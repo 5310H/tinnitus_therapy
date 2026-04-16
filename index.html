@@ -25,7 +25,7 @@
         font-size: 14px;
     }
 
-    /* GRID LAYOUT */
+    /* GRID */
     .grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -33,7 +33,6 @@
         margin-top: 10px;
     }
 
-    /* MOBILE FALLBACK */
     @media (max-width: 600px) {
         .grid {
             grid-template-columns: 1fr;
@@ -67,13 +66,32 @@
     .button:active {
         background: #005fcc;
     }
+
+    /* COLLAPSIBLE SUBMENU */
+    details {
+        text-align: left;
+        margin-top: 8px;
+    }
+
+    summary {
+        cursor: pointer;
+        font-size: 16px;
+        padding: 8px;
+        background: #e8e8e8;
+        border-radius: 6px;
+    }
+
+    details .submenu a {
+        margin: 4px 0;
+        width: 95%;
+    }
 </style>
 </head>
 
 <body>
 
 <h1>Tinnitus Therapy Suite</h1>
-<p>Open‑source tinnitus therapy tools</p>
+<p>Open‑source sound therapy tools</p>
 
 <div class="grid">
 
@@ -95,23 +113,35 @@
         <a class="button" href="hearingtest.html">Hearing Range Test</a>
     </div>
 
-    <!-- Column 1 -->
+    <!-- Column 1: Advanced Tools submenu -->
     <div class="card">
-        <h2>Advanced Tools</h2>
-        <a class="button" href="spectrogram.html">Spectrogram</a>
-        <a class="button" href="meter.html">Audio Level Meter</a>
+        <h2>Advanced</h2>
+
+        <details>
+            <summary>Show Advanced Tools</summary>
+            <div class="submenu">
+                <a class="button" href="spectrogram.html">Spectrogram</a>
+                <a class="button" href="meter.html">Audio Level Meter</a>
+            </div>
+        </details>
     </div>
 
-    <!-- Column 2 -->
+    <!-- Column 2: Project Files submenu -->
     <div class="card">
-        <h2>Project Files</h2>
-        <a class="button" href="docs/index.html">Documentation</a>
-        <a class="button" href="research.html">Research</a>
-        <a class="button" href="license.html">License</a>
-        <a class="button" href="disclaimer.html">Disclaimer</a>
+        <h2>Project</h2>
+
+        <details>
+            <summary>Show Project Files</summary>
+            <div class="submenu">
+                <a class="button" href="docs/index.html">Documentation</a>
+                <a class="button" href="research.html">Research</a>
+                <a class="button" href="license.html">License</a>
+                <a class="button" href="disclaimer.html">Disclaimer</a>
+            </div>
+        </details>
     </div>
 
-    <!-- Full width (auto stacks) -->
+    <!-- Full width -->
     <div class="card" style="grid-column: span 2;">
         <h2>Guidance</h2>
         <a class="button" href="recommended.html">Recommended Use</a>
