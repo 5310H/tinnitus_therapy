@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Audio Level Meter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family:Arial; background:#f4f4f4; padding:20px; text-align:center; }
+.bar { width:80%; height:30px; background:#ddd; margin:auto; border-radius:10px; overflow:hidden; }
+.fill { height:100%; width:0%; background:#0078ff; }
+.button { background:#0078ff; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; margin:8px; display:inline-block; }
+.card { background:white; padding:20px; border-radius:12px; box-shadow:0 0 6px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+
+<h1>Audio Level Meter</h1>
+<p>Shows real‑time audio amplitude</p>
+
+<div class="card">
+    <div class="bar"><div class="fill" id="fill"></div></div>
+    <br>
+    <button class="button" onclick="start()">Start</button>
+    <button class="button" onclick="stop()">Stop</button>
+</div>
+
+<script>
+let audioCtx=null, analyser, source, raf;
+
+function start(){
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+        source=audioCtx.createMediaStreamSource(stream);
+        analyser=audioCtx.createAnalyser();
+        analyser.fftSize=256;
+        source.connect(analyser);
+        draw();
+    });
+}
+
+function stop(){ if(raf) cancelAnimationFrame(raf); }
+
+function draw(){
+    const data=new Uint8Array(analyser.frequencyBinCount);
+    const fill=document.getElementById("fill");
+
+    function loop(){
+        analyser.getByteFrequencyData(data);
+        const avg=data.reduce((a,b)=>a+b)/data.length;
+        fill.style.width=(avg/255*100)+"%";
+        raf=requestAnimationFrame(loop);
+    }
+    loop();
+}
+</script>
+
+</body>
+</html>
