@@ -10,31 +10,40 @@
         font-family: Arial, sans-serif;
         background: #f4f4f4;
         margin: 0;
-        padding: 20px;
+        padding: 10px;
         text-align: center;
-        line-height: 1.6;
+        line-height: 1.4;
     }
     h1 {
-        margin-bottom: 10px;
+        margin: 5px 0 10px 0;
+        font-size: 22px;
+    }
+    p {
+        margin: 0 0 10px 0;
+        font-size: 14px;
     }
     .card {
         background: white;
-        padding: 20px;
-        margin: 15px 0;
-        border-radius: 12px;
-        box-shadow: 0 0 6px rgba(0,0,0,0.1);
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 10px;
+        box-shadow: 0 0 4px rgba(0,0,0,0.1);
+    }
+    .card h2 {
+        margin: 0 0 8px 0;
+        font-size: 18px;
     }
     .button {
         display: block;
         background: #0078ff;
         color: white;
-        padding: 14px;
-        margin: 10px auto;
-        width: 80%;
-        max-width: 300px;
-        border-radius: 10px;
+        padding: 10px;
+        margin: 6px auto;
+        width: 90%;
+        max-width: 260px;
+        border-radius: 8px;
         text-decoration: none;
-        font-size: 18px;
+        font-size: 15px;
     }
     .button:active {
         background: #005fcc;
@@ -45,12 +54,12 @@
 <body>
 
 <h1>Tinnitus Therapy Suite</h1>
-<p>Open‑source sound therapy tools for tinnitus relief and experimentation</p>
+<p>Open‑source sound therapy tools</p>
 
 <div class="card">
     <h2>Therapy Modes</h2>
-    <a class="button" href="decorrelated.html">Decorrelated Therapy</a>
-    <a class="button" href="notch.html">Notch Therapy</a>
+    <a class="button" href="decorrelated.html">Decorrelated</a>
+    <a class="button" href="notch.html">Notch</a>
     <a class="button" href="soundtherapy.html">Sound Therapy</a>
     <a class="button" href="python.html">Noise Generator</a>
 </div>
@@ -61,14 +70,6 @@
     <a class="button" href="research.html">Research</a>
     <a class="button" href="license.html">License</a>
     <a class="button" href="disclaimer.html">Disclaimer</a>
-</div>
-
-<div class="card">
-    <h2>About This Project</h2>
-    <p>
-        This suite is fully open‑source, runs entirely in your browser, and stores no data.
-        All sound generation uses the Web Audio API for real‑time synthesis.
-    </p>
 </div>
 
 </body>
