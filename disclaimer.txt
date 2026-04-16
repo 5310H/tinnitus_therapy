@@ -1,0 +1,23 @@
+DISCLAIMER
+
+This tinnitus therapy suite is an experimental, educational, and informational tool. 
+It is not a medical device and is not intended to diagnose, treat, cure, or prevent 
+any disease or health condition.
+
+No medical claims are made or implied. The sound tools provided here are based on 
+general concepts found in tinnitus research, but they are not a substitute for 
+professional evaluation or treatment by a licensed clinician, audiologist, or 
+healthcare provider.
+
+Use of this software is voluntary and at your own risk. Always keep listening volume 
+at a safe and comfortable level. Stop using the tool immediately if you experience 
+pain, discomfort, dizziness, or worsening symptoms.
+
+If you have concerns about tinnitus, hearing loss, hyperacusis, or any other medical 
+condition, consult a qualified healthcare professional.
+
+This software is provided “AS IS,” without warranty of any kind, express or implied. 
+The authors and contributors are not liable for any damages, losses, or adverse 
+effects arising from the use of this software.
+
+By using this tool, you acknowledge that you have read and understood this disclaimer.
