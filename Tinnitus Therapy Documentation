@@ -1,0 +1,1327 @@
+Here's the entire document. Long-press to start selecting, then tap Select All → Copy.
+
+---
+
+Tinnitus Sound Therapy — Complete Project Manual
+
+> Version: 1.0.0
+> Date: April 2026
+> License: MIT
+> Platform: Browser-based (Web Audio API)
+
+---
+
+Table of Contents
+
+1. Project Overview
+2. How Sound Therapy Works
+3. Project File Structure
+4. index.html — Main Landing Page
+5. soundtherapy.html — Standard Sound Therapy
+6. decorrelated.html — Decorrelated Sound Therapy
+7. Documentation Page
+8. Technical Architecture
+9. Usage Guide
+10. Clinical Background & Evidence
+11. Customization & Configuration
+12. Accessibility & Compatibility
+13. LICENSE
+14. DISCLAIMER
+15. Appendix — Glossary of Terms
+
+---
+
+1. Project Overview
+
+Purpose
+
+This project is a browser-based tinnitus sound therapy application designed to generate customizable therapeutic audio directly in the user's web browser. It requires no installation, no backend server, and no plugins — all audio is synthesized in real time using the Web Audio API.
+
+The application provides two distinct therapy modes:
+
+- Standard Sound Therapy — colored noise generation (white, pink, brown) with adjustable volume and optional frequency shaping.
+- Decorrelated Sound Therapy — independent noise streams delivered to left and right ears, preventing the brain from "locking on" to a single pattern and promoting habituation.
+
+Who This Is For
+
+- Individuals with subjective tinnitus (ringing, buzzing, hissing) seeking non-invasive relief.
+- People with tonal tinnitus paired with moderate hearing loss who want to supplement hearing aid therapy.
+- Audiologists, therapists, and clinicians looking for an accessible client-side tool.
+- Developers interested in Web Audio API applications for therapeutic use.
+
+Design Principles
+
+| Principle | Implementation |
+|---|---|
+| Privacy-first | All processing runs locally in the browser. No data is collected, stored, or transmitted. |
+| Zero dependencies | Pure HTML, CSS, and vanilla JavaScript. No frameworks, no CDN calls, no npm packages. |
+| Offline-capable | Once loaded, the application functions without an internet connection. |
+| Accessible | Keyboard-navigable controls, ARIA labels, high-contrast color scheme, responsive layout. |
+| Evidence-informed | Sound therapy approaches are grounded in published audiological research. |
+
+---
+
+2. How Sound Therapy Works
+
+The Contrast Enhancement Effect
+
+In silence, the brain amplifies internal signals — including tinnitus. This perceptual phenomenon is called the contrast enhancement effect. Just as a candle appears blindingly bright in a dark room but dim when the lights are on, tinnitus feels louder and more intrusive when there is no competing external sound.
+
+Sound therapy introduces carefully calibrated external audio to reduce this contrast. The goal is not to drown out tinnitus (masking), but to provide a sound environment where the brain gradually learns to de-prioritize the tinnitus signal — a process called habituation.
+
+Colored Noise Types
+
+| Noise Color | Spectral Profile | Perceived Character | Best For |
+|---|---|---|---|
+| White | Equal power across all frequencies | Bright, hissy (like TV static) | Broad-spectrum masking; quick relief for buzzing tinnitus |
+| Pink | −3 dB/octave rolloff at higher frequencies | Balanced, natural (like rainfall) | Extended listening; ringing tinnitus; overnight use |
+| Brown | −6 dB/octave rolloff at higher frequencies | Deep, rumbly (like a waterfall) | Low-frequency comfort; anxiety reduction; sleep |
+
+Why Decorrelated Audio Matters
+
+Standard noise generators send an identical signal to both ears. The brain quickly recognizes this as a single coherent source and may begin to ignore it — reducing therapeutic benefit over time.
+
+Decorrelated sound therapy generates two statistically independent noise streams, one for each ear. Because the left and right signals are different (yet share the same spectral characteristics), the brain cannot collapse them into a single source. This:
+
+- Prevents rapid auditory adaptation
+- Creates a wider, more immersive sound field
+- Engages more of the auditory cortex
+- Promotes faster habituation to the tinnitus signal
+
+---
+
+3. Project File Structure
+
+`
+tinnitus-therapy/
+├── index.html              # Main landing page and navigation hub
+├── soundtherapy.html       # Standard colored noise generator
+├── decorrelated.html       # Decorrelated dual-channel noise generator
+├── documentation.html      # In-app documentation and user guide
+├── css/
+│   └── styles.css          # Shared stylesheet for all pages
+├── js/
+│   ├── audio-engine.js     # Core Web Audio API abstraction layer
+│   ├── noise-generators.js # White, pink, and brown noise algorithms
+│   ├── decorrelated.js     # Independent L/R channel noise engine
+│   └── ui-controls.js      # Slider, button, and state management
+├── LICENSE                 # MIT License
+├── DISCLAIMER              # Medical and legal disclaimer
+└── README.md               # Project readme (this document)
+`
+
+---
+
+4. index.html — Main Landing Page
+
+Purpose
+
+The landing page serves as the navigation hub for the entire application. It introduces the project, explains the two therapy modes, and provides direct links to each tool.
+
+Layout & Sections
+
+Header
+
+- Project title: Tinnitus Sound Therapy
+- Subtitle: Browser-based therapeutic audio for tinnitus relief
+- Navigation bar with links to all pages
+
+Hero Section
+
+- Brief description of what the application does
+- Two prominent call-to-action cards:
+  - Standard Sound Therapy → links to soundtherapy.html
+  - Decorrelated Sound Therapy → links to decorrelated.html
+
+Information Section
+
+- "How It Works" overview with three-step visual flow:
+  1. Choose your therapy mode
+  2. Adjust noise color, volume, and balance
+  3. Listen at a comfortable level below your tinnitus
+
+Safety Notice
+
+- Inline reminder to use sound therapy at comfortable volumes
+- Link to the full Disclaimer page
+
+Footer
+
+- Links to Documentation, License, and Disclaimer
+- Version number and copyright notice
+
+HTML Structure
+
+`html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinnitus Sound Therapy</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <nav aria-label="Main navigation">
+            <a href="index.html" class="nav-logo">Tinnitus Sound Therapy</a>
+            <ul class="nav-links">
+                <li><a href="soundtherapy.html">Standard Therapy</a></li>
+                <li><a href="decorrelated.html">Decorrelated Therapy</a></li>
+                <li><a href="documentation.html">Documentation</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero" role="banner">
+            <h1>Tinnitus Sound Therapy</h1>
+            <p>Browser-based therapeutic audio for tinnitus relief.
+               No installation. No data collection. No cost.</p>
+        </section>
+
+        <section class="therapy-cards" aria-label="Therapy options">
+            <div class="card">
+                <h2>Standard Sound Therapy</h2>
+                <p>Generate white, pink, or brown noise with adjustable
+                   volume and frequency shaping.</p>
+                <a href="soundtherapy.html" class="btn-primary">
+                    Launch Standard Therapy
+                </a>
+            </div>
+            <div class="card">
+                <h2>Decorrelated Sound Therapy</h2>
+                <p>Independent noise streams for each ear — prevents
+                   auditory adaptation for deeper relief.</p>
+                <a href="decorrelated.html" class="btn-primary">
+                    Launch Decorrelated Therapy
+                </a>
+            </div>
+        </section>
+
+        <section class="how-it-works">
+            <h2>How It Works</h2>
+            <ol class="steps">
+                <li>
+                    <strong>Choose</strong> your therapy mode — standard
+                    or decorrelated
+                </li>
+                <li>
+                    <strong>Adjust</strong> noise color, volume, and
+                    stereo balance to your comfort
+                </li>
+                <li>
+                    <strong>Listen</strong> at a level just below your
+                    tinnitus for maximum habituation benefit
+                </li>
+            </ol>
+        </section>
+
+        <section class="safety-notice" role="alert">
+            <h2>Important Safety Information</h2>
+            <p>This tool is not a medical device. Always use at
+               comfortable listening volumes. Consult a qualified
+               audiologist or ENT specialist for personalized tinnitus
+               treatment. <a href="#disclaimer">Read full disclaimer</a>.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Tinnitus Sound Therapy Project</p>
+        <nav aria-label="Footer navigation">
+            <a href="documentation.html">Documentation</a>
+            <a href="LICENSE">License</a>
+            <a href="DISCLAIMER">Disclaimer</a>
+        </nav>
+    </footer>
+</body>
+</html>
+`
+
+Styling Notes
+
+- Color Palette: Dark background (#1a1a2e) with calming teal accents (#16a085) — designed to reduce visual stimulation during use.
+- Typography: System font stack for maximum compatibility and fast load times.
+- Responsive Breakpoints: Cards stack vertically below 768px viewport width.
+
+---
+
+5. soundtherapy.html — Standard Sound Therapy
+
+Purpose
+
+This page is the primary sound generator. It produces continuous colored noise (white, pink, or brown) using the Web Audio API, with real-time user controls for volume, noise type, and optional frequency shaping.
+
+User Interface Controls
+
+| Control | Type | Range | Default | Description |
+|---|---|---|---|---|
+| Noise Color | Radio buttons | White / Pink / Brown | Pink | Selects the noise spectrum profile |
+| Volume | Range slider | 0–100% | 30% | Master output level |
+| High-Frequency Rolloff | Range slider | 0–100% | 0% | Additional high-frequency attenuation via low-pass filter |
+| Play / Pause | Toggle button | On / Off | Off | Starts or suspends audio output |
+| Stop | Button | — | — | Stops audio and resets the audio context |
+| Timer | Dropdown | 15 / 30 / 60 / 120 min / Continuous | Continuous | Auto-stop with gradual fade-out |
+
+HTML Structure
+
+`html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standard Sound Therapy — Tinnitus Sound Therapy</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <nav aria-label="Main navigation">
+            <a href="index.html" class="nav-logo">Tinnitus Sound Therapy</a>
+            <ul class="nav-links">
+                <li><a href="soundtherapy.html" aria-current="page">
+                    Standard Therapy</a></li>
+                <li><a href="decorrelated.html">Decorrelated Therapy</a></li>
+                <li><a href="documentation.html">Documentation</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Standard Sound Therapy</h1>
+        <p class="page-description">
+            Generate continuous colored noise tailored to your comfort.
+            Start at a low volume and adjust gradually.
+        </p>
+
+        <section class="controls-panel" aria-label="Sound controls">
+
+            <!-- Noise Color Selection -->
+            <fieldset>
+                <legend>Noise Color</legend>
+                <label>
+                    <input type="radio" name="noiseColor" value="white">
+                    White Noise
+                    <span class="hint">Bright, equal-energy hiss</span>
+                </label>
+                <label>
+                    <input type="radio" name="noiseColor" value="pink"
+                           checked>
+                    Pink Noise
+                    <span class="hint">Balanced, natural rainfall</span>
+                </label>
+                <label>
+                    <input type="radio" name="noiseColor" value="brown">
+                    Brown Noise
+                    <span class="hint">Deep, rumbly waterfall</span>
+                </label>
+            </fieldset>
+
+            <!-- Volume Control -->
+            <div class="control-group">
+                <label for="volumeSlider">
+                    Volume: <output id="volumeValue">30%</output>
+                </label>
+                <input type="range" id="volumeSlider"
+                       min="0" max="100" value="30"
+                       aria-describedby="volumeHint">
+                <span id="volumeHint" class="hint">
+                    Keep below your tinnitus level for best results
+                </span>
+            </div>
+
+            <!-- High-Frequency Rolloff -->
+            <div class="control-group">
+                <label for="rolloffSlider">
+                    High-Frequency Rolloff:
+                    <output id="rolloffValue">0%</output>
+                </label>
+                <input type="range" id="rolloffSlider"
+                       min="0" max="100" value="0"
+                       aria-describedby="rolloffHint">
+                <span id="rolloffHint" class="hint">
+                    Increase to soften harsh high frequencies
+                </span>
+            </div>
+
+            <!-- Timer -->
+            <div class="control-group">
+                <label for="timerSelect">Auto-Stop Timer:</label>
+                <select id="timerSelect">
+                    <option value="0">Continuous</option>
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="60">60 minutes</option>
+                    <option value="120">120 minutes</option>
+                </select>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="playback-controls">
+                <button id="playPauseBtn" class="btn-primary"
+                        aria-label="Play or pause sound therapy">
+                    ▶ Play
+                </button>
+                <button id="stopBtn" class="btn-secondary"
+                        aria-label="Stop sound therapy">
+                    ◼ Stop
+                </button>
+            </div>
+
+            <!-- Timer Display -->
+            <div class="timer-display" aria-live="polite">
+                <span id="timerCountdown"></span>
+            </div>
+
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Tinnitus Sound Therapy Project</p>
+    </footer>
+
+    <script src="js/audio-engine.js"></script>
+    <script src="js/noise-generators.js"></script>
+    <script src="js/ui-controls.js"></script>
+</body>
+</html>
+`
+
+JavaScript: Noise Generation Algorithms
+
+White Noise
+
+White noise has equal power at every frequency. It is generated by filling an audio buffer with uniformly distributed random samples:
+
+`javascript
+function generateWhiteNoise(audioContext, durationSeconds) {
+    const sampleRate = audioContext.sampleRate;
+    const bufferSize = sampleRate * durationSeconds;
+    const buffer = audioContext.createBuffer(1, bufferSize, sampleRate);
+    const channelData = buffer.getChannelData(0);
+
+    for (let i = 0; i < bufferSize; i++) {
+        channelData[i] = Math.random() * 2 - 1;
+    }
+
+    return buffer;
+}
+`
+
+Pink Noise (Voss-McCartney Algorithm)
+
+Pink noise has a spectral density that decreases at 3 dB per octave. The Voss-McCartney algorithm uses multiple random generators updated at different rates to approximate the −3 dB/octave slope efficiently:
+
+`javascript
+function generatePinkNoise(audioContext, durationSeconds) {
+    const sampleRate = audioContext.sampleRate;
+    const bufferSize = sampleRate * durationSeconds;
+    const buffer = audioContext.createBuffer(1, bufferSize, sampleRate);
+    const channelData = buffer.getChannelData(0);
+
+    const NUM_ROWS = 16;
+    let runningSum = 0;
+    const rows = new Float32Array(NUM_ROWS);
+
+    for (let i = 0; i < NUM_ROWS; i++) {
+        rows[i] = Math.random() * 2 - 1;
+        runningSum += rows[i];
+    }
+
+    for (let i = 0; i < bufferSize; i++) {
+        let n = i;
+        let numZeros = 0;
+        if (n > 0) {
+            while ((n & 1) === 0) {
+                numZeros++;
+                n >>= 1;
+            }
+        }
+
+        const rowIndex = numZeros % NUM_ROWS;
+        runningSum -= rows[rowIndex];
+        rows[rowIndex] = Math.random() * 2 - 1;
+        runningSum += rows[rowIndex];
+
+        channelData[i] = runningSum / NUM_ROWS;
+    }
+
+    return buffer;
+}
+`
+
+Brown Noise (Brownian / Red Noise)
+
+Brown noise is generated by integrating white noise — each sample is the previous sample plus a small random step. A leaky integrator prevents DC drift:
+
+`javascript
+function generateBrownNoise(audioContext, durationSeconds) {
+    const sampleRate = audioContext.sampleRate;
+    const bufferSize = sampleRate * durationSeconds;
+    const buffer = audioContext.createBuffer(1, bufferSize, sampleRate);
+    const channelData = buffer.getChannelData(0);
+
+    let lastSample = 0;
+    const leak = 0.995;
+
+    for (let i = 0; i < bufferSize; i++) {
+        const whiteStep = Math.random() * 2 - 1;
+        lastSample = (lastSample  leak) + (whiteStep  0.1);
+        channelData[i] = Math.max(-1, Math.min(1, lastSample * 3.5));
+    }
+
+    return buffer;
+}
+`
+
+Audio Engine: Playback & Controls
+
+`javascript
+class SoundTherapyEngine {
+    constructor() {
+        this.audioContext = null;
+        this.sourceNode = null;
+        this.gainNode = null;
+        this.filterNode = null;
+        this.isPlaying = false;
+        this.timerId = null;
+    }
+
+    initialize() {
+        this.audioContext = new (window.AudioContext
+                             || window.webkitAudioContext)();
+        this.gainNode = this.audioContext.createGain();
+        this.filterNode = this.audioContext.createBiquadFilter();
+        this.filterNode.type = 'lowpass';
+        this.filterNode.frequency.value = 22050;
+
+        this.filterNode.connect(this.gainNode);
+        this.gainNode.connect(this.audioContext.destination);
+    }
+
+    play(noiseType) {
+        if (!this.audioContext) this.initialize();
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+
+        this.stop();
+
+        const bufferDuration = 4;
+        let buffer;
+        switch (noiseType) {
+            case 'white':
+                buffer = generateWhiteNoise(
+                    this.audioContext, bufferDuration);
+                break;
+            case 'brown':
+                buffer = generateBrownNoise(
+                    this.audioContext, bufferDuration);
+                break;
+            case 'pink':
+            default:
+                buffer = generatePinkNoise(
+                    this.audioContext, bufferDuration);
+        }
+
+        this.sourceNode = this.audioContext.createBufferSource();
+        this.sourceNode.buffer = buffer;
+        this.sourceNode.loop = true;
+        this.sourceNode.connect(this.filterNode);
+        this.sourceNode.start();
+        this.isPlaying = true;
+    }
+
+    setVolume(percent) {
+        if (this.gainNode) {
+            this.gainNode.gain.setTargetAtTime(
+                percent / 100,
+                this.audioContext.currentTime,
+                0.05
+            );
+        }
+    }
+
+    setRolloff(percent) {
+        if (this.filterNode) {
+            const minFreq = 200;
+            const maxFreq = 22050;
+            const freq = maxFreq * Math.pow(
+                minFreq / maxFreq, percent / 100);
+            this.filterNode.frequency.setTargetAtTime(
+                freq,
+                this.audioContext.currentTime,
+                0.1
+            );
+        }
+    }
+
+    fadeOut(durationSeconds) {
+        if (this.gainNode && this.isPlaying) {
+            this.gainNode.gain.setTargetAtTime(
+                0,
+                this.audioContext.currentTime,
+                durationSeconds / 4
+            );
+            setTimeout(() => this.stop(),
+                       durationSeconds * 1000);
+        }
+    }
+
+    stop() {
+        if (this.sourceNode) {
+            try { this.sourceNode.stop(); } catch (e) {}
+            this.sourceNode.disconnect();
+            this.sourceNode = null;
+        }
+        if (this.timerId) {
+            clearTimeout(this.timerId);
+            this.timerId = null;
+        }
+        this.isPlaying = false;
+    }
+
+    startTimer(minutes) {
+        if (minutes <= 0) return;
+        const fadeTime = 10;
+        const ms = (minutes  60 - fadeTime)  1000;
+        this.timerId = setTimeout(() => {
+            this.fadeOut(fadeTime);
+        }, ms);
+    }
+}
+`
+
+---
+
+6. decorrelated.html — Decorrelated Sound Therapy
+
+Purpose
+
+This page provides an advanced therapy mode that generates two independent noise streams — one for each ear. This prevents the auditory system from consolidating the sound into a single "ignorable" source, promoting deeper and more sustained habituation.
+
+How Decorrelation Works
+
+1. Two separate noise buffers are generated using the same algorithm (e.g., both pink noise), but with different random seeds.
+2. Buffer A is routed exclusively to the left channel.
+3. Buffer B is routed exclusively to the right channel.
+4. The listener perceives a wide, spatially diffuse sound field that is harder for the brain to habituate to (in the negative, adaptation sense).
+5. Both streams share the same spectral characteristics, so the therapy remains balanced and comfortable.
+
+User Interface Controls
+
+| Control | Type | Range | Default | Description |
+|---|---|---|---|---|
+| Noise Color | Radio buttons | White / Pink / Brown | Pink | Spectral profile (applied to both channels) |
+| Master Volume | Range slider | 0–100% | 30% | Overall output level |
+| Left/Right Balance | Range slider | L100–Center–R100 | Center | Shifts loudness emphasis between ears |
+| Decorrelation Level | Range slider | 0–100% | 100% | At 0%, both ears get identical noise (mono). At 100%, fully independent streams |
+| Play / Pause | Toggle button | On / Off | Off | Starts or suspends audio |
+| Stop | Button | — | — | Stops and resets |
+| Timer | Dropdown | 15 / 30 / 60 / 120 min / Continuous | Continuous | Auto-stop with fade-out |
+
+HTML Structure
+
+`html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decorrelated Sound Therapy — Tinnitus Sound Therapy</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <nav aria-label="Main navigation">
+            <a href="index.html" class="nav-logo">
+                Tinnitus Sound Therapy</a>
+            <ul class="nav-links">
+                <li><a href="soundtherapy.html">Standard Therapy</a></li>
+                <li><a href="decorrelated.html" aria-current="page">
+                    Decorrelated Therapy</a></li>
+                <li><a href="documentation.html">Documentation</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Decorrelated Sound Therapy</h1>
+        <p class="page-description">
+            Independent noise streams for each ear. Use headphones
+            or earbuds for full effect.
+        </p>
+
+        <div class="headphone-notice" role="alert">
+            <strong>Headphones Required:</strong>
+            This therapy mode delivers different audio to each ear.
+            Speakers will blend the channels and reduce effectiveness.
+        </div>
+
+        <section class="controls-panel" aria-label="Sound controls">
+
+            <!-- Noise Color Selection -->
+            <fieldset>
+                <legend>Noise Color</legend>
+                <label>
+                    <input type="radio" name="noiseColor" value="white">
+                    White Noise
+                </label>
+                <label>
+                    <input type="radio" name="noiseColor" value="pink"
+                           checked>
+                    Pink Noise
+                </label>
+                <label>
+                    <input type="radio" name="noiseColor" value="brown">
+                    Brown Noise
+                </label>
+            </fieldset>
+
+            <!-- Master Volume -->
+            <div class="control-group">
+                <label for="masterVolume">
+                    Master Volume:
+                    <output id="masterVolumeValue">30%</output>
+                </label>
+                <input type="range" id="masterVolume"
+                       min="0" max="100" value="30">
+            </div>
+
+            <!-- L/R Balance -->
+            <div class="control-group">
+                <label for="balanceSlider">
+                    Left/Right Balance:
+                    <output id="balanceValue">Center</output>
+                </label>
+                <input type="range" id="balanceSlider"
+                       min="-100" max="100" value="0"
+                       aria-describedby="balanceHint">
+                <span id="balanceHint" class="hint">
+                    Shift emphasis toward the ear with
+                    stronger tinnitus
+                </span>
+            </div>
+
+            <!-- Decorrelation Level -->
+            <div class="control-group">
+                <label for="decorrelationSlider">
+                    Decorrelation Level:
+                    <output id="decorrelationValue">100%</output>
+                </label>
+                <input type="range" id="decorrelationSlider"
+                       min="0" max="100" value="100"
+                       aria-describedby="decorrelationHint">
+                <span id="decorrelationHint" class="hint">
+                    100% = fully independent L/R streams;
+                    0% = identical (mono) noise
+                </span>
+            </div>
+
+            <!-- Timer -->
+            <div class="control-group">
+                <label for="timerSelect">Auto-Stop Timer:</label>
+                <select id="timerSelect">
+                    <option value="0">Continuous</option>
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="60">60 minutes</option>
+                    <option value="120">120 minutes</option>
+                </select>
+            </div>
+
+            <!-- Playback Controls -->
+            <div class="playback-controls">
+                <button id="playPauseBtn" class="btn-primary"
+                        aria-label="Play or pause decorrelated
+                                    sound therapy">
+                    ▶ Play
+                </button>
+                <button id="stopBtn" class="btn-secondary"
+                        aria-label="Stop decorrelated sound therapy">
+                    ◼ Stop
+                </button>
+            </div>
+
+            <div class="timer-display" aria-live="polite">
+                <span id="timerCountdown"></span>
+            </div>
+
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Tinnitus Sound Therapy Project</p>
+    </footer>
+
+    <script src="js/audio-engine.js"></script>
+    <script src="js/noise-generators.js"></script>
+    <script src="js/decorrelated.js"></script>
+    <script src="js/ui-controls.js"></script>
+</body>
+</html>
+`
+
+JavaScript: Decorrelated Engine
+
+`javascript
+class DecorrelatedTherapyEngine {
+    constructor() {
+        this.audioContext = null;
+        this.leftSource = null;
+        this.rightSource = null;
+        this.leftGain = null;
+        this.rightGain = null;
+        this.merger = null;
+        this.masterGain = null;
+        this.isPlaying = false;
+        this.decorrelationLevel = 1.0;
+    }
+
+    initialize() {
+        this.audioContext = new (window.AudioContext
+                             || window.webkitAudioContext)();
+
+        this.merger = this.audioContext.createChannelMerger(2);
+
+        this.leftGain = this.audioContext.createGain();
+        this.rightGain = this.audioContext.createGain();
+
+        this.masterGain = this.audioContext.createGain();
+        this.masterGain.gain.value = 0.3;
+
+        this.leftGain.connect(this.merger, 0, 0);
+        this.rightGain.connect(this.merger, 0, 1);
+        this.merger.connect(this.masterGain);
+        this.masterGain.connect(this.audioContext.destination);
+    }
+
+    play(noiseType) {
+        if (!this.audioContext) this.initialize();
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+
+        this.stop();
+
+        const bufferDuration = 4;
+        const generateFn = this.getGeneratorFunction(noiseType);
+
+        const leftBuffer = generateFn(
+            this.audioContext, bufferDuration);
+        const rightBuffer = generateFn(
+            this.audioContext, bufferDuration);
+
+        if (this.decorrelationLevel < 1.0) {
+            this.mixBuffers(leftBuffer, rightBuffer,
+                          this.decorrelationLevel);
+        }
+
+        this.leftSource =
+            this.audioContext.createBufferSource();
+        this.leftSource.buffer = leftBuffer;
+        this.leftSource.loop = true;
+        this.leftSource.connect(this.leftGain);
+
+        this.rightSource =
+            this.audioContext.createBufferSource();
+        this.rightSource.buffer = rightBuffer;
+        this.rightSource.loop = true;
+        this.rightSource.connect(this.rightGain);
+
+        const startTime = this.audioContext.currentTime + 0.01;
+        this.leftSource.start(startTime);
+        this.rightSource.start(startTime);
+        this.isPlaying = true;
+    }
+
+    getGeneratorFunction(noiseType) {
+        switch (noiseType) {
+            case 'white': return generateWhiteNoise;
+            case 'brown': return generateBrownNoise;
+            case 'pink':
+            default:      return generatePinkNoise;
+        }
+    }
+
+    mixBuffers(bufferA, bufferB, decorrelation) {
+        const dataA = bufferA.getChannelData(0);
+        const dataB = bufferB.getChannelData(0);
+        const blend = 1 - decorrelation;
+
+        for (let i = 0; i < dataA.length; i++) {
+            const avg = (dataA[i] + dataB[i]) / 2;
+            dataA[i] = dataA[i]  decorrelation + avg  blend;
+            dataB[i] = dataB[i]  decorrelation + avg  blend;
+        }
+    }
+
+    setBalance(value) {
+        const normalized = value / 100;
+        const leftLevel = Math.cos(
+            (normalized + 1) * Math.PI / 4);
+        const rightLevel = Math.sin(
+            (normalized + 1) * Math.PI / 4);
+
+        this.leftGain.gain.setTargetAtTime(
+            leftLevel, this.audioContext.currentTime, 0.05);
+        this.rightGain.gain.setTargetAtTime(
+            rightLevel, this.audioContext.currentTime, 0.05);
+    }
+
+    setDecorrelation(percent) {
+        this.decorrelationLevel = percent / 100;
+        if (this.isPlaying) {
+            const currentType = document.querySelector(
+                'input[name="noiseColor"]:checked').value;
+            this.play(currentType);
+        }
+    }
+
+    setVolume(percent) {
+        if (this.masterGain) {
+            this.masterGain.gain.setTargetAtTime(
+                percent / 100,
+                this.audioContext.currentTime,
+                0.05
+            );
+        }
+    }
+
+    stop() {
+        [this.leftSource, this.rightSource].forEach(src => {
+            if (src) {
+                try { src.stop(); } catch (e) {}
+                src.disconnect();
+            }
+        });
+        this.leftSource = null;
+        this.rightSource = null;
+        this.isPlaying = false;
+    }
+}
+`
+
+---
+
+7. Documentation Page
+
+Purpose
+
+The in-app documentation page (documentation.html) provides users with a complete guide to using the application effectively. It is written in plain language for non-technical users while including enough detail for audiologists and developers.
+
+Content Sections
+
+Getting Started
+
+1. Open any of the therapy pages in a modern web browser (Chrome, Firefox, Safari, Edge).
+2. If using Decorrelated Therapy, connect headphones or earbuds — this mode requires separate audio channels for each ear.
+3. Click Play to begin.
+4. Start at a low volume (20–30%) and adjust upward gradually.
+5. Set a timer if using for sleep or extended sessions.
+
+Choosing a Noise Color
+
+| If Your Tinnitus Sounds Like... | Try This First | Why |
+|---|---|---|
+| High-pitched ringing | Pink noise | Balanced spectrum without harsh highs |
+| Buzzing or hissing | White noise | Covers all frequencies equally |
+| Low-pitched hum | Brown noise | Concentrated low-frequency energy |
+| Uncertain / mixed | Pink noise | Most natural-sounding; good default |
+
+Volume Guidelines
+
+- Target level: Just below the perceived loudness of your tinnitus. You should still be able to hear your tinnitus faintly through the noise — this is the "mixing point" where habituation occurs most effectively.
+- Never exceed comfortable levels. Sound therapy should feel soothing, not stressful.
+- For sleep: Set volume lower than your daytime preference and use the timer with the fade-out feature.
+
+Standard vs. Decorrelated: When to Use Each
+
+| Scenario | Recommended Mode |
+|---|---|
+| First time trying sound therapy | Standard |
+| Quick relief during the day | Standard |
+| Extended sessions (1+ hour) | Decorrelated |
+| Overnight / sleep use | Either (with timer) |
+| Standard noise has stopped helping | Decorrelated |
+| Bilateral tinnitus (both ears) | Decorrelated |
+| Unilateral tinnitus (one ear) | Decorrelated with balance shifted |
+
+Troubleshooting
+
+| Problem | Solution |
+|---|---|
+| No sound after pressing Play | Click anywhere on the page first (browser autoplay policy requires user interaction) |
+| Sound is distorted or crackly | Lower the volume; close other audio-intensive tabs |
+| Timer doesn't stop playback | Ensure you selected a time value (not "Continuous") before pressing Play |
+| Different volume in each ear (Standard mode) | Check your device's system balance settings |
+| Decorrelated mode sounds "mono" | Verify headphones are connected; check decorrelation slider is above 0% |
+
+Browser Compatibility
+
+| Browser | Standard Therapy | Decorrelated Therapy | Notes |
+|---|---|---|---|
+| Chrome 49+ | Full support | Full support | Recommended |
+| Firefox 50+ | Full support | Full support | — |
+| Safari 14.1+ | Full support | Full support | May require user click to start |
+| Edge 79+ | Full support | Full support | Chromium-based |
+| Mobile Chrome | Full support | Full support | Use wired headphones for decorrelated |
+| Mobile Safari | Full support | Full support | Works with AirPods; slight latency possible |
+
+---
+
+8. Technical Architecture
+
+Web Audio API Signal Flow
+
+Standard Mode
+
+`
+OscillatorNode / AudioBufferSourceNode (noise)
+        │
+        ▼
+BiquadFilterNode (lowpass — rolloff control)
+        │
+        ▼
+   GainNode (volume)
+        │
+        ▼
+AudioContext.destination (speakers / headphones)
+`
+
+Decorrelated Mode
+
+`
+AudioBufferSourceNode (left noise)     AudioBufferSourceNode (right noise)
+        │                                       │
+        ▼                                       ▼
+   GainNode (left level)                  GainNode (right level)
+        │                                       │
+        ▼                                       ▼
+ChannelMergerNode ───────────────────────────────┘
+        │ (input 0 = left, input 1 = right)
+        ▼
+   GainNode (master volume)
+        │
+        ▼
+AudioContext.destination (headphones)
+`
+
+Key Design Decisions
+
+| Decision | Rationale |
+|---|---|
+| Pre-generated buffers (4s) with looping | Avoids per-sample ScriptProcessorNode overhead. AudioWorklets are faster but less compatible. 4 seconds provides sufficient randomness to prevent audible looping artifacts. |
+| Voss-McCartney for pink noise | O(n) complexity with good spectral accuracy. Alternatives (Paul Kellet's IIR filter) have slightly better accuracy but are more complex to implement and debug. |
+| Leaky integrator for brown noise | Simple, stable, and prevents DC offset accumulation that can damage speakers or cause distortion. |
+| setTargetAtTime for parameter changes | Exponential smoothing prevents clicks and pops from abrupt value changes. The 50ms time constant is fast enough to feel responsive but slow enough to avoid artifacts. |
+| No external audio files | Synthesized noise is infinitely variable, adds zero network latency, works offline, and avoids copyright issues. |
+| No frameworks | Minimizes attack surface, load time, and maintenance burden. The application is simple enough that vanilla JS is clearer and faster. |
+
+Security & Privacy Model
+
+- No network requests after initial page load.
+- No cookies, localStorage, or sessionStorage used (timer state is in-memory only).
+- No analytics, tracking, or telemetry of any kind.
+- No microphone or camera access requested.
+- Content Security Policy headers recommended for deployment:
+
+`
+Content-Security-Policy:
+    default-src 'self';
+    script-src 'self';
+    style-src 'self';
+    img-src 'self';
+    media-src 'none';
+    connect-src 'none';
+    frame-src 'none';
+`
+
+---
+
+9. Usage Guide
+
+Recommended Therapy Protocol
+
+This protocol is adapted from general sound therapy guidelines published in audiological literature. It is not medical advice. Consult a qualified professional for a personalized plan.
+
+Phase 1: Exploration (Days 1–3)
+
+1. Open Standard Sound Therapy.
+2. Try each noise color for 5 minutes.
+3. Note which color feels most comfortable and provides the best partial masking of your tinnitus.
+4. Experiment with the high-frequency rolloff slider.
+5. Find your "mixing point" — the volume where you can still faintly hear your tinnitus through the noise.
+
+Phase 2: Routine Building (Days 4–14)
+
+1. Use your preferred noise color for 30–60 minute sessions.
+2. Aim for 2–3 sessions per day during focused work, reading, or rest.
+3. If using for sleep, set the timer to 60 or 120 minutes with continuous fade-out.
+4. Keep a simple log: date, noise color, volume level, duration, and subjective tinnitus rating (1–10).
+
+Phase 3: Advancing to Decorrelated (Week 3+)
+
+1. Switch to Decorrelated Sound Therapy using headphones.
+2. Start with 100% decorrelation and your preferred noise color.
+3. If your tinnitus is louder in one ear, shift the balance slider toward that ear.
+4. Continue 30–60 minute sessions.
+5. Compare your tinnitus ratings to Phase 2 — many users report improvement within 2–4 weeks.
+
+Phase 4: Maintenance (Ongoing)
+
+- Use sound therapy as needed — during quiet environments, before sleep, or during tinnitus spikes.
+- Experiment with lowering volume over time as habituation develops.
+- There is no harm in long-term use at comfortable volumes.
+
+Tips for Hearing Aid Users
+
+- Streaming-compatible hearing aids (RIC, some Custom models with Bluetooth) can stream sound therapy directly from the browser to your hearing aids via your phone.
+- Non-streaming aids (CIC/IIC, some Silk models): Use wired earbuds under or alongside your hearing aids, or use sound therapy during periods when aids are removed (bedtime).
+- Sound therapy complements — but does not replace — the tinnitus management features built into many modern hearing aids (e.g., built-in noise generators, notch therapy).
+
+---
+
+10. Clinical Background & Evidence
+
+Evidence Base for Sound Therapy
+
+Sound therapy for tinnitus has been studied for over two centuries. While no single approach works for everyone, the evidence supports several key findings:
+
+- Sound enrichment reduces tinnitus distress in the majority of patients with mild-to-moderate subjective tinnitus.
+- Customized sound therapy (matched to individual tinnitus characteristics) is generally more effective than non-customized approaches.
+- Patients with more severe baseline tinnitus often show the greatest improvement from sound therapy.
+- Sound therapy works best as part of a comprehensive treatment plan, potentially including hearing aids, cognitive behavioral therapy (CBT), and medical evaluation.
+
+Relevant Research
+
+- Wang et al. (2020) conducted a systematic review of sound therapy for subjective tinnitus in adults, analyzing 43 studies. They concluded that "sound therapy can effectively suppress tinnitus, at least in some patients" and emphasized the importance of matching therapy to individual tinnitus characteristics.
+- Tinnitus Retraining Therapy (TRT), developed by Jastreboff, uses structured sound therapy combined with directive counseling to achieve habituation. The sound component uses broadband noise at the mixing point — the same approach used in this application.
+- Notched noise/music therapy — Some research suggests removing the frequency matching the patient's tinnitus from background noise can accelerate habituation through reverse lateral inhibition. This application does not implement notched therapy but could be extended to do so.
+
+Limitations of Sound Therapy
+
+- It does not cure tinnitus or treat its underlying neurological causes.
+- It is less effective for pulsatile tinnitus (which often has a vascular cause requiring medical evaluation).
+- Effectiveness varies significantly between individuals.
+- It should not be used as a substitute for professional evaluation, especially if tinnitus is sudden-onset, unilateral, or accompanied by hearing loss.
+
+---
+
+11. Customization & Configuration
+
+Modifying the Color Palette
+
+Edit css/styles.css to change the visual theme:
+
+`css
+:root {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-controls: #0f3460;
+
+    --accent: #16a085;
+    --accent-hover: #1abc9c;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --text-heading: #ffffff;
+
+    --slider-track: #2c3e50;
+    --slider-thumb: #16a085;
+    --btn-primary-bg: #16a085;
+    --btn-primary-text: #ffffff;
+    --btn-secondary-bg: #2c3e50;
+    --btn-secondary-text: #e0e0e0;
+
+    --notice-bg: #1e3a5f;
+    --notice-border: #e74c3c;
+}
+`
+
+Adding a New Noise Type
+
+To add a new noise color (e.g., violet noise, which has a +6 dB/octave slope):
+
+1. Add the generation function to js/noise-generators.js:
+
+`javascript
+function generateVioletNoise(audioContext, durationSeconds) {
+    const sampleRate = audioContext.sampleRate;
+    const bufferSize = sampleRate * durationSeconds;
+    const buffer = audioContext.createBuffer(
+        1, bufferSize, sampleRate);
+    const channelData = buffer.getChannelData(0);
+
+    let lastSample = 0;
+    for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        channelData[i] = white - lastSample;
+        lastSample = white;
+    }
+
+    let max = 0;
+    for (let i = 0; i < bufferSize; i++) {
+        max = Math.max(max, Math.abs(channelData[i]));
+    }
+    for (let i = 0; i < bufferSize; i++) {
+        channelData[i] /= max;
+    }
+
+    return buffer;
+}
+`
+
+2. Add a radio button option to both therapy HTML pages.
+3. Add a case 'violet': to the switch statements in both engine classes.
+
+Adjusting Buffer Duration
+
+The default 4-second buffer provides a good balance between memory usage and naturalness. To change it:
+
+- Shorter (1–2s): Lower memory; may produce audible looping artifacts with brown noise.
+- Longer (8–16s): More natural; higher memory usage. Recommended for brown noise if looping is perceptible.
+
+Change the bufferDuration constant in both engine classes.
+
+---
+
+12. Accessibility & Compatibility
+
+Keyboard Navigation
+
+All controls are fully keyboard-accessible:
+
+| Key | Action |
+|---|---|
+| Tab | Move between controls |
+| Space / Enter | Activate buttons and radio buttons |
+| Arrow Left/Right | Adjust slider values |
+| Arrow Up/Down | Adjust slider values (fine control) |
+
+ARIA Implementation
+
+- All interactive controls have descriptive aria-label attributes.
+- Slider values are announced via output elements linked with for attributes.
+- Timer countdown uses aria-live="polite" for screen reader announcements.
+- Navigation uses aria-label to distinguish header and footer navs.
+- Current page is indicated with aria-current="page".
+
+Reduced Motion
+
+The application respects the prefers-reduced-motion media query. When enabled:
+
+- Button transitions are instantaneous.
+- No animated visual indicators.
+- Audio behavior is unchanged (audio is not motion).
+
+`css
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition-duration: 0s !important;
+        animation-duration: 0s !important;
+    }
+}
+`
+
+---
+
+13. LICENSE
+
+`
+MIT License
+
+Copyright (c) 2026 Tinnitus Sound Therapy Project
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+`
+
+---
+
+14. DISCLAIMER
+
+Medical Disclaimer
+
+This application is NOT a medical device. It has not been evaluated, approved, or cleared by the U.S. Food and Drug Administration (FDA), the European Medicines Agency (EMA), or any other regulatory body.
+
+This application does NOT:
+
+- Diagnose, treat, cure, or prevent any disease or medical condition.
+- Replace professional medical advice, diagnosis, or treatment.
+- Serve as a substitute for consultation with a qualified audiologist, otolaryngologist (ENT), or other healthcare provider.
+
+Important medical guidance:
+
+- If you experience sudden-onset tinnitus, tinnitus in only one ear, tinnitus accompanied by hearing loss, dizziness, or pain, or pulsatile tinnitus (tinnitus that beats in time with your pulse), seek medical evaluation promptly. These symptoms may indicate conditions requiring urgent treatment.
+- Always listen at comfortable volume levels. Excessive sound exposure — even from therapeutic noise — can cause or worsen hearing damage.
+- Sound therapy is most effective as one component of a comprehensive tinnitus management plan developed with your healthcare provider.
+
+Liability Disclaimer
+
+The authors and contributors of this software accept no responsibility or liability for:
+
+- Any adverse health effects resulting from use of this application.
+- Any hearing damage resulting from excessive volume levels.
+- Any reliance on this application as a substitute for professional medical care.
+- Any direct, indirect, incidental, special, or consequential damages arising from use of this software.
+
+Use this application entirely at your own risk.
+
+Data & Privacy Disclaimer
+
+This application:
+
+- Collects no personal data of any kind.
+- Makes no network requests after the initial page load.
+- Uses no cookies, local storage, or session storage.
+- Stores no information about your usage, preferences, or health condition.
+- Contains no analytics, telemetry, or tracking code.
+
+Your therapy sessions are completely private.
+
+---
+
+15. Appendix — Glossary of Terms
+
+| Term | Definition |
+|---|---|
+| Audiogram | A graph showing hearing sensitivity at different frequencies, used to characterize hearing loss. |
+| Brown noise | Noise with a spectral density that decreases at 6 dB per octave. Named after Brownian motion, not the color. Sounds deep and rumbly. |
+| Contrast enhancement effect | The perceptual phenomenon where tinnitus sounds louder in silence because the brain amplifies the internal signal when no external sound competes. |
+| dB (decibel) | A logarithmic unit of sound intensity. A 3 dB increase represents a doubling of power; a 10 dB increase sounds roughly twice as loud. |
+| Decorrelated noise | Two noise signals with the same spectral characteristics but different random patterns. When delivered to separate ears, the brain cannot fuse them into a single source. |
+| Habituation | The neurological process of learning to ignore a stimulus. In tinnitus therapy, habituation means the brain de-prioritizes the tinnitus signal over time. |
+| Mixing point | The volume level at which therapeutic noise partially — but not fully — covers the tinnitus. This is considered the optimal level for promoting habituation. |
+| Octave | A doubling of frequency. For example, 1000 Hz to 2000 Hz is one octave. |
+| Pink noise | Noise with a spectral density that decreases at 3 dB per octave. Sounds balanced and natural, like rainfall. |
+| Spectral density | The distribution of power across different frequencies in a signal. |
+| Subjective tinnitus | Tinnitus that is heard only by the patient, with no external sound source. The most common type, typically linked to auditory processing in the brain. |
+| Tonal tinnitus | Tinnitus perceived as a single tone or narrow frequency range, typically a steady ringing or whistling. |
+| TRT (Tinnitus Retraining Therapy) | A structured therapy combining directive counseling with broadband sound therapy to achieve habituation. Developed by Pawel Jastreboff. |
+| Voss-McCartney algorithm | An efficient method for generating pink noise using multiple random sources updated at different rates. |
+| Web Audio API | A browser-based JavaScript API for synthesizing, processing, and controlling audio in real time without plugins. |
+| White noise | Noise with equal power at every frequency across the audible spectrum. Sounds bright and hissy, like radio static. |
+
+---
+
+End of Document
+
+---
