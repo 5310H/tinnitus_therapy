@@ -10,13 +10,31 @@
         font-family: Arial, sans-serif;
         background: #f4f4f4;
         margin: 0;
-        padding: 10px;
+        padding: 0;
         text-align: center;
         line-height: 1.4;
     }
 
+    /* NAVIGATION BAR */
+    nav {
+        background: #0078ff;
+        padding: 10px;
+        color: white;
+        font-size: 16px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    nav a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
     h1 {
-        margin: 5px 0 10px 0;
+        margin: 15px 0 5px 0;
         font-size: 22px;
     }
 
@@ -30,7 +48,7 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 10px;
-        margin-top: 10px;
+        padding: 10px;
     }
 
     @media (max-width: 600px) {
@@ -67,10 +85,11 @@
         background: #005fcc;
     }
 
-    /* COLLAPSIBLE SUBMENU */
+    /* ANIMATED COLLAPSIBLE SUBMENU */
     details {
         text-align: left;
         margin-top: 8px;
+        overflow: hidden;
     }
 
     summary {
@@ -79,6 +98,26 @@
         padding: 8px;
         background: #e8e8e8;
         border-radius: 6px;
+        list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+        display: none;
+    }
+
+    details[open] summary {
+        background: #d0d0d0;
+    }
+
+    /* Smooth slide animation */
+    details .submenu {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s ease;
+    }
+
+    details[open] .submenu {
+        max-height: 500px;
     }
 
     details .submenu a {
@@ -90,13 +129,23 @@
 
 <body>
 
+<!-- NAVIGATION BAR -->
+<nav>
+    <a href="#">Home</a>
+    <a href="#therapy">Therapy</a>
+    <a href="#tools">Tools</a>
+    <a href="#advanced">Advanced</a>
+    <a href="#project">Project</a>
+    <a href="#guidance">Guidance</a>
+</nav>
+
 <h1>Tinnitus Therapy Suite</h1>
-<p>Open‑source tinnitus therapy tools</p>
+<p>Open‑source sound therapy tools</p>
 
 <div class="grid">
 
     <!-- Column 1 -->
-    <div class="card">
+    <div class="card" id="therapy">
         <h2>Therapy Modes</h2>
         <a class="button" href="decorrelated.html">Decorrelated</a>
         <a class="button" href="notch.html">Notch Therapy</a>
@@ -105,7 +154,7 @@
     </div>
 
     <!-- Column 2 -->
-    <div class="card">
+    <div class="card" id="tools">
         <h2>Tools</h2>
         <a class="button" href="notchfinder.html">Notch Finder</a>
         <a class="button" href="twotone.html">Two‑Tone Comparison</a>
@@ -114,11 +163,11 @@
     </div>
 
     <!-- Column 1: Advanced Tools submenu -->
-    <div class="card">
+    <div class="card" id="advanced">
         <h2>Advanced</h2>
 
         <details>
-            <summary>Tools</summary>
+            <summary>Hearing Tools</summary>
             <div class="submenu">
                 <a class="button" href="spectrogram.html">Spectrogram</a>
                 <a class="button" href="meter.html">Audio Level Meter</a>
@@ -127,7 +176,7 @@
     </div>
 
     <!-- Column 2: Project Files submenu -->
-    <div class="card">
+    <div class="card" id="project">
         <h2>Project</h2>
 
         <details>
@@ -142,7 +191,7 @@
     </div>
 
     <!-- Full width -->
-    <div class="card" style="grid-column: span 2;">
+    <div class="card" style="grid-column: span 2;" id="guidance">
         <h2>Guidance</h2>
         <a class="button" href="recommended.html">Recommended Use</a>
     </div>
@@ -151,3 +200,4 @@
 
 </body>
 </html>
+
