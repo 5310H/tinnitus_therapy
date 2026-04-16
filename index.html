@@ -2,46 +2,75 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Tinnitus Therapy Suite</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tinnitus Therapy Tools</title>
+
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.container{max-width:700px;width:90%;text-align:center;padding:2rem}
-h1{font-size:2.2rem;margin-bottom:.5rem;background:linear-gradient(135deg,#4fc3f7,#ab47bc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.subtitle{color:#888;margin-bottom:2.5rem;font-size:1.05rem}
-.menu{display:flex;flex-direction:column;gap:1rem}
-.menu a{display:block;padding:1.2rem 1.5rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#e0e0e0;text-decoration:none;transition:all .25s;text-align:left}
-.menu a:hover{background:rgba(79,195,247,.12);border-color:#4fc3f7;transform:translateX(6px)}
-.menu a .label{font-size:1.15rem;font-weight:600;display:block;margin-bottom:.3rem}
-.menu a .desc{font-size:.85rem;color:#999}
-footer{margin-top:3rem;font-size:.8rem;color:#555}
-footer a{color:#4fc3f7;text-decoration:none}
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+    }
+    h1 {
+        margin-bottom: 10px;
+    }
+    .card {
+        background: white;
+        padding: 20px;
+        margin: 15px 0;
+        border-radius: 12px;
+        box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    }
+    a.button {
+        display: inline-block;
+        padding: 14px 22px;
+        margin: 10px;
+        font-size: 18px;
+        border-radius: 10px;
+        background: #0078ff;
+        color: white;
+        text-decoration: none;
+    }
+    a.button:active {
+        background: #005fcc;
+    }
+    p {
+        line-height: 1.5;
+    }
 </style>
 </head>
+
 <body>
-<div class="container">
-<h1>Tinnitus Therapy Tools</h1>
-<p class="subtitle">Open-source sound therapy &amp; tone generation</p>
-<nav class="menu">
-  <a href="decorrelated.html">
-    <span class="label">Decorrelated Noise Therapy</span>
-    <span class="desc">Binaural decorrelated white/pink/brown noise with adjustable parameters for habituation-based relief.</span>
-  </a>
-  <a href="notch.html">
-    <span class="label">Notch Therapy</span>
-    <span class="desc">Filtered noise with a precise spectral notch around your tinnitus frequency - based on TMNMT research.</span>
-  </a>
-  <a href="generator.html">
-    <span class="label">Python Tone Generator</span>
-    <span class="desc">Documentation and download for an offline Python script that generates calibrated therapy WAV files.</span>
-  </a>
-  <a href="research.html">
-    <span class="label">Research and References</span>
-    <span class="desc">Published studies and clinical evidence behind decorrelated noise and notch sound therapy.</span>
-  </a>
-</nav>
-<footer>Built by <a href="https://github.com/5310h">5310h</a> - <a href="https://github.com/5310h/tinnitus_therapy">Source on GitHub</a></footer>
+
+<h1>Tinnitus Therapy Suite</h1>
+<p>Open‑source browser‑based sound therapies</p>
+
+<div class="card">
+    <h2>Therapy Modes</h2>
+    <a class="button" href="decorrelated.html">Decorrelated Therapy</a>
+    <a class="button" href="notch.html">Notch Therapy</a>
+    <a class="button" href="soundtherapy.html">Sound Therapy</a>
+    <a class="button" href="python.html">Noise Generator</a>
 </div>
-</body>
-</html>
+
+<div class="card">
+    <h2>Recommended Use</h2>
+    <p>
+        For best results, use:
+        <br>• Wired earbuds  
+        <br>• Bluetooth earbuds (AirPods, Galaxy Buds, etc.)  
+        <br>• Over‑ear headphones  
+        <br>• USB‑C or Lightning headphones  
+        <br>• Bone‑conduction headphones  
+        <br>• Hearing aids with Bluetooth streaming  
+    </p>
+    <p>
+        Start with low volume and short sessions.  
+        Increase gradually based on comfort.  
+        Stop immediately if you feel discomfort.
+    </p>
+</div>
+
+<div class="card">
