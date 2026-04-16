@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Frequency Sweep</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family:Arial; background:#f4f4f4; padding:20px; text-align:center; }
+.card { background:white; padding:20px; border-radius:12px; box-shadow:0 0 6px rgba(0,0,0,0.1); }
+.button { background:#0078ff; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; margin:8px; display:inline-block; }
+</style>
+</head>
+<body>
+
+<h1>Frequency Sweep</h1>
+<p>20 Hz → 20,000 Hz</p>
+
+<div class="card">
+    <h2>Current Frequency: <span id="freq">0</span> Hz</h2>
+    <button class="button" id="start">Start Sweep</button>
+    <button class="button" id="stop">Stop</button>
+</div>
+
+<script>
+let ctx=null, osc=null, startTime=null, raf=null;
+
+function sweep(){
+    const now=ctx.currentTime-startTime;
+    const freq=20*Math.pow(1000, now/10);
+    if(freq>20000){ stop(); return; }
+    osc.frequency.value=freq;
+    document.getElementById("freq").textContent=Math.round(freq);
+    raf=requestAnimationFrame(sweep);
+}
+
+function start(){
+    if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)();
+    stop();
+    osc=ctx.createOscillator();
+    osc.type="sine";
+    osc.connect(ctx.destination);
+    osc.start();
+    startTime=ctx.currentTime;
+    sweep();
+}
+
+function stop(){
+    if(osc){ osc.stop(); osc.disconnect(); osc=null; }
+    if(raf) cancelAnimationFrame(raf);
+}
+document.getElementById("start").onclick=start;
+document.getElementById("stop").onclick=stop;
+</script>
+
+</body>
+</html>
