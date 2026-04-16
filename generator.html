@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Tone Generator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+a.back{position:fixed;top:1rem;left:1rem;color:#66bb6a;text-decoration:none;font-size:.9rem;z-index:10}
+.panel{max-width:700px;width:90%;margin:3rem auto}
+h1{font-size:1.8rem;margin-bottom:.3rem;color:#66bb6a;text-align:center}
+.info{color:#888;font-size:.85rem;margin-bottom:2rem;text-align:center}
+h2{font-size:1.2rem;color:#66bb6a;margin:2rem 0 .8rem;border-bottom:1px solid #222;padding-bottom:.4rem}
+pre{background:#111;border:1px solid #333;border-radius:10px;padding:1.2rem;overflow-x:auto;font-size:.82rem;line-height:1.5;color:#c5e1a5;margin:1rem 0}
+code{font-family:'Cascadia Code','Fira Code',monospace}
+ul{margin:.8rem 0 .8rem 1.5rem;line-height:1.8}
+.dl-btn{display:inline-block;padding:.7rem 1.5rem;background:#66bb6a;color:#0a0a1a;border-radius:8px;text-decoration:none;font-weight:700;margin:.5rem .5rem 0 0;font-size:.9rem}
+.dl-btn:hover{background:#81c784}
+p{line-height:1.6;margin:.6rem 0}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">Home</a>
+<div class="panel">
+<h1>Python Tone Generator</h1>
+<p class="info">Generate calibrated therapy WAV files offline - no internet required.</p>
+<a class="dl-btn" href="tinnitus_generator.py" download>Download tinnitus_generator.py</a>
+<h2>Requirements</h2>
+<ul>
+  <li>Python 3.8+</li>
+  <li>NumPy - <code>pip install numpy</code></li>
+  <li>SciPy - <code>pip install scipy</code></li>
+</ul>
+<h2>Usage</h2>
+<pre><code># Generate 30 minutes of notch-filtered pink noise at 6000 Hz
+python tinnitus_generator.py --type notch --freq 6000 --duration 1800
+
+# Generate decorrelated white noise
+python tinnitus_generator.py --type decorrelated --color white --duration 900
+
+# Generate a pure tone for pitch-matching
+python tinnitus_generator.py --type tone --freq 4500 --duration 30</code></pre>
+<h2>Options</h2>
+<ul>
+  <li><code>--type</code> - notch, decorrelated, or tone</li>
+  <li><code>--freq</code> - Center frequency in Hz (default: 6000)</li>
+  <li><code>--color</code> - Noise color: white, pink, brown (default: pink)</li>
+  <li><code>--duration</code> - Duration in seconds (default: 600)</li>
+  <li><code>--notch-width</code> - Notch width in octaves (default: 1.0)</li>
+  <li><code>--sample-rate</code> - Sample rate in Hz (default: 44100)</li>
+  <li><code>--output</code> - Output filename (auto-generated if omitted)</li>
+</ul>
+<h2>Output</h2>
+<p>Files are saved as 16-bit stereo WAV. Decorrelated mode generates independent noise per channel. Notch mode applies a bandstop filter centered on your tinnitus frequency.</p>
+<h2>Safety</h2>
+<p>Always start at low volume. Therapy sounds should be played at or slightly below your tinnitus perception level (mixing point). Consult an audiologist for personalized guidance.</p>
+</div>
+</body>
+</html>
