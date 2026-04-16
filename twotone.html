@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Two‑Tone Comparison Tool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family:Arial; background:#f4f4f4; padding:20px; text-align:center; }
+.card { background:white; padding:20px; border-radius:12px; box-shadow:0 0 6px rgba(0,0,0,0.1); margin-bottom:20px; }
+input[type=range] { width:90%; }
+.button { background:#0078ff; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; margin:8px; display:inline-block; }
+</style>
+</head>
+<body>
+
+<h1>Two‑Tone Comparison</h1>
+<p>Switch between two tones to match your tinnitus pitch</p>
+
+<div class="card">
+    <h2>Tone A: <span id="freqA">1000</span> Hz</h2>
+    <input id="sliderA" type="range" min="100" max="12000" value="1000">
+</div>
+
+<div class="card">
+    <h2>Tone B: <span id="freqB">1200</span> Hz</h2>
+    <input id="sliderB" type="range" min="100" max="12000" value="1200">
+</div>
+
+<div>
+    <button class="button" id="playA">Play A</button>
+    <button class="button" id="playB">Play B</button>
+    <button class="button" id="stop">Stop</button>
+</div>
+
+<script>
+let ctx=null, osc=null;
+
+function play(freq){
+    if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)();
+    stop();
+    osc=ctx.createOscillator();
+    osc.type="sine";
+    osc.frequency.value=freq;
+    osc.connect(ctx.destination);
+    osc.start();
+}
+function stop(){ if(osc){ osc.stop(); osc.disconnect(); osc=null; } }
+
+const sliderA=document.getElementById("sliderA");
+const sliderB=document.getElementById("sliderB");
+sliderA.oninput=()=>document.getElementById("freqA").textContent=sliderA.value;
+sliderB.oninput=()=>document.getElementById("freqB").textContent=sliderB.value;
+
+document.getElementById("playA").onclick=()=>play(sliderA.value);
+document.getElementById("playB").onclick=()=>play(sliderB.value);
+document.getElementById("stop").onclick=()=>stop();
+</script>
+
+</body>
+</html>
