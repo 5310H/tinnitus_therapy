@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Notch Finder Tool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+    }
+    .card {
+        background: white;
+        padding: 20px;
+        margin: 15px 0;
+        border-radius: 12px;
+        box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    }
+    input[type=range] {
+        width: 90%;
+        margin: 20px 0;
+    }
+    .button {
+        display: inline-block;
+        background: #0078ff;
+        color: white;
+        padding: 12px 20px;
+        margin: 10px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 16px;
+    }
+    .button:active {
+        background: #005fcc;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>Notch Finder Tool</h1>
+<p>Match this tone to your tinnitus pitch</p>
+
+<div class="card">
+    <h2>Frequency: <span id="freqLabel">1000</span> Hz</h2>
+
+    <input id="freqSlider" type="range" min="100" max="12000" value="1000">
+
+    <div>
+        <button class="button" id="minusBtn">– 10 Hz</button>
+        <button class="button" id="plusBtn">+ 10 Hz</button>
+    </div>
+
+    <div>
+        <button class="button" id="playBtn">Play Tone</button>
+        <button class="button" id="stopBtn">Stop</button>
+    </div>
+</div>
+
+<script>
+let audioCtx = null;
+let oscillator = null;
+
+function startTone(freq) {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    stopTone();
+
+    oscillator = audioCtx.createOscillator();
+    oscillator.type = "sine";
+    oscillator.frequency.value = freq;
+
+    oscillator.connect(audioCtx.destination);
+    oscillator.start();
+}
+
+function stopTone() {
+    if (oscillator) {
+        oscillator.stop();
+        oscillator.disconnect();
+        oscillator = null;
+    }
+}
+
+const slider = document.getElementById("freqSlider");
+const label = document.getElementById("freqLabel");
+
+slider.addEventListener("input", () => {
+    label.textContent = slider.value;
+    if (oscillator) oscillator.frequency.value = slider.value;
+});
+
+document.getElementById("plusBtn").onclick = () => {
+    slider.value = Number(slider.value) + 10;
+    slider.dispatchEvent(new Event("input"));
+};
+
+document.getElementById("minusBtn").onclick = () => {
+    slider.value = Number(slider.value) - 10;
+    slider.dispatchEvent(new Event("input"));
+};
+
+document.getElementById("playBtn").onclick = () => startTone(slider.value);
+document.getElementById("stopBtn").onclick = () => stopTone();
+</script>
+
+</body>
+</html>
