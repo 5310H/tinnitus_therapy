@@ -12,6 +12,7 @@
         margin: 0;
         padding: 20px;
         text-align: center;
+        line-height: 1.6;
     }
     h1 {
         margin-bottom: 10px;
@@ -23,21 +24,20 @@
         border-radius: 12px;
         box-shadow: 0 0 6px rgba(0,0,0,0.1);
     }
-    a.button {
-        display: inline-block;
-        padding: 14px 22px;
-        margin: 10px;
-        font-size: 18px;
-        border-radius: 10px;
+    .button {
+        display: block;
         background: #0078ff;
         color: white;
+        padding: 14px;
+        margin: 10px auto;
+        width: 80%;
+        max-width: 300px;
+        border-radius: 10px;
         text-decoration: none;
+        font-size: 18px;
     }
-    a.button:active {
+    .button:active {
         background: #005fcc;
-    }
-    p {
-        line-height: 1.5;
     }
 </style>
 </head>
@@ -45,7 +45,7 @@
 <body>
 
 <h1>Tinnitus Therapy Suite</h1>
-<p>Open‑source browser‑based sound therapies</p>
+<p>Open‑source sound therapy tools for tinnitus relief and experimentation</p>
 
 <div class="card">
     <h2>Therapy Modes</h2>
@@ -56,21 +56,20 @@
 </div>
 
 <div class="card">
-    <h2>Recommended Use</h2>
-    <p>
-        For best results, use:
-        <br>• Wired earbuds  
-        <br>• Bluetooth earbuds (AirPods, Galaxy Buds, etc.)  
-        <br>• Over‑ear headphones  
-        <br>• USB‑C or Lightning headphones  
-        <br>• Bone‑conduction headphones  
-        <br>• Hearing aids with Bluetooth streaming  
-    </p>
-    <p>
-        Start with low volume and short sessions.  
-        Increase gradually based on comfort.  
-        Stop immediately if you feel discomfort.
-    </p>
+    <h2>Project Files</h2>
+    <a class="button" href="docs/index.html">Documentation</a>
+    <a class="button" href="research.html">Research</a>
+    <a class="button" href="LICENSE">License</a>
+    <a class="button" href="DISCLAIMER.txt">Disclaimer</a>
 </div>
 
 <div class="card">
+    <h2>About This Project</h2>
+    <p>
+        This suite is fully open‑source, runs entirely in your browser, and stores no data.
+        All sound generation uses the Web Audio API for real‑time synthesis.
+    </p>
+</div>
+
+</body>
+</html>
