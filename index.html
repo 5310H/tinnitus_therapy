@@ -6,9 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-    html {
-        scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
 
     body {
         font-family: Arial, sans-serif;
@@ -48,11 +46,13 @@
         padding: 12px;
         border-radius: 10px;
         box-shadow: 0 0 4px rgba(0,0,0,0.1);
+        text-align: left;
     }
 
     .card h2 {
         margin: 0 0 8px 0;
         font-size: 17px;
+        text-align: center;
     }
 
     .button {
@@ -66,15 +66,15 @@
         text-decoration: none;
         font-size: 15px;
         transition: background 0.25s ease;
+        text-align: center;
     }
 
     .button:hover {
         background: #005fcc;
     }
 
-    /* ANIMATED COLLAPSIBLE SUBMENU */
+    /* COLLAPSIBLE DROPDOWNS */
     details {
-        text-align: left;
         margin-top: 8px;
         overflow: hidden;
     }
@@ -126,29 +126,51 @@
 
 <div class="grid">
 
-    <!-- Column 1 -->
-    <div class="card" id="therapy">
-        <h2>Therapy Modes</h2>
-        <a class="button" href="decorrelated.html">Decorrelated</a>
-        <a class="button" href="notch.html">Notch Therapy</a>
-        <a class="button" href="lenire.html">Lenire‑style Therapy</a>
-        <a class="button" href="soundtherapy.html">Sound Therapy</a>
-        <a class="button" href="python.html">Noise Generator</a>
+    <!-- MODELS (dropdown) -->
+    <div class="card" id="models">
+        <h2>Models</h2>
+        <details>
+            <summary>Show Models</summary>
+            <div class="submenu">
+                <a class="button" href="model1.html">Model 1</a>
+                <a class="button" href="model2.html">Model 2</a>
+                <a class="button" href="model3.html">Model 3</a>
+            </div>
+        </details>
     </div>
 
-    <!-- Column 2 -->
+    <!-- TOOLS (dropdown) -->
     <div class="card" id="tools">
         <h2>Tools</h2>
-        <a class="button" href="notchfinder.html">Notch Finder</a>
-        <a class="button" href="twotone.html">Two‑Tone Comparison</a>
-        <a class="button" href="sweep.html">Frequency Sweep</a>
-        <a class="button" href="hearingtest.html">Hearing Range Test</a>
+        <details>
+            <summary>Show Tools</summary>
+            <div class="submenu">
+                <a class="button" href="notchfinder.html">Notch Finder</a>
+                <a class="button" href="twotone.html">Two‑Tone Comparison</a>
+                <a class="button" href="sweep.html">Frequency Sweep</a>
+                <a class="button" href="hearingtest.html">Hearing Range Test</a>
+            </div>
+        </details>
     </div>
 
-    <!-- Column 1: Advanced Tools submenu -->
+    <!-- THERAPY (dropdown) -->
+    <div class="card" id="therapy">
+        <h2>Therapy Modes</h2>
+        <details>
+            <summary>Show Therapy Modes</summary>
+            <div class="submenu">
+                <a class="button" href="decorrelated.html">Decorrelated</a>
+                <a class="button" href="notch.html">Notch Therapy</a>
+                <a class="button" href="lenire.html">Lenire‑style Therapy</a>
+                <a class="button" href="soundtherapy.html">Sound Therapy</a>
+                <a class="button" href="python.html">Noise Generator</a>
+            </div>
+        </details>
+    </div>
+
+    <!-- ADVANCED (dropdown) -->
     <div class="card" id="advanced">
         <h2>Advanced</h2>
-
         <details>
             <summary>Advanced Tools</summary>
             <div class="submenu">
@@ -158,10 +180,9 @@
         </details>
     </div>
 
-    <!-- Column 2: Project Files submenu -->
+    <!-- PROJECT (dropdown) -->
     <div class="card" id="project">
         <h2>Project</h2>
-
         <details>
             <summary>Documentation</summary>
             <div class="submenu">
@@ -173,7 +194,7 @@
         </details>
     </div>
 
-    <!-- Full width -->
+    <!-- GUIDANCE -->
     <div class="card" style="grid-column: span 2;" id="guidance">
         <h2>Guidance</h2>
         <a class="button" href="recommended.html">Recommended Use</a>
