@@ -21,6 +21,12 @@ select{width:100%;padding:.6rem;background:#1a1a2e;color:#e0e0e0;border:1px soli
 .stop-btn{background:linear-gradient(135deg,#ef5350,#e53935);color:#fff}
 .big-btn:hover{transform:scale(1.02)}
 .status{margin-top:1rem;font-size:.9rem;color:#888;min-height:1.5rem}
+
+/* --- TIMER ADDITION (matches your style) --- */
+.timer-block{margin-top:1.5rem;text-align:left}
+.timer-block label{display:block;font-size:.85rem;color:#aaa;margin-bottom:.3rem}
+.timer-block input{width:100%;padding:.6rem;background:#1a1a2e;color:#e0e0e0;border:1px solid #333;border-radius:8px;font-size:1rem}
+.timer-display{margin-top:.8rem;font-size:.95rem;color:#4fc3f7;text-align:center;min-height:1.2rem}
 </style>
 </head>
 <body>
@@ -28,6 +34,7 @@ select{width:100%;padding:.6rem;background:#1a1a2e;color:#e0e0e0;border:1px soli
 <div class="panel">
 <h1>Decorrelated Noise</h1>
 <p class="info">Independent noise streams per ear reduce central auditory pattern-matching, promoting habituation.</p>
+
 <div class="ctrl">
   <label>Noise Color</label>
   <select id="color">
@@ -36,28 +43,46 @@ select{width:100%;padding:.6rem;background:#1a1a2e;color:#e0e0e0;border:1px soli
     <option value="brown">Brown Noise (-6 dB/octave)</option>
   </select>
 </div>
+
 <div class="ctrl">
   <label>Volume <span class="val" id="volVal">40%</span></label>
   <input type="range" id="vol" min="0" max="100" value="40">
 </div>
+
 <div class="ctrl">
   <label>Decorrelation Amount <span class="val" id="decVal">100%</span></label>
   <input type="range" id="dec" min="0" max="100" value="100">
 </div>
+
 <div class="ctrl">
   <label>Low-Cut Frequency <span class="val" id="lcVal">80 Hz</span></label>
   <input type="range" id="lc" min="20" max="500" value="80">
 </div>
+
 <div class="ctrl">
   <label>High-Cut Frequency <span class="val" id="hcVal">14000 Hz</span></label>
   <input type="range" id="hc" min="2000" max="20000" value="14000" step="100">
 </div>
+
+<!-- ⭐ TIMER ADDED HERE ⭐ -->
+<div class="timer-block">
+  <label>Session Timer (minutes)</label>
+  <input id="timerInput" type="number" min="1" max="120" value="10">
+  <button class="big-btn play-btn" onclick="startTimer()">Start Timer</button>
+  <div class="timer-display" id="timerDisplay"></div>
+</div>
+<!-- END TIMER -->
+
 <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start Therapy</button>
 <div class="status" id="status"></div>
 </div>
+
 <script>
 let ctx, playing=false, nodesL, nodesR;
+let timerInterval=null;
+
 const BUF_SIZE=2*44100;
+
 function createNoise(color){
   const buf=ctx.createBuffer(1,BUF_SIZE,ctx.sampleRate);
   const d=buf.getChannelData(0);
@@ -66,6 +91,7 @@ function createNoise(color){
   else{let last=0;for(let i=0;i<BUF_SIZE;i++){const w=Math.random()*2-1;d[i]=(last+.02*w)/1.02;last=d[i];d[i]*=3.5}}
   return buf;
 }
+
 function makeChain(buf,vol,lc,hc){
   const src=ctx.createBufferSource();src.buffer=buf;src.loop=true;
   const g=ctx.createGain();g.gain.value=vol;
@@ -75,7 +101,9 @@ function makeChain(buf,vol,lc,hc){
   src.connect(lo);lo.connect(hi);hi.connect(g);g.connect(pan);pan.connect(ctx.destination);
   return{src,gain:g,lo,hi,pan};
 }
+
 function toggle(){if(!playing) start(); else stop()}
+
 function start(){
   ctx=new(window.AudioContext||window.webkitAudioContext)();
   const color=document.getElementById('color').value;
@@ -95,6 +123,7 @@ function start(){
   document.getElementById('toggleBtn').className='big-btn stop-btn';
   document.getElementById('status').textContent='Playing '+color+' noise, '+Math.round(dec*100)+'% decorrelation';
 }
+
 function stop(){
   if(ctx){ctx.close();ctx=null}
   playing=false;
@@ -102,10 +131,55 @@ function stop(){
   document.getElementById('toggleBtn').className='big-btn play-btn';
   document.getElementById('status').textContent='Stopped';
 }
-document.getElementById('vol').oninput=e=>{document.getElementById('volVal').textContent=e.target.value+'%';if(playing&&nodesL){const v=e.target.value/100;nodesL.gain.gain.value=v;nodesR.gain.gain.value=v}};
-document.getElementById('dec').oninput=e=>document.getElementById('decVal').textContent=e.target.value+'%';
-document.getElementById('lc').oninput=e=>{document.getElementById('lcVal').textContent=e.target.value+' Hz';if(playing){nodesL.lo.frequency.value=+e.target.value;nodesR.lo.frequency.value=+e.target.value}};
-document.getElementById('hc').oninput=e=>{document.getElementById('hcVal').textContent=e.target.value+' Hz';if(playing){nodesL.hi.frequency.value=+e.target.value;nodesR.hi.frequency.value=+e.target.value}};
+
+function startTimer(){
+  const minutes=parseInt(document.getElementById("timerInput").value);
+  let remaining=minutes*60;
+
+  clearInterval(timerInterval);
+
+  timerInterval=setInterval(()=>{
+    remaining--;
+
+    document.getElementById("timerDisplay").textContent=
+      "Time left: "+Math.floor(remaining/60)+":"+
+      (remaining%60).toString().padStart(2,'0');
+
+    if(remaining<=0){
+      stop();
+      clearInterval(timerInterval);
+      document.getElementById("timerDisplay").textContent="Session complete";
+    }
+  },1000);
+}
+
+document.getElementById('vol').oninput=e=>{
+  document.getElementById('volVal').textContent=e.target.value+'%';
+  if(playing&&nodesL){
+    const v=e.target.value/100;
+    nodesL.gain.gain.value=v;
+    nodesR.gain.gain.value=v;
+  }
+};
+
+document.getElementById('dec').oninput=e=>
+  document.getElementById('decVal').textContent=e.target.value+'%';
+
+document.getElementById('lc').oninput=e=>{
+  document.getElementById('lcVal').textContent=e.target.value+' Hz';
+  if(playing){
+    nodesL.lo.frequency.value=+e.target.value;
+    nodesR.lo.frequency.value=+e.target.value;
+  }
+};
+
+document.getElementById('hc').oninput=e=>{
+  document.getElementById('hcVal').textContent=e.target.value+' Hz';
+  if(playing){
+    nodesL.hi.frequency.value=+e.target.value;
+    nodesR.hi.frequency.value=+e.target.value;
+  }
+};
 </script>
 </body>
 </html>
