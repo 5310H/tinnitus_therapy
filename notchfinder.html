@@ -13,17 +13,48 @@
         padding: 20px;
         text-align: center;
     }
+
+    /* TOP BAR */
+    .top-bar {
+        width: 100%;
+        background: #0078ff;
+        padding: 12px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 20;
+    }
+    .dark-btn {
+        background: #222;
+        color: #fff;
+        border: none;
+        padding: 10px 16px;
+        margin: 0 10px;
+        border-radius: 6px;
+        font-size: 15px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .dark-btn:active {
+        background: #444;
+    }
+
     .card {
         background: white;
         padding: 20px;
-        margin: 15px 0;
+        margin: 80px 0 15px 0;
         border-radius: 12px;
         box-shadow: 0 0 6px rgba(0,0,0,0.1);
     }
+
     input[type=range] {
         width: 90%;
         margin: 20px 0;
     }
+
     .button {
         display: inline-block;
         background: #0078ff;
@@ -33,10 +64,12 @@
         border-radius: 10px;
         text-decoration: none;
         font-size: 16px;
+        cursor: pointer;
     }
     .button:active {
         background: #005fcc;
     }
+
     #savedMsg {
         margin-top: 10px;
         font-size: 14px;
@@ -47,7 +80,13 @@
 
 <body>
 
-<h1>Notch Finder Tool</h1>
+<!-- TOP BAR -->
+<div class="top-bar">
+    <button class="dark-btn" onclick="location.href='index.html'">Home</button>
+    <button class="dark-btn" onclick="stopTone()">Stop</button>
+</div>
+
+<h1 style="margin-top:70px;">Notch Finder Tool</h1>
 <p>Match this tone to your tinnitus pitch</p>
 
 <div class="card">
@@ -59,3 +98,106 @@
         <button class="button" id="minusBtn">– 10 Hz</button>
         <button class="button" id="plusBtn">+ 10 Hz</button>
     </div>
+
+    <div>
+        <button class="button" id="playBtn">Play Tone</button>
+        <button class="button" id="saveBtn">Save Frequency</button>
+    </div>
+
+    <div id="savedMsg"></div>
+</div>
+
+<script>
+let audioCtx = null;
+let osc = null;
+let playing = false;
+
+/* PLAY TONE */
+function playTone(freq) {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    stopTone(); // ensure only one tone plays
+
+    osc = audioCtx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.2;
+
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start();
+
+    playing = true;
+    document.getElementById("playBtn").textContent = "Stop Tone";
+}
+
+/* STOP TONE */
+function stopTone() {
+    if (osc) {
+        try { osc.stop(); } catch(e) {}
+        osc = null;
+    }
+    playing = false;
+    document.getElementById("playBtn").textContent = "Play Tone";
+}
+
+/* UI ELEMENTS */
+const slider = document.getElementById("freqSlider");
+const label = document.getElementById("freqLabel");
+const minusBtn = document.getElementById("minusBtn");
+const plusBtn = document.getElementById("plusBtn");
+const playBtn = document.getElementById("playBtn");
+const saveBtn = document.getElementById("saveBtn");
+const savedMsg = document.getElementById("savedMsg");
+
+/* UPDATE LABEL */
+function updateLabel() {
+    label.textContent = slider.value;
+    if (playing && osc) {
+        osc.frequency.value = slider.value;
+    }
+}
+
+/* SLIDER CHANGE */
+slider.oninput = updateLabel;
+
+/* FINE TUNE BUTTONS */
+minusBtn.onclick = () => {
+    slider.value = Math.max(100, Number(slider.value) - 10);
+    updateLabel();
+};
+plusBtn.onclick = () => {
+    slider.value = Math.min(12000, Number(slider.value) + 10);
+    updateLabel();
+};
+
+/* PLAY / STOP BUTTON */
+playBtn.onclick = () => {
+    if (!playing) playTone(slider.value);
+    else stopTone();
+};
+
+/* SAVE FREQUENCY */
+saveBtn.onclick = () => {
+    localStorage.setItem("notchFreq", slider.value);
+    savedMsg.textContent = "Saved!";
+    setTimeout(() => savedMsg.textContent = "", 1500);
+};
+
+/* LOAD SAVED FREQUENCY */
+window.onload = () => {
+    const saved = localStorage.getItem("notchFreq");
+    if (saved) {
+        slider.value = saved;
+        updateLabel();
+        savedMsg.textContent = "Loaded saved frequency: " + saved + " Hz";
+        setTimeout(() => savedMsg.textContent = "", 2000);
+    }
+};
+</script>
+
+</body>
+</html>
