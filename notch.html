@@ -8,6 +8,23 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
 a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
+
+/* ⭐ HELP BUTTON (added, non-invasive) ⭐ */
+.help-btn {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background:#1a1a2e;
+    color:#ab47bc;
+    border:1px solid #ab47bc;
+    padding:8px 14px;
+    border-radius:8px;
+    font-size:.9rem;
+    cursor:pointer;
+    z-index:10;
+}
+.help-btn:hover { background:#ab47bc; color:#fff; }
+
 .panel{max-width:520px;width:90%;margin:3rem auto;text-align:center}
 h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc}
 .info{color:#888;font-size:.85rem;margin-bottom:2rem}
@@ -28,7 +45,7 @@ canvas{width:100%;height:120px;margin-top:1rem;border-radius:8px;background:#111
 .tone-btn{padding:.5rem 1rem;margin-top:.5rem;background:#1a1a2e;border:1px solid #ab47bc;color:#ab47bc;border-radius:6px;cursor:pointer;font-size:.85rem}
 .tone-btn:hover{background:#ab47bc;color:#fff}
 
-/* ⭐ TIMER BLOCK (added) ⭐ */
+/* ⭐ TIMER BLOCK (added earlier) ⭐ */
 .timer-block{margin-top:1.5rem;text-align:left}
 .timer-block label{display:block;font-size:.85rem;color:#aaa;margin-bottom:.3rem}
 .timer-block input{width:100%;padding:.6rem;background:#1a1a2e;color:#e0e0e0;border:1px solid #333;border-radius:8px;font-size:1rem}
@@ -36,7 +53,12 @@ canvas{width:100%;height:120px;margin-top:1rem;border-radius:8px;background:#111
 </style>
 </head>
 <body>
+
+<!-- ⭐ HELP BUTTON ADDED ⭐ -->
+<button class="help-btn" onclick="openHelp()">Help</button>
+
 <a class="back" href="index.html">Home</a>
+
 <div class="panel">
 <h1>Notch Therapy</h1>
 <p class="info">Removes energy at your tinnitus frequency from broadband noise, encouraging cortical reorganization (TMNMT).</p>
@@ -74,14 +96,13 @@ canvas{width:100%;height:120px;margin-top:1rem;border-radius:8px;background:#111
   <input type="range" id="vol" min="0" max="100" value="40">
 </div>
 
-<!-- ⭐ TIMER ADDED HERE ⭐ -->
+<!-- ⭐ TIMER BLOCK ⭐ -->
 <div class="timer-block">
   <label>Session Timer (minutes)</label>
   <input id="timerInput" type="number" min="1" max="120" value="10">
   <button class="big-btn play-btn" onclick="startTimer()">Start Timer</button>
   <div class="timer-display" id="timerDisplay"></div>
 </div>
-<!-- END TIMER -->
 
 <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start Notch Therapy</button>
 <div class="status" id="status"></div>
@@ -225,5 +246,78 @@ document.getElementById('nw').oninput=e=>
 document.getElementById('vol').oninput=e=>
   document.getElementById('volVal').textContent=e.target.value+'%';
 </script>
+
+<!-- ⭐ HELP MODAL (added, no code removed) ⭐ -->
+<div id="helpModal" style="
+    display:none;
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.7);
+    backdrop-filter:blur(4px);
+    z-index:9999;
+    padding:20px;
+">
+    <div style="
+        max-width:500px;
+        margin:60px auto;
+        background:#fff;
+        color:#000;
+        padding:20px;
+        border-radius:12px;
+        box-shadow:0 0 10px rgba(0,0,0,0.3);
+        text-align:left;
+    ">
+        <h2 style="margin-top:0;">How to Use This Therapy</h2>
+        <div id="helpContent" style="font-size:15px; line-height:1.5;"></div>
+
+        <button onclick="closeHelp()" style="
+            margin-top:20px;
+            width:100%;
+            padding:12px;
+            background:#ab47bc;
+            color:#fff;
+            border:none;
+            border-radius:8px;
+            font-size:16px;
+            cursor:pointer;
+        ">Close</button>
+    </div>
+</div>
+
+<script>
+function openHelp() {
+    document.getElementById("helpModal").style.display = "block";
+}
+function closeHelp() {
+    document.getElementById("helpModal").style.display = "none";
+}
+</script>
+
+<!-- ⭐ NOTCH THERAPY HELP CONTENT ⭐ -->
+<script>
+document.getElementById("helpContent").innerHTML = `
+<b>Purpose:</b><br>
+Notch Therapy removes sound energy around your tinnitus frequency. Over time, this encourages the auditory cortex to reduce overactivity at that pitch.<br><br>
+
+<b>Setup:</b><br>
+• First match your tinnitus pitch using the test tone.<br>
+• Set notch width to 0.5–1.0 octaves for best results.<br>
+• Use headphones for accurate frequency targeting.<br><br>
+
+<b>Usage Plan:</b><br>
+• 30–60 minutes per session.<br>
+• 1–2 sessions per day.<br>
+• Expect gradual improvement over weeks.<br><br>
+
+<b>Tips:</b><br>
+• Re‑match your tinnitus pitch weekly.<br>
+• Pink noise is generally more comfortable.<br><br>
+
+<b>Safety:</b><br>
+• Keep volume low and comfortable.
+`;
+</script>
+
 </body>
 </html>
