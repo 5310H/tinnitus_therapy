@@ -12,6 +12,37 @@
         padding: 20px;
         text-align: center;
     }
+
+    /* --- ADDED TOP BAR --- */
+    .top-bar {
+        width: 100%;
+        background: #0078ff;
+        color: white;
+        padding: 12px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: -20px;
+        margin-bottom: 10px;
+    }
+
+    .dark-btn {
+        background: #333;
+        color: #fff;
+        border: none;
+        padding: 10px 16px;
+        margin: 0 10px;
+        border-radius: 6px;
+        font-size: 15px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .dark-btn:active {
+        background: #555;
+    }
+    /* --- END ADDED --- */
+
     h1 { margin-bottom: 5px; }
     p  { margin-top: 0; font-size: 14px; }
     .panel {
@@ -53,6 +84,13 @@
 </style>
 </head>
 <body>
+
+<!-- ADDED TOP BAR -->
+<div class="top-bar">
+    <button class="dark-btn" onclick="location.href='index.html'">Home</button>
+    <button class="dark-btn" onclick="stopSession()">Stop</button>
+</div>
+<!-- END ADDED -->
 
 <h1>Lenire‑Style Sound Module</h1>
 <p>Experimental sound‑only tinnitus therapy (no electrical stimulation, no medical claims).</p>
@@ -141,17 +179,15 @@ function setupAudio() {
     masterGain.gain.value = parseFloat(volumeEl.value);
     masterGain.connect(audioCtx.destination);
 
-    // Carrier tone
     toneOsc = audioCtx.createOscillator();
     toneOsc.type = 'sine';
     toneOsc.frequency.value = parseFloat(freqEl.value);
 
     toneGain = audioCtx.createGain();
-    toneGain.gain.value = parseFloat(mixEl.value); // mix control later scaled
+    toneGain.gain.value = parseFloat(mixEl.value);
 
     toneOsc.connect(toneGain).connect(masterGain);
 
-    // Broadband noise with band‑pass around tinnitus freq
     noiseSource = audioCtx.createBufferSource();
     noiseSource.buffer = createNoiseBuffer(audioCtx);
     noiseSource.loop = true;
@@ -166,24 +202,22 @@ function setupAudio() {
 
     noiseSource.connect(noiseFilter).connect(noiseGain).connect(masterGain);
 
-    // Amplitude modulation of noise
     noiseModOsc = audioCtx.createOscillator();
     noiseModOsc.type = 'sine';
     noiseModOsc.frequency.value = parseFloat(modRateEl.value);
 
     noiseModGain = audioCtx.createGain();
-    noiseModGain.gain.value = 0.4; // modulation depth
+    noiseModGain.gain.value = 0.4;
 
     noiseModOsc.connect(noiseModGain);
     noiseModGain.connect(noiseGain.gain);
 
-    // Tone bursts (slow gating of tone)
     burstOsc = audioCtx.createOscillator();
     burstOsc.type = 'square';
     burstOsc.frequency.value = parseFloat(burstRateEl.value);
 
     burstGain = audioCtx.createGain();
-    burstGain.gain.value = 0.5; // burst depth
+    burstGain.gain.value = 0.5;
 
     burstOsc.connect(burstGain);
     burstGain.connect(toneGain.gain);
@@ -251,18 +285,11 @@ function stopSession() {
     updateTimerDisplay();
 }
 
-startBtn.addEventListener('click', () => {
-    startSession();
-});
-
-stopBtn.addEventListener('click', () => {
-    stopSession();
-});
+startBtn.addEventListener('click', () => startSession());
+stopBtn.addEventListener('click', () => stopSession());
 
 [freqEl, volumeEl, mixEl, modRateEl, burstRateEl].forEach(el => {
-    el.addEventListener('input', () => {
-        updateParams();
-    });
+    el.addEventListener('input', updateParams);
 });
 </script>
 
