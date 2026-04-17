@@ -12,7 +12,6 @@
         margin: 0;
         padding: 20px;
         text-align: center;
-        transition: background 0.3s, color 0.3s;
     }
 
     /* Top bar (added) */
@@ -28,9 +27,10 @@
         margin-bottom: 10px;
     }
 
-    .top-bar button {
-        background: white;
-        color: #0078ff;
+    /* Dark-style buttons ONLY */
+    .dark-btn {
+        background: #333;
+        color: #fff;
         border: none;
         padding: 10px 16px;
         margin: 0 10px;
@@ -38,7 +38,10 @@
         font-size: 15px;
         cursor: pointer;
         font-weight: bold;
-        transition: background 0.3s, color 0.3s;
+    }
+
+    .dark-btn:active {
+        background: #555;
     }
 
     button {
@@ -50,7 +53,6 @@
         background: #0078ff;
         color: white;
         cursor: pointer;
-        transition: background 0.3s, color 0.3s;
     }
 
     button:active {
@@ -60,44 +62,15 @@
     input[type=range] {
         width: 90%;
     }
-
-    /* ---------- DARK MODE ---------- */
-
-    body.dark {
-        background: #1e1e1e;
-        color: #e6e6e6;
-    }
-
-    body.dark .top-bar {
-        background: #111;
-        color: white;
-    }
-
-    body.dark .top-bar button {
-        background: #333;
-        color: #fff;
-    }
-
-    body.dark button {
-        background: #444;
-        color: #fff;
-    }
-
-    body.dark button:active {
-        background: #666;
-    }
 </style>
 </head>
 
 <body>
 
-<!-- Top bar (added) -->
+<!-- Top bar -->
 <div class="top-bar">
-    <button onclick="location.href='index.html'">Home</button>
-    <div>
-        <button onclick="toggleDarkMode()">Dark Mode</button>
-        <button onclick="stopAll()">Stop</button>
-    </div>
+    <button class="dark-btn" onclick="location.href='index.html'">Home</button>
+    <button class="dark-btn" onclick="stopAll()">Stop</button>
 </div>
 
 <h1>Lenire Sound Therapy</h1>
@@ -122,11 +95,6 @@ let gainNode;
 let pannerNode;
 let currentSource = null;
 let timerInterval;
-
-/* DARK MODE */
-function toggleDarkMode() {
-    document.body.classList.toggle("dark");
-}
 
 /* AUDIO INIT */
 function initAudio() {
