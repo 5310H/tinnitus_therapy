@@ -27,18 +27,14 @@
         font-size: 14px;
     }
 
-    /* GRID */
+    /* SINGLE COLUMN */
     .grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 10px;
         padding: 10px;
-    }
-
-    @media (max-width: 600px) {
-        .grid {
-            grid-template-columns: 1fr;
-        }
+        max-width: 500px;
+        margin: 0 auto;
     }
 
     .card {
@@ -181,7 +177,7 @@
     </div>
 
     <!-- GUIDANCE -->
-    <div class="card" style="grid-column: span 2;" id="guidance">
+    <div class="card" id="guidance">
         <h2>Guidance</h2>
         <a class="button" href="recommended.html">Recommended Use</a>
     </div>
