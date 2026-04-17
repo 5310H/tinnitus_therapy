@@ -1,37 +1,111 @@
-# Tinnitus Therapy Tools
+# Tinnitus Therapy Suite  
+Open‑source, browser‑based sound therapy tools for tinnitus research and experimentation.
 
-Open-source browser-based sound therapy applications for tinnitus relief.
+This project provides several sound‑based tinnitus therapy methods implemented entirely in the browser using the Web Audio API. No downloads, no accounts, no tracking, and no external dependencies.
 
-**Live site:** [tinnitus.trahreg.com](https://tinnitus.trahreg.com)
+---
 
-## Tools
+## 🎧 Therapy Modes
 
-### Decorrelated Noise Therapy
-Independent noise streams per ear with adjustable frequency bands centered on your tinnitus pitch. Designed to disrupt neural synchrony associated with tonal tinnitus.
+### **1. Decorrelated Noise Therapy**
+Left/right decorrelated broadband noise designed to reduce auditory synchrony.
 
-### Notch Sound Therapy
-Broadband sound with a precise spectral notch at your tinnitus frequency. Based on the tailor-made notched music therapy approach to reduce tinnitus-related cortical activity. Supports both generated noise and your own audio files.
+### **2. Notch Therapy**
+Broadband noise with a narrow frequency band removed around the user’s tinnitus pitch.
 
-### Python Generator
-Command-line tool to generate therapy WAV files offline. Supports decorrelated noise, notch-filtered noise, and amplitude-modulated stimuli.
+### **3. Lenire‑Style Sound Therapy (Sound‑Only)**
+A sound‑only implementation inspired by the auditory component of Lenire’s bimodal neuromodulation research.  
+Includes:
+- Carrier tones  
+- Frequency‑shaped noise  
+- Amplitude‑modulated noise  
+- Tone‑burst patterns  
 
-```bash
-pip install numpy
-python generator/generate.py decorrelated --freq 4000 --duration 1800 -o therapy.wav
-```
+⚠️ No electrical stimulation is included.  
+This is an experimental sound‑only tool based on publicly available research.
 
-## Features
+### **4. Broadband Sound Therapy**
+White, pink, brown noise and nature‑style soundscapes for masking and habituation.
 
-- **No installation** - runs entirely in the browser via Web Audio API
-- **No tracking** - no analytics, cookies, or data collection
-- **Offline generation** - Python script for creating WAV files
-- **Configurable** - center frequency, bandwidth, notch depth, session timers
-- **Stereo visualization** - real-time frequency spectrum display
+### **5. Noise Generator (Python‑style)**
+Simple broadband noise generator with adjustable parameters.
 
-## Disclaimer
+---
 
-These tools are provided for informational and experimental purposes. They are not medical devices and do not replace professional audiological care. Always listen at comfortable volumes.
+## 🛠 Tools
 
-## License
+### **Notch Finder**
+Helps users identify their tinnitus frequency.
 
-MIT
+### **Two‑Tone Comparison**
+Allows A/B comparison of two tones for pitch matching.
+
+### **Frequency Sweep**
+Plays a sweep from low to high frequencies for hearing range testing.
+
+### **Hearing Range Test**
+Simple hearing threshold exploration (non‑clinical).
+
+### **Spectrogram**
+Real‑time visualization of audio frequencies.
+
+### **Audio Level Meter**
+Displays real‑time amplitude levels.
+
+---
+
+## 📚 Research Summary
+
+### **Lenire (Bimodal Neuromodulation)**
+Lenire combines:
+- Sound stimulation  
+- Mild electrical pulses to the tongue  
+
+Research shows:
+- Sound‑only stimulation can reduce tinnitus severity  
+- Bimodal stimulation produces stronger effects in clinical trials  
+- Benefits are more pronounced in moderate–severe tinnitus  
+
+This project implements **only the sound component**.
+
+### **Sound Therapy Approaches**
+Common evidence‑supported methods include:
+- Broadband noise (white/pink/brown)  
+- Notch therapy  
+- Decorrelated noise  
+- Amplitude‑modulated noise  
+- Tone‑based therapy  
+
+These approaches are widely used in tinnitus management and research.
+
+---
+
+## 📦 Offline Use
+
+The entire suite works **fully offline**.
+
+To use without internet:
+1. Download the repository (`Code → Download ZIP`)
+2. Unzip the folder
+3. Open `index.html` in any modern browser  
+4. Keep all files in the same folder structure
+
+### Mobile Offline Use
+- **Android:** open `index.html` from a file manager  
+- **iPhone/iPad:** open via Files → Add to Home Screen  
+- **Chromebook:** open directly from Downloads  
+
+No server required.
+
+---
+
+## ⚠️ Disclaimer
+
+This project is for **research, experimentation, and personal exploration only**.  
+It is **not** a medical device and does not provide medical treatment.  
+Consult a qualified professional for clinical tinnitus care.
+
+---
+
+## 📄 License
+MIT License — free to use, modify, and distribute.
