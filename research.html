@@ -2,119 +2,151 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Tinnitus Research Overview</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Research and References</title>
+
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-a.back{position:fixed;top:1rem;left:1rem;color:#ffb74d;text-decoration:none;font-size:.9rem;z-index:10}
-.panel{max-width:750px;width:90%;margin:3rem auto;padding-bottom:3rem}
-h1{font-size:1.8rem;margin-bottom:.3rem;color:#ffb74d;text-align:center}
-.info{color:#888;font-size:.85rem;margin-bottom:2rem;text-align:center}
-h2{font-size:1.25rem;color:#ffb74d;margin:2.5rem 0 1rem;border-bottom:1px solid #222;padding-bottom:.4rem}
-.study{background:rgba(255,183,77,.05);border:1px solid rgba(255,183,77,.15);border-radius:10px;padding:1.2rem;margin:.8rem 0}
-.study .title{font-weight:700;color:#ffe0b2;font-size:.95rem;margin-bottom:.4rem}
-.study .authors{font-size:.8rem;color:#999;margin-bottom:.4rem}
-.study .journal{font-size:.8rem;color:#bbb;font-style:italic;margin-bottom:.6rem}
-.study .summary{font-size:.85rem;line-height:1.6;color:#ccc}
-.study a{color:#ffb74d;text-decoration:none;font-size:.82rem}
-.study a:hover{text-decoration:underline}
-.note{background:rgba(255,255,255,.04);border-radius:10px;padding:1.2rem;margin-top:2rem;font-size:.85rem;line-height:1.6;color:#999}
-.note strong{color:#ffb74d}
-p{line-height:1.7;margin:.6rem 0;font-size:.92rem}
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
+    }
+
+    h1 {
+        margin-bottom: 5px;
+        font-size: 24px;
+    }
+
+    p {
+        margin-top: 0;
+        font-size: 14px;
+        color: #444;
+    }
+
+    .card {
+        max-width: 700px;
+        margin: 15px auto;
+        background: #fff;
+        padding: 18px;
+        border-radius: 10px;
+        box-shadow: 0 0 4px rgba(0,0,0,0.1);
+        text-align: left;
+    }
+
+    h2 {
+        margin-top: 0;
+        font-size: 20px;
+    }
+
+    .button {
+        display: block;
+        background: #0078ff;
+        color: white;
+        padding: 10px;
+        margin: 10px auto;
+        width: 200px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 15px;
+        transition: background 0.25s ease;
+        text-align: center;
+    }
+
+    .button:hover {
+        background: #005fcc;
+    }
+
+    ul {
+        padding-left: 20px;
+        line-height: 1.5;
+    }
 </style>
 </head>
+
 <body>
-<a class="back" href="index.html">Home</a>
-<div class="panel">
-<h1>Research and References</h1>
-<p class="info">The clinical and neuroscience evidence underlying these therapy tools.</p>
 
-<h2>Notch Sound Therapy (Tailor-Made Notched Music / TMNMT)</h2>
+<a class="button" href="index.html">Home</a>
 
-<p>Notch therapy removes the spectral energy at a patient's tinnitus frequency from broadband sound. The hypothesis is rooted in lateral inhibition: neurons tuned to frequencies adjacent to the notch become more active relative to the tinnitus-frequency neurons, which receive less excitatory input. Over weeks of regular exposure, this may reduce maladaptive over-representation of the tinnitus frequency in the auditory cortex.</p>
+<h1>Tinnitus Research Overview</h1>
+<p>Summary of evidence behind Lenire‑style and sound‑based tinnitus therapies.</p>
 
-<div class="study">
-  <div class="title">Listening to Tailor-Made Notched Music Reduces Tinnitus Loudness and Tinnitus-Related Auditory Cortex Activity</div>
-  <div class="authors">Okamoto, H., Stracke, H., Stoll, W., and Pantev, C.</div>
-  <div class="journal">Proceedings of the National Academy of Sciences, 107(3), 1207-1210, 2010</div>
-  <div class="summary">The landmark TMNMT study demonstrating that 12 months of listening to music with a frequency notch centered on the individual tinnitus pitch significantly reduced subjective tinnitus loudness and the corresponding auditory evoked field (AEF) measured by MEG, compared to controls. Established the cortical lateral-inhibition mechanism for notch therapy.</div>
-  <a href="https://doi.org/10.1073/pnas.0911268107" target="_blank">DOI: 10.1073/pnas.0911268107</a>
+<!-- LENIRE SECTION -->
+<div class="card">
+    <h2>Lenire (Bimodal Neuromodulation)</h2>
+
+    <p>
+        Lenire is a tinnitus treatment that combines:
+    </p>
+
+    <ul>
+        <li><strong>Sound stimulation</strong> through headphones</li>
+        <li><strong>Mild electrical pulses</strong> delivered to the tongue</li>
+    </ul>
+
+    <p>
+        This dual‑input approach is known as <strong>bimodal neuromodulation</strong>.  
+        Research shows that pairing sound with somatosensory stimulation can promote changes in the auditory system.
+    </p>
+
+    <h3>Key Findings</h3>
+    <ul>
+        <li>Clinical trials reported reductions in tinnitus severity for many participants.</li>
+        <li>Sound‑only stimulation also produced improvement, but bimodal stimulation produced stronger effects.</li>
+        <li>Benefits were more pronounced in people with moderate to severe tinnitus.</li>
+    </ul>
+
+    <h3>What This Project Uses</h3>
+    <p>
+        This site provides the <strong>sound‑only component</strong> of Lenire‑style therapy:
+    </p>
+
+    <ul>
+        <li>Carrier tones</li>
+        <li>Broadband noise</li>
+        <li>Frequency‑shaped noise</li>
+        <li>Amplitude‑modulated noise</li>
+        <li>Tone‑burst patterns</li>
+    </ul>
+
+    <p>
+        No electrical stimulation is included.  
+        This is an <strong>experimental sound‑only tool</strong> inspired by published research.
+    </p>
 </div>
 
-<div class="study">
-  <div class="title">Short and Intense Tailor-Made Notched Music Training against Tinnitus</div>
-  <div class="authors">Teismann, H., Okamoto, H., and Pantev, C.</div>
-  <div class="journal">Annals of the New York Academy of Sciences, 1252(1), 312-318, 2012</div>
-  <div class="summary">Follow-up study showing that even shorter, more intensive TMNMT protocols (3 hours/day for 5 days) could produce measurable reduction in tinnitus-related neural activity, suggesting that compressed treatment schedules may be viable.</div>
-  <a href="https://doi.org/10.1111/j.1749-6632.2011.06426.x" target="_blank">DOI: 10.1111/j.1749-6632.2011.06426.x</a>
+<!-- SOUND THERAPY SECTION -->
+<div class="card">
+    <h2>Sound Therapy Approaches</h2>
+
+    <p>
+        Sound therapy is one of the most widely used tinnitus management strategies.  
+        It works by reducing contrast between tinnitus and silence, promoting habituation, and altering auditory gain.
+    </p>
+
+    <h3>Common Sound‑Based Methods</h3>
+
+    <ul>
+        <li><strong>White, pink, and brown noise</strong> — broadband noise used for masking and habituation.</li>
+        <li><strong>Notch therapy</strong> — removes a narrow frequency band around the tinnitus pitch.</li>
+        <li><strong>Decorrelated noise</strong> — left/right differences reduce central auditory synchrony.</li>
+        <li><strong>Amplitude‑modulated noise</strong> — rhythmic modulation may reduce perceived loudness.</li>
+        <li><strong>Tone‑based therapy</strong> — tones matched to tinnitus frequency for targeted stimulation.</li>
+    </ul>
+
+    <h3>Evidence Summary</h3>
+    <ul>
+        <li>Broadband noise can reduce tinnitus awareness over time.</li>
+        <li>Notch therapy has shown benefit in several studies, especially for tonal tinnitus.</li>
+        <li>Modulated noise and tone‑burst patterns are being explored in newer research.</li>
+        <li>Sound‑only therapy is non‑invasive and widely used in clinical practice.</li>
+    </ul>
+
+    <p>
+        The tools on this site implement these methods using the Web Audio API, allowing real‑time sound generation in the browser.
+    </p>
 </div>
 
-<div class="study">
-  <div class="title">Notched Environmental Sounds: A New Hearing Aid-Integrated Therapy for Tinnitus</div>
-  <div class="authors">Stein, A., Wunderlich, R., Lau, P., et al.</div>
-  <div class="journal">Hearing Research, 340, 86-96, 2016</div>
-  <div class="summary">Extended notch therapy to broadband environmental sounds delivered through hearing aids. Results showed reduced tinnitus loudness ratings after 3 months, demonstrating the approach works beyond music -- including with filtered noise, as implemented in these tools.</div>
-  <a href="https://doi.org/10.1016/j.heares.2016.04.003" target="_blank">DOI: 10.1016/j.heares.2016.04.003</a>
-</div>
-
-<div class="study">
-  <div class="title">Effectiveness of Tailor-Made Notched Music Training on Tinnitus: A Systematic Review and Meta-Analysis</div>
-  <div class="authors">Mahboubi, H., Ziai, K., Brunworth, J., and Djalilian, H.R.</div>
-  <div class="journal">Journal of the American Academy of Audiology, 33(1), 2022</div>
-  <div class="summary">Systematic review and meta-analysis pooling results from multiple TMNMT studies. Found statistically significant improvements in tinnitus loudness and subjective distress ratings across studies, though effect sizes varied and the authors recommend further standardized RCTs.</div>
-  <a href="https://doi.org/10.1055/s-0041-1735557" target="_blank">DOI: 10.1055/s-0041-1735557</a>
-</div>
-
-<h2>Decorrelated Noise Therapy</h2>
-
-<p>Decorrelated binaural noise presents independent (uncorrelated) noise signals to each ear. Because the central auditory system relies on inter-aural correlation to detect signals in noise, decorrelated noise disrupts the neural pattern-matching that may sustain tinnitus perception. This approach is used within broader sound therapy and tinnitus retraining (TRT) frameworks.</p>
-
-<div class="study">
-  <div class="title">Tinnitus Retraining Therapy (TRT) as a Method for Treatment of Tinnitus and Hyperacusis Patients</div>
-  <div class="authors">Jastreboff, P.J. and Jastreboff, M.M.</div>
-  <div class="journal">Journal of the American Academy of Audiology, 11(3), 162-177, 2000</div>
-  <div class="summary">Foundational paper on TRT describing the neurophysiological model of tinnitus and the use of broadband sound generators for habituation. TRT uses low-level noise to reduce the contrast between tinnitus and the acoustic environment, with over 80% of patients reporting significant improvement. Decorrelated noise enhances this effect by reducing binaural cues.</div>
-  <a href="https://pubmed.ncbi.nlm.nih.gov/10718514/" target="_blank">PubMed: 10718514</a>
-</div>
-
-<div class="study">
-  <div class="title">The Neurophysiological Model of Tinnitus and Decreased Sound Tolerance</div>
-  <div class="authors">Jastreboff, P.J.</div>
-  <div class="journal">In: Tinnitus: Theory and Management (Snow, J.B., ed.), BC Decker, 96-107, 2004</div>
-  <div class="summary">Comprehensive chapter describing the theoretical basis for sound enrichment therapy. Jastreboff explains how the limbic and autonomic systems sustain tinnitus awareness, and how neutral, low-level sound -- particularly broadband noise -- facilitates habituation by breaking the detection-reaction cycle.</div>
-</div>
-
-<div class="study">
-  <div class="title">Interaural Correlation and the Binaural Summation of Loudness</div>
-  <div class="authors">Culling, J.F. and Colburn, H.S.</div>
-  <div class="journal">Journal of the Acoustical Society of America, 108(4), 1894-1900, 2000</div>
-  <div class="summary">Psychoacoustic study demonstrating that the degree of inter-aural correlation affects how the brain processes binaural signals. Decorrelated noise is perceived as more diffuse and spatially spread, which may help mask centrally-generated tinnitus signals that rely on coherent neural firing patterns.</div>
-  <a href="https://doi.org/10.1121/1.1308417" target="_blank">DOI: 10.1121/1.1308417</a>
-</div>
-
-<div class="study">
-  <div class="title">Sound Therapy (Masking) in the Management of Tinnitus in Adults</div>
-  <div class="authors">Hobson, J., Chisholm, E., and El Refaie, A.</div>
-  <div class="journal">Cochrane Database of Systematic Reviews, Issue 11, 2012</div>
-  <div class="summary">Cochrane review evaluating the evidence for sound therapy, including broadband noise generators, as treatment for tinnitus. While the review found limited high-quality RCTs, it acknowledged consistent patient-reported benefits of sound therapy, particularly when combined with counseling.</div>
-  <a href="https://doi.org/10.1002/14651858.CD006371.pub3" target="_blank">DOI: 10.1002/14651858.CD006371.pub3</a>
-</div>
-
-<h2>General Background</h2>
-
-<div class="study">
-  <div class="title">Tinnitus: Causes and Clinical Management</div>
-  <div class="authors">Langguth, B., Kreuzer, P.M., Kleinjung, T., and De Ridder, D.</div>
-  <div class="journal">The Lancet Neurology, 12(9), 920-930, 2013</div>
-  <div class="summary">Comprehensive review of tinnitus pathophysiology, covering peripheral deafferentation, central gain changes, and maladaptive cortical plasticity. Provides the neuroscience framework explaining why both notch therapy and sound enrichment strategies are biologically plausible treatments.</div>
-  <a href="https://doi.org/10.1016/S1474-4422(13)70160-1" target="_blank">DOI: 10.1016/S1474-4422(13)70160-1</a>
-</div>
-
-<div class="note">
-  <strong>Disclaimer:</strong> These tools are provided for informational and self-help purposes only. They are not medical devices and do not replace professional audiological evaluation or treatment. Tinnitus can have many causes -- consult a qualified audiologist or ENT specialist for diagnosis and personalized therapy. Always use therapy sounds at comfortable, low volumes.
-</div>
-
-</div>
 </body>
 </html>
