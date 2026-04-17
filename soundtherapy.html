@@ -13,221 +13,58 @@
         padding: 20px;
         text-align: center;
     }
+
     h1 {
-        margin-bottom: 10px;
+        margin-bottom: 5px;
+        font-size: 24px;
     }
-    .control-group {
-        background: white;
+
+    p {
+        margin-top: 0;
+        font-size: 14px;
+        color: #444;
+    }
+
+    .card {
+        max-width: 480px;
+        margin: 15px auto;
+        background: #fff;
         padding: 15px;
-        margin: 15px 0;
         border-radius: 10px;
-        box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        box-shadow: 0 0 4px rgba(0,0,0,0.1);
+        text-align: left;
     }
-    button {
-        padding: 12px 20px;
-        margin: 8px;
-        font-size: 16px;
-        border: none;
-        border-radius: 8px;
+
+    .button {
+        display: block;
         background: #0078ff;
         color: white;
-        cursor: pointer;
-    }
-    button:active {
-        background: #005fcc;
-    }
-    input[type=range] {
+        padding: 10px;
+        margin: 6px auto;
         width: 90%;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 15px;
+        transition: background 0.25s ease;
+        text-align: center;
+    }
+
+    .button:hover {
+        background: #005fcc;
     }
 </style>
 </head>
 
 <body>
 
+<a class="button" href="index.html" style="max-width:200px;margin:auto;">Home</a>
+
 <h1>Sound Therapy</h1>
-<p>White, pink, brown noise + nature sounds</p>
+<p>White, pink, brown noise and nature sounds.</p>
 
-<div class="control-group">
-    <h3>Noise Types</h3>
-    <button onclick="playNoise('white')">White Noise</button>
-    <button onclick="playNoise('pink')">Pink Noise</button>
-    <button onclick="playNoise('brown')">Brown Noise</button>
+<div class="card">
+    <!-- Paste your existing soundtherapy.html app here -->
 </div>
-
-<div class="control-group">
-    <h3>Nature Sounds</h3>
-    <button onclick="playNature('rain')">Rain</button>
-    <button onclick="playNature('ocean')">Ocean</button>
-    <button onclick="playNature('stream')">Stream</button>
-    <button onclick="playNature('wind')">Wind</button>
-</div>
-
-<div class="control-group">
-    <h3>Volume</h3>
-    <input id="volume" type="range" min="0" max="1" step="0.01" value="0.3" oninput="setVolume(this.value)">
-</div>
-
-<div class="control-group">
-    <h3>Left / Right Balance</h3>
-    <input id="balance" type="range" min="-1" max="1" step="0.01" value="0" oninput="setBalance(this.value)">
-</div>
-
-<div class="control-group">
-    <h3>Session Timer (minutes)</h3>
-    <input id="timer" type="number" min="1" max="120" value="10">
-    <button onclick="startTimer()">Start Timer</button>
-    <p id="timerDisplay"></p>
-</div>
-
-<button onclick="stopAll()" style="background:#cc0000">Stop All</button>
-
-<script>
-let audioCtx;
-let currentSource = null;
-let gainNode;
-let pannerNode;
-let timerInterval;
-
-// Initialize audio context
-function initAudio() {
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        gainNode = audioCtx.createGain();
-        pannerNode = audioCtx.createStereoPanner();
-        gainNode.connect(pannerNode).connect(audioCtx.destination);
-    }
-}
-
-// Noise generation
-function createNoise(type) {
-    const bufferSize = 2 * audioCtx.sampleRate;
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-
-    if (type === 'white') {
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-    }
-    if (type === 'pink') {
-        let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0;
-        for (let i = 0; i < bufferSize; i++) {
-            const white = Math.random() * 2 - 1;
-            b0 = 0.99886 * b0 + white * 0.0555179;
-            b1 = 0.99332 * b1 + white * 0.0750759;
-            b2 = 0.96900 * b2 + white * 0.1538520;
-            b3 = 0.86650 * b3 + white * 0.3104856;
-            b4 = 0.55000 * b4 + white * 0.5329522;
-            b5 = -0.7616 * b5 - white * 0.0168980;
-            data[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
-            data[i] *= 0.11;
-            b6 = white * 0.115926;
-        }
-    }
-    if (type === 'brown') {
-        let lastOut = 0;
-        for (let i = 0; i < bufferSize; i++) {
-            const white = Math.random() * 2 - 1;
-            data[i] = (lastOut + 0.02 * white) / 1.02;
-            lastOut = data[i];
-            data[i] *= 3.5;
-        }
-    }
-
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
-    noise.loop = true;
-    return noise;
-}
-
-// Play noise
-function playNoise(type) {
-    initAudio();
-    stopAll();
-    currentSource = createNoise(type);
-    currentSource.connect(gainNode);
-    currentSource.start();
-}
-
-// Nature sounds (procedural)
-function playNature(type) {
-    initAudio();
-    stopAll();
-
-    const osc = audioCtx.createOscillator();
-    const lfo = audioCtx.createOscillator();
-    const lfoGain = audioCtx.createGain();
-
-    if (type === 'rain') {
-        osc.type = 'noise';
-    }
-
-    if (type === 'ocean') {
-        osc.type = 'sine';
-        osc.frequency.value = 0.5;
-        lfo.frequency.value = 0.2;
-    }
-
-    if (type === 'stream') {
-        osc.type = 'triangle';
-        osc.frequency.value = 40;
-        lfo.frequency.value = 1.2;
-    }
-
-    if (type === 'wind') {
-        osc.type = 'sawtooth';
-        osc.frequency.value = 200;
-        lfo.frequency.value = 0.4;
-    }
-
-    lfoGain.gain.value = 0.4;
-    lfo.connect(lfoGain).connect(gainNode.gain);
-
-    osc.connect(gainNode);
-    osc.start();
-    lfo.start();
-
-    currentSource = osc;
-}
-
-// Volume
-function setVolume(v) {
-    initAudio();
-    gainNode.gain.value = v;
-}
-
-// Balance
-function setBalance(v) {
-    initAudio();
-    pannerNode.pan.value = v;
-}
-
-// Timer
-function startTimer() {
-    const minutes = parseInt(document.getElementById("timer").value);
-    let remaining = minutes * 60;
-
-    clearInterval(timerInterval);
-
-    timerInterval = setInterval(() => {
-        remaining--;
-        document.getElementById("timerDisplay").innerText =
-            "Time left: " + Math.floor(remaining / 60) + ":" + (remaining % 60).toString().padStart(2, '0');
-
-        if (remaining <= 0) {
-            stopAll();
-            clearInterval(timerInterval);
-            document.getElementById("timerDisplay").innerText = "Session complete";
-        }
-    }, 1000);
-}
-
-// Stop everything
-function stopAll() {
-    if (currentSource) {
-        try { currentSource.stop(); } catch(e) {}
-        currentSource = null;
-    }
-}
-</script>
 
 </body>
 </html>
