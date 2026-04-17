@@ -41,7 +41,20 @@
     .dark-btn:active {
         background: #555;
     }
-    /* --- END ADDED --- */
+
+    /* ⭐ HELP BUTTON (added) ⭐ */
+    .help-btn {
+        background:#333;
+        color:#fff;
+        border:none;
+        padding:10px 16px;
+        margin-right:10px;
+        border-radius:6px;
+        font-size:15px;
+        cursor:pointer;
+        font-weight:bold;
+    }
+    .help-btn:hover { background:#555; }
 
     h1 { margin-bottom: 5px; }
     p  { margin-top: 0; font-size: 14px; }
@@ -89,6 +102,7 @@
 <div class="top-bar">
     <button class="dark-btn" onclick="location.href='index.html'">Home</button>
     <button class="dark-btn" onclick="stopSession()">Stop</button>
+    <button class="help-btn" onclick="openHelp()">Help</button>
 </div>
 <!-- END ADDED -->
 
@@ -291,6 +305,78 @@ stopBtn.addEventListener('click', () => stopSession());
 [freqEl, volumeEl, mixEl, modRateEl, burstRateEl].forEach(el => {
     el.addEventListener('input', updateParams);
 });
+</script>
+
+<!-- ⭐ HELP MODAL (added, no code removed) ⭐ -->
+<div id="helpModal" style="
+    display:none;
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.7);
+    backdrop-filter:blur(4px);
+    z-index:9999;
+    padding:20px;
+">
+    <div style="
+        max-width:500px;
+        margin:60px auto;
+        background:#fff;
+        color:#000;
+        padding:20px;
+        border-radius:12px;
+        box-shadow:0 0 10px rgba(0,0,0,0.3);
+        text-align:left;
+    ">
+        <h2 style="margin-top:0;">How to Use This Therapy</h2>
+        <div id="helpContent" style="font-size:15px; line-height:1.5;"></div>
+
+        <button onclick="closeHelp()" style="
+            margin-top:20px;
+            width:100%;
+            padding:12px;
+            background:#0078ff;
+            color:#fff;
+            border:none;
+            border-radius:8px;
+            font-size:16px;
+            cursor:pointer;
+        ">Close</button>
+    </div>
+</div>
+
+<script>
+function openHelp() {
+    document.getElementById("helpModal").style.display = "block";
+}
+function closeHelp() {
+    document.getElementById("helpModal").style.display = "none";
+}
+</script>
+
+<!-- ⭐ LENIRE HELP CONTENT ⭐ -->
+<script>
+document.getElementById("helpContent").innerHTML = `
+<b>Purpose:</b><br>
+This module simulates the sound‑only component of Lenire therapy using tone bursts and modulated noise.<br><br>
+
+<b>Setup:</b><br>
+• Use headphones.<br>
+• Set carrier frequency near your tinnitus pitch.<br>
+• Adjust tone/noise mix for comfort.<br><br>
+
+<b>Usage Plan:</b><br>
+• 20 minutes per session (default).<br>
+• 1–2 sessions per day.<br><br>
+
+<b>Tips:</b><br>
+• If tone is too sharp, increase noise mix.<br>
+• If noise is too harsh, lower modulation rate.<br><br>
+
+<b>Safety:</b><br>
+• Keep volume low.<br>
+• Stop if you feel discomfort.
+`;
 </script>
 
 </body>
