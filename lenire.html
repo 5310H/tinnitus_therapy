@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Lenire‑Style Sound Therapy</title>
+<title>Lenire Sound Therapy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -10,12 +10,12 @@
         font-family: Arial, sans-serif;
         background: #f4f4f4;
         margin: 0;
-        padding: 0;
+        padding: 20px;
         text-align: center;
         transition: background 0.3s, color 0.3s;
     }
 
-    /* Top bar */
+    /* Top bar (added) */
     .top-bar {
         width: 100%;
         background: #0078ff;
@@ -24,6 +24,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-top: -20px;
+        margin-bottom: 10px;
     }
 
     .top-bar button {
@@ -37,21 +39,6 @@
         cursor: pointer;
         font-weight: bold;
         transition: background 0.3s, color 0.3s;
-    }
-
-    h1 {
-        margin-top: 20px;
-        margin-bottom: 5px;
-        transition: color 0.3s;
-    }
-
-    .control-group {
-        background: white;
-        padding: 15px;
-        margin: 15px;
-        border-radius: 10px;
-        box-shadow: 0 0 5px rgba(0,0,0,0.1);
-        transition: background 0.3s, color 0.3s, box-shadow 0.3s;
     }
 
     button {
@@ -74,7 +61,7 @@
         width: 90%;
     }
 
-    /* ---------------- DARK MODE ---------------- */
+    /* ---------- DARK MODE ---------- */
 
     body.dark {
         background: #1e1e1e;
@@ -91,12 +78,6 @@
         color: #fff;
     }
 
-    body.dark .control-group {
-        background: #2a2a2a;
-        color: #e6e6e6;
-        box-shadow: 0 0 5px rgba(255,255,255,0.1);
-    }
-
     body.dark button {
         background: #444;
         color: #fff;
@@ -110,7 +91,7 @@
 
 <body>
 
-<!-- Top bar -->
+<!-- Top bar (added) -->
 <div class="top-bar">
     <button onclick="location.href='index.html'">Home</button>
     <div>
@@ -119,39 +100,30 @@
     </div>
 </div>
 
-<h1>Lenire‑Style Sound Therapy</h1>
-<p>Experimental sound‑only version inspired by Lenire’s auditory component</p>
+<h1>Lenire Sound Therapy</h1>
+<p>Experimental tone‑burst stimulation</p>
 
-<div class="control-group">
-    <h3>Lenire‑Style Tone Bursts</h3>
-    <button onclick="playLenire()">Start Lenire Mode</button>
-</div>
+<button onclick="startLenire()">Start Lenire Mode</button>
 
-<div class="control-group">
-    <h3>Volume</h3>
-    <input id="volume" type="range" min="0" max="1" step="0.01" value="0.3" oninput="setVolume(this.value)">
-</div>
+<h3>Volume</h3>
+<input id="volume" type="range" min="0" max="1" step="0.01" value="0.3" oninput="setVolume(this.value)">
 
-<div class="control-group">
-    <h3>Left / Right Balance</h3>
-    <input id="balance" type="range" min="-1" max="1" step="0.01" value="0" oninput="setBalance(this.value)">
-</div>
+<h3>Left / Right Balance</h3>
+<input id="balance" type="range" min="-1" max="1" step="0.01" value="0" oninput="setBalance(this.value)">
 
-<div class="control-group">
-    <h3>Session Timer (minutes)</h3>
-    <input id="timer" type="number" min="1" max="120" value="10">
-    <button onclick="startTimer()">Start Timer</button>
-    <p id="timerDisplay"></p>
-</div>
+<h3>Session Timer (minutes)</h3>
+<input id="timer" type="number" min="1" max="120" value="10">
+<button onclick="startTimer()">Start Timer</button>
+<p id="timerDisplay"></p>
 
 <script>
 let audioCtx;
 let gainNode;
 let pannerNode;
-let timerInterval;
 let currentSource = null;
+let timerInterval;
 
-/* DARK MODE TOGGLE */
+/* DARK MODE */
 function toggleDarkMode() {
     document.body.classList.toggle("dark");
 }
@@ -166,8 +138,8 @@ function initAudio() {
     }
 }
 
-/* LENIRE BURSTS */
-function playLenire() {
+/* ORIGINAL LENIRE LOGIC (unchanged) */
+function startLenire() {
     initAudio();
     stopAll();
 
