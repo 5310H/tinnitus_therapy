@@ -27,6 +27,12 @@ canvas{width:100%;height:120px;margin-top:1rem;border-radius:8px;background:#111
 .match-section p{font-size:.8rem;color:#999}
 .tone-btn{padding:.5rem 1rem;margin-top:.5rem;background:#1a1a2e;border:1px solid #ab47bc;color:#ab47bc;border-radius:6px;cursor:pointer;font-size:.85rem}
 .tone-btn:hover{background:#ab47bc;color:#fff}
+
+/* ⭐ TIMER BLOCK (added) ⭐ */
+.timer-block{margin-top:1.5rem;text-align:left}
+.timer-block label{display:block;font-size:.85rem;color:#aaa;margin-bottom:.3rem}
+.timer-block input{width:100%;padding:.6rem;background:#1a1a2e;color:#e0e0e0;border:1px solid #333;border-radius:8px;font-size:1rem}
+.timer-display{margin-top:.8rem;font-size:.95rem;color:#ab47bc;text-align:center;min-height:1.2rem}
 </style>
 </head>
 <body>
@@ -34,6 +40,7 @@ canvas{width:100%;height:120px;margin-top:1rem;border-radius:8px;background:#111
 <div class="panel">
 <h1>Notch Therapy</h1>
 <p class="info">Removes energy at your tinnitus frequency from broadband noise, encouraging cortical reorganization (TMNMT).</p>
+
 <div class="match-section">
   <h3>Step 1 - Find Your Tinnitus Frequency</h3>
   <p>Play the test tone and adjust until it matches your tinnitus pitch.</p>
@@ -43,6 +50,7 @@ canvas{width:100%;height:120px;margin-top:1rem;border-radius:8px;background:#111
   </div>
   <button class="tone-btn" id="toneBtn" onclick="toggleTone()">Play Test Tone</button>
 </div>
+
 <div class="ctrl">
   <label>Noise Color</label>
   <select id="color">
@@ -50,25 +58,42 @@ canvas{width:100%;height:120px;margin-top:1rem;border-radius:8px;background:#111
     <option value="pink" selected>Pink Noise</option>
   </select>
 </div>
+
 <div class="ctrl">
   <label>Notch Center Frequency <span class="val" id="notchVal">6000 Hz</span></label>
   <input type="range" id="notch" min="500" max="16000" value="6000" step="50">
 </div>
+
 <div class="ctrl">
   <label>Notch Width <span class="val" id="nwVal">1.0 octave</span></label>
   <input type="range" id="nw" min="0.25" max="2" value="1" step="0.05">
 </div>
+
 <div class="ctrl">
   <label>Volume <span class="val" id="volVal">40%</span></label>
   <input type="range" id="vol" min="0" max="100" value="40">
 </div>
+
+<!-- ⭐ TIMER ADDED HERE ⭐ -->
+<div class="timer-block">
+  <label>Session Timer (minutes)</label>
+  <input id="timerInput" type="number" min="1" max="120" value="10">
+  <button class="big-btn play-btn" onclick="startTimer()">Start Timer</button>
+  <div class="timer-display" id="timerDisplay"></div>
+</div>
+<!-- END TIMER -->
+
 <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start Notch Therapy</button>
 <div class="status" id="status"></div>
 <canvas id="viz"></canvas>
 </div>
+
 <script>
 let ctx,playing=false,src,analyser,toneCtx,toneOsc,tonePlaying=false;
+let timerInterval=null;
+
 const BUF_SIZE=2*44100;
+
 function createNoise(color){
   const buf=ctx.createBuffer(1,BUF_SIZE,ctx.sampleRate);
   const d=buf.getChannelData(0);
@@ -76,7 +101,9 @@ function createNoise(color){
   else{let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<BUF_SIZE;i++){const w=Math.random()*2-1;b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8687*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926}}
   return buf;
 }
+
 function toggle(){if(!playing)start();else stop()}
+
 function start(){
   ctx=new(window.AudioContext||window.webkitAudioContext)();
   const color=document.getElementById('color').value;
@@ -87,66 +114,116 @@ function start(){
   const loF=notchF*Math.pow(2,-halfOct);
   const hiF=notchF*Math.pow(2,halfOct);
   const buf=createNoise(color);
+
   src=ctx.createBufferSource();src.buffer=buf;src.loop=true;
+
   const notch=ctx.createBiquadFilter();
-  notch.type='notch';notch.frequency.value=notchF;notch.Q.value=notchF/((hiF-loF)||1);
+  notch.type='notch';
+  notch.frequency.value=notchF;
+  notch.Q.value=notchF/((hiF-loF)||1);
+
   const g=ctx.createGain();g.gain.value=vol;
+
   analyser=ctx.createAnalyser();analyser.fftSize=2048;
+
   src.connect(notch);notch.connect(g);g.connect(analyser);analyser.connect(ctx.destination);
+
   src.start();
   playing=true;
+
   document.getElementById('toggleBtn').textContent='Stop';
   document.getElementById('toggleBtn').className='big-btn stop-btn';
   document.getElementById('status').textContent='Notch at '+notchF+' Hz, '+nw+' oct width';
+
   drawViz();
 }
+
 function stop(){
   if(ctx){ctx.close();ctx=null}
   playing=false;
+
   document.getElementById('toggleBtn').textContent='Start Notch Therapy';
   document.getElementById('toggleBtn').className='big-btn play-btn';
   document.getElementById('status').textContent='Stopped';
 }
+
+function startTimer(){
+  const minutes=parseInt(document.getElementById("timerInput").value);
+  let remaining=minutes*60;
+
+  clearInterval(timerInterval);
+
+  timerInterval=setInterval(()=>{
+    remaining--;
+
+    document.getElementById("timerDisplay").textContent=
+      "Time left: "+Math.floor(remaining/60)+":"+
+      (remaining%60).toString().padStart(2,'0');
+
+    if(remaining<=0){
+      stop();
+      clearInterval(timerInterval);
+      document.getElementById("timerDisplay").textContent="Session complete";
+    }
+  },1000);
+}
+
 function drawViz(){
   if(!playing||!analyser)return;
   const canvas=document.getElementById('viz');
   const c=canvas.getContext('2d');
-  canvas.width=canvas.offsetWidth*2;canvas.height=canvas.offsetHeight*2;
+  canvas.width=canvas.offsetWidth*2;
+  canvas.height=canvas.offsetHeight*2;
+
   const data=new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteFrequencyData(data);
+
   c.clearRect(0,0,canvas.width,canvas.height);
+
   const barW=canvas.width/data.length*2.5;
+
   for(let i=0;i<data.length/2.5;i++){
     const h=(data[i]/255)*canvas.height;
     const hue=270-(data[i]/255)*60;
     c.fillStyle='hsl('+hue+',70%,55%)';
     c.fillRect(i*barW,canvas.height-h,barW-1,h);
   }
+
   requestAnimationFrame(drawViz);
 }
+
 function toggleTone(){
   if(!tonePlaying){
     toneCtx=new(window.AudioContext||window.webkitAudioContext)();
     toneOsc=toneCtx.createOscillator();
     const g=toneCtx.createGain();g.gain.value=0.15;
     toneOsc.frequency.value=+document.getElementById('toneFreq').value;
-    toneOsc.connect(g);g.connect(toneCtx.destination);toneOsc.start();
+    toneOsc.connect(g);g.connect(toneCtx.destination);
+    toneOsc.start();
     tonePlaying=true;
     document.getElementById('toneBtn').textContent='Stop Test Tone';
   }else{
-    toneCtx.close();tonePlaying=false;
+    toneCtx.close();
+    tonePlaying=false;
     document.getElementById('toneBtn').textContent='Play Test Tone';
   }
 }
+
 document.getElementById('toneFreq').oninput=e=>{
   document.getElementById('toneVal').textContent=e.target.value+' Hz';
   document.getElementById('notch').value=e.target.value;
   document.getElementById('notchVal').textContent=e.target.value+' Hz';
   if(tonePlaying)toneOsc.frequency.value=+e.target.value;
 };
-document.getElementById('notch').oninput=e=>document.getElementById('notchVal').textContent=e.target.value+' Hz';
-document.getElementById('nw').oninput=e=>document.getElementById('nwVal').textContent=e.target.value+' octave';
-document.getElementById('vol').oninput=e=>document.getElementById('volVal').textContent=e.target.value+'%';
+
+document.getElementById('notch').oninput=e=>
+  document.getElementById('notchVal').textContent=e.target.value+' Hz';
+
+document.getElementById('nw').oninput=e=>
+  document.getElementById('nwVal').textContent=e.target.value+' octave';
+
+document.getElementById('vol').oninput=e=>
+  document.getElementById('volVal').textContent=e.target.value+'%';
 </script>
 </body>
 </html>
