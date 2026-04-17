@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Spectrogram Visualizer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family:Arial; background:#f4f4f4; padding:20px; text-align:center; }
+canvas { width:100%; height:300px; background:black; border-radius:10px; }
+.button { background:#0078ff; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; margin:8px; display:inline-block; }
+.card { background:white; padding:20px; border-radius:12px; box-shadow:0 0 6px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+
+<h1>Spectrogram Visualizer</h1>
+<p>Shows real‑time frequency content of any sound</p>
+
+<div class="card">
+    <canvas id="spec"></canvas>
+    <br>
+    <button class="button" onclick="start()">Start</button>
+    <button class="button" onclick="stop()">Stop</button>
+</div>
+
+<script>
+let ctx, analyser, source, raf;
+let audioCtx=null;
+
+function start(){
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+        source=audioCtx.createMediaStreamSource(stream);
+        analyser=audioCtx.createAnalyser();
+        analyser.fftSize=2048;
+        source.connect(analyser);
+        draw();
+    });
+}
+
+function stop(){
+    if(raf) cancelAnimationFrame(raf);
+}
+
+function draw(){
+    const canvas=document.getElementById("spec");
+    const c=canvas.getContext("2d");
+    const data=new Uint8Array(analyser.frequencyBinCount);
+
+    function loop(){
+        analyser.getByteFrequencyData(data);
+        c.fillStyle="black";
+        c.fillRect(0,0,canvas.width,canvas.height);
+
+        for(let i=0;i<data.length;i++){
+            const v=data[i];
+            const y=canvas.height - (v/255)*canvas.height;
+            c.fillStyle=`hsl(${i/2},100%,50%)`;
+            c.fillRect(i, y, 2, canvas.height);
+        }
+        raf=requestAnimationFrame(loop);
+    }
+    loop();
+}
+</script>
+
+</body>
+</html>
