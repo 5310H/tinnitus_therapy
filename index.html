@@ -33,11 +33,10 @@
         gap: 20px;
         flex-wrap: wrap;
         box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-        transition: background 0.3s ease, padding 0.3s ease;
+        transition: padding 0.3s ease, background 0.3s ease;
     }
 
-    /* Shrink nav on scroll */
-    body.scrolled nav {
+    nav.shrink {
         padding: 6px 5px;
         background: #0060cc;
     }
@@ -156,7 +155,7 @@
 <body>
 
 <!-- NAVIGATION BAR -->
-<nav>
+<nav id="navbar">
     <a href="#therapy">Therapy</a>
     <a href="#tools">Tools</a>
     <a href="#advanced">Advanced</a>
@@ -165,7 +164,7 @@
 </nav>
 
 <h1>Tinnitus Therapy Suite</h1>
-<p>Open‑source tinnitus therapy tools</p>
+<p>Open‑source sound therapy tools</p>
 
 <div class="grid">
 
@@ -205,7 +204,7 @@
         <h2>Project</h2>
 
         <details>
-            <summary>Documentation</summary>
+            <summary>Show Project Files</summary>
             <div class="submenu">
                 <a class="button" href="docs/index.html">Documentation</a>
                 <a class="button" href="research.html">Research</a>
@@ -225,11 +224,13 @@
 
 <script>
 /* Shrink nav bar on scroll */
+const nav = document.getElementById("navbar");
+
 window.addEventListener("scroll", () => {
-    if (window.scrollY > 10) {
-        document.body.classList.add("scrolled");
+    if (window.scrollY > 5) {
+        nav.classList.add("shrink");
     } else {
-        document.body.classList.remove("scrolled");
+        nav.classList.remove("shrink");
     }
 });
 </script>
