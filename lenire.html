@@ -12,9 +12,10 @@
         margin: 0;
         padding: 0;
         text-align: center;
+        transition: background 0.3s, color 0.3s;
     }
 
-    /* Top bar (matches notch.html + soundtherapy.html) */
+    /* Top bar */
     .top-bar {
         width: 100%;
         background: #0078ff;
@@ -35,11 +36,13 @@
         font-size: 15px;
         cursor: pointer;
         font-weight: bold;
+        transition: background 0.3s, color 0.3s;
     }
 
     h1 {
         margin-top: 20px;
         margin-bottom: 5px;
+        transition: color 0.3s;
     }
 
     .control-group {
@@ -48,6 +51,7 @@
         margin: 15px;
         border-radius: 10px;
         box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        transition: background 0.3s, color 0.3s, box-shadow 0.3s;
     }
 
     button {
@@ -59,6 +63,7 @@
         background: #0078ff;
         color: white;
         cursor: pointer;
+        transition: background 0.3s, color 0.3s;
     }
 
     button:active {
@@ -68,6 +73,38 @@
     input[type=range] {
         width: 90%;
     }
+
+    /* ---------------- DARK MODE ---------------- */
+
+    body.dark {
+        background: #1e1e1e;
+        color: #e6e6e6;
+    }
+
+    body.dark .top-bar {
+        background: #111;
+        color: white;
+    }
+
+    body.dark .top-bar button {
+        background: #333;
+        color: #fff;
+    }
+
+    body.dark .control-group {
+        background: #2a2a2a;
+        color: #e6e6e6;
+        box-shadow: 0 0 5px rgba(255,255,255,0.1);
+    }
+
+    body.dark button {
+        background: #444;
+        color: #fff;
+    }
+
+    body.dark button:active {
+        background: #666;
+    }
 </style>
 </head>
 
@@ -76,7 +113,10 @@
 <!-- Top bar -->
 <div class="top-bar">
     <button onclick="location.href='index.html'">Home</button>
-    <button onclick="stopAll()">Stop</button>
+    <div>
+        <button onclick="toggleDarkMode()">Dark Mode</button>
+        <button onclick="stopAll()">Stop</button>
+    </div>
 </div>
 
 <h1>Lenire‑Style Sound Therapy</h1>
@@ -111,7 +151,12 @@ let pannerNode;
 let timerInterval;
 let currentSource = null;
 
-// Init audio
+/* DARK MODE TOGGLE */
+function toggleDarkMode() {
+    document.body.classList.toggle("dark");
+}
+
+/* AUDIO INIT */
 function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -121,7 +166,7 @@ function initAudio() {
     }
 }
 
-// Lenire‑style tone bursts
+/* LENIRE BURSTS */
 function playLenire() {
     initAudio();
     stopAll();
@@ -131,7 +176,6 @@ function playLenire() {
 
     osc.type = "sine";
     osc.frequency.value = 4000;
-
     amp.gain.value = 0;
 
     osc.connect(amp).connect(gainNode);
@@ -139,7 +183,6 @@ function playLenire() {
 
     currentSource = osc;
 
-    // Burst pattern
     function burst() {
         amp.gain.setValueAtTime(0, audioCtx.currentTime);
         amp.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.05);
@@ -150,19 +193,19 @@ function playLenire() {
     setInterval(burst, 300);
 }
 
-// Volume
+/* VOLUME */
 function setVolume(v) {
     initAudio();
     gainNode.gain.value = v;
 }
 
-// Balance
+/* BALANCE */
 function setBalance(v) {
     initAudio();
     pannerNode.pan.value = v;
 }
 
-// Timer
+/* TIMER */
 function startTimer() {
     const minutes = parseInt(document.getElementById("timer").value);
     let remaining = minutes * 60;
@@ -182,7 +225,7 @@ function startTimer() {
     }, 1000);
 }
 
-// Stop everything
+/* STOP */
 function stopAll() {
     if (currentSource) {
         try { currentSource.stop(); } catch(e) {}
