@@ -13,9 +13,7 @@
         padding: 20px;
         text-align: center;
     }
-    h1 {
-        margin-bottom: 10px;
-    }
+    h1 { margin-bottom: 10px; }
     .control-group {
         background: white;
         padding: 15px;
@@ -33,19 +31,15 @@
         color: white;
         cursor: pointer;
     }
-    button:active {
-        background: #005fcc;
-    }
-    input[type=range] {
-        width: 90%;
-    }
+    button:active { background: #005fcc; }
+    input[type=range] { width: 90%; }
 </style>
 </head>
 
 <body>
 
 <h1>Sound Therapy</h1>
-<p>White, pink, brown noise + nature sounds</p>
+<p>White, pink, brown noise + real nature sounds</p>
 
 <div class="control-group">
     <h3>Noise Types</h3>
@@ -55,11 +49,11 @@
 </div>
 
 <div class="control-group">
-    <h3>Nature Sounds</h3>
-    <button onclick="playNature('rain')">Rain</button>
-    <button onclick="playNature('ocean')">Ocean</button>
-    <button onclick="playNature('stream')">Stream</button>
-    <button onclick="playNature('wind')">Wind</button>
+    <h3>Nature Sounds (Sample‑Based)</h3>
+    <button onclick="playSample('rain')">Rain</button>
+    <button onclick="playSample('ocean')">Ocean</button>
+    <button onclick="playSample('stream')">Stream</button>
+    <button onclick="playSample('wind')">Wind</button>
 </div>
 
 <div class="control-group">
@@ -147,45 +141,26 @@ function playNoise(type) {
     currentSource.start();
 }
 
-// Nature sounds (procedural)
-function playNature(type) {
+// Play sample‑based nature sounds
+function playSample(type) {
     initAudio();
     stopAll();
 
-    const osc = audioCtx.createOscillator();
-    const lfo = audioCtx.createOscillator();
-    const lfoGain = audioCtx.createGain();
+    const fileMap = {
+        rain: 'audio/rain.mp3',
+        ocean: 'audio/ocean.mp3',
+        stream: 'audio/stream.mp3',
+        wind: 'audio/wind.mp3'
+    };
 
-    if (type === 'rain') {
-        osc.type = 'noise';
-    }
+    const audio = new Audio(fileMap[type]);
+    audio.loop = true;
 
-    if (type === 'ocean') {
-        osc.type = 'sine';
-        osc.frequency.value = 0.5;
-        lfo.frequency.value = 0.2;
-    }
+    const track = audioCtx.createMediaElementSource(audio);
+    track.connect(gainNode);
 
-    if (type === 'stream') {
-        osc.type = 'triangle';
-        osc.frequency.value = 40;
-        lfo.frequency.value = 1.2;
-    }
-
-    if (type === 'wind') {
-        osc.type = 'sawtooth';
-        osc.frequency.value = 200;
-        lfo.frequency.value = 0.4;
-    }
-
-    lfoGain.gain.value = 0.4;
-    lfo.connect(lfoGain).connect(gainNode.gain);
-
-    osc.connect(gainNode);
-    osc.start();
-    lfo.start();
-
-    currentSource = osc;
+    audio.play();
+    currentSource = audio;
 }
 
 // Volume
@@ -223,6 +198,7 @@ function startTimer() {
 // Stop everything
 function stopAll() {
     if (currentSource) {
+        try { currentSource.pause(); currentSource.currentTime = 0; } catch(e) {}
         try { currentSource.stop(); } catch(e) {}
         currentSource = null;
     }
