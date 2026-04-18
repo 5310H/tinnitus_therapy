@@ -1,35 +1,92 @@
-// Start of notch.html modifications
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinnitus Therapy Notch</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #canvas {
+            width: 100%;
+            height: auto;
+            background: #fafafa;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tinnitus Therapy Notch Filter</h1>
+    <canvas id="canvas"></canvas>
+    <audio id="audio" src="your-audio-file.mp3" preload="auto"></audio>
+    <button id="toggleButton">Toggle Sound</button>
+    <div id="message" style="color:red;"></div>
+    <script>
+        const audio = document.getElementById('audio');
+        const toggleButton = document.getElementById('toggleButton');
+        const messageDiv = document.getElementById('message');
+        let isPlaying = false;
+        let audioLoaded = false;
 
-// Replacing line 367 with the toggle function
-window.toggle = () => playing ? stop() : start();
+        function initializeAudio() {
+            audio.addEventListener('canplaythrough', () => {
+                audioLoaded = true;
+                messageDiv.textContent = '';
+            });
+            audio.addEventListener('error', () => {
+                messageDiv.textContent = 'Error loading audio file.';
+            });
+            // Check if audio can load
+            audio.load();
+        }
 
-// Adding error handling for audio loading in loadSample function
-function loadSample(url) {
-    const audio = new Audio(url);
-    audio.addEventListener('error', () => {
-        console.error('Error loading audio sample:', url);
-    });
-    return audio;
-}
+        function toggleAudio() {
+            if (!audioLoaded) {
+                messageDiv.textContent = 'Audio is still loading, please wait.';
+                return;
+            }
+            if (isPlaying) {
+                audio.pause();
+                toggleButton.textContent = 'Play Sound';
+            } else {
+                audio.play().catch(err => {
+                    messageDiv.textContent = 'Error playing audio: ' + err.message;
+                });
+                toggleButton.textContent = 'Pause Sound';
+            }
+            isPlaying = !isPlaying;
+        }
 
-// Auto-start playback when timer starts
-function startPlayback() {
-    if (timerIsActive) {
-        start();
-    }
-}
+        toggleButton.addEventListener('click', toggleAudio);
 
-// Optimize canvas resizing to only resize when needed
-function resizeCanvas() {
-    if (canvasNeedsResize) {
-        canvas.width = newWidth;
-        canvas.height = newHeight;
-    }
-}
+        // Auto-start playback after 1 second
+        setTimeout(() => {
+            if (audioLoaded) {
+                toggleAudio();
+            }
+        }, 1000);
 
-// Fix octave unit grammar
-function getOctaveString(octaveCount) {
-    return octaveCount === 1 ? 'octave' : 'octaves';
-}
+        // Optimize canvas resizing
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            // Redraw or optimize canvas content here
+            drawCanvasContent(context);
+        });
 
-// End of notch.html modifications
+        function drawCanvasContent(context) {
+            // Your canvas drawing logic
+            context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+            context.fillStyle = 'lightblue';
+            context.fillRect(10, 10, 100, 100);
+            // Add more canvas drawing as needed
+        }
+
+        initializeAudio();
+    </script>
+</body>
+</html>
