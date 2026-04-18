@@ -2,382 +2,118 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Lenire‑Style Sound Module</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lenire‑Style Sound Module</title>
+<script src="storage.js"></script>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f4f4f4;
-        margin: 0;
-        padding: 20px;
-        text-align: center;
-    }
-
-    /* --- ADDED TOP BAR --- */
-    .top-bar {
-        width: 100%;
-        background: #0078ff;
-        color: white;
-        padding: 12px 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: -20px;
-        margin-bottom: 10px;
-    }
-
-    .dark-btn {
-        background: #333;
-        color: #fff;
-        border: none;
-        padding: 10px 16px;
-        margin: 0 10px;
-        border-radius: 6px;
-        font-size: 15px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-
-    .dark-btn:active {
-        background: #555;
-    }
-
-    /* ⭐ HELP BUTTON (added) ⭐ */
-    .help-btn {
-        background:#333;
-        color:#fff;
-        border:none;
-        padding:10px 16px;
-        margin-right:10px;
-        border-radius:6px;
-        font-size:15px;
-        cursor:pointer;
-        font-weight:bold;
-    }
-    .help-btn:hover { background:#555; }
-
-    h1 { margin-bottom: 5px; }
-    p  { margin-top: 0; font-size: 14px; }
-    .panel {
-        max-width: 480px;
-        margin: 10px auto;
-        background: #fff;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0 0 4px rgba(0,0,0,0.1);
-        text-align: left;
-    }
-    label { display: block; margin: 8px 0 4px; font-size: 14px; }
-    input[type="number"], input[type="range"], select {
-        width: 100%;
-        box-sizing: border-box;
-    }
-    button {
-        margin-top: 12px;
-        width: 100%;
-        padding: 10px;
-        border: none;
-        border-radius: 8px;
-        background: #0078ff;
-        color: #fff;
-        font-size: 15px;
-        cursor: pointer;
-    }
-    button:disabled {
-        background: #999;
-        cursor: default;
-    }
-    .timer {
-        text-align: center;
-        font-size: 16px;
-        margin-top: 10px;
-        font-weight: bold;
-    }
-    small { font-size: 12px; color: #555; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
+.panel{max-width:520px;width:90%;margin:3rem auto;text-align:center}
+h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc}
+.info{color:#888;font-size:.85rem;margin-bottom:2rem}
+.ctrl{margin:1rem 0;text-align:left}
+.ctrl label{display:block;font-size:.85rem;color:#aaa;margin-bottom:.3rem}
+.ctrl input[type=range], .ctrl input[type=number], select{width:100%;accent-color:#ab47bc;padding:.6rem;background:#1a1a2e;color:#e0e0e0;border:1px solid #333;border-radius:8px;font-size:1rem}
+.val{float:right;color:#ab47bc;font-size:.85rem}
+.big-btn{width:100%;padding:1rem;margin-top:1rem;font-size:1.2rem;border:none;border-radius:12px;cursor:pointer;font-weight:700;transition:all .2s}
+.play-btn{background:linear-gradient(135deg,#ab47bc,#8e24aa);color:#fff}
+.stop-btn{background:linear-gradient(135deg,#ef5350,#e53935);color:#fff}
+.big-btn:hover{transform:scale(1.02)}
+.timer{margin-top:1rem;font-size:1rem;font-weight:700;color:#ab47bc}
+.help-btn { position: fixed; top: 1rem; right: 1rem; background:#1a1a2e; color:#ab47bc; border:1px solid #ab47bc; padding:8px 14px; border-radius:8px; font-size:.9rem; cursor:pointer; z-index:10; }
+.help-btn:hover { background:#ab47bc; color:#fff; }
 </style>
 </head>
 <body>
-
-<!-- ADDED TOP BAR -->
-<div class="top-bar">
-    <button class="dark-btn" onclick="location.href='index.html'">Home</button>
-    <button class="dark-btn" onclick="stopSession()">Stop</button>
-    <button class="help-btn" onclick="openHelp()">Help</button>
-</div>
-<!-- END ADDED -->
-
-<h1>Lenire‑Style Sound Module</h1>
-<p>Experimental sound‑only tinnitus therapy (no electrical stimulation, no medical claims).</p>
-
+<button class="help-btn" onclick="openHelp()">Help</button>
+<a class="back" href="index.html">Home</a>
 <div class="panel">
-    <label for="freq">Carrier frequency (Hz)</label>
-    <input id="freq" type="number" min="200" max="12000" step="10" value="8000">
-
-    <label for="session">Session length</label>
-    <select id="session">
-        <option value="600">10 minutes</option>
-        <option value="900">15 minutes</option>
-        <option value="1200" selected>20 minutes</option>
-        <option value="1800">30 minutes</option>
-    </select>
-
-    <label for="volume">Master volume</label>
-    <input id="volume" type="range" min="0" max="1" step="0.01" value="0.3">
-
-    <label for="mix">Tone / Noise mix (0 = noise only, 1 = tone only)</label>
-    <input id="mix" type="range" min="0" max="1" step="0.01" value="0.5">
-
-    <label for="modRate">Noise modulation rate (Hz)</label>
-    <input id="modRate" type="number" min="0.1" max="10" step="0.1" value="2.0">
-
-    <label for="burstRate">Tone burst rate (Hz)</label>
-    <input id="burstRate" type="number" min="0.2" max="10" step="0.1" value="1.5">
-
-    <button id="startBtn">Start session</button>
-    <button id="stopBtn" disabled>Stop</button>
-
+    <h1>Lenire‑Style Sound</h1>
+    <p class="info">Experimental sound‑only bimodal-style therapy.</p>
+    <div class="ctrl"><label>Carrier Frequency (Hz)</label><input id="freq" type="number" min="200" max="12000" step="10" value="8000"></div>
+    <div class="ctrl"><label>Session Length</label><select id="session"><option value="600">10 min</option><option value="900">15 min</option><option value="1200" selected>20 min</option></select></div>
+    <div class="ctrl"><label>Master Volume <span class="val" id="volVal">30%</span></label><input id="volume" type="range" min="0" max="1" step="0.01" value="0.3"></div>
+    <div class="ctrl"><label>Tone / Noise Mix <span class="val" id="mixVal">50%</span></label><input id="mix" type="range" min="0" max="1" step="0.01" value="0.5"></div>
+    <div class="ctrl"><label>Noise Modulation (Hz)</label><input id="modRate" type="number" min="0.1" max="10" step="0.1" value="2.0"></div>
+    <div class="ctrl"><label>Tone Burst Rate (Hz)</label><input id="burstRate" type="number" min="0.2" max="10" step="0.1" value="1.5"></div>
+    <button id="startBtn" class="big-btn play-btn" onclick="startSession()">Start Session</button>
+    <button id="stopBtn" class="big-btn stop-btn" style="display:none" onclick="stopSession()">Stop Session</button>
     <div class="timer" id="timer">Session: 00:00 / 20:00</div>
-
-    <small>
-        Use at comfortable listening levels. This is an experimental sound tool, not a medical device.
-    </small>
 </div>
-
 <script>
-let audioCtx = null;
-let masterGain, toneGain, noiseGain;
-let toneOsc, noiseSource, noiseFilter;
-let noiseModOsc, noiseModGain;
-let burstOsc, burstGain;
-let running = false;
-let sessionSeconds = 1200;
-let remaining = 0;
-let timerId = null;
+let audioCtx,masterGain,toneGain,noiseGain,toneOsc,noiseSource,noiseFilter,noiseModOsc,noiseModGain,burstOsc,burstGain;
+let running=false,remaining=0,timerId=null,sessionSeconds=1200;
 
-const freqEl = document.getElementById('freq');
-const sessionEl = document.getElementById('session');
-const volumeEl = document.getElementById('volume');
-const mixEl = document.getElementById('mix');
-const modRateEl = document.getElementById('modRate');
-const burstRateEl = document.getElementById('burstRate');
-const startBtn = document.getElementById('startBtn');
-const stopBtn = document.getElementById('stopBtn');
-const timerEl = document.getElementById('timer');
+window.onload = () => {
+    document.getElementById('freq').value = loadSetting('len_freq', 8000);
+    document.getElementById('volume').value = loadSetting('len_vol', 0.3);
+    document.getElementById('mix').value = loadSetting('len_mix', 0.5);
+    document.getElementById('modRate').value = loadSetting('len_mod', 2.0);
+    document.getElementById('burstRate').value = loadSetting('len_burst', 1.5);
+    updateLabels();
+};
 
-function formatTime(sec) {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+function updateLabels(){
+    document.getElementById('volVal').textContent = Math.round(document.getElementById('volume').value*100) + '%';
+    document.getElementById('mixVal').textContent = Math.round(document.getElementById('mix').value*100) + '%';
 }
 
-function updateTimerDisplay() {
-    const total = sessionSeconds;
-    const elapsed = total - remaining;
-    timerEl.textContent = `Session: ${formatTime(elapsed)} / ${formatTime(total)}`;
+function formatTime(s){return Math.floor(s/60).toString().padStart(2,'0')+':'+(s%60).toString().padStart(2,'0')}
+function updateTimerDisplay(){timerEl.textContent='Session: '+formatTime(sessionSeconds-remaining)+' / '+formatTime(sessionSeconds)}
+const freqEl=document.getElementById('freq'),volEl=document.getElementById('volume'),mixEl=document.getElementById('mix'),modEl=document.getElementById('modRate'),burstEl=document.getElementById('burstRate'),timerEl=document.getElementById('timer');
+
+function startSession(){
+  if(running)return;
+  sessionSeconds=parseInt(document.getElementById('session').value); remaining=sessionSeconds;
+  if(!audioCtx)setupAudio();
+  updateParams(); running=true;
+  document.getElementById('startBtn').style.display='none';
+  document.getElementById('stopBtn').style.display='block';
+  timerId=setInterval(()=>{remaining--;if(remaining<=0)stopSession();updateTimerDisplay()},1000);
+}
+function stopSession(){running=false;document.getElementById('startBtn').style.display='block';document.getElementById('stopBtn').style.display='none';if(timerId)clearInterval(timerId);remaining=0;updateTimerDisplay()}
+
+function setupAudio(){
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  masterGain=audioCtx.createGain(); masterGain.connect(audioCtx.destination);
+  toneOsc=audioCtx.createOscillator(); toneGain=audioCtx.createGain(); toneOsc.connect(toneGain).connect(masterGain);
+  const buf=audioCtx.createBuffer(1,audioCtx.sampleRate*2,audioCtx.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  noiseSource=audioCtx.createBufferSource(); noiseSource.buffer=buf; noiseSource.loop=true;
+  noiseFilter=audioCtx.createBiquadFilter(); noiseFilter.type='bandpass'; noiseFilter.Q.value=1.5;
+  noiseGain=audioCtx.createGain(); noiseSource.connect(noiseFilter).connect(noiseGain).connect(masterGain);
+  noiseModOsc=audioCtx.createOscillator(); noiseModGain=audioCtx.createGain(); noiseModGain.gain.value=0.4; noiseModOsc.connect(noiseModGain).connect(noiseGain.gain);
+  burstOsc=audioCtx.createOscillator(); burstOsc.type='square'; burstGain=audioCtx.createGain(); burstGain.gain.value=0.5; burstOsc.connect(burstGain).connect(toneGain.gain);
+  toneOsc.start(); noiseSource.start(); noiseModOsc.start(); burstOsc.start();
+}
+function updateParams(){
+  if(!audioCtx)return;
+  const f=+freqEl.value,v=+volEl.value,m=+mixEl.value,mr=+modEl.value,br=+burstEl.value;
+  toneOsc.frequency.setTargetAtTime(f,audioCtx.currentTime,0.05); noiseFilter.frequency.setTargetAtTime(f,audioCtx.currentTime,0.05);
+  masterGain.gain.setTargetAtTime(v,audioCtx.currentTime,0.05); toneGain.gain.setTargetAtTime(m,audioCtx.currentTime,0.05); noiseGain.gain.setTargetAtTime(1-m,audioCtx.currentTime,0.05);
+  noiseModOsc.frequency.setTargetAtTime(mr,audioCtx.currentTime,0.05); burstOsc.frequency.setTargetAtTime(br,audioCtx.currentTime,0.05);
 }
 
-function createNoiseBuffer(ctx) {
-    const length = ctx.sampleRate * 2;
-    const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < length; i++) {
-        data[i] = Math.random() * 2 - 1;
-    }
-    return buffer;
-}
+[freqEl,volEl,mixEl,modEl,burstEl].forEach(el=>{el.oninput=()=>{
+    updateParams(); updateLabels();
+    const key = 'len_'+el.id.replace('Rate','').replace('volume','vol');
+    saveSetting(key, el.value);
+}});
 
-function setupAudio() {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    masterGain = audioCtx.createGain();
-    masterGain.gain.value = parseFloat(volumeEl.value);
-    masterGain.connect(audioCtx.destination);
-
-    toneOsc = audioCtx.createOscillator();
-    toneOsc.type = 'sine';
-    toneOsc.frequency.value = parseFloat(freqEl.value);
-
-    toneGain = audioCtx.createGain();
-    toneGain.gain.value = parseFloat(mixEl.value);
-
-    toneOsc.connect(toneGain).connect(masterGain);
-
-    noiseSource = audioCtx.createBufferSource();
-    noiseSource.buffer = createNoiseBuffer(audioCtx);
-    noiseSource.loop = true;
-
-    noiseFilter = audioCtx.createBiquadFilter();
-    noiseFilter.type = 'bandpass';
-    noiseFilter.frequency.value = parseFloat(freqEl.value);
-    noiseFilter.Q.value = 1.5;
-
-    noiseGain = audioCtx.createGain();
-    noiseGain.gain.value = 1.0 - parseFloat(mixEl.value);
-
-    noiseSource.connect(noiseFilter).connect(noiseGain).connect(masterGain);
-
-    noiseModOsc = audioCtx.createOscillator();
-    noiseModOsc.type = 'sine';
-    noiseModOsc.frequency.value = parseFloat(modRateEl.value);
-
-    noiseModGain = audioCtx.createGain();
-    noiseModGain.gain.value = 0.4;
-
-    noiseModOsc.connect(noiseModGain);
-    noiseModGain.connect(noiseGain.gain);
-
-    burstOsc = audioCtx.createOscillator();
-    burstOsc.type = 'square';
-    burstOsc.frequency.value = parseFloat(burstRateEl.value);
-
-    burstGain = audioCtx.createGain();
-    burstGain.gain.value = 0.5;
-
-    burstOsc.connect(burstGain);
-    burstGain.connect(toneGain.gain);
-
-    toneOsc.start();
-    noiseSource.start();
-    noiseModOsc.start();
-    burstOsc.start();
-}
-
-function updateParams() {
-    if (!audioCtx) return;
-    const freq = parseFloat(freqEl.value);
-    const mix = parseFloat(mixEl.value);
-    const modRate = parseFloat(modRateEl.value);
-    const burstRate = parseFloat(burstRateEl.value);
-    const vol = parseFloat(volumeEl.value);
-
-    toneOsc.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.05);
-    noiseFilter.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.05);
-
-    masterGain.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.05);
-    toneGain.gain.setTargetAtTime(mix, audioCtx.currentTime, 0.05);
-    noiseGain.gain.setTargetAtTime(1.0 - mix, audioCtx.currentTime, 0.05);
-
-    noiseModOsc.frequency.setTargetAtTime(modRate, audioCtx.currentTime, 0.05);
-    burstOsc.frequency.setTargetAtTime(burstRate, audioCtx.currentTime, 0.05);
-}
-
-function startSession() {
-    if (running) return;
-    sessionSeconds = parseInt(sessionEl.value, 10);
-    remaining = sessionSeconds;
-
-    if (!audioCtx) {
-        setupAudio();
-    }
-
-    updateParams();
-    running = true;
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
-
-    updateTimerDisplay();
-    timerId = setInterval(() => {
-        if (!running) return;
-        remaining--;
-        if (remaining <= 0) {
-            stopSession();
-            return;
-        }
-        updateTimerDisplay();
-    }, 1000);
-}
-
-function stopSession() {
-    running = false;
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-    if (timerId) {
-        clearInterval(timerId);
-        timerId = null;
-    }
-    remaining = 0;
-    updateTimerDisplay();
-}
-
-startBtn.addEventListener('click', () => startSession());
-stopBtn.addEventListener('click', () => stopSession());
-
-[freqEl, volumeEl, mixEl, modRateEl, burstRateEl].forEach(el => {
-    el.addEventListener('input', updateParams);
-});
+function openHelp() { document.getElementById("helpModal").style.display = "block"; }
+function closeHelp() { document.getElementById("helpModal").style.display = "none"; }
 </script>
-
-<!-- ⭐ HELP MODAL (added, no code removed) ⭐ -->
-<div id="helpModal" style="
-    display:none;
-    position:fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background:rgba(0,0,0,0.7);
-    backdrop-filter:blur(4px);
-    z-index:9999;
-    padding:20px;
-">
-    <div style="
-        max-width:500px;
-        margin:60px auto;
-        background:#fff;
-        color:#000;
-        padding:20px;
-        border-radius:12px;
-        box-shadow:0 0 10px rgba(0,0,0,0.3);
-        text-align:left;
-    ">
-        <h2 style="margin-top:0;">How to Use This Therapy</h2>
-        <div id="helpContent" style="font-size:15px; line-height:1.5;"></div>
-
-        <button onclick="closeHelp()" style="
-            margin-top:20px;
-            width:100%;
-            padding:12px;
-            background:#0078ff;
-            color:#fff;
-            border:none;
-            border-radius:8px;
-            font-size:16px;
-            cursor:pointer;
-        ">Close</button>
+<div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); z-index:9999; padding:20px;">
+    <div style="max-width:500px; margin:60px auto; background:#1a1a2e; color:#e0e0e0; padding:25px; border-radius:12px; border:1px solid #333; text-align:left;">
+        <h2 style="color:#ab47bc; margin-top:0;">Help & Guidance</h2>
+        <div id="helpContent" style="font-size:0.95rem; line-height:1.6; margin:15px 0;">
+            <b>Purpose:</b> Simulates the sound‑only component of Lenire therapy using tone bursts and modulated noise.<br><br>
+            <b>Usage:</b> Set carrier frequency near your tinnitus pitch. Adjust tone/noise mix for comfort.<br><br>
+            <b>Plan:</b> 20 minutes per session is recommended.
+        </div>
+        <button onclick="closeHelp()" style="width:100%; padding:12px; background:#ab47bc; color:#fff; border:none; border-radius:8px; cursor:pointer;">Close</button>
     </div>
 </div>
-
-<script>
-function openHelp() {
-    document.getElementById("helpModal").style.display = "block";
-}
-function closeHelp() {
-    document.getElementById("helpModal").style.display = "none";
-}
-</script>
-
-<!-- ⭐ LENIRE HELP CONTENT ⭐ -->
-<script>
-document.getElementById("helpContent").innerHTML = `
-<b>Purpose:</b><br>
-This module simulates the sound‑only component of Lenire therapy using tone bursts and modulated noise.<br><br>
-
-<b>Setup:</b><br>
-• Use headphones.<br>
-• Set carrier frequency near your tinnitus pitch.<br>
-• Adjust tone/noise mix for comfort.<br><br>
-
-<b>Usage Plan:</b><br>
-• 20 minutes per session (default).<br>
-• 1–2 sessions per day.<br><br>
-
-<b>Tips:</b><br>
-• If tone is too sharp, increase noise mix.<br>
-• If noise is too harsh, lower modulation rate.<br><br>
-
-<b>Safety:</b><br>
-• Keep volume low.<br>
-• Stop if you feel discomfort.
-`;
-</script>
-
 </body>
 </html>

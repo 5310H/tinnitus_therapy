@@ -2,384 +2,150 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Sound Therapy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>Sound Therapy</title>
+<script src="storage.js"></script>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f4f4f4;
-        margin: 0;
-        padding: 0;
-        text-align: center;
-        transition: background 0.3s, color 0.3s;
-    }
-
-    /* Top bar */
-    .top-bar {
-        width: 100%;
-        background: #0078ff;
-        color: white;
-        padding: 12px 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .top-bar button {
-        background: white;
-        color: #0078ff;
-        border: none;
-        padding: 10px 16px;
-        margin: 0 10px;
-        border-radius: 6px;
-        font-size: 15px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: background 0.3s, color 0.3s;
-    }
-
-    /* ⭐ HELP BUTTON (added) ⭐ */
-    .help-btn {
-        background:white;
-        color:#0078ff;
-        border:none;
-        padding:10px 16px;
-        margin-right:10px;
-        border-radius:6px;
-        font-size:15px;
-        cursor:pointer;
-        font-weight:bold;
-    }
-    .help-btn:hover { background:#e0e0e0; }
-
-    h1 {
-        margin-top: 20px;
-        margin-bottom: 5px;
-        transition: color 0.3s;
-    }
-
-    .control-group {
-        background: white;
-        padding: 15px;
-        margin: 15px;
-        border-radius: 10px;
-        box-shadow: 0 0 5px rgba(0,0,0,0.1);
-        transition: background 0.3s, color 0.3s, box-shadow 0.3s;
-    }
-
-    button {
-        padding: 12px 20px;
-        margin: 8px;
-        font-size: 16px;
-        border: none;
-        border-radius: 8px;
-        background: #0078ff;
-        color: white;
-        cursor: pointer;
-        transition: background 0.3s, color 0.3s;
-    }
-
-    button:active {
-        background: #005fcc;
-    }
-
-    input[type=range] {
-        width: 90%;
-    }
-
-    /* ---------------- DARK MODE ---------------- */
-
-    body.dark {
-        background: #1e1e1e;
-        color: #e6e6e6;
-    }
-
-    body.dark .top-bar {
-        background: #111;
-        color: white;
-    }
-
-    body.dark .top-bar button {
-        background: #333;
-        color: #fff;
-    }
-
-    body.dark .control-group {
-        background: #2a2a2a;
-        color: #e6e6e6;
-        box-shadow: 0 0 5px rgba(255,255,255,0.1);
-    }
-
-    body.dark button {
-        background: #444;
-        color: #fff;
-    }
-
-    body.dark button:active {
-        background: #666;
-    }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
+.panel{max-width:520px;width:90%;margin:3rem auto;text-align:center}
+h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc}
+.info{color:#888;font-size:.85rem;margin-bottom:2rem}
+.ctrl{margin:1.5rem 0;padding:1rem;background:#1a1a2e;border:1px solid #333;border-radius:12px;text-align:left}
+.ctrl h3{font-size:.95rem;color:#ab47bc;margin-bottom:.8rem;text-align:center;text-transform:uppercase;letter-spacing:1px}
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sm-btn{padding:10px;background:#252545;color:#e0e0e0;border:1px solid #333;border-radius:8px;cursor:pointer;font-size:.85rem;transition:all .2s}
+.sm-btn:hover{background:#ab47bc;color:#fff}
+.sm-btn.active{background:#ab47bc;color:#fff;border-color:#fff}
+input[type=range]{width:100%;accent-color:#ab47bc;margin-top:5px}
+.val{float:right;color:#ab47bc;font-size:.85rem}
+.big-btn{width:100%;padding:1rem;margin-top:10px;font-size:1.1rem;border:none;border-radius:12px;cursor:pointer;font-weight:700;background:linear-gradient(135deg,#ab47bc,#8e24aa);color:#fff}
+.stop-btn{background:linear-gradient(135deg,#ef5350,#e53935)}
+.help-btn { position: fixed; top: 1rem; right: 1rem; background:#1a1a2e; color:#ab47bc; border:1px solid #ab47bc; padding:8px 14px; border-radius:8px; font-size:.9rem; cursor:pointer; z-index:10; }
 </style>
 </head>
-
 <body>
+<button class="help-btn" onclick="openHelp()">Help</button>
+<a class="back" href="index.html">Home</a>
+<div class="panel">
+    <h1>Sound Therapy</h1>
+    <p class="info">Nature sounds and calibrated broadband noise.</p>
 
-<!-- Top bar -->
-<div class="top-bar">
-    <button onclick="location.href='index.html'">Home</button>
-    <div>
-        <button onclick="toggleDarkMode()">Dark Mode</button>
-        <button onclick="stopAll()">Stop</button>
-        <button class="help-btn" onclick="openHelp()">Help</button>
+    <div class="ctrl">
+        <h3>Noise Types</h3>
+        <div class="btn-grid">
+            <button class="sm-btn" onclick="playNoise('white', this)">White</button>
+            <button class="sm-btn" onclick="playNoise('pink', this)">Pink</button>
+            <button class="sm-btn" onclick="playNoise('brown', this)">Brown</button>
+            <button class="sm-btn stop-btn" onclick="stopAll()">Stop</button>
+        </div>
+    </div>
+
+    <div class="ctrl">
+        <h3>Nature Sounds</h3>
+        <div class="btn-grid">
+            <button class="sm-btn" onclick="playSample('rain', this)">Rain</button>
+            <button class="sm-btn" onclick="playSample('ocean', this)">Ocean</button>
+            <button class="sm-btn" onclick="playSample('stream', this)">Stream</button>
+            <button class="sm-btn" onclick="playSample('wind', this)">Wind</button>
+        </div>
+    </div>
+
+    <div class="ctrl">
+        <label>Volume <span class="val" id="volVal">30%</span></label>
+        <input id="volume" type="range" min="0" max="1" step="0.01" value="0.3" oninput="setVolume(this.value)">
+        <label style="display:block;margin-top:10px">L/R Balance <span class="val" id="balVal">0</span></label>
+        <input id="balance" type="range" min="-1" max="1" step="0.02" value="0" oninput="setBalance(this.value)">
+    </div>
+
+    <div class="ctrl" style="text-align:center">
+        <h3>Session Timer</h3>
+        <input id="timer" type="number" min="1" max="120" value="10" style="width:60px;padding:5px;border-radius:4px;border:1px solid #333;background:#0a0a1a;color:#fff"> min
+        <button class="big-btn" onclick="startTimer()">Start Timer</button>
+        <p id="timerDisplay" style="margin-top:10px;color:#ab47bc;font-weight:700"></p>
     </div>
 </div>
 
-<h1>Sound Therapy</h1>
-<p>White, pink, brown noise + real nature sounds</p>
-
-<div class="control-group">
-    <h3>Noise Types</h3>
-    <button onclick="playNoise('white')">White Noise</button>
-    <button onclick="playNoise('pink')">Pink Noise</button>
-    <button onclick="playNoise('brown')">Brown Noise</button>
-</div>
-
-<div class="control-group">
-    <h3>Nature Sounds </h3>
-    <button onclick="playSample('rain')">Rain</button>
-    <button onclick="playSample('ocean')">Ocean</button>
-    <button onclick="playSample('costal')">Coastal Ocean</button>
-    <button onclick="playSample('stream')">Stream</button>
-    <button onclick="playSample('wild')">Wild Stream</button>
-    <button onclick="playSample('wind')">Wind</button>
-</div>
-
-<div class="control-group">
-    <h3>Volume</h3>
-    <input id="volume" type="range" min="0" max="1" step="0.01" value="0.3" oninput="setVolume(this.value)">
-</div>
-
-<div class="control-group">
-    <h3>Left / Right Balance</h3>
-    <input id="balance" type="range" min="-1" max="1" step="0.01" value="0" oninput="setBalance(this.value)">
-</div>
-
-<div class="control-group">
-    <h3>Session Timer (minutes)</h3>
-    <input id="timer" type="number" min="1" max="120" value="10">
-    <button onclick="startTimer()">Start Timer</button>
-    <p id="timerDisplay"></p>
-</div>
-
 <script>
-let audioCtx;
-let currentSource = null;
-let gainNode;
-let pannerNode;
-let timerInterval;
+let audioCtx,currentSource,gainNode,pannerNode,timerInterval;
 
-/* DARK MODE */
-function toggleDarkMode() {
-    document.body.classList.toggle("dark");
-}
+window.onload = () => {
+    const v = loadSetting('st_vol', 0.3);
+    const b = loadSetting('st_bal', 0);
+    document.getElementById('volume').value = v;
+    document.getElementById('balance').value = b;
+    document.getElementById('volVal').textContent = Math.round(v*100)+'%';
+    document.getElementById('balVal').textContent = b;
+};
 
-/* AUDIO INIT */
 function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         gainNode = audioCtx.createGain();
         pannerNode = audioCtx.createStereoPanner();
         gainNode.connect(pannerNode).connect(audioCtx.destination);
+        setVolume(document.getElementById('volume').value);
+        setBalance(document.getElementById('balance').value);
     }
 }
 
-/* NOISE GENERATION */
-function createNoise(type) {
-    const bufferSize = 2 * audioCtx.sampleRate;
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-
-    if (type === 'white') {
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-    }
-    if (type === 'pink') {
-        let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0;
-        for (let i = 0; i < bufferSize; i++) {
-            const white = Math.random() * 2 - 1;
-            b0 = 0.99886 * b0 + white * 0.0555179;
-            b1 = 0.99332 * b1 + white * 0.0750759;
-            b2 = 0.96900 * b2 + white * 0.1538520;
-            b3 = 0.86650 * b3 + white * 0.3104856;
-            b4 = 0.55000 * b4 + white * 0.5329522;
-            b5 = -0.7616 * b5 - white * 0.0168980;
-            data[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
-            data[i] *= 0.11;
-            b6 = white * 0.115926;
-        }
-    }
-    if (type === 'brown') {
-        let lastOut = 0;
-        for (let i = 0; i < bufferSize; i++) {
-            const white = Math.random() * 2 - 1;
-            data[i] = (lastOut + 0.02 * white) / 1.02;
-            lastOut = data[i];
-            data[i] *= 3.5;
-        }
-    }
-
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
-    noise.loop = true;
-    return noise;
+function playNoise(type, btn) {
+    initAudio(); stopAll();
+    setActiveBtn(btn);
+    const bufSize = 2 * audioCtx.sampleRate, buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate), d = buf.getChannelData(0);
+    if(type==='white'){for(let i=0;i<bufSize;i++)d[i]=Math.random()*2-1}
+    else if(type==='pink'){let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8687*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926}}
+    else{let last=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;d[i]=(last+0.02*w)/1.02;last=d[i];d[i]*=3.5}}
+    currentSource = audioCtx.createBufferSource(); currentSource.buffer = buf; currentSource.loop = true;
+    currentSource.connect(gainNode); currentSource.start();
 }
 
-/* PLAY NOISE */
-function playNoise(type) {
-    initAudio();
-    stopAll();
-    currentSource = createNoise(type);
-    currentSource.connect(gainNode);
-    currentSource.start();
+function playSample(type, btn) {
+    initAudio(); stopAll();
+    setActiveBtn(btn);
+    const fileMap = { rain:'audio/rain.mp3', ocean:'audio/ocean.mp3', stream:'audio/stream.mp3', wind:'audio/wind.mp3' };
+    const audio = new Audio(fileMap[type]); audio.loop = true;
+    const track = audioCtx.createMediaElementSource(audio); track.connect(gainNode);
+    audio.play(); currentSource = audio;
 }
 
-/* PLAY SAMPLE */
-function playSample(type) {
-    initAudio();
-    stopAll();
+function setVolume(v) { if(gainNode) gainNode.gain.value = v; document.getElementById('volVal').textContent = Math.round(v*100)+'%'; saveSetting('st_vol', v); }
+function setBalance(v) { if(pannerNode) pannerNode.pan.value = v; document.getElementById('balVal').textContent = v; saveSetting('st_bal', v); }
 
-    const fileMap = {
-        rain: 'audio/rain.mp3',
-        ocean: 'audio/ocean.mp3',
-        costal: 'audio/ocean_coast.mp3',
-        stream: 'audio/stream.mp3',
-        wild: 'audio/loud_stream.mp3',
-        wind: 'audio/wind.mp3'
-    };
-
-    const audio = new Audio(fileMap[type]);
-    audio.loop = true;
-
-    const track = audioCtx.createMediaElementSource(audio);
-    track.connect(gainNode);
-
-    audio.play();
-    currentSource = audio;
+function stopAll() {
+    if(currentSource) { try{currentSource.pause()}catch(e){}; try{currentSource.stop()}catch(e){}; currentSource=null; }
+    document.querySelectorAll('.sm-btn').forEach(b=>b.classList.remove('active'));
 }
 
-/* VOLUME */
-function setVolume(v) {
-    initAudio();
-    gainNode.gain.value = v;
+function setActiveBtn(btn) {
+    document.querySelectorAll('.sm-btn').forEach(b=>b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
 }
 
-/* BALANCE */
-function setBalance(v) {
-    initAudio();
-    pannerNode.pan.value = v;
-}
-
-/* TIMER */
 function startTimer() {
-    const minutes = parseInt(document.getElementById("timer").value);
-    let remaining = minutes * 60;
-
+    let rem = parseInt(document.getElementById("timer").value) * 60;
     clearInterval(timerInterval);
-
     timerInterval = setInterval(() => {
-        remaining--;
-        document.getElementById("timerDisplay").innerText =
-            "Time left: " + Math.floor(remaining / 60) + ":" + (remaining % 60).toString().padStart(2, '0');
-
-        if (remaining <= 0) {
-            stopAll();
-            clearInterval(timerInterval);
-            document.getElementById("timerDisplay").innerText = "Session complete";
-        }
+        rem--; document.getElementById("timerDisplay").innerText = "Time left: "+Math.floor(rem/60)+":"+(rem%60).toString().padStart(2,'0');
+        if(rem<=0){ stopAll(); clearInterval(timerInterval); document.getElementById("timerDisplay").innerText = "Complete"; }
     }, 1000);
 }
 
-/* STOP EVERYTHING */
-function stopAll() {
-    if (currentSource) {
-        try { currentSource.pause(); currentSource.currentTime = 0; } catch(e) {}
-        try { currentSource.stop(); } catch(e) {}
-        currentSource = null;
-    }
-}
+function openHelp() { document.getElementById("helpModal").style.display = "block"; }
+function closeHelp() { document.getElementById("helpModal").style.display = "none"; }
 </script>
 
-<!-- ⭐ HELP MODAL (added, no code removed) ⭐ -->
-<div id="helpModal" style="
-    display:none;
-    position:fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background:rgba(0,0,0,0.7);
-    backdrop-filter:blur(4px);
-    z-index:9999;
-    padding:20px;
-">
-    <div style="
-        max-width:500px;
-        margin:60px auto;
-        background:#fff;
-        color:#000;
-        padding:20px;
-        border-radius:12px;
-        box-shadow:0 0 10px rgba(0,0,0,0.3);
-        text-align:left;
-    ">
-        <h2 style="margin-top:0;">How to Use This Therapy</h2>
-        <div id="helpContent" style="font-size:15px; line-height:1.5;"></div>
-
-        <button onclick="closeHelp()" style="
-            margin-top:20px;
-            width:100%;
-            padding:12px;
-            background:#0078ff;
-            color:#fff;
-            border:none;
-            border-radius:8px;
-            font-size:16px;
-            cursor:pointer;
-        ">Close</button>
+<div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); z-index:9999; padding:20px;">
+    <div style="max-width:500px; margin:60px auto; background:#1a1a2e; color:#e0e0e0; padding:25px; border-radius:12px; border:1px solid #333; text-align:left;">
+        <h2 style="color:#ab47bc; margin-top:0;">Help & Guidance</h2>
+        <div style="font-size:0.95rem; line-height:1.6; margin:15px 0;">
+            <b>Purpose:</b> Reduces contrast between tinnitus and silence, helping the brain ignore the phantom signal.<br><br>
+            <b>Usage:</b> Aim for "partial masking" where you can still hear the tinnitus slightly behind the noise.<br><br>
+            <b>Nature Sounds:</b> Useful for long sessions to reduce "listener fatigue."
+        </div>
+        <button onclick="closeHelp()" style="width:100%; padding:12px; background:#ab47bc; color:#fff; border:none; border-radius:8px; cursor:pointer;">Close</button>
     </div>
 </div>
-
-<script>
-function openHelp() {
-    document.getElementById("helpModal").style.display = "block";
-}
-function closeHelp() {
-    document.getElementById("helpModal").style.display = "none";
-}
-</script>
-
-<!-- ⭐ SOUND THERAPY HELP CONTENT ⭐ -->
-<script>
-document.getElementById("helpContent").innerHTML = `
-<b>Purpose:</b><br>
-Sound therapy reduces the contrast between tinnitus and silence, helping the brain ignore the tinnitus signal over time.<br><br>
-
-<b>Setup:</b><br>
-• Choose a noise or nature sound that feels soothing.<br>
-• Adjust volume so tinnitus blends but is not fully masked.<br>
-• Use headphones for best stereo balance control.<br><br>
-
-<b>Usage Plan:</b><br>
-• 20–60 minutes per session.<br>
-• Use during reading, work, relaxation, or sleep preparation.<br><br>
-
-<b>Tips:</b><br>
-• Pink noise is usually the most comfortable long‑term.<br>
-• Nature sounds can reduce listening fatigue.<br>
-• Avoid masking tinnitus completely — aim for partial blending.<br><br>
-
-<b>Safety:</b><br>
-• Keep volume low and comfortable.<br>
-• Stop if you feel ear fatigue or discomfort.
-`;
-</script>
-
 </body>
 </html>

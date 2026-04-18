@@ -4,149 +4,46 @@
 <meta charset="UTF-8">
 <title>Tinnitus Research Overview</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f4f4f4;
-        margin: 0;
-        padding: 20px;
-        text-align: center;
-    }
-
-    h1 {
-        margin-bottom: 5px;
-        font-size: 24px;
-    }
-
-    p {
-        margin-top: 0;
-        font-size: 14px;
-        color: #444;
-    }
-
-    .card {
-        max-width: 700px;
-        margin: 15px auto;
-        background: #fff;
-        padding: 18px;
-        border-radius: 10px;
-        box-shadow: 0 0 4px rgba(0,0,0,0.1);
-        text-align: left;
-    }
-
-    h2 {
-        margin-top: 0;
-        font-size: 20px;
-    }
-
-    .button {
-        display: block;
-        background: #0078ff;
-        color: white;
-        padding: 10px;
-        margin: 10px auto;
-        width: 200px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-size: 15px;
-        transition: background 0.25s ease;
-        text-align: center;
-    }
-
-    .button:hover {
-        background: #005fcc;
-    }
-
-    ul {
-        padding-left: 20px;
-        line-height: 1.5;
-    }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
+.panel{max-width:700px;width:90%;margin:3rem auto}
+h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc;text-align:center}
+.info{color:#888;font-size:.85rem;margin-bottom:2rem;text-align:center}
+.card{background:#1a1a2e;padding:20px;border-radius:12px;border:1px solid #333;margin-bottom:20px}
+h2{margin-bottom:10px;font-size:1.3rem;color:#ab47bc}
+h3{margin:15px 0 5px;font-size:1.1rem;color:#aaa}
+p{line-height:1.6;margin-bottom:10px;font-size:0.95rem}
+ul{padding-left:20px;line-height:1.6;font-size:0.95rem;margin-bottom:10px}
 </style>
 </head>
-
 <body>
-
-<a class="button" href="index.html">Home</a>
-
+<a class="back" href="index.html">Home</a>
+<div class="panel">
 <h1>Tinnitus Research Overview</h1>
-<p>Summary of evidence behind Lenire‑style and sound‑based tinnitus therapies.</p>
+<p class="info">Evidence behind sound‑based therapies.</p>
 
-<!-- LENIRE SECTION -->
 <div class="card">
-    <h2>Lenire (Bimodal Neuromodulation)</h2>
-
-    <p>
-        Lenire is a tinnitus treatment that combines:
-    </p>
-
-    <ul>
-        <li><strong>Sound stimulation</strong> through headphones</li>
-        <li><strong>Mild electrical pulses</strong> delivered to the tongue</li>
-    </ul>
-
-    <p>
-        This dual‑input approach is known as <strong>bimodal neuromodulation</strong>.  
-        Research shows that pairing sound with somatosensory stimulation can promote changes in the auditory system.
-    </p>
-
+    <h2>Bimodal Neuromodulation (Lenire-style)</h2>
+    <p>Lenire uses sound and tongue-stimulation. This site provides the <strong>sound-only component</strong>, which serves as a foundational baseline for experimental auditory stimulation. Research indicates pairing auditory stimulation with attention can promote cortical plasticity.</p>
     <h3>Key Findings</h3>
     <ul>
-        <li>Clinical trials reported reductions in tinnitus severity for many participants.</li>
-        <li>Sound‑only stimulation also produced improvement, but bimodal stimulation produced stronger effects.</li>
-        <li>Benefits were more pronounced in people with moderate to severe tinnitus.</li>
+        <li>Clinical trials report significant reductions in tinnitus severity for many.</li>
+        <li>Benefits are often most pronounced in moderate-to-severe cases.</li>
     </ul>
-
-    <h3>What This Project Uses</h3>
-    <p>
-        This site provides the <strong>sound‑only component</strong> of Lenire‑style therapy:
-    </p>
-
-    <ul>
-        <li>Carrier tones</li>
-        <li>Broadband noise</li>
-        <li>Frequency‑shaped noise</li>
-        <li>Amplitude‑modulated noise</li>
-        <li>Tone‑burst patterns</li>
-    </ul>
-
-    <p>
-        No electrical stimulation is included.  
-        This is an <strong>experimental sound‑only tool</strong> inspired by published research.
-    </p>
 </div>
 
-<!-- SOUND THERAPY SECTION -->
 <div class="card">
     <h2>Sound Therapy Approaches</h2>
-
-    <p>
-        Sound therapy is one of the most widely used tinnitus management strategies.  
-        It works by reducing contrast between tinnitus and silence, promoting habituation, and altering auditory gain.
-    </p>
-
-    <h3>Common Sound‑Based Methods</h3>
-
+    <p>Sound therapy aims to reduce the contrast between tinnitus and the environment, facilitating <strong>habituation</strong>.</p>
+    <h3>Common Methods</h3>
     <ul>
-        <li><strong>White, pink, and brown noise</strong> — broadband noise used for masking and habituation.</li>
-        <li><strong>Notch therapy</strong> — removes a narrow frequency band around the tinnitus pitch.</li>
-        <li><strong>Decorrelated noise</strong> — left/right differences reduce central auditory synchrony.</li>
-        <li><strong>Amplitude‑modulated noise</strong> — rhythmic modulation may reduce perceived loudness.</li>
-        <li><strong>Tone‑based therapy</strong> — tones matched to tinnitus frequency for targeted stimulation.</li>
+        <li><strong>Notch Therapy:</strong> Removing noise at the tinnitus frequency to encourage cortical reorganization.</li>
+        <li><strong>Broadband Noise (White/Pink):</strong> Useful for sustained masking and reducing attention focus.</li>
+        <li><strong>Decorrelated Noise:</strong> Reduces synchrony in the auditory system.</li>
     </ul>
-
-    <h3>Evidence Summary</h3>
-    <ul>
-        <li>Broadband noise can reduce tinnitus awareness over time.</li>
-        <li>Notch therapy has shown benefit in several studies, especially for tonal tinnitus.</li>
-        <li>Modulated noise and tone‑burst patterns are being explored in newer research.</li>
-        <li>Sound‑only therapy is non‑invasive and widely used in clinical practice.</li>
-    </ul>
-
-    <p>
-        The tools on this site implement these methods using the Web Audio API, allowing real‑time sound generation in the browser.
-    </p>
 </div>
-
+</div>
 </body>
 </html>

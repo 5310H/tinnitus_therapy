@@ -4,27 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Notch Therapy</title>
+<script src="storage.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
 a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
-
-/* ⭐ HELP BUTTON (added, non-invasive) ⭐ */
-.help-btn {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    background:#1a1a2e;
-    color:#ab47bc;
-    border:1px solid #ab47bc;
-    padding:8px 14px;
-    border-radius:8px;
-    font-size:.9rem;
-    cursor:pointer;
-    z-index:10;
-}
+.help-btn { position: fixed; top: 1rem; right: 1rem; background:#1a1a2e; color:#ab47bc; border:1px solid #ab47bc; padding:8px 14px; border-radius:8px; font-size:.9rem; cursor:pointer; z-index:10; }
 .help-btn:hover { background:#ab47bc; color:#fff; }
-
 .panel{max-width:520px;width:90%;margin:3rem auto;text-align:center}
 h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc}
 .info{color:#888;font-size:.85rem;margin-bottom:2rem}
@@ -44,8 +30,6 @@ canvas{width:100%;height:120px;margin-top:1rem;border-radius:8px;background:#111
 .match-section p{font-size:.8rem;color:#999}
 .tone-btn{padding:.5rem 1rem;margin-top:.5rem;background:#1a1a2e;border:1px solid #ab47bc;color:#ab47bc;border-radius:6px;cursor:pointer;font-size:.85rem}
 .tone-btn:hover{background:#ab47bc;color:#fff}
-
-/* ⭐ TIMER BLOCK (added earlier) ⭐ */
 .timer-block{margin-top:1.5rem;text-align:left}
 .timer-block label{display:block;font-size:.85rem;color:#aaa;margin-bottom:.3rem}
 .timer-block input{width:100%;padding:.6rem;background:#1a1a2e;color:#e0e0e0;border:1px solid #333;border-radius:8px;font-size:1rem}
@@ -53,67 +37,44 @@ canvas{width:100%;height:120px;margin-top:1rem;border-radius:8px;background:#111
 </style>
 </head>
 <body>
-
-<!-- ⭐ HELP BUTTON ADDED ⭐ -->
 <button class="help-btn" onclick="openHelp()">Help</button>
-
 <a class="back" href="index.html">Home</a>
-
 <div class="panel">
 <h1>Notch Therapy</h1>
 <p class="info">Removes energy at your tinnitus frequency from broadband noise, encouraging cortical reorganization (TMNMT).</p>
-
 <div class="match-section">
   <h3>Step 1 - Find Your Tinnitus Frequency</h3>
-  <p>Play the test tone and adjust until it matches your tinnitus pitch.</p>
   <div class="ctrl">
     <label>Test Tone <span class="val" id="toneVal">6000 Hz</span></label>
     <input type="range" id="toneFreq" min="500" max="16000" value="6000" step="50">
   </div>
   <button class="tone-btn" id="toneBtn" onclick="toggleTone()">Play Test Tone</button>
 </div>
-
-<div class="ctrl">
-  <label>Noise Color</label>
-  <select id="color">
-    <option value="white">White Noise</option>
-    <option value="pink" selected>Pink Noise</option>
-  </select>
-</div>
-
-<div class="ctrl">
-  <label>Notch Center Frequency <span class="val" id="notchVal">6000 Hz</span></label>
-  <input type="range" id="notch" min="500" max="16000" value="6000" step="50">
-</div>
-
-<div class="ctrl">
-  <label>Notch Width <span class="val" id="nwVal">1.0 octave</span></label>
-  <input type="range" id="nw" min="0.25" max="2" value="1" step="0.05">
-</div>
-
-<div class="ctrl">
-  <label>Volume <span class="val" id="volVal">40%</span></label>
-  <input type="range" id="vol" min="0" max="100" value="40">
-</div>
-
-<!-- ⭐ TIMER BLOCK ⭐ -->
-<div class="timer-block">
-  <label>Session Timer (minutes)</label>
-  <input id="timerInput" type="number" min="1" max="120" value="10">
-  <button class="big-btn play-btn" onclick="startTimer()">Start Timer</button>
-  <div class="timer-display" id="timerDisplay"></div>
-</div>
-
+<div class="ctrl"><label>Noise Color</label><select id="color"><option value="white">White Noise</option><option value="pink" selected>Pink Noise</option></select></div>
+<div class="ctrl"><label>Notch Center Frequency <span class="val" id="notchVal">6000 Hz</span></label><input type="range" id="notch" min="500" max="16000" value="6000" step="50"></div>
+<div class="ctrl"><label>Notch Width <span class="val" id="nwVal">1.0 octave</span></label><input type="range" id="nw" min="0.25" max="2" value="1" step="0.05"></div>
+<div class="ctrl"><label>Volume <span class="val" id="volVal">40%</span></label><input type="range" id="vol" min="0" max="100" value="40"></div>
+<div class="timer-block"><label>Session Timer (minutes)</label><input id="timerInput" type="number" min="1" max="120" value="10"><button class="big-btn play-btn" onclick="startTimer()">Start Timer</button><div class="timer-display" id="timerDisplay"></div></div>
 <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start Notch Therapy</button>
 <div class="status" id="status"></div>
 <canvas id="viz"></canvas>
 </div>
-
 <script>
-let ctx,playing=false,src,analyser,toneCtx,toneOsc,tonePlaying=false;
-let timerInterval=null;
-
+let ctx,playing=false,src,analyser,toneCtx,toneOsc,tonePlaying=false,timerInterval=null;
 const BUF_SIZE=2*44100;
+
+window.onload = () => {
+    document.getElementById('toneFreq').value = loadSetting('toneFreq', 6000);
+    document.getElementById('notch').value = loadSetting('notch', 6000);
+    document.getElementById('nw').value = loadSetting('nw', 1);
+    document.getElementById('vol').value = loadSetting('vol', 40);
+    document.getElementById('color').value = loadSetting('color', 'pink');
+    ['toneFreq', 'notch', 'nw', 'vol'].forEach(id => {
+        const el = document.getElementById(id);
+        const valEl = document.getElementById(id === 'toneFreq' ? 'toneVal' : (id === 'notch' ? 'notchVal' : (id === 'nw' ? 'nwVal' : 'volVal')));
+        if (valEl) valEl.textContent = el.value + (id === 'nw' ? ' octave' : (id === 'vol' ? '%' : ' Hz'));
+    });
+};
 
 function createNoise(color){
   const buf=ctx.createBuffer(1,BUF_SIZE,ctx.sampleRate);
@@ -122,9 +83,7 @@ function createNoise(color){
   else{let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<BUF_SIZE;i++){const w=Math.random()*2-1;b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8687*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926}}
   return buf;
 }
-
 function toggle(){if(!playing)start();else stop()}
-
 function start(){
   ctx=new(window.AudioContext||window.webkitAudioContext)();
   const color=document.getElementById('color').value;
@@ -135,84 +94,38 @@ function start(){
   const loF=notchF*Math.pow(2,-halfOct);
   const hiF=notchF*Math.pow(2,halfOct);
   const buf=createNoise(color);
-
   src=ctx.createBufferSource();src.buffer=buf;src.loop=true;
-
-  const notch=ctx.createBiquadFilter();
-  notch.type='notch';
-  notch.frequency.value=notchF;
-  notch.Q.value=notchF/((hiF-loF)||1);
-
+  const notch=ctx.createBiquadFilter();notch.type='notch';notch.frequency.value=notchF;notch.Q.value=notchF/((hiF-loF)||1);
   const g=ctx.createGain();g.gain.value=vol;
-
   analyser=ctx.createAnalyser();analyser.fftSize=2048;
-
   src.connect(notch);notch.connect(g);g.connect(analyser);analyser.connect(ctx.destination);
-
-  src.start();
-  playing=true;
-
+  src.start();playing=true;
   document.getElementById('toggleBtn').textContent='Stop';
   document.getElementById('toggleBtn').className='big-btn stop-btn';
   document.getElementById('status').textContent='Notch at '+notchF+' Hz, '+nw+' oct width';
-
   drawViz();
 }
-
-function stop(){
-  if(ctx){ctx.close();ctx=null}
-  playing=false;
-
-  document.getElementById('toggleBtn').textContent='Start Notch Therapy';
-  document.getElementById('toggleBtn').className='big-btn play-btn';
-  document.getElementById('status').textContent='Stopped';
-}
-
+function stop(){if(ctx){ctx.close();ctx=null}playing=false;document.getElementById('toggleBtn').textContent='Start Notch Therapy';document.getElementById('toggleBtn').className='big-btn play-btn';document.getElementById('status').textContent='Stopped'}
 function startTimer(){
   const minutes=parseInt(document.getElementById("timerInput").value);
   let remaining=minutes*60;
-
   clearInterval(timerInterval);
-
   timerInterval=setInterval(()=>{
     remaining--;
-
-    document.getElementById("timerDisplay").textContent=
-      "Time left: "+Math.floor(remaining/60)+":"+
-      (remaining%60).toString().padStart(2,'0');
-
-    if(remaining<=0){
-      stop();
-      clearInterval(timerInterval);
-      document.getElementById("timerDisplay").textContent="Session complete";
-    }
+    document.getElementById("timerDisplay").textContent="Time left: "+Math.floor(remaining/60)+":"+(remaining%60).toString().padStart(2,'0');
+    if(remaining<=0){stop();clearInterval(timerInterval);document.getElementById("timerDisplay").textContent="Session complete"}
   },1000);
 }
-
 function drawViz(){
   if(!playing||!analyser)return;
-  const canvas=document.getElementById('viz');
-  const c=canvas.getContext('2d');
-  canvas.width=canvas.offsetWidth*2;
-  canvas.height=canvas.offsetHeight*2;
-
-  const data=new Uint8Array(analyser.frequencyBinCount);
-  analyser.getByteFrequencyData(data);
-
+  const canvas=document.getElementById('viz'),c=canvas.getContext('2d');
+  canvas.width=canvas.offsetWidth*2;canvas.height=canvas.offsetHeight*2;
+  const data=new Uint8Array(analyser.frequencyBinCount);analyser.getByteFrequencyData(data);
   c.clearRect(0,0,canvas.width,canvas.height);
-
   const barW=canvas.width/data.length*2.5;
-
-  for(let i=0;i<data.length/2.5;i++){
-    const h=(data[i]/255)*canvas.height;
-    const hue=270-(data[i]/255)*60;
-    c.fillStyle='hsl('+hue+',70%,55%)';
-    c.fillRect(i*barW,canvas.height-h,barW-1,h);
-  }
-
+  for(let i=0;i<data.length/2.5;i++){const h=(data[i]/255)*canvas.height,hue=270-(data[i]/255)*60;c.fillStyle='hsl('+hue+',70%,55%)';c.fillRect(i*barW,canvas.height-h,barW-1,h)}
   requestAnimationFrame(drawViz);
 }
-
 function toggleTone(){
   if(!tonePlaying){
     toneCtx=new(window.AudioContext||window.webkitAudioContext)();
@@ -220,104 +133,35 @@ function toggleTone(){
     const g=toneCtx.createGain();g.gain.value=0.15;
     toneOsc.frequency.value=+document.getElementById('toneFreq').value;
     toneOsc.connect(g);g.connect(toneCtx.destination);
-    toneOsc.start();
-    tonePlaying=true;
+    toneOsc.start();tonePlaying=true;
     document.getElementById('toneBtn').textContent='Stop Test Tone';
-  }else{
-    toneCtx.close();
-    tonePlaying=false;
-    document.getElementById('toneBtn').textContent='Play Test Tone';
-  }
+  }else{toneCtx.close();tonePlaying=false;document.getElementById('toneBtn').textContent='Play Test Tone'}
 }
-
 document.getElementById('toneFreq').oninput=e=>{
   document.getElementById('toneVal').textContent=e.target.value+' Hz';
   document.getElementById('notch').value=e.target.value;
   document.getElementById('notchVal').textContent=e.target.value+' Hz';
+  saveSetting('toneFreq', e.target.value);saveSetting('notch', e.target.value);
   if(tonePlaying)toneOsc.frequency.value=+e.target.value;
 };
+document.getElementById('notch').oninput=e=>{document.getElementById('notchVal').textContent=e.target.value+' Hz';saveSetting('notch', e.target.value)};
+document.getElementById('nw').oninput=e=>{document.getElementById('nwVal').textContent=e.target.value+' octave';saveSetting('nw', e.target.value)};
+document.getElementById('vol').oninput=e=>{document.getElementById('volVal').textContent=e.target.value+'%';saveSetting('vol', e.target.value)};
+document.getElementById('color').onchange=e=>saveSetting('color', e.target.value);
 
-document.getElementById('notch').oninput=e=>
-  document.getElementById('notchVal').textContent=e.target.value+' Hz';
-
-document.getElementById('nw').oninput=e=>
-  document.getElementById('nwVal').textContent=e.target.value+' octave';
-
-document.getElementById('vol').oninput=e=>
-  document.getElementById('volVal').textContent=e.target.value+'%';
+function openHelp() { document.getElementById("helpModal").style.display = "block"; }
+function closeHelp() { document.getElementById("helpModal").style.display = "none"; }
 </script>
-
-<!-- ⭐ HELP MODAL (added, no code removed) ⭐ -->
-<div id="helpModal" style="
-    display:none;
-    position:fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background:rgba(0,0,0,0.7);
-    backdrop-filter:blur(4px);
-    z-index:9999;
-    padding:20px;
-">
-    <div style="
-        max-width:500px;
-        margin:60px auto;
-        background:#fff;
-        color:#000;
-        padding:20px;
-        border-radius:12px;
-        box-shadow:0 0 10px rgba(0,0,0,0.3);
-        text-align:left;
-    ">
-        <h2 style="margin-top:0;">How to Use This Therapy</h2>
-        <div id="helpContent" style="font-size:15px; line-height:1.5;"></div>
-
-        <button onclick="closeHelp()" style="
-            margin-top:20px;
-            width:100%;
-            padding:12px;
-            background:#ab47bc;
-            color:#fff;
-            border:none;
-            border-radius:8px;
-            font-size:16px;
-            cursor:pointer;
-        ">Close</button>
+<div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); z-index:9999; padding:20px;">
+    <div style="max-width:500px; margin:60px auto; background:#1a1a2e; color:#e0e0e0; padding:25px; border-radius:12px; border:1px solid #333; text-align:left;">
+        <h2 style="color:#ab47bc; margin-top:0;">Help & Guidance</h2>
+        <div id="helpContent" style="font-size:0.95rem; line-height:1.6; margin:15px 0;">
+            <b>Purpose:</b> Notch Therapy removes sound energy around your tinnitus frequency.<br><br>
+            <b>Setup:</b> Match your tinnitus pitch using the test tone. Set width to 0.5–1.0 octaves.<br><br>
+            <b>Safety:</b> Keep volume low and comfortable.
+        </div>
+        <button onclick="closeHelp()" style="width:100%; padding:12px; background:#ab47bc; color:#fff; border:none; border-radius:8px; cursor:pointer;">Close</button>
     </div>
 </div>
-
-<script>
-function openHelp() {
-    document.getElementById("helpModal").style.display = "block";
-}
-function closeHelp() {
-    document.getElementById("helpModal").style.display = "none";
-}
-</script>
-
-<!-- ⭐ NOTCH THERAPY HELP CONTENT ⭐ -->
-<script>
-document.getElementById("helpContent").innerHTML = `
-<b>Purpose:</b><br>
-Notch Therapy removes sound energy around your tinnitus frequency. Over time, this encourages the auditory cortex to reduce overactivity at that pitch.<br><br>
-
-<b>Setup:</b><br>
-• First match your tinnitus pitch using the test tone.<br>
-• Set notch width to 0.5–1.0 octaves for best results.<br>
-• Use headphones for accurate frequency targeting.<br><br>
-
-<b>Usage Plan:</b><br>
-• 30–60 minutes per session.<br>
-• 1–2 sessions per day.<br>
-• Expect gradual improvement over weeks.<br><br>
-
-<b>Tips:</b><br>
-• Re‑match your tinnitus pitch weekly.<br>
-• Pink noise is generally more comfortable.<br><br>
-
-<b>Safety:</b><br>
-• Keep volume low and comfortable.
-`;
-</script>
-
 </body>
 </html>
