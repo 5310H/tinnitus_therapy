@@ -73,7 +73,7 @@ canvas{width:100%;height:120px;margin-top:1rem;border-radius:8px;background:#111
 
 <div class="panel">
 <h1>Notch Therapy</h1>
-<p class="info">Removes energy at your tinnitus frequency from broadband noise or nature sounds.</p>
+<p class="info">Removes energy at your tinnitus frequency from noise or nature sounds.</p>
 
 <div class="match-section">
   <h3>Step 1 — Match Your Tinnitus Pitch</h3>
@@ -90,6 +90,8 @@ canvas{width:100%;height:120px;margin-top:1rem;border-radius:8px;background:#111
 <div class="ctrl">
   <label>Sound Source</label>
   <select id="color">
+    <option value="none">None (silence)</option>
+
     <option value="white">White Noise</option>
     <option value="pink" selected>Pink Noise</option>
     <option value="brown">Brown Noise</option>
@@ -197,9 +199,21 @@ async function loadSample(name){
 async function start(){
   if(playing) return;
 
+  const color=document.getElementById('color').value;
+
+  /* ⭐ NONE = SILENCE ⭐ */
+  if(color==="none"){
+    stop();
+    const canvas=document.getElementById('viz');
+    const c=canvas.getContext('2d');
+    c.clearRect(0,0,canvas.width,canvas.height);
+    document.getElementById('status').textContent="Silence (no sound selected)";
+    playing=false;
+    return;
+  }
+
   ctx=new(window.AudioContext||window.webkitAudioContext)();
 
-  const color=document.getElementById('color').value;
   const vol=document.getElementById('vol').value/100;
   const notchF=+document.getElementById('notch').value;
   const nw=+document.getElementById('nw').value;
@@ -263,8 +277,6 @@ function stop(){
   document.getElementById('toggleBtn').className='big-btn play-btn';
   document.getElementById('status').textContent='Stopped';
 }
-
-function toggle(){ playing?stop():start(); }
 
 /* ---------------------- VISUALIZER ---------------------- */
 function drawViz(){
