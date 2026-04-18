@@ -1,60 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Two‑Tone Comparison Tool</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body { font-family:Arial; background:#f4f4f4; padding:20px; text-align:center; }
-.card { background:white; padding:20px; border-radius:12px; box-shadow:0 0 6px rgba(0,0,0,0.1); margin-bottom:20px; }
-input[type=range] { width:90%; }
-.button { background:#0078ff; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; margin:8px; display:inline-block; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinnitus Therapy</title>
+    <style>
+        /* Styles for top navigation bar */
+        .navbar {
+            background-color: #0078ff;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+        }
+        .navbar button {
+            background-color: darkblue;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+        /* Card styling matching notchfinder.html */
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px;
+            background-color: #f9f9f9;
+        }
+    </style>
 </head>
 <body>
+    <div class="navbar">
+        <button onclick="window.location.href='home.html'">Home</button>
+        <button onclick="stopAudio()">Stop</button>
+        <button id="helpBtn">Help</button>
+    </div>
 
-<h1>Two‑Tone Comparison</h1>
-<p>Switch between two tones to match your tinnitus pitch</p>
+    <div class="card">
+        <h2>Two-Tone Comparison</h2>
+        <p>Use the buttons above to navigate or stop audio playback.</p>
+    </div>
 
-<div class="card">
-    <h2>Tone A: <span id="freqA">1000</span> Hz</h2>
-    <input id="sliderA" type="range" min="100" max="12000" value="1000">
-</div>
+    <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5);">
+        <div style="background:white; padding:20px; margin:100px auto; width:300px;">
+            <h3>Help</h3>
+            <p>This functionality allows you to compare two tones.</p>
+            <button onclick="document.getElementById('helpModal').style.display='none'">Close</button>
+        </div>
+    </div>
 
-<div class="card">
-    <h2>Tone B: <span id="freqB">1200</span> Hz</h2>
-    <input id="sliderB" type="range" min="100" max="12000" value="1200">
-</div>
+    <script>
+        let audioPlayback = null;
 
-<div>
-    <button class="button" id="playA">Play A</button>
-    <button class="button" id="playB">Play B</button>
-    <button class="button" id="stop">Stop</button>
-</div>
+        function stopAudio() {
+            if (audioPlayback) {
+                audioPlayback.pause();
+                audioPlayback.currentTime = 0;
+            } else {
+                console.error('No audio is currently playing.');
+            }
+        }
 
-<script>
-let ctx=null, osc=null;
-
-function play(freq){
-    if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)();
-    stop();
-    osc=ctx.createOscillator();
-    osc.type="sine";
-    osc.frequency.value=freq;
-    osc.connect(ctx.destination);
-    osc.start();
-}
-function stop(){ if(osc){ osc.stop(); osc.disconnect(); osc=null; } }
-
-const sliderA=document.getElementById("sliderA");
-const sliderB=document.getElementById("sliderB");
-sliderA.oninput=()=>document.getElementById("freqA").textContent=sliderA.value;
-sliderB.oninput=()=>document.getElementById("freqB").textContent=sliderB.value;
-
-document.getElementById("playA").onclick=()=>play(sliderA.value);
-document.getElementById("playB").onclick=()=>play(sliderB.value);
-document.getElementById("stop").onclick=()=>stop();
-</script>
-
+        document.getElementById('helpBtn').onclick = function() {
+            document.getElementById('helpModal').style.display='block';
+        };
+    </script>
 </body>
 </html>
