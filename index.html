@@ -4,23 +4,15 @@
 <meta charset="UTF-8">
 <title>Tinnitus Therapy Suite</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0a0a1a; color: #e0e0e0; margin: 0; padding: 0; text-align: center; }
-    h1 { margin: 20px 0 10px 0; font-size: 1.8rem; color: #ab47bc; }
-    p { margin: 0 0 20px 0; font-size: 0.9rem; color: #888; }
-    .grid { display: grid; grid-template-columns: 1fr; gap: 15px; padding: 15px; max-width: 500px; margin: 0 auto; }
-    .card { background: #1a1a2e; padding: 15px; border-radius: 12px; border: 1px solid #333; text-align: left; }
-    .card h2 { margin: 0 0 10px 0; font-size: 1.1rem; text-align: center; color: #aaa; }
-    .button { display: block; background: #252545; color: #e0e0e0; padding: 12px; margin: 6px auto; width: 90%; border-radius: 8px; text-decoration: none; font-size: 0.95rem; transition: all 0.2s ease; text-align: center; border: 1px solid #333; }
-    .button:hover { background: #ab47bc; color: white; border-color: #ab47bc; }
-    details { margin-top: 8px; }
-    summary { cursor: pointer; padding: 10px; background: #252545; border-radius: 8px; list-style: none; text-align: center; font-size: 0.95rem; }
-    summary:hover { background: #353555; }
-</style>
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
 </head>
 <body>
 <h1>Tinnitus Therapy Suite</h1>
 <p>Open‑source therapy tools</p>
+<p>[ Beta 2026.4.20 ]</p>
+
 <div class="grid">
     <div class="card"><h2>Therapy Modes</h2><details><summary>Show</summary><a class="button" href="decorrelated.html">Decorrelated</a><a class="button" href="notch.html">Notch Therapy</a><a class="button" href="lenire.html">Lenire‑style</a><a class="button" href="soundtherapy.html">Sound Therapy</a></details></div>
     <div class="card">
@@ -35,12 +27,63 @@
             <a class="button" href="meter.html">Audio Meter</a>
         </details>
     </div>
+    <div class="card">
+        <h2>Progress</h2>
+        <details>
+            <summary>Show</summary>
+            <div class="ctrl" style="margin-top:15px">
+                <label>Daily Goal (mins) <input type="number" id="goalInput" class="val-input" min="1" max="240" value="20"></label>
+            </div>
+            <div class="stats-container" id="statsContainer" style="margin-top:15px">
+                <!-- Bars injected by JS -->
+            </div>
+            <p class="usage-text" id="weeklyTotal">Total: 0 mins this week</p>
+        </details>
+    </div>
     <div class="card"><h2>Project</h2><details><summary>Show</summary><a class="button" href="docs/index.html">Documentation</a><a class="button" href="research.html">Research</a><a class="button" href="license.html">License</a></details></div>
     <div class="card">
         <h2>Support Tinnitus Research</h2>
-        <p>You can support tinnitus research by donating to a reputable organization of your choice, such as the American Tinnitus Association, the Tinnitus Research Association, or the Cleveland Hearing and Speech Center. Your donation will help fund research and initiatives that aim to improve our understanding and treatment of tinnitus.</p>
+        <p>You can support tinnitus research by donating to a reputable organization of your choice, such as the American Tinnitus Association, the Tinnitus Research Association, or the <a href="https://www.chsc.org/donate" target="_blank" style="color:var(--accent); text-decoration:underline;">Cleveland Hearing and Speech Center</a>. Your donation will help fund research and initiatives that aim to improve our understanding and treatment of tinnitus.</p>
     </div>
 </div>
+
+<script>
+window.onload = () => {
+    initNav();
+    document.getElementById('goalInput').value = loadSetting('daily_goal', 20);
+    renderStats();
+};
+
+document.getElementById('goalInput').oninput = (e) => {
+    saveSetting('daily_goal', e.target.value);
+    renderStats();
+};
+
+function renderStats() {
+    const container = document.getElementById('statsContainer');
+    container.innerHTML = '';
+    const log = JSON.parse(localStorage.getItem('tts_usage_log') || '{}');
+    const goal = loadSetting('daily_goal', 20);
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const now = new Date();
+    let total = 0;
+
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(now.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        const mins = log[dateStr] || 0;
+        total += mins;
+
+        const height = Math.min(100, (mins / goal) * 100);
+        container.innerHTML += `
+            <div class="stat-col">
+                <div class="stat-bar-wrap"><div class="stat-bar" style="height:${height}%"></div></div>
+                <div class="stat-day">${days[d.getDay()]}</div>
+            </div>`;
+    }
+    document.getElementById('weeklyTotal').textContent = `Total: ${Math.round(total)} mins this week`;
+}
+</script>
 </body>
 </html>
-

@@ -5,29 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sound Therapy</title>
 <script src="storage.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
-.panel{max-width:520px;width:90%;margin:3rem auto;text-align:center}
-h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc}
-.info{color:#888;font-size:.85rem;margin-bottom:2rem}
-.ctrl{margin:1.5rem 0;padding:1rem;background:#1a1a2e;border:1px solid #333;border-radius:12px;text-align:left}
-.ctrl h3{font-size:.95rem;color:#ab47bc;margin-bottom:.8rem;text-align:center;text-transform:uppercase;letter-spacing:1px}
-.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.sm-btn{padding:10px;background:#252545;color:#e0e0e0;border:1px solid #333;border-radius:8px;cursor:pointer;font-size:.85rem;transition:all .2s}
-.sm-btn:hover{background:#ab47bc;color:#fff}
-.sm-btn.active{background:#ab47bc;color:#fff;border-color:#fff}
-input[type=range]{width:100%;accent-color:#ab47bc;margin-top:5px}
-.val{float:right;color:#ab47bc;font-size:.85rem}
-.big-btn{width:100%;padding:1rem;margin-top:10px;font-size:1.1rem;border:none;border-radius:12px;cursor:pointer;font-weight:700;background:linear-gradient(135deg,#ab47bc,#8e24aa);color:#fff}
-.stop-btn{background:linear-gradient(135deg,#ef5350,#e53935)}
-.help-btn { position: fixed; top: 1rem; right: 1rem; background:#1a1a2e; color:#ab47bc; border:1px solid #ab47bc; padding:8px 14px; border-radius:8px; font-size:.9rem; cursor:pointer; z-index:10; }
-</style>
+<script src="nav.js"></script>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<button class="help-btn" onclick="openHelp()">Help</button>
-<a class="back" href="index.html">Home</a>
 <div class="panel">
     <h1>Sound Therapy</h1>
     <p class="info">Nature sounds and calibrated broadband noise.</p>
@@ -53,10 +34,23 @@ input[type=range]{width:100%;accent-color:#ab47bc;margin-top:5px}
     </div>
 
     <div class="ctrl">
-        <label>Volume <span class="val" id="volVal">30%</span></label>
-        <input id="volume" type="range" min="0" max="1" step="0.01" value="0.3" oninput="setVolume(this.value)">
-        <label style="display:block;margin-top:10px">L/R Balance <span class="val" id="balVal">0</span></label>
-        <input id="balance" type="range" min="-1" max="1" step="0.02" value="0" oninput="setBalance(this.value)">
+        <label>Volume (%) <input type="number" id="volInput" class="val-input" min="0" max="100" value="30"></label>
+        <input id="volume" type="range" min="0" max="100" value="30">
+        <div class="btn-group" data-target="volume">
+            <button class="button-step" data-delta="-5">-5</button>
+            <button class="button-step" data-delta="5">+5</button>
+        </div>
+
+        <label style="display:block;margin-top:10px">L/R Balance <input type="number" id="balInput" class="val-input" min="-1" max="1" step="0.1" value="0"></label>
+        <input id="balance" type="range" min="-1" max="1" step="0.02" value="0">
+        <div class="btn-group" data-target="balance">
+            <button class="button-step" data-delta="-0.1">-0.1</button>
+            <button class="button-step" data-delta="0.1">+0.1</button>
+        </div>
+        <div class="bal-viz">
+            <div class="bal-track"><div id="balMarker" class="bal-marker"></div></div>
+            <div class="bal-labels"><span>Left</span><span>Center</span><span>Right</span></div>
+        </div>
     </div>
 
     <div class="ctrl" style="text-align:center">
@@ -64,6 +58,10 @@ input[type=range]{width:100%;accent-color:#ab47bc;margin-top:5px}
         <input id="timer" type="number" min="1" max="120" value="10" style="width:60px;padding:5px;border-radius:4px;border:1px solid #333;background:#0a0a1a;color:#fff"> min
         <button class="big-btn" onclick="startTimer()">Start Timer</button>
         <p id="timerDisplay" style="margin-top:10px;color:#ab47bc;font-weight:700"></p>
+        <div class="usage-progress">
+            <div id="usageBar" class="usage-bar" style="width: 0%"></div>
+        </div>
+        <div id="usageText" class="usage-text">Today's Progress: 0 / 20 mins</div>
     </div>
 </div>
 
@@ -71,12 +69,62 @@ input[type=range]{width:100%;accent-color:#ab47bc;margin-top:5px}
 let audioCtx,currentSource,gainNode,pannerNode,timerInterval;
 
 window.onload = () => {
-    const v = loadSetting('st_vol', 0.3);
+    initNav(`
+        <b>Purpose:</b> Reduces contrast between tinnitus and silence, helping the brain ignore the phantom signal.<br><br>
+        <b>Usage:</b> Aim for "partial masking" where you can still hear the tinnitus slightly behind the noise.<br><br>
+        <b>Nature Sounds:</b> Useful for long sessions to reduce "listener fatigue."
+    `);
+
+    const v = loadSetting('st_vol', 30);
     const b = loadSetting('st_bal', 0);
     document.getElementById('volume').value = v;
     document.getElementById('balance').value = b;
-    document.getElementById('volVal').textContent = Math.round(v*100)+'%';
-    document.getElementById('balVal').textContent = b;
+    updateLabels();
+    setupStepButtons();
+    refreshUsageUI();
+};
+
+function refreshUsageUI() {
+    const goal = loadSetting('daily_goal', 20);
+    const current = getDailyUsage();
+    document.getElementById('usageBar').style.width = Math.min(100, (current / goal) * 100) + '%';
+    document.getElementById('usageText').textContent = `Today's Progress: ${Math.round(current)} / ${goal} mins`;
+}
+
+let repeatTimeout, repeatInterval;
+function setupStepButtons() {
+    document.querySelectorAll('.btn-group .button-step').forEach(btn => {
+        const delta = parseFloat(btn.dataset.delta);
+        const target = document.getElementById(btn.parentElement.dataset.target);
+        const step = () => {
+            let val = (parseFloat(target.value) + delta);
+            if (target.step.includes('.')) val = parseFloat(val.toFixed(1));
+            target.value = Math.min(target.max, Math.max(target.min, val));
+            target.dispatchEvent(new Event('input'));
+        };
+        btn.onmousedown = btn.ontouchstart = (e) => {
+            e.preventDefault(); step();
+            repeatTimeout = setTimeout(() => { repeatInterval = setInterval(step, 80); }, 500);
+        };
+        btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => { clearInterval(repeatInterval); clearTimeout(repeatTimeout); repeatInterval = null; };
+        btn.onclick = () => { if(!repeatInterval) step(); };
+    });
+}
+
+function updateLabels(){
+    document.getElementById('volInput').value = document.getElementById('volume').value;
+    const b = document.getElementById('balance').value;
+    document.getElementById('balInput').value = b;
+    document.getElementById('balMarker').style.left = ((parseFloat(b) + 1) / 2 * 100) + '%';
+}
+
+document.getElementById('volInput').oninput = e => {
+    document.getElementById('volume').value = e.target.value;
+    document.getElementById('volume').dispatchEvent(new Event('input'));
+};
+document.getElementById('balInput').oninput = e => {
+    document.getElementById('balance').value = e.target.value;
+    document.getElementById('balance').dispatchEvent(new Event('input'));
 };
 
 function initAudio() {
@@ -85,10 +133,10 @@ function initAudio() {
         gainNode = audioCtx.createGain();
         pannerNode = audioCtx.createStereoPanner();
         gainNode.connect(pannerNode).connect(audioCtx.destination);
-        setVolume(document.getElementById('volume').value);
-        setBalance(document.getElementById('balance').value);
+        syncAudioNodes();
     }
 }
+function syncAudioNodes() { setVolume(document.getElementById('volume').value); setBalance(document.getElementById('balance').value); }
 
 function playNoise(type, btn) {
     initAudio(); stopAll();
@@ -110,8 +158,16 @@ function playSample(type, btn) {
     audio.play(); currentSource = audio;
 }
 
-function setVolume(v) { if(gainNode) gainNode.gain.value = v; document.getElementById('volVal').textContent = Math.round(v*100)+'%'; saveSetting('st_vol', v); }
-function setBalance(v) { if(pannerNode) pannerNode.pan.value = v; document.getElementById('balVal').textContent = v; saveSetting('st_bal', v); }
+function setVolume(v) { if(gainNode) gainNode.gain.value = v / 100; document.getElementById('volInput').value = v; saveSetting('st_vol', v); }
+function setBalance(v) { 
+    if(pannerNode) pannerNode.pan.value = v; 
+    document.getElementById('balInput').value = v; 
+    document.getElementById('balMarker').style.left = ((parseFloat(v) + 1) / 2 * 100) + '%';
+    saveSetting('st_bal', v); 
+}
+
+document.getElementById('volume').oninput = e => { setVolume(e.target.value); };
+document.getElementById('balance').oninput = e => { setBalance(e.target.value); };
 
 function stopAll() {
     if(currentSource) { try{currentSource.pause()}catch(e){}; try{currentSource.stop()}catch(e){}; currentSource=null; }
@@ -124,28 +180,20 @@ function setActiveBtn(btn) {
 }
 
 function startTimer() {
-    let rem = parseInt(document.getElementById("timer").value) * 60;
+    const minutes = parseInt(document.getElementById("timer").value);
+    let rem = minutes * 60;
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         rem--; document.getElementById("timerDisplay").innerText = "Time left: "+Math.floor(rem/60)+":"+(rem%60).toString().padStart(2,'0');
-        if(rem<=0){ stopAll(); clearInterval(timerInterval); document.getElementById("timerDisplay").innerText = "Complete"; }
+        if(rem<=0){
+            logUsageMinutes(minutes);
+            stopAll();
+            clearInterval(timerInterval);
+            document.getElementById("timerDisplay").innerText = "Complete";
+            refreshUsageUI();
+        }
     }, 1000);
 }
-
-function openHelp() { document.getElementById("helpModal").style.display = "block"; }
-function closeHelp() { document.getElementById("helpModal").style.display = "none"; }
 </script>
-
-<div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); z-index:9999; padding:20px;">
-    <div style="max-width:500px; margin:60px auto; background:#1a1a2e; color:#e0e0e0; padding:25px; border-radius:12px; border:1px solid #333; text-align:left;">
-        <h2 style="color:#ab47bc; margin-top:0;">Help & Guidance</h2>
-        <div style="font-size:0.95rem; line-height:1.6; margin:15px 0;">
-            <b>Purpose:</b> Reduces contrast between tinnitus and silence, helping the brain ignore the phantom signal.<br><br>
-            <b>Usage:</b> Aim for "partial masking" where you can still hear the tinnitus slightly behind the noise.<br><br>
-            <b>Nature Sounds:</b> Useful for long sessions to reduce "listener fatigue."
-        </div>
-        <button onclick="closeHelp()" style="width:100%; padding:12px; background:#ab47bc; color:#fff; border:none; border-radius:8px; cursor:pointer;">Close</button>
-    </div>
-</div>
 </body>
 </html>

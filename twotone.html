@@ -1,77 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
-.panel{max-width:520px;width:90%;margin:3rem auto}
-h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc;text-align:center}
-.info{color:#888;font-size:.85rem;margin-bottom:2rem;text-align:center}
-</style>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tinnitus Therapy</title>
-    <style>
-        /* Styles for top navigation bar */
-        .navbar {
-            background-color: #0078ff;
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-        }
-        .navbar button {
-            background-color: darkblue;
-            color: white;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-        }
-        /* Card styling matching notchfinder.html */
-        .card {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            margin: 10px;
-            background-color: #f9f9f9;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Two-Tone Comparison</title>
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
 </head>
-<body><a class="back" href="index.html">Home</a>
-    <div class="navbar">
-        <button onclick="window.location.href='home.html'">Home</button>
-        <button onclick="stopAudio()">Stop</button>
-        <button id="helpBtn">Help</button>
-    </div>
+<body>
+    <div class="panel">
+        <h1>Two-Tone Comparison</h1>
+        <p class="info">Compare two tones for pitch matching.</p>
+        
+        <div class="card">
+            <h3>Tone A</h3>
+            <div class="ctrl">
+                <label>Frequency (Hz) <input type="number" id="freqAInput" class="val-input" value="4000" min="100" max="16000"></label>
+                <input id="freqASlider" type="range" min="100" max="16000" value="4000" step="10">
+            </div>
+            <div class="btn-group" data-target="freqASlider">
+                <button class="button-step" data-delta="-100">-100</button>
+                <button class="button-step" data-delta="-10">-10</button>
+                <button class="button-step" data-delta="10">+10</button>
+                <button class="button-step" data-delta="100">+100</button>
+            </div>
+            <button class="button" onclick="playTone('A')">Play Tone A</button>
+            <button class="button" style="background:var(--surface)" onclick="saveToNotch('A')">Save A to Notch</button>
+        </div>
 
-    <div class="card">
-        <h2>Two-Tone Comparison</h2>
-        <p>Use the buttons above to navigate or stop audio playback.</p>
-    </div>
+        <div class="card">
+            <h3>Tone B</h3>
+            <div class="ctrl">
+                <label>Frequency (Hz) <input type="number" id="freqBInput" class="val-input" value="8000" min="100" max="16000"></label>
+                <input id="freqBSlider" type="range" min="100" max="16000" value="8000" step="10">
+            </div>
+            <div class="btn-group" data-target="freqBSlider">
+                <button class="button-step" data-delta="-100">-100</button>
+                <button class="button-step" data-delta="-10">-10</button>
+                <button class="button-step" data-delta="10">+10</button>
+                <button class="button-step" data-delta="100">+100</button>
+            </div>
+            <button class="button" onclick="playTone('B')">Play Tone B</button>
+            <button class="button" style="background:var(--surface)" onclick="saveToNotch('B')">Save B to Notch</button>
+        </div>
 
-    <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5);">
-        <div style="background:white; padding:20px; margin:100px auto; width:300px;">
-            <h3>Help</h3>
-            <p>This functionality allows you to compare two tones.</p>
-            <button onclick="document.getElementById('helpModal').style.display='none'">Close</button>
+        <div class="ctrl" style="margin-top:2rem">
+            <label>Master Volume <span class="val" id="volVal">20%</span></label>
+            <input id="volSlider" type="range" min="0" max="100" value="20">
+        </div>
+
+        <div class="btn-group">
+            <button class="button" onclick="playBoth()">Play Both</button>
+            <button class="button stop-btn" onclick="stopAudio()">Stop All</button>
         </div>
     </div>
 
     <script>
-        let audioPlayback = null;
+        let ctx = null, oscA = null, oscB = null, gA = null, gB = null;
 
-        function stopAudio() {
-            if (audioPlayback) {
-                audioPlayback.pause();
-                audioPlayback.currentTime = 0;
-            } else {
-                console.error('No audio is currently playing.');
+        window.onload = () => {
+            initNav("Use two tones to 'bracket' your tinnitus. By comparing two reference points, you can avoid common pitch-matching errors like 'octave confusion'. Match one tone, then adjust the other until you find the true frequency.");
+            setupStepButtons();
+            updateUI();
+        };
+
+        function initAudio() {
+            if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function updateUI() {
+            document.getElementById('freqAInput').value = document.getElementById('freqASlider').value;
+            document.getElementById('freqBInput').value = document.getElementById('freqBSlider').value;
+            document.getElementById('volVal').textContent = document.getElementById('volSlider').value + '%';
+        }
+
+        function playTone(type) {
+            initAudio();
+            const freq = document.getElementById(`freq${type}Slider`).value;
+            const vol = document.getElementById('volSlider').value / 100;
+            
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.value = vol;
+            
+            osc.connect(gain).connect(ctx.destination);
+            osc.start();
+            
+            if (type === 'A') { 
+                if (oscA) { try { oscA.stop(); } catch(e) {} }
+                oscA = osc; gA = gain; 
+            } else { 
+                if (oscB) { try { oscB.stop(); } catch(e) {} }
+                oscB = osc; gB = gain; 
             }
         }
 
-        document.getElementById('helpBtn').onclick = function() {
-            document.getElementById('helpModal').style.display='block';
-        };
+        function playBoth() {
+            initAudio();
+            stopAudio();
+            playTone('A');
+            playTone('B');
+        }
+
+        function stopAudio() {
+            if (oscA) { try { oscA.stop(); } catch(e) {} oscA = null; }
+            if (oscB) { try { oscB.stop(); } catch(e) {} oscB = null; }
+        }
+
+        function saveToNotch(type) {
+            const freq = document.getElementById(`freq${type}Slider`).value;
+            saveSetting('notch', freq);
+            saveSetting('toneFreq', freq);
+            alert(`Frequency ${freq}Hz saved as your tinnitus pitch.`);
+        }
+
+        function setupStepButtons() {
+            document.querySelectorAll('.btn-group .button-step').forEach(btn => {
+                const delta = parseInt(btn.dataset.delta);
+                const targetId = btn.parentElement.dataset.target;
+                const target = document.getElementById(targetId);
+                btn.onclick = () => {
+                    target.value = Math.min(target.max, Math.max(target.min, Number(target.value) + delta));
+                    target.dispatchEvent(new Event('input'));
+                };
+            });
+        }
+
+        document.getElementById('freqASlider').oninput = updateUI;
+        document.getElementById('freqBSlider').oninput = updateUI;
+        document.getElementById('volSlider').oninput = updateUI;
+        document.getElementById('freqAInput').oninput = e => { document.getElementById('freqASlider').value = e.target.value; updateUI(); };
+        document.getElementById('freqBInput').oninput = e => { document.getElementById('freqBSlider').value = e.target.value; updateUI(); };
     </script>
 </body>
 </html>

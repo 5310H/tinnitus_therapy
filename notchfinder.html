@@ -1,124 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
-.panel{max-width:520px;width:90%;margin:3rem auto}
-h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc;text-align:center}
-.info{color:#888;font-size:.85rem;margin-bottom:2rem;text-align:center}
-</style>
 <meta charset="UTF-8">
 <title>Notch Finder Tool</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f4f4f4;
-        margin: 0;
-        padding: 20px;
-        text-align: center;
-    }
-
-    /* TOP BAR */
-    .top-bar {
-        width: 100%;
-        background: #0078ff;
-        padding: 12px 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 20;
-    }
-    .dark-btn {
-        background: #222;
-        color: #fff;
-        border: none;
-        padding: 10px 16px;
-        margin: 0 10px;
-        border-radius: 6px;
-        font-size: 15px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    .dark-btn:active {
-        background: #444;
-    }
-
-    .card {
-        background: white;
-        padding: 20px;
-        margin: 80px 0 15px 0;
-        border-radius: 12px;
-        box-shadow: 0 0 6px rgba(0,0,0,0.1);
-    }
-
-    input[type=range] {
-        width: 90%;
-        margin: 20px 0;
-    }
-
-    .button {
-        display: inline-block;
-        background: #0078ff;
-        color: white;
-        padding: 12px 20px;
-        margin: 10px;
-        border-radius: 10px;
-        text-decoration: none;
-        font-size: 16px;
-        cursor: pointer;
-    }
-    .button:active {
-        background: #005fcc;
-    }
-
-    #savedMsg {
-        margin-top: 10px;
-        font-size: 14px;
-        color: #333;
-    }
-</style>
+<script src="storage.js"></script>
+<script src="nav.js"></script>
+<link rel="stylesheet" href="style.css">
 </head>
+<body>
+<div class="panel">
+    <h1>Notch Finder Tool</h1>
+    <p class="info">Identify your tinnitus pitch to calibrate Notch Therapy.</p>
 
-<body><a class="back" href="index.html">Home</a>
-
-<!-- TOP BAR -->
-<div class="top-bar">
-    <button class="dark-btn" onclick="location.href='index.html'">Home</button>
-    <button class="dark-btn" onclick="stopTone()">Stop</button>
-</div>
-
-<h1 style="margin-top:70px;">Notch Finder Tool</h1>
-<p>Match this tone to your tinnitus pitch</p>
-
-<div class="card">
-    <h2>Frequency: <span id="freqLabel">1000</span> Hz</h2>
-
-    <input id="freqSlider" type="range" min="100" max="12000" value="1000">
-
-    <div>
-        <button class="button" id="minusBtn">– 10 Hz</button>
-        <button class="button" id="plusBtn">+ 10 Hz</button>
+    <div class="ctrl">
+        <label>Frequency (Hz) <input type="number" id="freqInput" class="val-input" value="1000" min="100" max="16000"></label>
+        <input id="freqSlider" type="range" min="100" max="16000" value="1000" step="10">
     </div>
 
-    <div>
-        <button class="button" id="playBtn">Play Tone</button>
-        <button class="button" id="saveBtn">Save Frequency</button>
+    <div class="btn-group">
+        <button class="button" data-delta="-100">– 100</button>
+        <button class="button" data-delta="-10">– 10</button>
+        <button class="button" data-delta="10">+ 10</button>
+        <button class="button" data-delta="100">+ 100</button>
     </div>
+
+    <div class="ctrl">
+        <label>Volume <span class="val" id="volVal">20%</span></label>
+        <input id="volSlider" type="range" min="0" max="100" value="20">
+    </div>
+
+    <div class="btn-group">
+        <button class="button" id="sweepBtn">Start Auto-Sweep</button>
+    </div>
+
+    <button class="big-btn" id="playBtn">Play Tone</button>
+    <button class="big-btn" style="background:#252545; border:1px solid #333" id="saveBtn">Save to Therapy Settings</button>
 
     <div id="savedMsg"></div>
 </div>
 
 <script>
-let audioCtx = null;
-let osc = null;
-let playing = false;
+let audioCtx = null, osc = null, gainNode = null, playing = false;
+
+const slider = document.getElementById("freqSlider");
+const freqInput = document.getElementById("freqInput");
+const volSlider = document.getElementById("volSlider");
+const volLabel = document.getElementById("volVal");
+const playBtn = document.getElementById("playBtn");
+const sweepBtn = document.getElementById("sweepBtn");
+const saveBtn = document.getElementById("saveBtn");
+const savedMsg = document.getElementById("savedMsg");
 
 /* PLAY TONE */
 function playTone(freq) {
@@ -131,81 +63,134 @@ function playTone(freq) {
     osc = audioCtx.createOscillator();
     osc.type = "sine";
     osc.frequency.value = freq;
+    
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = volSlider.value / 100;
 
-    const gain = audioCtx.createGain();
-    gain.gain.value = 0.2;
-
-    osc.connect(gain).connect(audioCtx.destination);
+    osc.connect(gainNode).connect(audioCtx.destination);
     osc.start();
 
     playing = true;
-    document.getElementById("playBtn").textContent = "Stop Tone";
+    playBtn.textContent = "Stop Tone";
+    playBtn.classList.add("stop-btn");
 }
 
 /* STOP TONE */
 function stopTone() {
-    if (osc) {
-        try { osc.stop(); } catch(e) {}
-        osc = null;
+    if (audioCtx) {
+        if (osc) { try { osc.stop(); } catch(e) {} osc = null; }
     }
     playing = false;
-    document.getElementById("playBtn").textContent = "Play Tone";
+    stopSweep();
+    playBtn.textContent = "Play Tone";
+    playBtn.classList.remove("stop-btn");
 }
-
-/* UI ELEMENTS */
-const slider = document.getElementById("freqSlider");
-const label = document.getElementById("freqLabel");
-const minusBtn = document.getElementById("minusBtn");
-const plusBtn = document.getElementById("plusBtn");
-const playBtn = document.getElementById("playBtn");
-const saveBtn = document.getElementById("saveBtn");
-const savedMsg = document.getElementById("savedMsg");
 
 /* UPDATE LABEL */
 function updateLabel() {
-    label.textContent = slider.value;
+    freqInput.value = slider.value;
     if (playing && osc) {
-        osc.frequency.value = slider.value;
+        osc.frequency.setTargetAtTime(slider.value, audioCtx.currentTime, 0.05);
     }
 }
 
-/* SLIDER CHANGE */
-slider.oninput = updateLabel;
+let sweeping = false, lastStepTime = 0;
+function stopSweep() {
+    sweeping = false;
+    sweepBtn.textContent = "Start Auto-Sweep";
+}
 
-/* FINE TUNE BUTTONS */
-minusBtn.onclick = () => {
-    slider.value = Math.max(100, Number(slider.value) - 10);
+function runSweep(time) {
+    if (!sweeping || !playing) {
+        stopSweep();
+        return;
+    }
+    // Move frequency up exponentially (doubles every ~12 seconds at 20fps)
+    if (time - lastStepTime > 50) {
+        let val = Number(slider.value);
+        val = val * Math.pow(2, 1/240); 
+        if (val > 16000) val = 100;
+        slider.value = Math.round(val);
+        updateLabel();
+        lastStepTime = time;
+    }
+    requestAnimationFrame(runSweep);
+}
+
+slider.oninput = () => {
+    stopSweep();
     updateLabel();
 };
-plusBtn.onclick = () => {
-    slider.value = Math.min(12000, Number(slider.value) + 10);
+
+freqInput.oninput = () => {
+    stopSweep();
+    let val = Math.min(16000, Math.max(100, freqInput.value));
+    slider.value = val;
     updateLabel();
 };
 
-/* PLAY / STOP BUTTON */
+volSlider.oninput = () => {
+    volLabel.textContent = volSlider.value + "%";
+    if (playing && gainNode) {
+        gainNode.gain.setTargetAtTime(volSlider.value / 100, audioCtx.currentTime, 0.05);
+    }
+};
+
+/* BUTTON REPEAT LOGIC */
+let repeatTimeout, repeatInterval;
+function startRepeat(delta) {
+    const step = () => {
+        stopSweep();
+        slider.value = Math.min(16000, Math.max(100, Number(slider.value) + delta));
+        updateLabel();
+    };
+    step();
+    repeatTimeout = setTimeout(() => {
+        repeatInterval = setInterval(step, 80);
+    }, 500);
+}
+function stopRepeat() {
+    clearTimeout(repeatTimeout);
+    clearInterval(repeatInterval);
+}
+
+document.querySelectorAll('.btn-group .button[data-delta]').forEach(btn => {
+    const delta = parseInt(btn.dataset.delta);
+    btn.onmousedown = btn.ontouchstart = (e) => { e.preventDefault(); startRepeat(delta); };
+    btn.onmouseup = btn.onmouseleave = btn.ontouchend = stopRepeat;
+    // Accessible fallback
+    btn.onclick = (e) => { if(!repeatInterval) startRepeat(delta); stopRepeat(); };
+});
+
+sweepBtn.onclick = () => {
+    if (sweeping) {
+        stopSweep();
+    } else {
+        if (!playing) playTone(slider.value);
+        sweeping = true;
+        sweepBtn.textContent = "Stop Auto-Sweep";
+        lastStepTime = performance.now();
+        requestAnimationFrame(runSweep);
+    }
+};
+
 playBtn.onclick = () => {
     if (!playing) playTone(slider.value);
     else stopTone();
 };
 
-/* SAVE FREQUENCY */
 saveBtn.onclick = () => {
-    localStorage.setItem("notchFreq", slider.value);
-    savedMsg.textContent = "Saved!";
+    saveSetting("notch", slider.value);
+    saveSetting("toneFreq", slider.value);
+    savedMsg.textContent = "Frequency saved to therapy settings.";
     setTimeout(() => savedMsg.textContent = "", 1500);
 };
 
-/* LOAD SAVED FREQUENCY */
 window.onload = () => {
-    const saved = localStorage.getItem("notchFreq");
-    if (saved) {
-        slider.value = saved;
-        updateLabel();
-        savedMsg.textContent = "Loaded saved frequency: " + saved + " Hz";
-        setTimeout(() => savedMsg.textContent = "", 2000);
-    }
+    initNav(`Use the slider or the <b>Auto-Sweep</b> feature to find a tone that matches the pitch of your tinnitus. Auto-sweep slowly raises the pitch to help you identify the "crossing point." Once matched, save the frequency to use it in Notch Therapy.`);
+    slider.value = loadSetting("notch", 6000);
+    updateLabel();
 };
 </script>
-
 </body>
 </html>

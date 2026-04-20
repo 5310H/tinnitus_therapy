@@ -1,95 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
-.panel{max-width:520px;width:90%;margin:3rem auto}
-h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc;text-align:center}
-.info{color:#888;font-size:.85rem;margin-bottom:2rem;text-align:center}
-</style>
-<meta charset="UTF-8">
-<title>Hearing Range Test</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f4f4f4;
-    padding: 20px;
-    text-align: center;
-    margin: 0;
-}
-
-/* TOP BAR */
-.top-bar {
-    width: 100%;
-    background: #0078ff;
-    padding: 12px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 20;
-}
-.dark-btn {
-    background: #222;
-    color: #fff;
-    border: none;
-    padding: 10px 16px;
-    margin: 0 10px;
-    border-radius: 6px;
-    font-size: 15px;
-    cursor: pointer;
-    font-weight: bold;
-}
-.dark-btn:active { background: #444; }
-
-.card {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 0 6px rgba(0,0,0,0.1);
-    margin-top: 80px;
-}
-
-.button {
-    background: #0078ff;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    text-decoration: none;
-    margin: 8px;
-    display: inline-block;
-    cursor: pointer;
-    font-size: 16px;
-}
-.button:active { background: #005fcc; }
-
-.section-title {
-    font-weight: bold;
-    margin-top: 20px;
-    font-size: 18px;
-}
-</style>
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
 </head>
-
-<body><a class="back" href="index.html">Home</a>
-
-<!-- TOP BAR -->
-<div class="top-bar">
-    <button class="dark-btn" onclick="location.href='index.html'">Home</button>
-    <button class="dark-btn" onclick="stopTone()">Stop</button>
-</div>
-
-<h1 style="margin-top:70px;">Hearing Range Test</h1>
+<body>
+<div class="panel">
+<h1>Hearing Range Test</h1>
 <p>Tap each button to test audibility</p>
-
 <div class="card">
-
     <div class="section-title">Low Frequencies</div>
     <button class="button" onclick="play(20)">20 Hz</button>
     <button class="button" onclick="play(40)">40 Hz</button>
@@ -121,6 +41,10 @@ body {
 </div>
 
 <script>
+window.onload = () => {
+    initNav();
+};
+
 let ctx = null;
 let osc = null;
 

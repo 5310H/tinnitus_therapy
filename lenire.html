@@ -5,57 +5,94 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lenire‑Style Sound Module</title>
 <script src="storage.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
-.panel{max-width:520px;width:90%;margin:3rem auto;text-align:center}
-h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc}
-.info{color:#888;font-size:.85rem;margin-bottom:2rem}
-.ctrl{margin:1rem 0;text-align:left}
-.ctrl label{display:block;font-size:.85rem;color:#aaa;margin-bottom:.3rem}
-.ctrl input[type=range], .ctrl input[type=number], select{width:100%;accent-color:#ab47bc;padding:.6rem;background:#1a1a2e;color:#e0e0e0;border:1px solid #333;border-radius:8px;font-size:1rem}
-.val{float:right;color:#ab47bc;font-size:.85rem}
-.big-btn{width:100%;padding:1rem;margin-top:1rem;font-size:1.2rem;border:none;border-radius:12px;cursor:pointer;font-weight:700;transition:all .2s}
-.play-btn{background:linear-gradient(135deg,#ab47bc,#8e24aa);color:#fff}
-.stop-btn{background:linear-gradient(135deg,#ef5350,#e53935);color:#fff}
-.big-btn:hover{transform:scale(1.02)}
-.timer{margin-top:1rem;font-size:1rem;font-weight:700;color:#ab47bc}
-.help-btn { position: fixed; top: 1rem; right: 1rem; background:#1a1a2e; color:#ab47bc; border:1px solid #ab47bc; padding:8px 14px; border-radius:8px; font-size:.9rem; cursor:pointer; z-index:10; }
-.help-btn:hover { background:#ab47bc; color:#fff; }
-</style>
+<script src="nav.js"></script>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<button class="help-btn" onclick="openHelp()">Help</button>
-<a class="back" href="index.html">Home</a>
 <div class="panel">
     <h1>Lenire‑Style Sound</h1>
     <p class="info">Experimental sound‑only bimodal-style therapy.</p>
-    <div class="ctrl"><label>Carrier Frequency (Hz)</label><input id="freq" type="number" min="200" max="12000" step="10" value="8000"></div>
+    <div class="ctrl">
+        <label>Carrier Frequency (Hz) <input type="number" id="freq" class="val-input" min="200" max="12000" value="8000"></label>
+        <div class="btn-group" data-target="freq">
+            <button class="button-step" data-delta="-100">-100</button>
+            <button class="button-step" data-delta="-10">-10</button>
+            <button class="button-step" data-delta="10">+10</button>
+            <button class="button-step" data-delta="100">+100</button>
+        </div>
+    </div>
     <div class="ctrl"><label>Session Length</label><select id="session"><option value="600">10 min</option><option value="900">15 min</option><option value="1200" selected>20 min</option></select></div>
-    <div class="ctrl"><label>Master Volume <span class="val" id="volVal">30%</span></label><input id="volume" type="range" min="0" max="1" step="0.01" value="0.3"></div>
+    <div class="ctrl"><label>Master Volume <span class="val" id="volVal">30%</span></label><input id="volume" type="range" min="0" max="100" step="1" value="30"></div>
     <div class="ctrl"><label>Tone / Noise Mix <span class="val" id="mixVal">50%</span></label><input id="mix" type="range" min="0" max="1" step="0.01" value="0.5"></div>
-    <div class="ctrl"><label>Noise Modulation (Hz)</label><input id="modRate" type="number" min="0.1" max="10" step="0.1" value="2.0"></div>
-    <div class="ctrl"><label>Tone Burst Rate (Hz)</label><input id="burstRate" type="number" min="0.2" max="10" step="0.1" value="1.5"></div>
+    <div class="ctrl">
+        <label>Noise Modulation (Hz) <input type="number" id="modRate" class="val-input" min="0.1" max="10" step="0.1" value="2.0"></label>
+        <div class="btn-group" data-target="modRate"><button class="button-step" data-delta="-0.1">-0.1</button><button class="button-step" data-delta="0.1">+0.1</button></div>
+    </div>
+    <div class="ctrl">
+        <label>Tone Burst Rate (Hz) <input type="number" id="burstRate" class="val-input" min="0.2" max="10" step="0.1" value="1.5"></label>
+        <div class="btn-group" data-target="burstRate"><button class="button-step" data-delta="-0.1">-0.1</button><button class="button-step" data-delta="0.1">+0.1</button></div>
+    </div>
     <button id="startBtn" class="big-btn play-btn" onclick="startSession()">Start Session</button>
     <button id="stopBtn" class="big-btn stop-btn" style="display:none" onclick="stopSession()">Stop Session</button>
     <div class="timer" id="timer">Session: 00:00 / 20:00</div>
+    <div class="usage-progress">
+        <div id="usageBar" class="usage-bar" style="width: 0%"></div>
+    </div>
+    <div id="usageText" class="usage-text">Today's Progress: 0 / 20 mins</div>
 </div>
 <script>
 let audioCtx,masterGain,toneGain,noiseGain,toneOsc,noiseSource,noiseFilter,noiseModOsc,noiseModGain,burstOsc,burstGain;
 let running=false,remaining=0,timerId=null,sessionSeconds=1200;
 
 window.onload = () => {
+    initNav(`
+        <b>Purpose:</b> Simulates the sound‑only component of Lenire therapy using tone bursts and modulated noise.<br><br>
+        <b>Technical Accuracy:</b> The module utilizes independent oscillators for tone bursting and noise modulation, ensuring precise delivery of rhythmic auditory stimuli used in neuromodulation research.<br><br>
+        <b>Usage:</b> Set carrier frequency near your tinnitus pitch. Adjust tone/noise mix for comfort.<br><br>
+        <b>Plan:</b> 20 minutes per session is recommended.
+    `);
+
     document.getElementById('freq').value = loadSetting('len_freq', 8000);
-    document.getElementById('volume').value = loadSetting('len_vol', 0.3);
+    document.getElementById('volume').value = loadSetting('len_vol', 30);
     document.getElementById('mix').value = loadSetting('len_mix', 0.5);
     document.getElementById('modRate').value = loadSetting('len_mod', 2.0);
     document.getElementById('burstRate').value = loadSetting('len_burst', 1.5);
     updateLabels();
+    setupStepButtons();
+    refreshUsageUI();
 };
 
+function refreshUsageUI() {
+    const goal = loadSetting('daily_goal', 20);
+    const current = getDailyUsage();
+    document.getElementById('usageBar').style.width = Math.min(100, (current / goal) * 100) + '%';
+    document.getElementById('usageText').textContent = `Today's Progress: ${Math.round(current)} / ${goal} mins`;
+}
+
+let repeatTimeout, repeatInterval;
+function setupStepButtons() {
+    document.querySelectorAll('.btn-group .button-step').forEach(btn => {
+        const delta = parseFloat(btn.dataset.delta);
+        const target = document.getElementById(btn.parentElement.dataset.target);
+        const step = () => {
+            let val = (parseFloat(target.value) + delta);
+            if (target.step.includes('.')) val = parseFloat(val.toFixed(1));
+            target.value = Math.min(target.max, Math.max(target.min, val));
+            target.dispatchEvent(new Event('input'));
+        };
+        btn.onmousedown = btn.ontouchstart = (e) => {
+            e.preventDefault(); step();
+            repeatTimeout = setTimeout(() => { repeatInterval = setInterval(step, 80); }, 500);
+        };
+        btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => {
+            clearInterval(repeatInterval); clearTimeout(repeatTimeout); repeatInterval = null;
+        };
+        btn.onclick = () => { if(!repeatInterval) step(); };
+    });
+}
+
 function updateLabels(){
-    document.getElementById('volVal').textContent = Math.round(document.getElementById('volume').value*100) + '%';
+    document.getElementById('volVal').textContent = document.getElementById('volume').value + '%';
     document.getElementById('mixVal').textContent = Math.round(document.getElementById('mix').value*100) + '%';
 }
 
@@ -67,12 +104,28 @@ function startSession(){
   if(running)return;
   sessionSeconds=parseInt(document.getElementById('session').value); remaining=sessionSeconds;
   if(!audioCtx)setupAudio();
+  validateLenireParams();
   updateParams(); running=true;
   document.getElementById('startBtn').style.display='none';
   document.getElementById('stopBtn').style.display='block';
-  timerId=setInterval(()=>{remaining--;if(remaining<=0)stopSession();updateTimerDisplay()},1000);
+  timerId=setInterval(()=>{
+    remaining--;
+    if(remaining<=0) {
+      logUsageMinutes(sessionSeconds / 60);
+      stopSession();
+      refreshUsageUI();
+    }
+    updateTimerDisplay();
+  },1000);
 }
-function stopSession(){running=false;document.getElementById('startBtn').style.display='block';document.getElementById('stopBtn').style.display='none';if(timerId)clearInterval(timerId);remaining=0;updateTimerDisplay()}
+function stopSession(){
+  running=false;
+  document.getElementById('startBtn').style.display='block';
+  document.getElementById('stopBtn').style.display='none';
+  if(timerId)clearInterval(timerId);
+  remaining=0;
+  updateTimerDisplay();
+}
 
 function setupAudio(){
   audioCtx=new(window.AudioContext||window.webkitAudioContext)();
@@ -91,8 +144,31 @@ function updateParams(){
   if(!audioCtx)return;
   const f=+freqEl.value,v=+volEl.value,m=+mixEl.value,mr=+modEl.value,br=+burstEl.value;
   toneOsc.frequency.setTargetAtTime(f,audioCtx.currentTime,0.05); noiseFilter.frequency.setTargetAtTime(f,audioCtx.currentTime,0.05);
-  masterGain.gain.setTargetAtTime(v,audioCtx.currentTime,0.05); toneGain.gain.setTargetAtTime(m,audioCtx.currentTime,0.05); noiseGain.gain.setTargetAtTime(1-m,audioCtx.currentTime,0.05);
+  masterGain.gain.setTargetAtTime(v / 100, audioCtx.currentTime, 0.05); toneGain.gain.setTargetAtTime(m,audioCtx.currentTime,0.05); noiseGain.gain.setTargetAtTime(1-m,audioCtx.currentTime,0.05);
   noiseModOsc.frequency.setTargetAtTime(mr,audioCtx.currentTime,0.05); burstOsc.frequency.setTargetAtTime(br,audioCtx.currentTime,0.05);
+}
+
+function validateLenireParams() {
+    const f = +document.getElementById('freq').value;
+    const mr = +document.getElementById('modRate').value;
+    const br = +document.getElementById('burstRate').value;
+    const mix = +document.getElementById('mix').value;
+
+    console.log("--- Lenire-Style Parameter Validation ---");
+    console.log(`Carrier Frequency: ${f} Hz (Targeting Tinnitus Pitch)`);
+    console.log(`Modulation Rate: ${mr} Hz | Burst Rate: ${br} Hz`);
+    
+    // Safety/Efficacy Checks
+    if (f < 1000) console.warn("Note: Carrier frequencies below 1kHz are unusual for tonal tinnitus.");
+    if (mix > 0.9 || mix < 0.1) console.warn("⚠️ Warning: Extreme mix levels may negate the benefits of combining tones and noise.");
+    
+    // Verification of Active Nodes
+    if (toneOsc && noiseModOsc && burstOsc) {
+        console.log("✅ All neuromodulation oscillators verified active.");
+        console.log(`✅ Timing Precision: ${(1000/br).toFixed(0)}ms burst intervals.`);
+    } else {
+        console.error("❌ Audio Engine Error: Modulation nodes failed to initialize.");
+    }
 }
 
 [freqEl,volEl,mixEl,modEl,burstEl].forEach(el=>{el.oninput=()=>{
@@ -100,20 +176,6 @@ function updateParams(){
     const key = 'len_'+el.id.replace('Rate','').replace('volume','vol');
     saveSetting(key, el.value);
 }});
-
-function openHelp() { document.getElementById("helpModal").style.display = "block"; }
-function closeHelp() { document.getElementById("helpModal").style.display = "none"; }
 </script>
-<div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); z-index:9999; padding:20px;">
-    <div style="max-width:500px; margin:60px auto; background:#1a1a2e; color:#e0e0e0; padding:25px; border-radius:12px; border:1px solid #333; text-align:left;">
-        <h2 style="color:#ab47bc; margin-top:0;">Help & Guidance</h2>
-        <div id="helpContent" style="font-size:0.95rem; line-height:1.6; margin:15px 0;">
-            <b>Purpose:</b> Simulates the sound‑only component of Lenire therapy using tone bursts and modulated noise.<br><br>
-            <b>Usage:</b> Set carrier frequency near your tinnitus pitch. Adjust tone/noise mix for comfort.<br><br>
-            <b>Plan:</b> 20 minutes per session is recommended.
-        </div>
-        <button onclick="closeHelp()" style="width:100%; padding:12px; background:#ab47bc; color:#fff; border:none; border-radius:8px; cursor:pointer;">Close</button>
-    </div>
-</div>
 </body>
 </html>

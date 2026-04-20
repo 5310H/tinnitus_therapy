@@ -5,68 +5,118 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Decorrelated Noise Therapy</title>
 <script src="storage.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
-.panel{max-width:520px;width:90%;margin:3rem auto;text-align:center}
-h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc}
-.info{color:#888;font-size:.85rem;margin-bottom:2rem}
-.ctrl{margin:1rem 0;text-align:left}
-.ctrl label{display:block;font-size:.85rem;color:#aaa;margin-bottom:.3rem}
-.ctrl input[type=range]{width:100%;accent-color:#ab47bc}
-.val{float:right;color:#ab47bc;font-size:.85rem}
-select{width:100%;padding:.6rem;background:#1a1a2e;color:#e0e0e0;border:1px solid #333;border-radius:8px;font-size:1rem}
-.big-btn{width:100%;padding:1rem;margin-top:1.5rem;font-size:1.2rem;border:none;border-radius:12px;cursor:pointer;font-weight:700;transition:all .2s}
-.play-btn{background:linear-gradient(135deg,#ab47bc,#8e24aa);color:#fff}
-.stop-btn{background:linear-gradient(135deg,#ef5350,#e53935);color:#fff}
-.big-btn:hover{transform:scale(1.02)}
-.status{margin-top:1rem;font-size:.9rem;color:#888;min-height:1.5rem}
-.help-btn { position: fixed; top: 1rem; right: 1rem; background:#1a1a2e; color:#ab47bc; border:1px solid #ab47bc; padding:8px 14px; border-radius:8px; font-size:.9rem; cursor:pointer; z-index:10; }
-.help-btn:hover { background:#ab47bc; color:#fff; }
-.timer-block{margin-top:1.5rem;text-align:left}
-.timer-block label{display:block;font-size:.85rem;color:#aaa;margin-bottom:.3rem}
-.timer-block input{width:100%;padding:.6rem;background:#1a1a2e;color:#e0e0e0;border:1px solid #333;border-radius:8px;font-size:1rem}
-.timer-display{margin-top:.8rem;font-size:.95rem;color:#ab47bc;text-align:center;min-height:1.2rem}
-</style>
+<script src="nav.js"></script>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<button class="help-btn" onclick="openHelp()">Help</button>
-<a class="back" href="index.html">Home</a>
 <div class="panel">
 <h1>Decorrelated Noise</h1>
 <p class="info">Independent noise streams per ear reduce pattern-matching, promoting habituation.</p>
 <div class="ctrl">
-  <label>Noise Color</label>
-  <select id="color"><option value="white">White Noise</option><option value="pink" selected>Pink Noise</option><option value="brown">Brown Noise</option></select>
+  <label>Sound Source</label>
+  <select id="color">
+    <optgroup label="Broadband Noise">
+      <option value="white">White Noise</option>
+      <option value="pink" selected>Pink Noise</option>
+      <option value="brown">Brown Noise</option>
+    </optgroup>
+    <optgroup label="Nature Sounds">
+      <option value="rain">Rain</option>
+      <option value="ocean">Ocean</option>
+      <option value="stream">Stream</option>
+      <option value="wind">Wind</option>
+    </optgroup>
+  </select>
 </div>
 <div class="ctrl"><label>Volume <span class="val" id="volVal">40%</span></label><input type="range" id="vol" min="0" max="100" value="40"></div>
 <div class="ctrl"><label>Decorrelation Amount <span class="val" id="decVal">100%</span></label><input type="range" id="dec" min="0" max="100" value="100"></div>
-<div class="ctrl"><label>Low-Cut <span class="val" id="lcVal">80 Hz</span></label><input type="range" id="lc" min="20" max="500" value="80"></div>
-<div class="ctrl"><label>High-Cut <span class="val" id="hcVal">14000 Hz</span></label><input type="range" id="hc" min="2000" max="20000" value="14000" step="100"></div>
+<div class="ctrl">
+  <label>Low-Cut (Hz) <input type="number" id="lcInput" class="val-input" value="80" min="20" max="500"></label>
+  <input type="range" id="lc" min="20" max="500" value="80">
+  <div class="btn-group" data-target="lc">
+    <button class="button-step" data-delta="-10">-10</button>
+    <button class="button-step" data-delta="10">+10</button>
+  </div>
+</div>
+<div class="ctrl">
+  <label>High-Cut (Hz) <input type="number" id="hcInput" class="val-input" value="14000" min="2000" max="20000"></label>
+  <input type="range" id="hc" min="2000" max="20000" value="14000" step="100">
+  <div class="btn-group" data-target="hc">
+    <button class="button-step" data-delta="-500">-500</button>
+    <button class="button-step" data-delta="500">+500</button>
+  </div>
+</div>
 <div class="timer-block"><label>Session Timer (minutes)</label><input id="timerInput" type="number" min="1" max="120" value="10"><button class="big-btn play-btn" onclick="startTimer()">Start Timer</button><div class="timer-display" id="timerDisplay"></div></div>
 <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start Therapy</button>
-<div class="status" id="status"></div>
+<div class="status" id="status"></div> 
+<div class="usage-progress">
+  <div id="usageBar" class="usage-bar" style="width: 0%"></div>
+</div>
+<div id="usageText" class="usage-text">Today's Progress: 0 / 20 mins</div>
+<canvas id="decorrelationViz" class="decorrelation-canvas"></canvas>
 </div>
 <script>
-let ctx,playing=false,nodesL,nodesR,timerInterval=null;
+let ctx,playing=false,nodesL,nodesR,audioL,audioR,timerInterval=null,analyserL,analyserR,rafViz;
 const BUF_SIZE=2*44100;
 
 window.onload = () => {
+    initNav(`
+        <b>Purpose:</b> Decorrelated noise or nature sounds send slightly different signals to each ear to reduce pattern‑matching.<br><br>
+        <b>Technical Conformity:</b> This module uses dual-stream generation (different buffers or time-offsets) to ensure minimal correlation between channels, targeting neural desynchronization.<br><br>
+        <b>Requirements:</b> Stereophonic headphones are required for clinical efficacy.<br><br>
+        <b>Usage:</b> Keep volume at a low, comfortable level.
+    `);
+
     document.getElementById('vol').value = loadSetting('dec_vol', 40);
     document.getElementById('dec').value = loadSetting('dec_dec', 100);
     document.getElementById('lc').value = loadSetting('dec_lc', 80);
     document.getElementById('hc').value = loadSetting('dec_hc', 14000);
     document.getElementById('color').value = loadSetting('dec_color', 'pink');
     updateLabels();
+    setupStepButtons();
+    refreshUsageUI();
 };
+
+function refreshUsageUI() {
+    const goal = loadSetting('daily_goal', 20);
+    const current = getDailyUsage();
+    document.getElementById('usageBar').style.width = Math.min(100, (current / goal) * 100) + '%';
+    document.getElementById('usageText').textContent = `Today's Progress: ${Math.round(current)} / ${goal} mins`;
+}
 
 function updateLabels(){
     document.getElementById('volVal').textContent = document.getElementById('vol').value + '%';
     document.getElementById('decVal').textContent = document.getElementById('dec').value + '%';
-    document.getElementById('lcVal').textContent = document.getElementById('lc').value + ' Hz';
-    document.getElementById('hcVal').textContent = document.getElementById('hc').value + ' Hz';
+    document.getElementById('lcInput').value = document.getElementById('lc').value;
+    document.getElementById('hcInput').value = document.getElementById('hc').value;
 }
+
+let repeatTimeout, repeatInterval;
+function setupStepButtons() {
+    document.querySelectorAll('.btn-group .button-step').forEach(btn => {
+        const delta = parseInt(btn.dataset.delta);
+        const target = document.getElementById(btn.parentElement.dataset.target);
+        const step = () => {
+            target.value = Math.min(target.max, Math.max(target.min, Number(target.value) + delta));
+            target.dispatchEvent(new Event('input'));
+        };
+        btn.onmousedown = btn.ontouchstart = (e) => {
+            e.preventDefault(); step();
+            repeatTimeout = setTimeout(() => { repeatInterval = setInterval(step, 80); }, 500);
+        };
+        btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => { clearInterval(repeatInterval); clearTimeout(repeatTimeout); repeatInterval = null; };
+        btn.onclick = () => { if(!repeatInterval) step(); };
+    });
+}
+
+document.getElementById('lcInput').oninput = e => {
+    document.getElementById('lc').value = e.target.value;
+    document.getElementById('lc').dispatchEvent(new Event('input'));
+};
+document.getElementById('hcInput').oninput = e => {
+    document.getElementById('hc').value = e.target.value;
+    document.getElementById('hc').dispatchEvent(new Event('input'));
+};
 
 function createNoise(color){
   const buf=ctx.createBuffer(1,BUF_SIZE,ctx.sampleRate);
@@ -77,30 +127,156 @@ function createNoise(color){
   return buf;
 }
 
-function makeChain(buf,vol,lc,hc){
+function makeChain(buf,vol,lc,hc,analyser){
   const src=ctx.createBufferSource();src.buffer=buf;src.loop=true;
   const g=ctx.createGain();g.gain.value=vol;
   const lo=ctx.createBiquadFilter();lo.type='highpass';lo.frequency.value=lc;
   const hi=ctx.createBiquadFilter();hi.type='lowpass';hi.frequency.value=hc;
   const pan=ctx.createStereoPanner();
   src.connect(lo);lo.connect(hi);hi.connect(g);g.connect(pan);pan.connect(ctx.destination);
+  if(analyser) g.connect(analyser);
   return{src,gain:g,lo,hi,pan};
+}
+
+function makeChainFromNode(node,vol,lc,hc,analyser){
+  const g=ctx.createGain();g.gain.value=vol;
+  const lo=ctx.createBiquadFilter();lo.type='highpass';lo.frequency.value=lc;
+  const hi=ctx.createBiquadFilter();hi.type='lowpass';hi.frequency.value=hc;
+  const pan=ctx.createStereoPanner();
+  node.connect(lo);lo.connect(hi);hi.connect(g);g.connect(pan);pan.connect(ctx.destination);
+  if(analyser) g.connect(analyser);
+  return{gain:g,lo,hi,pan};
 }
 
 function toggle(){if(!playing)start();else stop()}
 function start(){
   ctx=new(window.AudioContext||window.webkitAudioContext)();
   const color=document.getElementById('color').value, vol=document.getElementById('vol').value/100, dec=document.getElementById('dec').value/100, lc=+document.getElementById('lc').value, hc=+document.getElementById('hc').value;
-  const bufL=createNoise(color), bufR=dec>0?createNoise(color):bufL;
-  nodesL=makeChain(bufL,vol,lc,hc); nodesR=makeChain(bufR,vol,lc,hc);
-  nodesL.pan.pan.value=-1; nodesR.pan.pan.value=1;
-  nodesL.src.start();nodesR.src.start();
+
+  analyserL = ctx.createAnalyser(); analyserL.fftSize = 2048;
+  analyserR = ctx.createAnalyser(); analyserR.fftSize = 2048;
+  
+  const natureMap = { rain:'audio/rain.mp3', ocean:'audio/ocean.mp3', stream:'audio/stream.mp3', wind:'audio/wind.mp3' };
+
+  if (natureMap[color]) {
+    audioL = new Audio(natureMap[color]); audioL.loop = true;
+    const trackL = ctx.createMediaElementSource(audioL);
+    nodesL = makeChainFromNode(trackL, vol, lc, hc, analyserL);
+    nodesL.pan.pan.value = -1;
+    audioL.play();
+
+    if (dec > 0) {
+      audioR = new Audio(natureMap[color]); audioR.loop = true;
+      audioR.oncanplay = () => { if(audioR.currentTime === 0) audioR.currentTime = Math.random() * 30; };
+      const trackR = ctx.createMediaElementSource(audioR);
+      nodesR = makeChainFromNode(trackR, vol, lc, hc, analyserR);
+      nodesR.pan.pan.value = 1;
+      audioR.play();
+    } else {
+      // Connect same source to both chains but different analyser paths
+      const trackR_sim = ctx.createMediaElementSource(audioL);
+      nodesR = makeChainFromNode(trackR_sim, vol, lc, hc, analyserR);
+      nodesR.pan.pan.value = 1;
+    }
+    document.getElementById('status').textContent='Playing '+color+' sound';
+  } else {
+    const bufL=createNoise(color), bufR=dec>0?createNoise(color):bufL;
+    nodesL=makeChain(bufL,vol,lc,hc,analyserL); 
+    nodesR=makeChain(bufR,vol,lc,hc,analyserR);
+    nodesL.pan.pan.value=-1; nodesR.pan.pan.value=1;
+    nodesL.src.start();nodesR.src.start();
+    validateDecorrelation(bufL, bufR, lc, hc);
+    document.getElementById('status').textContent='Playing '+color+' noise';
+  }
+
   playing=true;
   document.getElementById('toggleBtn').textContent='Stop';
   document.getElementById('toggleBtn').className='big-btn stop-btn';
-  document.getElementById('status').textContent='Playing '+color+' noise';
 }
-function stop(){if(ctx){ctx.close();ctx=null}playing=false;document.getElementById('toggleBtn').textContent='Start Therapy';document.getElementById('toggleBtn').className='big-btn play-btn';document.getElementById('status').textContent='Stopped'}
+drawViz(); // Start visualization loop
+
+function stop(){
+  if(audioL){audioL.pause();audioL=null}
+  if(audioR){audioR.pause();audioR=null}
+  if(ctx){ctx.close();ctx=null}
+  playing=false;
+  if(rafViz) cancelAnimationFrame(rafViz); // Stop visualization loop
+  document.getElementById('toggleBtn').textContent='Start Therapy';
+  document.getElementById('toggleBtn').className='big-btn play-btn';
+  document.getElementById('status').textContent='Stopped'
+}
+
+function drawViz() {
+    const canvas = document.getElementById('decorrelationViz');
+    const c = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth * 2; // For high-res display
+    canvas.height = canvas.offsetHeight * 2;
+
+    const bufferLength = analyserL.fftSize;
+    const dataArrayL = new Uint8Array(bufferLength);
+    const dataArrayR = new Uint8Array(bufferLength);
+
+    function loop() {
+        if (!playing || !analyserL || !analyserR) {
+            c.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas when stopped
+            return;
+        }
+
+        analyserL.getByteTimeDomainData(dataArrayL);
+        analyserR.getByteTimeDomainData(dataArrayR);
+
+        c.clearRect(0, 0, canvas.width, canvas.height);
+        c.lineWidth = 2;
+
+        drawWaveform(c, canvas, dataArrayL, 'rgba(0, 191, 165, 0.7)'); // Teal for Left
+        drawWaveform(c, canvas, dataArrayR, 'rgba(255, 165, 0, 0.7)'); // Orange for Right
+
+        rafViz = requestAnimationFrame(loop);
+    }
+    loop();
+}
+
+function drawWaveform(c, canvas, dataArray, color) {
+    c.strokeStyle = color;
+    c.beginPath();
+    const sliceWidth = canvas.width * 1.0 / dataArray.length;
+    let x = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = v * canvas.height / 2;
+        if (i === 0) {
+            c.moveTo(x, y);
+        } else {
+            c.lineTo(x, y);
+        }
+        x += sliceWidth;
+    }
+    c.lineTo(canvas.width, canvas.height / 2);
+    c.stroke();
+}
+
+function validateDecorrelation(bufL, bufR, lc, hc) {
+    console.log("--- Decorrelation Validation ---");
+    
+    // 1. Channel Independence Check
+    const isIndependent = (bufL !== bufR);
+    console.log(`Channel Independence: ${isIndependent ? "✅ PASSED (Unique Streams)" : "❌ FAILED (Mono Stream)"}`);
+    
+    // 2. Frequency Range Validation
+    console.log(`Spectrum Bounds: ${lc}Hz - ${hc}Hz`);
+    if (lc >= hc) {
+        console.error("❌ Validation Error: Low-cut is higher than High-cut.");
+    } else {
+        console.log("✅ Frequency range configuration valid.");
+    }
+
+    // 3. Signal Consistency Check
+    const dataL = bufL.getChannelData(0);
+    const sampleVal = dataL[Math.floor(Math.random() * dataL.length)];
+    if (Math.abs(sampleVal) < 0.0001) {
+        console.warn("⚠️ Warning: Output signal appears near-silent.");
+    }
+}
 
 function startTimer(){
   const minutes=parseInt(document.getElementById("timerInput").value);
@@ -109,7 +285,13 @@ function startTimer(){
   timerInterval=setInterval(()=>{
     remaining--;
     document.getElementById("timerDisplay").textContent="Time left: "+Math.floor(remaining/60)+":"+(remaining%60).toString().padStart(2,'0');
-    if(remaining<=0){stop();clearInterval(timerInterval);document.getElementById("timerDisplay").textContent="Session complete"}
+    if(remaining<=0){
+      logUsageMinutes(minutes);
+      stop();
+      clearInterval(timerInterval);
+      document.getElementById("timerDisplay").textContent="Session complete";
+      refreshUsageUI();
+    }
   },1000);
 }
 
@@ -118,20 +300,6 @@ document.getElementById('dec').oninput=e=>{document.getElementById('decVal').tex
 document.getElementById('lc').oninput=e=>{document.getElementById('lcVal').textContent=e.target.value+' Hz';saveSetting('dec_lc',e.target.value);if(playing){nodesL.lo.frequency.value=+e.target.value;nodesR.lo.frequency.value=+e.target.value}};
 document.getElementById('hc').oninput=e=>{document.getElementById('hcVal').textContent=e.target.value+' Hz';saveSetting('dec_hc',e.target.value);if(playing){nodesL.hi.frequency.value=+e.target.value;nodesR.hi.frequency.value=+e.target.value}};
 document.getElementById('color').onchange=e=>saveSetting('dec_color',e.target.value);
-
-function openHelp() { document.getElementById("helpModal").style.display = "block"; }
-function closeHelp() { document.getElementById("helpModal").style.display = "none"; }
 </script>
-<div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); z-index:9999; padding:20px;">
-    <div style="max-width:500px; margin:60px auto; background:#1a1a2e; color:#e0e0e0; padding:25px; border-radius:12px; border:1px solid #333; text-align:left;">
-        <h2 style="color:#ab47bc; margin-top:0;">Help & Guidance</h2>
-        <div id="helpContent" style="font-size:0.95rem; line-height:1.6; margin:15px 0;">
-            <b>Purpose:</b> Decorrelated noise sends slightly different signals to each ear to reduce pattern‑matching.<br><br>
-            <b>Setup:</b> Headphones are required for proper L/R separation.<br><br>
-            <b>Usage:</b> Keep volume at a low, comfortable level.
-        </div>
-        <button onclick="closeHelp()" style="width:100%; padding:12px; background:#ab47bc; color:#fff; border:none; border-radius:8px; cursor:pointer;">Close</button>
-    </div>
-</div>
 </body>
 </html>

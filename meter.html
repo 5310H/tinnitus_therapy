@@ -1,61 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
-.panel{max-width:520px;width:90%;margin:3rem auto}
-h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc;text-align:center}
-.info{color:#888;font-size:.85rem;margin-bottom:2rem;text-align:center}
-</style>
 <meta charset="UTF-8">
 <title>Audio Level Meter</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body { font-family:Arial; background:#f4f4f4; padding:20px; text-align:center; }
-.bar { width:80%; height:30px; background:#ddd; margin:auto; border-radius:10px; overflow:hidden; }
-.fill { height:100%; width:0%; background:#0078ff; }
-.button { background:#0078ff; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; margin:8px; display:inline-block; }
-.card { background:white; padding:20px; border-radius:12px; box-shadow:0 0 6px rgba(0,0,0,0.1); }
-</style>
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
+<style>.meter-bar { width:100%; height:30px; background:var(--surface); margin:10px 0; border-radius:10px; overflow:hidden; position: relative; }
+.meter-fill { height:100%; width:0%; background:var(--accent); transition: width 0.1s; }
+.meter-peak { position: absolute; top: 0; height: 100%; width: 3px; background: var(--text); transition: left 0.1s; pointer-events: none; }</style>
 </head>
-<body><a class="back" href="index.html">Home</a>
-
+<body>
+<div class="panel">
 <h1>Audio Level Meter</h1>
-<p>Shows real‑time audio amplitude</p>
-
+<p class="info">Shows real‑time audio amplitude</p>
 <div class="card">
-    <div class="bar"><div class="fill" id="fill"></div></div>
-    <br>
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="meter-bar" style="flex: 1;">
+            <div class="meter-fill" id="fill"></div>
+            <div class="meter-peak" id="peak" style="left: 0%;"></div>
+        </div>
+        <div id="dbVal" style="width: 75px; font-weight: bold; color: var(--accent); font-size: 1.1rem; text-align: right;">-100 dB</div>
+    </div>
     <button class="button" onclick="start()">Start</button>
-    <button class="button" onclick="stop()">Stop</button>
+    <button class="button stop-btn" onclick="stop()">Stop</button>
 </div>
-
+</div>
 <script>
-let audioCtx=null, analyser, source, raf;
+window.onload = () => initNav(`
+    <b>Purpose:</b> This tool measures the real-time volume (amplitude) of your environment or input source.<br><br>
+    <b>Usage:</b> Use this to calibrate your therapy levels. Many researchers suggest therapy sounds should be adjusted to a "mixing point" where they just begin to blend with your tinnitus or the ambient room noise.<br><br>
+    <b>Note:</b> This tool is passive and does not produce sound.
+`);
+let audioCtx=null, analyser, source, raf, streamRef=null, peakLevel=0, lastPeakUpdate=0;
 
 function start(){
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+
     navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+        streamRef = stream;
         source=audioCtx.createMediaStreamSource(stream);
         analyser=audioCtx.createAnalyser();
         analyser.fftSize=256;
         source.connect(analyser);
         draw();
+    }).catch(err => {
+        alert("Microphone access is required for the meter to function.");
     });
 }
 
-function stop(){ if(raf) cancelAnimationFrame(raf); }
+function stop(){ 
+    if(raf) cancelAnimationFrame(raf);
+    if(streamRef) {
+        streamRef.getTracks().forEach(track => track.stop());
+        streamRef = null;
+    }
+    document.getElementById("fill").style.width = "0%";
+    document.getElementById("peak").style.left = "0%";
+    document.getElementById("dbVal").textContent = "-100 dB";
+    document.getElementById("fill").style.background = "var(--accent)";
+    peakLevel = 0;
+}
 
 function draw(){
     const data=new Uint8Array(analyser.frequencyBinCount);
     const fill=document.getElementById("fill");
+    const peak=document.getElementById("peak");
+    const dbText=document.getElementById("dbVal");
 
     function loop(){
         analyser.getByteFrequencyData(data);
         const avg=data.reduce((a,b)=>a+b)/data.length;
         fill.style.width=(avg/255*100)+"%";
+
+        // Smoothly transition from teal (140) to red (0) based on amplitude
+        const hue = Math.max(0, 140 - (avg / 255) * 140);
+        fill.style.background = `hsl(${hue}, 80%, 50%)`;
+
+        // Calculate dB based on AnalyserNode defaults (-100 to -30 dB)
+        const db = Math.round(analyser.minDecibels + (avg / 255) * (analyser.maxDecibels - analyser.minDecibels));
+        dbText.textContent = db + " dB";
+
+        const now = performance.now();
+        if (avg >= peakLevel) {
+            peakLevel = avg;
+            lastPeakUpdate = now;
+        } else if (now - lastPeakUpdate > 2000) {
+            peakLevel = Math.max(avg, peakLevel * 0.98); // Decay after 2-second hold
+        }
+        peak.style.left = (peakLevel / 255 * 100) + "%";
+
         raf=requestAnimationFrame(loop);
     }
     loop();

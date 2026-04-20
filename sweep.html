@@ -1,39 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
-.panel{max-width:520px;width:90%;margin:3rem auto}
-h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc;text-align:center}
-.info{color:#888;font-size:.85rem;margin-bottom:2rem;text-align:center}
-</style>
 <meta charset="UTF-8">
 <title>Frequency Sweep</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body { font-family:Arial; background:#f4f4f4; padding:20px; text-align:center; }
-.card { background:white; padding:20px; border-radius:12px; box-shadow:0 0 6px rgba(0,0,0,0.1); }
-.button { background:#0078ff; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; margin:8px; display:inline-block; }
-</style>
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
 </head>
-<body><a class="back" href="index.html">Home</a>
-
+<body>
+<div class="panel">
 <h1>Frequency Sweep</h1>
-<p>20 Hz → 20,000 Hz</p>
-
+<p class="info">20 Hz → 20,000 Hz</p>
 <div class="card">
-    <h2>Current Frequency: <span id="freq">0</span> Hz</h2>
+    <h2>Current: <span id="freq">0</span> Hz</h2>
+    <div class="usage-progress" style="margin-bottom: 5px;">
+        <div id="progressBar" class="usage-bar" style="width: 0%; transition: none;"></div>
+    </div>
+    <div style="position: relative; height: 1.2rem; font-size: 0.65rem; color: var(--text-dim); margin-bottom: 15px;">
+        <span style="position: absolute; left: 0;">20Hz</span>
+        <span style="position: absolute; left: 23.3%; transform: translateX(-50%);">100Hz</span>
+        <span style="position: absolute; left: 56.6%; transform: translateX(-50%);">1kHz</span>
+        <span style="position: absolute; left: 79.9%; transform: translateX(-50%);">5kHz</span>
+        <span style="position: absolute; left: 90%; transform: translateX(-50%);">10kHz</span>
+        <span style="position: absolute; right: 0;">20kHz</span>
+    </div>
+    <div class="ctrl">
+        <label>Volume <span class="val" id="volVal">10%</span></label>
+        <input id="volSlider" type="range" min="0" max="100" value="10">
+    </div>
     <button class="button" id="start">Start Sweep</button>
-    <button class="button" id="stop">Stop</button>
+    <button class="button stop-btn" id="stop">Stop</button>
 </div>
-
 <script>
-let ctx=null, osc=null, startTime=null, raf=null;
+window.onload = () => initNav(`
+    <b>Purpose:</b> A frequency sweep moves from the lowest audible frequencies (20 Hz) to the highest (20,000 Hz) over a 10-second period.<br><br>
+    <b>Usage:</b> This helps you identify "dead zones" in your hearing or specific frequencies that trigger your tinnitus. It can also help you roughly verify your upper hearing limit.<br><br>
+    <b>Safety:</b> High frequencies can be piercing. Start with your device volume very low.
+`);
+let ctx=null, osc=null, startTime=null, raf=null, gainNode=null;
 
 function sweep(){
+    if(!ctx || !osc) return;
     const now=ctx.currentTime-startTime;
+    
+    const progress = Math.min(100, (now / 10) * 100);
+    document.getElementById("progressBar").style.width = progress + "%";
+
     const freq=20*Math.pow(1000, now/10);
     if(freq>20000){ stop(); return; }
     osc.frequency.value=freq;
@@ -43,21 +56,35 @@ function sweep(){
 
 function start(){
     if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)();
+    if(ctx.state === 'suspended') ctx.resume();
     stop();
+
     osc=ctx.createOscillator();
     osc.type="sine";
-    osc.connect(ctx.destination);
+    gainNode=ctx.createGain();
+    gainNode.gain.value = document.getElementById("volSlider").value / 100;
+    
+    osc.connect(gainNode).connect(ctx.destination);
     osc.start();
     startTime=ctx.currentTime;
     sweep();
 }
 
 function stop(){
-    if(osc){ osc.stop(); osc.disconnect(); osc=null; }
+    if(osc){ try { osc.stop(); } catch(e){} osc.disconnect(); osc=null; }
     if(raf) cancelAnimationFrame(raf);
+    document.getElementById("progressBar").style.width = "0%";
 }
 document.getElementById("start").onclick=start;
 document.getElementById("stop").onclick=stop;
+
+document.getElementById("volSlider").oninput = (e) => {
+    const v = e.target.value;
+    document.getElementById("volVal").textContent = v + "%";
+    if (gainNode && ctx) {
+        gainNode.gain.setTargetAtTime(v / 100, ctx.currentTime, 0.05);
+    }
+};
 </script>
 
 </body>

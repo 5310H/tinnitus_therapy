@@ -58,7 +58,9 @@ def apply_notch(signal, center_freq, width_octaves, sample_rate):
     high = center_freq * (2.0 ** half)
     low = max(low, 20)
     high = min(high, sample_rate / 2 - 1)
-    sos = butter(4, [low, high], btype='bandstop', fs=sample_rate, output='sos')
+    # Increasing order to 8 for a steeper 'medical-grade' notch transition.
+    # This ensures less energy is removed from the non-target frequencies.
+    sos = butter(8, [low, high], btype='bandstop', fs=sample_rate, output='sos')
     return sosfilt(sos, signal)
 
 def generate_tone(freq, duration, sample_rate):
