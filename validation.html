@@ -71,6 +71,11 @@
     <div id="results" style="margin-top: 20px;">
         <!-- Test results will be appended here -->
     </div>
+
+    <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+        <button class="button" onclick="exportClinicalSettings()">Export Validation Log (.txt)</button>
+        <button class="button" style="background:var(--accent); color:white;" onclick="emailToAudiologist()">Email Log to Audiologist</button>
+    </div>
 </div>
 
 <script>
@@ -246,6 +251,26 @@ async function testStereoSeparation(audioCtx) {
             addResult(title, 'fail', 'Buffers are mirrored.');
         }
     } catch (e) { addResult(title, 'fail', e.message); }
+}
+
+function getReportData() {
+    return { "Status": "System Integrity and Hardware Phase Audit" };
+}
+
+function exportClinicalSettings() {
+    const report = generateClinicalReport("System Validation", getReportData());
+    const blob = new Blob([report], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `tinnitus_validation_log.txt`;
+    a.click();
+}
+
+function emailToAudiologist() {
+    const email = loadSetting('audiologist_email', '');
+    if (!email) return alert("Please set your audiologist's email on the Home page.");
+    const report = generateClinicalReport("System Validation", getReportData());
+    window.location.href = `mailto:${email}?subject=System Validation Log&body=${encodeURIComponent(report)}`;
 }
 </script>
 </body>

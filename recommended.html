@@ -1,25 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-a.back{position:fixed;top:1rem;left:1rem;color:#ab47bc;text-decoration:none;font-size:.9rem;z-index:10}
-.panel{max-width:520px;width:90%;margin:3rem auto}
-h1{font-size:1.8rem;margin-bottom:.3rem;color:#ab47bc;text-align:center}
-.info{color:#888;font-size:.85rem;margin-bottom:2rem;text-align:center}
-</style>
 <meta charset="UTF-8">
 <title>Recommended Use</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body { font-family:Arial; background:#f4f4f4; padding:20px; line-height:1.6; }
-.card { background:white; padding:20px; border-radius:12px; box-shadow:0 0 6px rgba(0,0,0,0.1); }
-</style>
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
 </head>
-<body><a class="back" href="index.html">Home</a>
-
+<body>
+<div class="panel" style="text-align: left;">
 <h1>Recommended Use</h1>
+<p class="info">Guidelines for safe and effective sound therapy.</p>
 
 <div class="card">
 <h2>Best Listening Setup</h2>
@@ -44,5 +36,13 @@ body { font-family:Arial; background:#f4f4f4; padding:20px; line-height:1.6; }
 </ul>
 </div>
 
+<div style="text-align: center; margin-top: 2rem;">
+    <a href="index.html" class="button">Back to Suite</a>
+</div>
+</div>
+
+<script>
+    window.onload = () => initNav();
+</script>
 </body>
 </html>

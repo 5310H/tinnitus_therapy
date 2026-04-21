@@ -57,6 +57,15 @@
 window.onload = () => {
     initNav();
 
+    // Cleanup: Programmatically unregister legacy Service Workers to solve caching issues
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let registration of registrations) {
+                registration.unregister();
+            }
+        });
+    }
+
     // Onboarding Wizard Initialization
     const step = parseInt(loadSetting('onboarding_step', 0));
     if (step < 5) {

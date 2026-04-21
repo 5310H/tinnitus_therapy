@@ -36,6 +36,11 @@
 
     <button class="big-btn" id="playBtn">Play Tone</button>
     <button class="big-btn" style="background:#252545; border:1px solid #333" id="saveBtn">Save to Therapy Settings</button>
+    
+    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+        <button class="button" style="background:var(--accent); color:white;" onclick="emailToAudiologist()">Email to Audiologist</button>
+    </div>
 
     <div id="savedMsg"></div>
 </div>
@@ -185,6 +190,30 @@ saveBtn.onclick = () => {
     savedMsg.textContent = "Frequency saved to therapy settings.";
     setTimeout(() => savedMsg.textContent = "", 1500);
 };
+
+function getReportData() {
+    return {
+        "Target Frequency": slider.value + " Hz",
+        "Test Volume": volSlider.value + "%",
+        "Method": "Manual Slider / Auto-Sweep"
+    };
+}
+
+function exportClinicalSettings() {
+    const report = generateClinicalReport("Notch Finder (Pitch Matching)", getReportData());
+    const blob = new Blob([report], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `tinnitus_clinical_notch_finder.txt`;
+    a.click();
+}
+
+function emailToAudiologist() {
+    const email = loadSetting('audiologist_email', '');
+    if (!email) return alert("Please set your audiologist's email on the Home page.");
+    const report = generateClinicalReport("Notch Finder (Pitch Matching)", getReportData());
+    window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+}
 
 window.onload = () => {
     initNav(`Use the slider or the <b>Auto-Sweep</b> feature to find a tone that matches the pitch of your tinnitus. Auto-sweep slowly raises the pitch to help you identify the "crossing point." Once matched, save the frequency to use it in Notch Therapy.`);

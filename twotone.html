@@ -54,6 +54,11 @@
             <button class="button" onclick="playBoth()">Play Both</button>
             <button class="button stop-btn" onclick="stopAudio()">Stop All</button>
         </div>
+
+        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+            <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+            <button class="button" style="background:var(--accent); color:white;" onclick="emailToAudiologist()">Email to Audiologist</button>
+        </div>
     </div>
 
     <script>
@@ -127,6 +132,30 @@
                     target.dispatchEvent(new Event('input'));
                 };
             });
+        }
+
+        function getReportData() {
+            return {
+                "Tone A Frequency": document.getElementById('freqASlider').value + " Hz",
+                "Tone B Frequency": document.getElementById('freqBSlider').value + " Hz",
+                "Master Volume": document.getElementById('volSlider').value + "%"
+            };
+        }
+
+        function exportClinicalSettings() {
+            const report = generateClinicalReport("Two-Tone Comparison", getReportData());
+            const blob = new Blob([report], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `tinnitus_clinical_twotone.txt`;
+            a.click();
+        }
+
+        function emailToAudiologist() {
+            const email = loadSetting('audiologist_email', '');
+            if (!email) return alert("Please set your audiologist's email on the Home page.");
+            const report = generateClinicalReport("Two-Tone Comparison", getReportData());
+            window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
         }
 
         document.getElementById('freqASlider').oninput = updateUI;

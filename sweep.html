@@ -31,6 +31,11 @@
     </div>
     <button class="button" id="start">Start Sweep</button>
     <button class="button stop-btn" id="stop">Stop</button>
+
+    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+        <button class="button" style="background:var(--accent); color:white;" onclick="emailToAudiologist()">Email to Audiologist</button>
+    </div>
 </div>
 <script>
 window.onload = () => initNav(`
@@ -77,6 +82,29 @@ function stop(){
 }
 document.getElementById("start").onclick=start;
 document.getElementById("stop").onclick=stop;
+
+function getReportData() {
+    return {
+        "Sweep Range": "20 Hz to 20,000 Hz",
+        "Volume Level": document.getElementById('volSlider').value + "%"
+    };
+}
+
+function exportClinicalSettings() {
+    const report = generateClinicalReport("Frequency Sweep", getReportData());
+    const blob = new Blob([report], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `tinnitus_clinical_sweep.txt`;
+    a.click();
+}
+
+function emailToAudiologist() {
+    const email = loadSetting('audiologist_email', '');
+    if (!email) return alert("Please set your audiologist's email on the Home page.");
+    const report = generateClinicalReport("Frequency Sweep", getReportData());
+    window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+}
 
 document.getElementById("volSlider").oninput = (e) => {
     const v = e.target.value;

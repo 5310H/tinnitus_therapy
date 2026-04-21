@@ -32,6 +32,11 @@
     </div>
     <button class="button" onclick="start()">Start</button>
     <button class="button stop-btn" onclick="stop()">Stop</button>
+
+    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <button class="button" onclick="exportClinicalSettings()">Export Level Report (.txt)</button>
+        <button class="button" style="background:var(--accent); color:white;" onclick="emailToAudiologist()">Email to Audiologist</button>
+    </div>
 </div>
 </div>
 <script>
@@ -112,6 +117,26 @@ function draw(){
         raf=requestAnimationFrame(loop);
     }
     loop();
+}
+
+function getReportData() {
+    return { "Last Measured Level": document.getElementById('dbVal').textContent };
+}
+
+function exportClinicalSettings() {
+    const report = generateClinicalReport("Audio Level Analysis", getReportData());
+    const blob = new Blob([report], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `tinnitus_level_report.txt`;
+    a.click();
+}
+
+function emailToAudiologist() {
+    const email = loadSetting('audiologist_email', '');
+    if (!email) return alert("Please set your audiologist's email on the Home page.");
+    const report = generateClinicalReport("Audio Level Analysis", getReportData());
+    window.location.href = `mailto:${email}?subject=Audio Level Report&body=${encodeURIComponent(report)}`;
 }
 </script>
 

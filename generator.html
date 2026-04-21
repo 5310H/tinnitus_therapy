@@ -3,29 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Python Tone Generator</title>
+<title>Python Noise Generator</title>
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-a.back{position:fixed;top:1rem;left:1rem;color:#66bb6a;text-decoration:none;font-size:.9rem;z-index:10}
-.panel{max-width:700px;width:90%;margin:3rem auto}
-h1{font-size:1.8rem;margin-bottom:.3rem;color:#66bb6a;text-align:center}
-.info{color:#888;font-size:.85rem;margin-bottom:2rem;text-align:center}
-h2{font-size:1.2rem;color:#66bb6a;margin:2rem 0 .8rem;border-bottom:1px solid #222;padding-bottom:.4rem}
 pre{background:#111;border:1px solid #333;border-radius:10px;padding:1.2rem;overflow-x:auto;font-size:.82rem;line-height:1.5;color:#c5e1a5;margin:1rem 0}
 code{font-family:'Cascadia Code','Fira Code',monospace}
-ul{margin:.8rem 0 .8rem 1.5rem;line-height:1.8}
-.dl-btn{display:inline-block;padding:.7rem 1.5rem;background:#66bb6a;color:#0a0a1a;border-radius:8px;text-decoration:none;font-weight:700;margin:.5rem .5rem 0 0;font-size:.9rem}
-.dl-btn:hover{background:#81c784}
-p{line-height:1.6;margin:.6rem 0}
 </style>
 </head>
 <body>
-<a class="back" href="index.html">Home</a>
-<div class="panel">
+<div class="panel" style="text-align: left; max-width: 700px;">
 <h1>Python Tone Generator</h1>
 <p class="info">Generate calibrated therapy WAV files offline - no internet required.</p>
-<a class="dl-btn" href="tinnitus_generator.py" download>Download tinnitus_generator.py</a>
+<a href="tinnitus_generator.py" download class="big-btn play-btn" style="text-decoration:none;">Download tinnitus_generator.py</a>
+
 <h2>Requirements</h2>
 <ul>
   <li>Python 3.8+</li>
@@ -55,6 +47,14 @@ python tinnitus_generator.py --type tone --freq 4500 --duration 30</code></pre>
 <p>Files are saved as 16-bit stereo WAV. Decorrelated mode generates independent noise per channel. Notch mode applies a bandstop filter centered on your tinnitus frequency.</p>
 <h2>Safety</h2>
 <p>Always start at low volume. Therapy sounds should be played at or slightly below your tinnitus perception level (mixing point). Consult an audiologist for personalized guidance.</p>
+
+<div style="text-align: center; margin-top: 2rem;">
+    <a href="index.html" class="button">Back to Suite</a>
 </div>
+</div>
+
+<script>
+    window.onload = () => initNav("The Python generator provides the highest level of notch precision by utilizing 8th-order Butterworth filters for offline file creation.");
+</script>
 </body>
 </html>
