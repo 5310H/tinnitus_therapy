@@ -20,7 +20,7 @@
   <h3>Step 1 - Find Your Tinnitus Frequency</h3>
   <div class="ctrl">
     <label>Test Tone (Hz) <input type="number" id="toneFreqInput" class="val-input" value="6000" min="500" max="16000"></label>
-    <input type="range" id="toneFreq" min="500" max="16000" value="6000" step="50">
+    <input type="range" id="toneFreq" min="500" max="16000" value="6000" step="1">
     <div class="btn-group" data-target="toneFreq">
       <button class="button-step" data-delta="-100">-100</button>
       <button class="button-step" data-delta="-10">-10</button>
@@ -47,7 +47,7 @@
 </div>
 <div class="ctrl">
   <label>Notch Center Frequency (Hz) <input type="number" id="notchInput" class="val-input" value="6000" min="500" max="16000"></label>
-  <input type="range" id="notch" min="500" max="16000" value="6000" step="50">
+  <input type="range" id="notch" min="500" max="16000" value="6000" step="1">
   <div class="btn-group" data-target="notch">
     <button class="button-step" data-delta="-100">-100</button>
     <button class="button-step" data-delta="-10">-10</button>
@@ -60,7 +60,7 @@
 <div class="timer-block"><label>Session Timer (minutes)</label><input id="timerInput" type="number" min="1" max="120" value="10"><button class="big-btn play-btn" onclick="startTimer()">Start Timer</button><div class="timer-display" id="timerDisplay"></div></div>
 <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start Notch Therapy</button>
 <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
-<button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="emailToAudiologist()">Email to Audiologist</button>
+<button class="button email-audiologist-btn" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
 <div class="status" id="status"></div>
 <div class="usage-progress">
   <div id="usageBar" class="usage-bar" style="width: 0%"></div>
@@ -125,14 +125,18 @@ function setupStepButtons() {
 }
 
 document.getElementById('toneFreqInput').oninput = e => {
-    const val = Math.min(16000, Math.max(500, e.target.value));
-    document.getElementById('toneFreq').value = val;
-    document.getElementById('toneFreq').dispatchEvent(new Event('input'));
+    const val = parseInt(e.target.value);
+    if (!isNaN(val) && val >= 500 && val <= 16000) {
+        document.getElementById('toneFreq').value = val;
+        document.getElementById('toneFreq').dispatchEvent(new Event('input'));
+    }
 };
 document.getElementById('notchInput').oninput = e => {
-    const val = Math.min(16000, Math.max(500, e.target.value));
-    document.getElementById('notch').value = val;
-    document.getElementById('notch').dispatchEvent(new Event('input'));
+    const val = parseInt(e.target.value);
+    if (!isNaN(val) && val >= 500 && val <= 16000) {
+        document.getElementById('notch').value = val;
+        document.getElementById('notch').dispatchEvent(new Event('input'));
+    }
 };
 
 function createNoise(color){

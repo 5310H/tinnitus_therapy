@@ -91,6 +91,14 @@ function applyTheme() {
     }
 }
 
+function applyEmailVisibility() {
+    const email = loadSetting('audiologist_email', '');
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    document.querySelectorAll('.email-audiologist-btn').forEach(btn => {
+        btn.style.display = isValid ? 'block' : 'none';
+    });
+}
+
 function toggleTheme() {
     const theme = loadSetting('theme', 'dark');
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -136,7 +144,11 @@ function toggleTheme() {
 
 // Re-sync with body once DOM is ready
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyTheme);
+    document.addEventListener('DOMContentLoaded', () => {
+        applyTheme();
+        applyEmailVisibility();
+    });
 } else {
     applyTheme();
+    applyEmailVisibility();
 }

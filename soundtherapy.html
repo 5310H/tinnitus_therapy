@@ -63,7 +63,7 @@
         <input id="timer" type="number" min="1" max="120" value="10" style="width:60px;padding:5px;border-radius:4px;border:1px solid #333;background:#0a0a1a;color:#fff"> min
         <button class="big-btn" onclick="startTimer()">Start Timer</button>
         <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
-        <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="emailToAudiologist()">Email to Audiologist</button>
+        <button class="button email-audiologist-btn" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
         <p id="timerDisplay" style="margin-top:10px;color:#ab47bc;font-weight:700"></p>
         <div class="usage-progress">
             <div id="usageBar" class="usage-bar" style="width: 0%"></div>
