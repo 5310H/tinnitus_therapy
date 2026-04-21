@@ -85,16 +85,12 @@ These approaches are widely used in tinnitus management and research.
 
 ## 📦 Offline Use
 
-The entire suite works **fully offline** and is built as a **Progressive Web App (PWA)**.
+The entire suite works **fully offline**.
 
-### **Installation (Recommended)**
-For the best experience, you can install the suite directly to your device:
-- **Desktop:** Click the "Install" icon in the address bar (Chrome/Edge).
-- **Android:** Select "Install app" from the Chrome menu.
-- **iOS:** Tap "Share" in Safari and select "Add to Home Screen."
-
-Once installed, the app will work without an internet connection and appear in your app drawer or desktop.
-
+To use the suite offline:
+1. Download the project repository as a ZIP file.
+2. Extract the contents to a local folder.
+3. Open `index.html` in any modern web browser.
 
 ---
 
