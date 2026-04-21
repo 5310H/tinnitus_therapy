@@ -33,31 +33,83 @@
 </div>
 
 <div class="section">
-    <h2>Included Tools</h2>
+    <h2>Therapy Modes</h2>
 
-    <h3>1. Decorrelated Therapy</h3>
+    <h3>1. Decorrelated Noise Therapy</h3>
     <p>
-        Generates two channels of decorrelated noise.  
-        This can help reduce the perception of tonal tinnitus by providing a wideband, non‑repeating sound field.
+        Generates left/right decorrelated broadband noise designed to reduce auditory synchrony.
     </p>
 
     <h3>2. Notch Therapy</h3>
     <p>
-        Plays broadband noise with a frequency “notch” removed around the user’s tinnitus pitch.  
-        Some research suggests this may reduce tinnitus loudness over time through lateral inhibition.
+        Plays broadband noise with a narrow frequency band removed around the user’s tinnitus pitch.
+        Leverages <b>lateral inhibition</b> to potentially reduce tinnitus loudness by suppressing neurons in the specific frequency range associated with the user's symptoms.
     </p>
 
-    <h3>3. Sound Therapy</h3>
+    <h3>3. Lenire‑Style Sound Therapy (Sound‑Only)</h3>
     <p>
-        Provides white, pink, and brown noise, plus nature sounds such as rain, ocean, stream, and wind.  
-        Includes volume, balance, and session timer controls.
+        An experimental implementation inspired by the auditory component of bimodal neuromodulation research.
+        Utilizes <b>carrier tones, frequency‑shaped noise, amplitude‑modulated noise,</b> and <b>tone‑burst patterns</b> designed to promote neural plasticity.
     </p>
 
-    <h3>4. Python Noise Generator</h3>
+    <h3>4. Broadband Sound Therapy</h3>
     <p>
-        A simple interface for generating downloadable noise files using Python‑style algorithms.  
-        Useful for offline listening or custom sound design.
+        Provides high-fidelity <b>white, pink, and brown noise</b>, alongside nature-inspired soundscapes (rain, ocean, stream, wind) optimized for long-term auditory masking and habituation.
     </p>
+
+    <h3>5. Noise Generator (Python‑style)</h3>
+    <p>
+        A specialized tool for creating <b>calibrated 16-bit WAV files</b> for offline use. Supports adjustable notch widths (octaves), variable sample rates, and precise noise coloring algorithms.
+    </p>
+</div>
+
+<div class="section">
+    <h2>Research & Methodology</h2>
+    <p>This suite is built upon core principles found in modern tinnitus research:</p>
+    <ul>
+        <li><b>Bimodal Neuromodulation:</b> Implements the sound-only stimulation patterns used in clinical trials, such as synchronous tone bursts.</li>
+        <li><b>Auditory Synchrony Reduction:</b> Decorrelated noise patterns are used to disrupt the pathological firing synchronization of neurons often seen in tinnitus patients.</li>
+        <li><b>Lateral Inhibition:</b> Frequency-notched audio aims to re-balance auditory cortex activity.</li>
+    </ul>
+</div>
+
+<div class="section">
+    <h2>Session Tracking & Persistence</h2>
+    <p>The suite includes a local-first persistence layer powered by <code>storage.js</code>:</p>
+    <ul>
+        <li><b>Automatic Logging:</b> Therapy minutes are tracked and stored in a daily usage log.</li>
+        <li><b>Settings Memory:</b> Your specific frequencies, balance settings, and volume levels are remembered between sessions.</li>
+        <li><b>Privacy:</b> No data is transmitted. All usage logs and settings stay in your browser's local storage.</li>
+    </ul>
+</div>
+
+<div class="section">
+    <h2>Diagnostic & Visualization Tools</h2>
+
+    <h3>Notch Finder</h3>
+    <p>Helps users identify their specific tinnitus frequency using a narrow band noise slider.</p>
+
+    <h3>Two‑Tone Comparison</h3>
+    <p>Allows A/B comparison of two distinct tones to assist in precise pitch matching.</p>
+
+    <h3>Frequency Sweep</h3>
+    <p>Plays a linear frequency sweep from low to high to help explore hearing range and sensitivity.</p>
+
+    <h3>Spectrogram</h3>
+    <p>Real‑time FFT visualization to verify notch placement and analyze hardware frequency response.</p>
+
+    <h3>Audio Level Meter</h3>
+    <p>Displays peak and RMS amplitude to ensure safe listening levels and prevent audio clipping.</p>
+</div>
+
+<div class="section">
+    <h2>Offline Portability</h2>
+    <p>The entire suite is designed to function <b>without an internet connection</b>:</p>
+    <ul>
+        <li><b>Local Access:</b> Open <code>index.html</code> directly from your file system.</li>
+        <li><b>Mobile Use:</b> On iOS/Android, use "Add to Home Screen" to save the tools as a local app.</li>
+        <li><b>Offline Files:</b> The Python generator script allows you to create therapy files for use on any standard MP3 player.</li>
+    </ul>
 </div>
 
 <div class="section">
