@@ -105,32 +105,33 @@ function toggleTheme() {
         document.documentElement.classList.add('light-mode');
     }
     
-    // Onboarding Gatekeeper: Prevents bypassing disclaimer/onboarding
-    const path = window.location.pathname;
-
-    // Session Authorization: Mark the entry point as verified when home is hit
-    if (path.endsWith('index.html') || (path.endsWith('/') && !path.includes('/docs/'))) {
-        sessionStorage.setItem('tts_session_active', 'true');
-    }
-
-    const sessionActive = sessionStorage.getItem('tts_session_active') === 'true';
-    const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
-    
-    // Whitelist: these pages can always be accessed directly
-    const publicPages = ['index.html', 'disclaimer.html', 'license.html', 'about.html', 'research.html', 'feedback.html'];
-    const isPublicPage = publicPages.some(p => path.endsWith(p)) || (path.endsWith('/') && !path.includes('/docs/'));
-
-    console.log(`[Trahreg Gatekeeper] Path: ${path} | Session: ${sessionActive} | Step: ${onboardingStep}`);
-
-    // If it's not a public page, enforce session and onboarding requirements
-    if (!isPublicPage) {
-        // Must have visited home in this tab (sessionActive) AND accepted disclaimer (Step >= 1)
-        if (!sessionActive || onboardingStep < 1) {
-            console.warn("[Gatekeeper] Unauthorized access attempt. Redirecting to home...");
-            const isDocs = path.includes('/docs/');
-            window.location.href = isDocs ? '../index.html' : 'index.html';
+    // --- Trahreg Gatekeeper Logic ---
+    (function() {
+        const path = window.location.pathname.toLowerCase();
+        const isDocs = path.includes('/docs/');
+        
+        // 1. Identify Home/Root and authorize the session
+        const isHome = path.endsWith('index.html') || (path.endsWith('/') && !isDocs);
+        if (isHome) {
+            sessionStorage.setItem('tts_session_active', 'true');
         }
-    }
+
+        // 2. Identify Whitelisted (Public) pages
+        const publicPages = ['index.html', 'disclaimer.html', 'license.html', 'about.html', 'research.html', 'feedback.html'];
+        const isPublicPage = isHome || publicPages.some(p => path.endsWith(p));
+
+        const sessionActive = sessionStorage.getItem('tts_session_active') === 'true';
+        const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
+
+        // 3. Enforce Redirection
+        if (!isPublicPage) {
+            if (!sessionActive || onboardingStep < 1) {
+                console.warn("[Gatekeeper] Unauthorized access to " + path + ". Redirecting...");
+                const redirectTarget = isDocs ? '../index.html' : 'index.html';
+                window.location.replace(redirectTarget);
+            }
+        }
+    })();
 })();
 
 // Re-sync with body once DOM is ready
