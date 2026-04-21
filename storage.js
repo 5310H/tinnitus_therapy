@@ -1,15 +1,6 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-// Kill Switch: Unregister any legacy Service Workers to solve caching issues
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (let registration of registrations) {
-            registration.unregister();
-        }
-    });
-}
-
 const APP_VERSION = "1.1.0";
 
 function saveSetting(key, value) {
@@ -113,27 +104,29 @@ function toggleTheme() {
     if (theme === 'light') {
         document.documentElement.classList.add('light-mode');
     }
+    
     // Onboarding Gatekeeper: Prevents bypassing disclaimer/onboarding
-    const path = window.location.pathname.toLowerCase();
-    
-    // List of pages that do NOT require onboarding (whitelist)
-    const publicPages = ['index.html', 'disclaimer.html', 'license.html', 'about.html'];
-    
-    // Check if the current page is one of the public pages
-    // This checks if the path ends with a public page name or is the root directory
-    const isPublicPage = publicPages.some(p => path.endsWith(p)) || path.endsWith('/');
+    const path = window.location.pathname;
 
-    console.log(`[Gatekeeper] Path: ${path} | Public: ${isPublicPage}`);
+    // Session Authorization: Mark the entry point as verified when home is hit
+    if (path.endsWith('index.html') || (path.endsWith('/') && !path.includes('/docs/'))) {
+        sessionStorage.setItem('tts_session_active', 'true');
+    }
 
-    // If it's not a public page, enforce onboarding
+    const sessionActive = sessionStorage.getItem('tts_session_active') === 'true';
+    const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
+    
+    // Whitelist: these pages can always be accessed directly
+    const publicPages = ['index.html', 'disclaimer.html', 'license.html', 'about.html', 'research.html', 'feedback.html'];
+    const isPublicPage = publicPages.some(p => path.endsWith(p)) || (path.endsWith('/') && !path.includes('/docs/'));
+
+    console.log(`[Trahreg Gatekeeper] Path: ${path} | Session: ${sessionActive} | Step: ${onboardingStep}`);
+
+    // If it's not a public page, enforce session and onboarding requirements
     if (!isPublicPage) {
-        const step = localStorage.getItem('tts_onboarding_step');
-        console.log(`[Gatekeeper] Onboarding Step: ${step}`);
-        
-        // If no step is found or the user hasn't accepted the disclaimer (Step 0 -> 1)
-        if (!step || parseInt(step) < 1) {
-            console.warn("[Gatekeeper] Access denied. Redirecting to onboarding...");
-            // Redirect to root index.html. Handle subfolders like /docs/
+        // Must have visited home in this tab (sessionActive) AND accepted disclaimer (Step >= 1)
+        if (!sessionActive || onboardingStep < 1) {
+            console.warn("[Gatekeeper] Unauthorized access attempt. Redirecting to home...");
             const isDocs = path.includes('/docs/');
             window.location.href = isDocs ? '../index.html' : 'index.html';
         }
