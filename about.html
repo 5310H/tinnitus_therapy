@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>About - Trahreg Tinnitus Therapy Suite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
+</head>
+<body>
+<div class="panel" style="text-align: left;">
+    <h1>About the Project</h1>
+    <p class="info">An open-source initiative for accessible auditory research.</p>
+
+    <div class="card">
+        <h2>Our Mission</h2>
+        <p style="margin-bottom: 1rem;">The Trahreg Tinnitus Therapy Suite was created to bridge the gap between clinical research and accessible technology. Many effective sound therapy protocols are locked behind expensive proprietary devices; our goal is to provide these tools for free, with total privacy, to anyone with a web browser.</p>
+        <ul>
+            <li style="margin-bottom: 0.5rem;"><strong>Privacy First:</strong> No tracking, no cookies, and no data collection. Your hearing data stays on your device.</li>
+            <li style="margin-bottom: 0.5rem;"><strong>Research-Led:</strong> Every tool is built following parameters established in peer-reviewed clinical trials.</li>
+            <li style="margin-bottom: 0.5rem;"><strong>Offline Capability:</strong> Designed to work anywhere, ensuring therapy is available without an active internet connection.</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Technology Stack</h2>
+        <p style="margin-bottom: 1rem;">The suite is built using modern, lightweight web technologies to ensure maximum portability and performance:</p>
+        <ul style="list-style: none;">
+            <li>🛠 <strong>Web Audio API:</strong> For high-precision, real-time audio synthesis and filtering.</li>
+            <li>💾 <strong>Local Storage:</strong> For secure, local-only persistence of therapy settings.</li>
+            <li>🐍 <strong>Python (NumPy/SciPy):</strong> Powering the offline calibrated WAV generator.</li>
+            <li>📄 <strong>Vanilla HTML/CSS/JS:</strong> No heavy frameworks, ensuring long-term maintainability.</li>
+        </ul>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--accent);">
+        <h2>Clinical Specifications</h2>
+        <ul style="list-style: none; font-size: 0.9rem;">
+            <li>🎯 <strong>Filter Accuracy:</strong> Notch filters validated at >40dB attenuation with ±1% center frequency precision.</li>
+            <li>🔄 <strong>Modulation:</strong> Synchronous and asynchronous tone bursting following TENT-A (Lenire) timing protocols.</li>
+            <li>🎧 <strong>Decorrelation:</strong> True L/R independence using dual-buffer synthesis for neural desynchronization.</li>
+            <li>🛡 <strong>Safety:</strong> Exponential parameter ramping to eliminate digital transients and audio spikes.</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Professional Review</h2>
+        <p style="margin-bottom: 1rem;">To facilitate professional medical review, the suite allows you to share your configuration and usage data directly with your clinician:</p>
+        <ul>
+            <li style="margin-bottom: 0.5rem;"><strong>Configure Email:</strong> On the Home page, expand the <strong>Project</strong> card and enter your Audiologist's email address. This setting is saved locally on your device.</li>
+            <li style="margin-bottom: 0.5rem;"><strong>Send Reports:</strong> Within any therapy module, click the <strong>Email to Audiologist</strong> button.</li>
+            <li style="margin-bottom: 0.5rem;"><strong>Clinical Context:</strong> This generates a pre-formatted email containing your specific therapy settings, daily usage logs, and the results of your hardware and system validation tests for your doctor to review.</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Collaborate with Us</h2>
+        <p style="margin-bottom: 1rem;">We are actively looking for researchers, audiologists, and software engineers to help improve the suite. Areas where we need help include:</p>
+        <ul>
+            <li>Validation of DSP algorithms against clinical standards.</li>
+            <li>UI/UX improvements for accessibility (screen readers, etc.).</li>
+            <li>Localization and translation into more languages.</li>
+        </ul>
+        <p style="margin-top: 1rem;"><strong>Contact:</strong> If you are interested in contributing, please reach out via our <a href="feedback.html" style="color: var(--accent); font-weight: bold;">Feedback Tool.</a></p>
+    </div>
+
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="index.html" class="button">Back to Suite</a>
+    </div>
+</div>
+
+<script>
+window.onload = () => {
+    initNav(`
+        <b>Collaborators:</b> We welcome code contributions, clinical feedback, and research data.<br><br>
+        <b>Open Source:</b> This project is MIT licensed, meaning you are free to fork, modify, and distribute it.
+    `);
+};
+</script>
+</body>
+</html>

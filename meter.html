@@ -14,7 +14,14 @@
 <body>
 <div class="panel">
 <h1>Audio Level Meter</h1>
-<p class="info">Shows real‑time audio amplitude</p>
+<p class="info">Shows real‑time audio amplitude and clinical calibration status.</p>
+
+<div id="validationBox" class="match-section" style="display:none; margin-bottom: 20px;">
+    <h3>Clinical Calibration Check</h3>
+    <p id="clipWarning" style="color:#ef5350; font-weight:bold; display:none;">⚠️ SIGNAL CLIPPING DETECTED: Reduce system volume.</p>
+    <p id="floorCheck">Noise Floor: Measuring...</p>
+</div>
+
 <div class="card">
     <div style="display: flex; align-items: center; gap: 12px;">
         <div class="meter-bar" style="flex: 1;">
@@ -29,13 +36,14 @@
 </div>
 <script>
 window.onload = () => initNav(`
-    <b>Purpose:</b> This tool measures the real-time volume (amplitude) of your environment or input source.<br><br>
+    <b>Purpose:</b> This tool measures the real-time volume (amplitude) and monitors for signal clipping.<br><br>
     <b>Usage:</b> Use this to calibrate your therapy levels. Many researchers suggest therapy sounds should be adjusted to a "mixing point" where they just begin to blend with your tinnitus or the ambient room noise.<br><br>
     <b>Note:</b> This tool is passive and does not produce sound.
 `);
 let audioCtx=null, analyser, source, raf, streamRef=null, peakLevel=0, lastPeakUpdate=0;
 
 function start(){
+    document.getElementById("validationBox").style.display = "block";
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
     if(audioCtx.state === 'suspended') audioCtx.resume();
 
@@ -57,6 +65,7 @@ function stop(){
         streamRef.getTracks().forEach(track => track.stop());
         streamRef = null;
     }
+    document.getElementById("validationBox").style.display = "none";
     document.getElementById("fill").style.width = "0%";
     document.getElementById("peak").style.left = "0%";
     document.getElementById("dbVal").textContent = "-100 dB";
@@ -69,6 +78,8 @@ function draw(){
     const fill=document.getElementById("fill");
     const peak=document.getElementById("peak");
     const dbText=document.getElementById("dbVal");
+    const clipMsg=document.getElementById("clipWarning");
+    const floorMsg=document.getElementById("floorCheck");
 
     function loop(){
         analyser.getByteFrequencyData(data);
@@ -82,6 +93,12 @@ function draw(){
         // Calculate dB based on AnalyserNode defaults (-100 to -30 dB)
         const db = Math.round(analyser.minDecibels + (avg / 255) * (analyser.maxDecibels - analyser.minDecibels));
         dbText.textContent = db + " dB";
+
+        // Clinical Validation Logic
+        const isClipping = data.some(val => val >= 250);
+        clipMsg.style.display = isClipping ? "block" : "none";
+        if (db < -80) floorMsg.textContent = "Noise Floor: Clean (Low Ambient Noise)";
+        else floorMsg.textContent = "Noise Floor: High (Check Surroundings)";
 
         const now = performance.now();
         if (avg >= peakLevel) {

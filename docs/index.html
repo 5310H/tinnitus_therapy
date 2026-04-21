@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Tinnitus Therapy Documentation</title>
+<title>Trahreg Tinnitus Therapy Documentation</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="../style.css">
 <script src="../storage.js"></script>
@@ -20,13 +20,13 @@
 <div class="panel" style="text-align: left; max-width: 700px;">
 
 <div id="pdfContent">
-<h1>Tinnitus Therapy Suite</h1>
+<h1>Trahreg Tinnitus Therapy Suite</h1>
 <h3>Documentation & User Guide</h3>
-<p style="text-align: center; font-size: 0.8rem; color: var(--text-dim);">Generated for: [ Beta 2026.4.20 ]</p>
+<p style="text-align: center; font-size: 0.8rem; color: var(--text-dim);">Generated for Version: 1.1.0</p>
 <div class="section">
     <h2>Overview</h2>
     <p>
-        This tinnitus therapy suite is an open‑source, browser‑based collection of sound tools designed to support tinnitus relief and sound therapy experimentation.  
+        The Trahreg Tinnitus Therapy Suite is an open‑source, browser‑based collection of sound tools designed to support tinnitus relief and sound therapy experimentation.  
         Everything runs locally in your browser using the Web Audio API.  
         No accounts, no tracking, no data collection.
     </p>
@@ -84,6 +84,17 @@
 </div>
 
 <div class="section">
+    <h2>Clinical Export & Medical Review</h2>
+    <p>The suite includes features to facilitate communication with your healthcare provider and ensure your protocols align with clinical research.</p>
+    <ul>
+        <li><b>Clinical Export:</b> Use the <b>Clinical Export</b> button on any therapy page to generate a <code>.txt</code> file containing your exact calibration settings, usage logs, and system validation results.</li>
+        <li><b>Email to Audiologist:</b> Enter your clinician's email address in the <b>Project</b> card on the Home page. Once configured, you can use the <b>Email to Audiologist</b> button in therapy modules to generate a pre-formatted email draft for immediate review.</li>
+        <li><b>Preparation for Appointments:</b> We recommend generating these reports before visiting an audiologist or ENT specialist to provide them with a clear history of your protocols.</li>
+        <li><b>Validation Data:</b> Reports automatically include hardware phase status and automated engine validation logs, helping your clinician verify the technical integrity of your listening environment.</li>
+    </ul>
+</div>
+
+<div class="section">
     <h2>Diagnostic & Visualization Tools</h2>
 
     <h3>Notch Finder</h3>
@@ -100,14 +111,17 @@
 
     <h3>Audio Level Meter</h3>
     <p>Displays peak and RMS amplitude to ensure safe listening levels and prevent audio clipping.</p>
+
+    <h3>Feedback & Support</h3>
+    <p>Provides a standardized way to report issues or suggest features by generating a formatted email or local text file.</p>
 </div>
 
 <div class="section">
-    <h2>Offline Portability</h2>
-    <p>The entire suite is designed to function <b>without an internet connection</b>:</p>
+    <h2>PWA Installation & Offline Use</h2>
+    <p>The suite is a <b>Progressive Web App (PWA)</b>, allowing it to function as a standalone application without an internet connection.</p>
     <ul>
-        <li><b>Local Access:</b> Open <code>index.html</code> directly from your file system.</li>
-        <li><b>Mobile Use:</b> On iOS/Android, use "Add to Home Screen" to save the tools as a local app.</li>
+        <li><b>Desktop (Chrome/Edge):</b> Click the "Install" icon in the address bar or select "Install Tinnitus Therapy Suite" from the browser menu.</li>
+        <li><b>Mobile (Android/iOS):</b> Use "Add to Home Screen" in your browser's share or menu options to install the suite as a local app.</li>
         <li><b>Offline Files:</b> The Python generator script allows you to create therapy files for use on any standard MP3 player.</li>
     </ul>
 </div>

@@ -13,6 +13,11 @@
     <h1>Sound Therapy</h1>
     <p class="info">Nature sounds and calibrated broadband noise.</p>
 
+    <div class="match-section" style="margin-bottom: 20px;">
+        <h3>Clinical Significance</h3>
+        <p>Broadband noise is the cornerstone of <b>Tinnitus Retraining Therapy (TRT)</b>. Partial masking facilitates habituation, training the brain to reclassify and ignore the tinnitus signal over time.</p>
+    </div>
+
     <div class="ctrl">
         <h3>Noise Types</h3>
         <div class="btn-grid">
@@ -57,6 +62,8 @@
         <h3>Session Timer</h3>
         <input id="timer" type="number" min="1" max="120" value="10" style="width:60px;padding:5px;border-radius:4px;border:1px solid #333;background:#0a0a1a;color:#fff"> min
         <button class="big-btn" onclick="startTimer()">Start Timer</button>
+        <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+        <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="emailToAudiologist()">Email to Audiologist</button>
         <p id="timerDisplay" style="margin-top:10px;color:#ab47bc;font-weight:700"></p>
         <div class="usage-progress">
             <div id="usageBar" class="usage-bar" style="width: 0%"></div>
@@ -193,6 +200,31 @@ function startTimer() {
             refreshUsageUI();
         }
     }, 1000);
+}
+
+function getReportData() {
+    const activeBtn = document.querySelector('.sm-btn.active');
+    return {
+        "Active Sound": activeBtn ? activeBtn.textContent : 'None Selected',
+        "Volume Level": document.getElementById('volume').value + "%",
+        "L/R Balance": document.getElementById('balance').value
+    };
+}
+
+function exportClinicalSettings() {
+    const report = generateClinicalReport("Broadband Sound Therapy", getReportData());
+    const blob = new Blob([report], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `tinnitus_clinical_sound_therapy.txt`;
+    a.click();
+}
+
+function emailToAudiologist() {
+    const email = loadSetting('audiologist_email', '');
+    if (!email) return alert("Please set your audiologist's email on the Home page.");
+    const report = generateClinicalReport("Broadband Sound Therapy", getReportData());
+    window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
 }
 </script>
 </body>

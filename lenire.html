@@ -12,6 +12,10 @@
 <div class="panel">
     <h1>Lenire‑Style Sound</h1>
     <p class="info">Experimental sound‑only bimodal-style therapy.</p>
+    <div class="match-section" style="margin-bottom: 20px;">
+        <h3>Clinical Significance</h3>
+        <p>Inspired by the <b>TENT-A Clinical Trial (2020)</b>, these structured auditory patterns (tone bursts and modulated noise) are designed to engage neuroplasticity and disrupt tinnitus-related brain activity.</p>
+    </div>
     <div class="ctrl">
         <label>Carrier Frequency (Hz) <input type="number" id="freq" class="val-input" min="200" max="12000" value="8000"></label>
         <div class="btn-group" data-target="freq">
@@ -34,6 +38,8 @@
     </div>
     <button id="startBtn" class="big-btn play-btn" onclick="startSession()">Start Session</button>
     <button id="stopBtn" class="big-btn stop-btn" style="display:none" onclick="stopSession()">Stop Session</button>
+    <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+    <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="emailToAudiologist()">Email to Audiologist</button>
     <div class="timer" id="timer">Session: 00:00 / 20:00</div>
     <div class="usage-progress">
         <div id="usageBar" class="usage-bar" style="width: 0%"></div>
@@ -176,6 +182,33 @@ function validateLenireParams() {
     const key = 'len_'+el.id.replace('Rate','').replace('volume','vol');
     saveSetting(key, el.value);
 }});
+
+function getReportData() {
+    return {
+        "Carrier Frequency": freqEl.value + " Hz",
+        "Master Volume": volEl.value + "%",
+        "Tone/Noise Mix": Math.round(mixEl.value * 100) + "%",
+        "Noise Modulation": modEl.value + " Hz",
+        "Tone Burst Rate": burstEl.value + " Hz",
+        "Set Session Length": (document.getElementById('session').value / 60) + " minutes"
+    };
+}
+
+function exportClinicalSettings() {
+    const report = generateClinicalReport("Lenire-Style Sound (Experimental)", getReportData());
+    const blob = new Blob([report], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `tinnitus_clinical_lenire_style.txt`;
+    a.click();
+}
+
+function emailToAudiologist() {
+    const email = loadSetting('audiologist_email', '');
+    if (!email) return alert("Please set your audiologist's email on the Home page.");
+    const report = generateClinicalReport("Lenire-Style Sound (Experimental)", getReportData());
+    window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+}
 </script>
 </body>
 </html>

@@ -1,0 +1,16 @@
+{
+  "name": "Trahreg Tinnitus Therapy Suite",
+  "short_name": "TrahregTinnitus",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0a0a1a",
+  "theme_color": "#00bfa5",
+  "description": "Open-source browser-based sound therapy tools.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3039/3039433.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

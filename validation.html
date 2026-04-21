@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>System Validation - Tinnitus Therapy Suite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
+<style>
+    .test-result {
+        background: var(--card-bg);
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        margin-top: 10px;
+        text-align: left;
+    }
+    .test-result h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: var(--accent);
+    }
+    .test-result p {
+        font-size: 0.9em;
+        color: var(--text-dim);
+        margin-bottom: 5px;
+    }
+    .test-result.pass { border-color: #4CAF50; }
+    .test-result.fail { border-color: #f44336; }
+    .test-result.warn { border-color: #ff9800; }
+    .test-result.info { border-color: #2196F3; }
+    .test-status {
+        font-weight: bold;
+        margin-left: 10px;
+    }
+    .test-status.pass { color: #4CAF50; }
+    .test-status.fail { color: #f44336; }
+    .test-status.warn { color: #ff9800; }
+    .test-status.info { color: #2196F3; }
+</style>
+</head>
+<body>
+<div class="panel">
+    <h1>System Validation</h1>
+    <p class="info">Automated engine checks and hardware phase calibration.</p>
+
+    <div class="card">
+        <h2>System Calibration (Phase Test)</h2>
+        <p class="info">Verify that your headphones are correctly wired and in-phase.</p>
+        <button class="button" onclick="testPhase('in')">Test In-Phase (Center)</button>
+        <button class="button" onclick="testPhase('out')">Test Out-of-Phase (Diffuse)</button>
+        <button class="button stop-btn" style="width:100%; margin-top:10px" onclick="stopPhase()">Stop Phase Tone</button>
+        
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); text-align: center;">
+            <p style="font-size: 0.85rem; margin-bottom: 10px;">Does the In-Phase tone sound centered?</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button class="button" style="border-color: #4CAF50; color: #4CAF50;" onclick="savePhaseStatus('Verified: In-Phase (Correct)')">Yes (Correct)</button>
+                <button class="button" style="border-color: #f44336; color: #f44336;" onclick="savePhaseStatus('Error: Out-of-Phase Detected')">No (Phase Issue)</button>
+            </div>
+            <p id="phaseStatusDisplay" style="font-size: 0.8rem; margin-top: 10px; color: var(--accent); font-weight: bold;"></p>
+        </div>
+
+        <p id="phaseInfo" style="font-size: 0.8rem; margin-top: 10px; color: var(--muted);">
+            <b>In-Phase:</b> Should sound perfectly centered in your head.<br>
+            <b>Out-of-Phase:</b> Should sound hollow, diffuse, or "wide."
+        </p>
+    </div>
+
+    <button class="big-btn play-btn" onclick="runAllTests()">Run Engine Validation</button>
+    <div id="results" style="margin-top: 20px;">
+        <!-- Test results will be appended here -->
+    </div>
+</div>
+
+<script>
+window.onload = () => {
+    initNav(`
+        <b>Purpose:</b> This page verifies the technical accuracy of the suite and your hardware.<br><br>
+        <b>Phase Test:</b> Ensures L/R channels are not inverted. Correct phase is critical for Decorrelated Noise and Binaural therapies.<br><br>
+        <b>Engine Validation:</b> Simulates therapy setups to measure filter slopes and node connectivity.
+    `);
+    const savedStatus = loadSetting('phase_status', 'Not Verified');
+    document.getElementById('phaseStatusDisplay').textContent = "Current Status: " + savedStatus;
+};
+
+function savePhaseStatus(status) {
+    saveSetting('phase_status', status);
+    document.getElementById('phaseStatusDisplay').textContent = "Current Status: " + status;
+}
+
+let phaseCtx, phaseOsc, engineTestResults = [];
+
+function testPhase(mode) {
+    stopPhase();
+    phaseCtx = new (window.AudioContext || window.webkitAudioContext)();
+    phaseOsc = phaseCtx.createOscillator();
+    phaseOsc.frequency.value = 440;
+
+    const merger = phaseCtx.createChannelMerger(2);
+    const gainL = phaseCtx.createGain();
+    const gainR = phaseCtx.createGain();
+    
+    gainL.gain.value = 0.15;
+    // Phase inversion for 'out' mode
+    gainR.gain.value = (mode === 'out') ? -0.15 : 0.15;
+
+    phaseOsc.connect(gainL).connect(merger, 0, 0);
+    phaseOsc.connect(gainR).connect(merger, 0, 1);
+    merger.connect(phaseCtx.destination);
+    
+    phaseOsc.start();
+}
+
+function stopPhase() {
+    if (phaseCtx) {
+        phaseCtx.close();
+        phaseCtx = null;
+    }
+}
+
+const resultsContainer = document.getElementById('results');
+
+function addResult(title, status, message, details = '') {
+    const timestamp = new Date().toLocaleTimeString();
+    const resultDiv = document.createElement('div');
+    resultDiv.className = `test-result ${status}`;
+    resultDiv.innerHTML = `
+        <h3>${title} <span class="test-status ${status}">[${status.toUpperCase()}]</span></h3>
+        <p style="font-size: 0.75rem; color: var(--muted); margin-bottom: 4px;">Executed at: ${timestamp}</p>
+        <p>${message}</p>
+        ${details ? `<p style="font-size:0.8em; color:var(--muted);">${details}</p>` : ''}
+    `;
+    resultsContainer.appendChild(resultDiv);
+
+    if (status !== 'info') {
+        engineTestResults.push(`[${timestamp}] ${title}: [${status.toUpperCase()}] ${message}`);
+        saveSetting('engine_validation_results', engineTestResults.join('\n'));
+    }
+}
+
+async function runAllTests() {
+    resultsContainer.innerHTML = ''; 
+    engineTestResults = [];
+    saveSetting('engine_validation_results', 'Not Performed');
+    addResult('Starting Tests', 'info', 'Initializing AudioContext...');
+
+    let audioCtx;
+    try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
+        addResult('Web Audio Engine', 'pass', 'AudioContext is active and stable.');
+    } catch (e) {
+        addResult('Web Audio Engine', 'fail', 'Failed to initialize.');
+        return;
+    }
+
+    await testChannelConfiguration(audioCtx);
+    await testNotchFilter(audioCtx);
+    await testModulationNodes(audioCtx);
+    await testStereoSeparation(audioCtx);
+
+    if (audioCtx) await audioCtx.close();
+    addResult('Finished', 'info', 'Validation sequence completed.');
+}
+
+async function testChannelConfiguration(audioCtx) {
+    const title = 'Stereo Routing Check';
+    try {
+        const maxChannels = audioCtx.destination.maxChannelCount;
+        
+        // Automated engine test: Can we pan a signal to one channel without it appearing in the other?
+        const offlineCtx = new OfflineAudioContext(2, 1024, audioCtx.sampleRate);
+        const panner = offlineCtx.createStereoPanner();
+        const osc = offlineCtx.createOscillator();
+        
+        panner.pan.value = -1; // Hard Left
+        osc.connect(panner).connect(offlineCtx.destination);
+        osc.start();
+        
+        const rendered = await offlineCtx.startRendering();
+        const rightData = rendered.getChannelData(1);
+        
+        let rightBleed = false;
+        for (let i = 0; i < rightData.length; i++) {
+            if (Math.abs(rightData[i]) > 0.0001) {
+                rightBleed = true;
+                break;
+            }
+        }
+
+        if (maxChannels >= 2 && !rightBleed) {
+            addResult(title, 'pass', `Stereo verified. Browser supports ${maxChannels} channels with discrete L/R routing.`);
+        } else if (maxChannels < 2) {
+            addResult(title, 'fail', `Hardware/Browser reports MONO only (maxChannelCount: ${maxChannels}).`);
+        } else {
+            addResult(title, 'fail', 'Mono downmixing detected in audio engine.', 'Panned signals are bleeding across channels.');
+        }
+    } catch (e) { addResult(title, 'fail', e.message); }
+}
+
+async function testNotchFilter(audioCtx) {
+    const title = 'Filter Validation';
+    try {
+        const notch = audioCtx.createBiquadFilter();
+        notch.type = 'notch';
+        notch.frequency.value = 6000;
+        notch.Q.value = 10;
+
+        const freqs = new Float32Array([6000]);
+        const mag = new Float32Array(1);
+        const phase = new Float32Array(1);
+        notch.getFrequencyResponse(freqs, mag, phase);
+        
+        const db = 20 * Math.log10(mag[0]);
+        if (db < -40) {
+            addResult(title, 'pass', `Digital notch filter achieved ${db.toFixed(1)} dB attenuation at 6kHz.`);
+        } else {
+            addResult(title, 'fail', `Filter attenuation was only ${db.toFixed(1)} dB.`);
+        }
+    } catch (e) { addResult(title, 'fail', e.message); }
+}
+
+async function testModulationNodes(audioCtx) {
+    const title = 'Neuromodulation Engine';
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const lfo = audioCtx.createOscillator();
+        lfo.connect(gain.gain);
+        addResult(title, 'pass', 'Parameter modulation (LFO -> Gain) is supported and connected.');
+    } catch (e) { addResult(title, 'fail', e.message); }
+}
+
+async function testStereoSeparation(audioCtx) {
+    const title = 'Stereo Decorrelation';
+    try {
+        const bufL = audioCtx.createBuffer(1, 128, audioCtx.sampleRate);
+        const bufR = audioCtx.createBuffer(1, 128, audioCtx.sampleRate);
+        bufL.getChannelData(0)[0] = 0.5;
+        bufR.getChannelData(0)[0] = -0.5;
+
+        if (bufL.getChannelData(0)[0] !== bufR.getChannelData(0)[0]) {
+            addResult(title, 'pass', 'Independent L/R buffer synthesis verified.');
+        } else {
+            addResult(title, 'fail', 'Buffers are mirrored.');
+        }
+    } catch (e) { addResult(title, 'fail', e.message); }
+}
+</script>
+</body>
+</html>

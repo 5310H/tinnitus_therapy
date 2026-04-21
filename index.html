@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Tinnitus Therapy Suite</title>
+<title>Trahreg Tinnitus Therapy Suite</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="style.css">
 <script src="storage.js"></script>
+<!-- <link rel="manifest" href="manifest.json"> -->
 <script src="nav.js"></script>
 </head>
 <body>
-<h1>Tinnitus Therapy Suite</h1>
+<h1>Trahreg Tinnitus Therapy Suite</h1>
 <p>Open‑source therapy tools</p>
-<p>[ Beta 2026.4.20 ]</p>
+<p>[ Beta 1.1.0 ]</p>
 
 <div class="grid">
     <div class="card"><h2>Therapy Modes</h2><details><summary>Show</summary><a class="button" href="decorrelated.html">Decorrelated</a><a class="button" href="notch.html">Notch Therapy</a><a class="button" href="lenire.html">Lenire‑style</a><a class="button" href="soundtherapy.html">Sound Therapy</a></details></div>
@@ -25,6 +26,13 @@
             <a class="button" href="hearingtest.html">Hearing Test</a>
             <a class="button" href="spectrogram.html">Spectrogram</a>
             <a class="button" href="meter.html">Audio Meter</a>
+            <a class="button" href="validation.html" id="validationBtn">System Validation</a>
+            <!--
+            <div id="installContainer" style="display:none; margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border); text-align: center;">
+                <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 8px;">Install for offline use:</p>
+                <button id="installBtn" class="button" style="width: 100%; border: 1px solid var(--accent);">Install App</button>
+            </div>
+            -->
         </details>
     </div>
     <div class="card">
@@ -38,9 +46,14 @@
                 <!-- Bars injected by JS -->
             </div>
             <p class="usage-text" id="weeklyTotal">Total: 0 mins this week</p>
+            <div style="display: flex; gap: 8px; margin-top: 15px;">
+                <button class="button" style="flex: 1;" onclick="exportAllData()">Backup Data</button>
+                <button class="button" style="flex: 1;" onclick="document.getElementById('importFile').click()">Restore</button>
+                <input type="file" id="importFile" style="display:none" onchange="importAllData(this.files[0])" accept=".json">
+            </div>
         </details>
     </div>
-    <div class="card"><h2>Project</h2><details><summary>Show</summary><a class="button" href="docs/index.html">Documentation</a><a class="button" href="research.html">Research</a><a class="button" href="license.html">License</a></details></div>
+    <div class="card"><h2>Project</h2><details><summary>Show</summary><a class="button" href="about.html">About the Project</a><a class="button" href="docs/index.html">Documentation</a><a class="button" href="disclaimer.html">Disclaimer</a><a class="button" href="feedback.html">Feedback</a><a class="button" href="research.html">Research</a><a class="button" href="license.html">License</a><div class="ctrl" style="margin-top:15px; border-top:1px dashed var(--border); padding-top:10px;"><label>Audiologist Email</label><input type="email" id="audioEmail" placeholder="clinician@example.com" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);"></div></details></div>
     <div class="card">
         <h2>Support Tinnitus Research</h2>
         <p>You can support tinnitus research by donating to a reputable organization of your choice, such as the American Tinnitus Association, the Tinnitus Research Association, or the <a href="https://www.chsc.org/donate" target="_blank" style="color:var(--accent); text-decoration:underline;">Cleveland Hearing and Speech Center</a>. Your donation will help fund research and initiatives that aim to improve our understanding and treatment of tinnitus.</p>
@@ -50,13 +63,83 @@
 <script>
 window.onload = () => {
     initNav();
+
+    // Onboarding Wizard Initialization
+    const step = parseInt(loadSetting('onboarding_step', 0));
+    if (step < 5) {
+        showOnboardingStep(step);
+    }
+
+    /*
+    // Register Service Worker for PWA/Offline support
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log("Service Worker Registered"))
+            .catch(err => console.log("Service Worker Failed", err));
+    }
+
+    // PWA Install Logic
+    let deferredPrompt;
+    const installContainer = document.getElementById('installContainer');
+    const installBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installContainer.style.display = 'block';
+    });
+
+    installBtn.onclick = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt = null;
+        installContainer.style.display = 'none';
+    };
+    */
+
     document.getElementById('goalInput').value = loadSetting('daily_goal', 20);
+    document.getElementById('audioEmail').value = loadSetting('audiologist_email', '');
+
+    // Highlight validation button if calibration was completed
+    const phaseStatus = loadSetting('phase_status', 'Not Verified');
+    if (phaseStatus !== 'Not Verified') {
+        document.getElementById('validationBtn').classList.add('highlight-btn');
+    }
+
     renderStats();
 };
 
 document.getElementById('goalInput').oninput = (e) => {
     saveSetting('daily_goal', e.target.value);
     renderStats();
+};
+
+document.getElementById('audioEmail').oninput = (e) => {
+    saveSetting('audiologist_email', e.target.value);
+};
+
+function showOnboardingStep(step) {
+    document.getElementById('onboardingModal').style.display = 'block';
+
+    // Update progress bar
+    const progress = ((step + 1) / 5) * 100;
+    const progressBar = document.getElementById('onboardingProgressBar');
+    if (progressBar) progressBar.style.width = progress + '%';
+
+    for (let i = 0; i <= 4; i++) {
+        const el = document.getElementById(`onboarding-${i}`);
+        if (el) el.style.display = (i === step) ? 'block' : 'none';
+    }
+}
+
+window.nextOnboardingStep = (step) => {
+    saveSetting('onboarding_step', step);
+    showOnboardingStep(step);
+};
+
+window.finishOnboarding = () => {
+    saveSetting('onboarding_step', 5);
+    document.getElementById('onboardingModal').style.display = 'none';
 };
 
 function renderStats() {
@@ -85,5 +168,56 @@ function renderStats() {
     document.getElementById('weeklyTotal').textContent = `Total: ${Math.round(total)} mins this week`;
 }
 </script>
+
+<div id="onboardingModal" class="modal-overlay">
+    <div class="modal-card" style="text-align: center;">
+        <!-- Progress Bar -->
+        <div class="usage-progress" style="margin-top: 0; margin-bottom: 20px;">
+            <div id="onboardingProgressBar" class="usage-bar" style="width: 0%"></div>
+        </div>
+
+        <div id="onboarding-0">
+             <h2>Welcome</h2>
+             <p>This open‑source suite provides research‑based tinnitus tools. For your safety, please accept our disclaimer to begin.</p>
+             <a href="disclaimer.html" class="button" target="_blank" style="margin-top: 10px; display: block;">Read Full Disclaimer</a>
+             <button onclick="nextOnboardingStep(1)" class="big-btn play-btn">I Accept & Understand</button>
+        </div>
+        <div id="onboarding-1" style="display:none;">
+             <h2>Step 1: System Calibration</h2>
+             <p>Ensure your audio engine and hardware are functioning correctly before starting therapy.</p>
+             <a href="validation.html" class="big-btn play-btn" onclick="nextOnboardingStep(2)">Run System Validation</a>
+             <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button onclick="nextOnboardingStep(0)" class="button" style="flex: 1;">Back</button>
+                <button onclick="nextOnboardingStep(2)" class="button" style="flex: 1;">Skip for now</button>
+             </div>
+        </div>
+        <div id="onboarding-2" style="display:none;">
+             <h2>Step 2: Hearing Check</h2>
+             <p>It's vital to check your hearing thresholds before using high-frequency noise therapy.</p>
+             <a href="hearingtest.html" class="big-btn play-btn" onclick="nextOnboardingStep(3)">Go to Hearing Test</a>
+             <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button onclick="nextOnboardingStep(1)" class="button" style="flex: 1;">Back</button>
+                <button onclick="nextOnboardingStep(3)" class="button" style="flex: 1;">Skip for now</button>
+             </div>
+        </div>
+        <div id="onboarding-3" style="display:none;">
+             <h2>Step 3: Pitch Matching</h2>
+             <p>To use Notch Therapy effectively, you should identify your specific tinnitus frequency.</p>
+             <a href="notchfinder.html" class="big-btn play-btn" onclick="nextOnboardingStep(4)">Go to Notch Finder</a>
+             <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button onclick="nextOnboardingStep(2)" class="button" style="flex: 1;">Back</button>
+                <button onclick="nextOnboardingStep(4)" class="button" style="flex: 1;">Skip for now</button>
+             </div>
+        </div>
+        <div id="onboarding-4" style="display:none;">
+             <h2>Setup Complete!</h2>
+             <p>You're ready to start your journey. You can access all tools from the main dashboard.</p>
+             <button onclick="finishOnboarding()" class="big-btn play-btn">Start Exploring</button>
+             <button onclick="nextOnboardingStep(3)" class="button" style="width:100%; margin-top:10px;">Back</button>
+        </div>
+
+        <button onclick="finishOnboarding()" class="button" style="width:100%; margin-top:20px; border-color: var(--text-dim); color: var(--text-dim); font-weight: normal;">Exit Wizard</button>
+    </div>
+</div>
 </body>
 </html>

@@ -13,12 +13,14 @@ function initNav(helpHtml) {
             <div id="helpModal" class="modal-overlay">
                 <div class="modal-card">
                     <h2 style="color:var(--accent); margin-top:0;">Help & Guidance</h2>
-                    <div id="helpContent" style="font-size:0.95rem; line-height:1.6; margin:15px 0;">${helpHtml}</div>
+                    <div id="helpContent" style="font-size:0.95rem; line-height:1.6; margin:15px 0;"></div>
                     <button onclick="closeHelp()" class="modal-close-btn">Close</button>
                 </div>
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHTML);
+        // Use innerHTML only for the trusted static strings provided in initNav calls
+        document.getElementById('helpContent').innerHTML = helpHtml;
     }
 }
 window.openHelp = () => document.getElementById("helpModal").style.display = "block";

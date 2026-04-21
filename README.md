@@ -1,4 +1,4 @@
-# Tinnitus Therapy Suite  
+# Trahreg Tinnitus Therapy Suite  
 Open‑source, browser‑based sound therapy tools for tinnitus research and experimentation.
 
 This project provides several sound‑based tinnitus therapy methods implemented entirely in the browser using the Web Audio API. No downloads, no accounts, no tracking, and no external dependencies.
@@ -52,6 +52,9 @@ Real‑time visualization of audio frequencies.
 ### **Audio Level Meter**
 Displays real‑time amplitude levels.
 
+### **Feedback Tool**
+Submit bug reports or feature requests via email or local file generation.
+
 ---
 
 ## 📚 Research Summary
@@ -82,20 +85,16 @@ These approaches are widely used in tinnitus management and research.
 
 ## 📦 Offline Use
 
-The entire suite works **fully offline**.
+The entire suite works **fully offline** and is built as a **Progressive Web App (PWA)**.
 
-To use without internet:
-1. Download the repository (`Code → Download ZIP`)
-2. Unzip the folder
-3. Open `index.html` in any modern browser  
-4. Keep all files in the same folder structure
+### **Installation (Recommended)**
+For the best experience, you can install the suite directly to your device:
+- **Desktop:** Click the "Install" icon in the address bar (Chrome/Edge).
+- **Android:** Select "Install app" from the Chrome menu.
+- **iOS:** Tap "Share" in Safari and select "Add to Home Screen."
 
-### Mobile Offline Use
-- **Android:** open `index.html` from a file manager  
-- **iPhone/iPad:** open via Files → Add to Home Screen  
-- **Chromebook:** open directly from Downloads  
+Once installed, the app will work without an internet connection and appear in your app drawer or desktop.
 
-No server required.
 
 ---
 

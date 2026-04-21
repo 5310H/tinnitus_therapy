@@ -12,6 +12,10 @@
 <div class="panel">
 <h1>Notch Therapy</h1>
 <p class="info">Removes energy at your tinnitus frequency from broadband noise, encouraging cortical reorganization (TMNMT).</p>
+<div class="match-section" style="margin-bottom: 20px;">
+  <h3>Clinical Significance</h3>
+  <p>Per <b>Okamoto et al. (2010)</b>, removing energy at the tinnitus pitch triggers lateral inhibition, which aims to reduce perceived loudness via cortical reorganization over 3–12 months of consistent use.</p>
+</div>
 <div class="match-section">
   <h3>Step 1 - Find Your Tinnitus Frequency</h3>
   <div class="ctrl">
@@ -55,6 +59,8 @@
 <div class="ctrl"><label>Volume <span class="val" id="volVal">40%</span></label><input type="range" id="vol" min="0" max="100" value="40"></div>
 <div class="timer-block"><label>Session Timer (minutes)</label><input id="timerInput" type="number" min="1" max="120" value="10"><button class="big-btn play-btn" onclick="startTimer()">Start Timer</button><div class="timer-display" id="timerDisplay"></div></div>
 <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start Notch Therapy</button>
+<button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+<button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="emailToAudiologist()">Email to Audiologist</button>
 <div class="status" id="status"></div>
 <div class="usage-progress">
   <div id="usageBar" class="usage-bar" style="width: 0%"></div>
@@ -63,7 +69,7 @@
 <canvas id="viz"></canvas>
 </div>
 <script>
-let ctx,playing=false,src,analyser,toneCtx,toneOsc,tonePlaying=false,timerInterval=null;
+let ctx,playing=false,src,analyser,toneCtx,toneOsc,tonePlaying=false,timerInterval=null,lastValidationStatus="Not Validated";
 const BUF_SIZE=2*44100;
 
 window.onload = () => {
@@ -222,6 +228,7 @@ function validateFilter(filterNode) {
 
     if (attenuationDbAtMin > targetAttenuation) {
         console.warn(`❌ FAIL: Notch is too shallow. Expected < ${targetAttenuation} dB, got ${attenuationDbAtMin.toFixed(2)} dB.`);
+        lastValidationStatus = `FAIL: Shallow Notch (${attenuationDbAtMin.toFixed(2)} dB)`;
         passed = false;
     } else {
         console.log(`✅ PASS: Attenuation depth (${attenuationDbAtMin.toFixed(2)} dB) meets target (< ${targetAttenuation} dB).`);
@@ -229,6 +236,7 @@ function validateFilter(filterNode) {
 
     if (Math.abs(minMagFreq - centerFreq) / centerFreq > freqTolerance) {
         console.warn(`❌ FAIL: Notch center frequency mismatch. Expected ${centerFreq.toFixed(2)} Hz, observed min at ${minMagFreq.toFixed(2)} Hz.`);
+        lastValidationStatus = `FAIL: Frequency Mismatch (Observed ${minMagFreq.toFixed(0)} Hz)`;
         passed = false;
     } else {
         console.log(`✅ PASS: Notch center frequency (${minMagFreq.toFixed(2)} Hz) is within tolerance of target (${centerFreq.toFixed(2)} Hz).`);
@@ -236,6 +244,7 @@ function validateFilter(filterNode) {
 
     if (passed) {
         console.log(`✨ Notch filter validation PASSED all checks.`);
+        lastValidationStatus = `PASS: Validated -${Math.abs(attenuationDbAtMin).toFixed(1)}dB at ${minMagFreq.toFixed(0)}Hz`;
     } else {
         console.log(`⚠️ Notch filter validation FAILED one or more checks.`);
     }

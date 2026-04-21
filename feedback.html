@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Feedback - Trahreg Tinnitus Therapy Suite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+</head>
+<body>
+<a class="back" href="index.html">Home</a>
+<div class="panel">
+    <h1>Feedback & Support</h1>
+    <p class="info">Submit suggestions, issues, or feature requests.</p>
+
+    <div class="card">
+        <div class="ctrl">
+            <label for="subject">Subject</label>
+            <select id="subject">
+                <option value="Feedback">General Feedback</option>
+                <option value="Issue">Issue / Bug Report</option>
+                <option value="Feature Request">Feature Request</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div class="ctrl">
+            <label for="email">Email (Optional)</label>
+            <input type="email" id="email" placeholder="Enter your email for a response">
+        </div>
+
+        <div class="ctrl">
+            <label for="message">Message</label>
+            <textarea id="message" rows="8" placeholder="How can we improve the suite?" maxlength="500"></textarea>
+            <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span id="charCount">0</span> / 500</div>
+        </div>
+
+        <button onclick="sendFeedback()" class="big-btn play-btn" id="sendBtn">Send Feedback</button>
+        <button onclick="downloadFeedback()" class="button" style="width: 100%; margin-top: 10px;">Download as .txt</button>
+    </div>
+    
+    <div id="status" class="status"></div>
+</div>
+
+<script>
+// Replace 'YOUR_FORMSPREE_ID' with the unique ID provided by Formspree
+const FEEDBACK_ENDPOINT = 'https://formspree.io/f/xqewyzeb';
+const messageTextarea = document.getElementById('message');
+const charCountSpan = document.getElementById('charCount');
+
+function updateCharCount() {
+    charCountSpan.textContent = messageTextarea.value.length;
+}
+
+messageTextarea.addEventListener('input', updateCharCount);
+
+async function sendFeedback() {
+    const subject = document.getElementById('subject').value;
+    const email = document.getElementById('email').value;
+    const message = document.getElementById('message').value;
+    const status = document.getElementById('status');
+    const btn = document.getElementById('sendBtn');
+
+    if (!message.trim()) {
+        status.innerText = "Please enter a message.";
+        return;
+    }
+
+    if (FEEDBACK_ENDPOINT.includes('YOUR_FORMSPREE_ID')) {
+        status.innerText = "Error: Please configure your Formspree ID.";
+        return;
+    }
+
+    status.innerText = "Sending...";
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(FEEDBACK_ENDPOINT, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ 
+                _subject: `[Trahreg Tinnitus Suite] ${subject}`,
+                email: email,
+                message: message 
+            })
+        });
+
+        if (response.ok) {
+            status.innerText = "Feedback sent successfully!";
+            messageTextarea.value = "";
+            document.getElementById('email').value = "";
+            updateCharCount(); // Reset character counter
+        } else {
+            const data = await response.json();
+            status.innerText = data.error || "Submission failed. Try downloading instead.";
+        }
+    } catch (e) {
+        status.innerText = "Network error. Please check your connection.";
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function downloadFeedback() {
+    const subj = document.getElementById('subject').value;
+    const email = document.getElementById('email').value || 'Not provided';
+    const msg = document.getElementById('message').value;
+    const text = `Subject: ${subj}\nFrom: ${email}\nDate: ${new Date().toLocaleString()}\n\nMessage:\n${msg}`;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `tinnitus_feedback_${subj.toLowerCase()}.txt`;
+    a.click();
+}
+
+// Initialize counter on page load
+updateCharCount();
+</script>
+</body>
+</html>

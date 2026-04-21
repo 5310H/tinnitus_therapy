@@ -12,6 +12,10 @@
 <div class="panel">
 <h1>Decorrelated Noise</h1>
 <p class="info">Independent noise streams per ear reduce pattern-matching, promoting habituation.</p>
+<div class="match-section" style="margin-bottom: 20px;">
+  <h3>Clinical Significance</h3>
+  <p>Based on research by <b>Tass et al. (2012)</b>, decorrelated noise disrupts pathological neural synchrony by providing independent, non-correlated signals to each ear to promote neural desynchronization.</p>
+</div>
 <div class="ctrl">
   <label>Sound Source</label>
   <select id="color">
@@ -48,6 +52,8 @@
 </div>
 <div class="timer-block"><label>Session Timer (minutes)</label><input id="timerInput" type="number" min="1" max="120" value="10"><button class="big-btn play-btn" onclick="startTimer()">Start Timer</button><div class="timer-display" id="timerDisplay"></div></div>
 <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start Therapy</button>
+<button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+<button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="emailToAudiologist()">Email to Audiologist</button>
 <div class="status" id="status"></div> 
 <div class="usage-progress">
   <div id="usageBar" class="usage-bar" style="width: 0%"></div>
@@ -300,6 +306,32 @@ document.getElementById('dec').oninput=e=>{document.getElementById('decVal').tex
 document.getElementById('lc').oninput=e=>{document.getElementById('lcVal').textContent=e.target.value+' Hz';saveSetting('dec_lc',e.target.value);if(playing){nodesL.lo.frequency.value=+e.target.value;nodesR.lo.frequency.value=+e.target.value}};
 document.getElementById('hc').oninput=e=>{document.getElementById('hcVal').textContent=e.target.value+' Hz';saveSetting('dec_hc',e.target.value);if(playing){nodesL.hi.frequency.value=+e.target.value;nodesR.hi.frequency.value=+e.target.value}};
 document.getElementById('color').onchange=e=>saveSetting('dec_color',e.target.value);
+
+function getReportData() {
+    return {
+        "Sound Source": document.getElementById('color').value,
+        "Volume Level": document.getElementById('vol').value + "%",
+        "Decorrelation": document.getElementById('dec').value + "%",
+        "Low-Cut Filter": document.getElementById('lc').value + " Hz",
+        "High-Cut Filter": document.getElementById('hc').value + " Hz"
+    };
+}
+
+function exportClinicalSettings() {
+    const report = generateClinicalReport("Decorrelated Noise", getReportData());
+    const blob = new Blob([report], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `tinnitus_clinical_decorrelated.txt`;
+    a.click();
+}
+
+function emailToAudiologist() {
+    const email = loadSetting('audiologist_email', '');
+    if (!email) return alert("Please set your audiologist's email on the Home page.");
+    const report = generateClinicalReport("Decorrelated Noise", getReportData());
+    window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+}
 </script>
 </body>
 </html>
