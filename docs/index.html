@@ -2,234 +2,78 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Trahreg Tinnitus Therapy Documentation</title>
+<title>Technical Documentation - Trahreg Suite</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="../style.css">
 <script src="../storage.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<style>
-    body { padding: 20px; line-height: 1.6; text-align: left; }
-    h1, h3 { text-align: center; }
-    .section { background: var(--card-bg); padding: 20px; margin: 15px 0; border-radius: 12px; border: 1px solid var(--border); }
-    .section h2 { margin-bottom: 10px; }
-    .section h3 { text-align: left; margin: 15px 0 5px 0; color: var(--accent); }
-</style>
+<script src="../nav.js"></script>
 </head>
 <body>
-<a class="back" href="../index.html">Home</a>
-<div class="panel" style="text-align: left; max-width: 700px;">
+<div class="panel" style="text-align: left;">
+    <h1>Suite Documentation</h1>
+    <p class="info">Technical specifications and user guides for v1.1.1</p>
 
-<div id="pdfContent">
-<h1>Trahreg Tinnitus Therapy Suite</h1>
-<h3>Documentation & User Guide</h3>
-<p style="text-align: center; font-size: 0.8rem; color: var(--text-dim);">Generated for Version: 1.1.0</p>
-<div class="section">
-    <h2>Overview</h2>
-    <p>
-        The Trahreg Tinnitus Therapy Suite is an open‑source, browser‑based collection of sound tools designed to support tinnitus relief and sound therapy experimentation.  
-        Everything runs locally in your browser using the Web Audio API.  
-        No accounts, no tracking, no data collection.
-    </p>
-</div>
+    <div class="card">
+        <h2>1. Stereo Architecture</h2>
+        <p>The suite utilizes a <b>Discrete Stereo Routing</b> engine. Unlike standard audio players, our therapy modules generate independent signal chains for the Left and Right channels. This allows users to compensate for asymmetric hearing loss or ear-specific tinnitus frequencies.</p>
+        <ul>
+            <li><strong>Lock L/R:</strong> Synchronizes both channels to the "Master" Left ear settings.</li>
+            <li><strong>Master Gain:</strong> A global multiplier stage that preserves your custom L/R balance while scaling overall loudness.</li>
+        </ul>
+    </div>
 
-<div class="section">
-    <h2>Therapy Modes</h2>
+    <div class="card">
+        <h2>2. Mobile Precision Controls</h2>
+        <p>Recognizing the limitations of standard sliders on touchscreens, we have implemented a multi-tier control system:</p>
+        <ul>
+            <li><strong>Sliders:</strong> For coarse, rapid frequency sweeps.</li>
+            <li><strong>Fine-Tune Buttons (±1, ±5):</strong> For exact pitch matching without needing a keyboard.</li>
+            <li><strong>Coarse Step Buttons (±10, ±100):</strong> For quick navigation across octaves.</li>
+        </ul>
+    </div>
 
-    <h3>1. Decorrelated Noise Therapy</h3>
-    <p>
-        Generates left/right decorrelated broadband noise designed to reduce auditory synchrony.
-    </p>
+    <div class="card" style="border-left: 4px solid var(--accent);">
+        <h2>3. Validation & Safety</h2>
+        <p>To ensure clinical integrity, the suite includes automated diagnostic tools:</p>
+        <ul>
+            <li><strong>Hardware Phase Audit:</strong> Checks for inverted headphone wiring which can negate the effects of decorrelated noise.</li>
+            <li><strong>DSP Validation:</strong> A real-time mathematical check of filter attenuation (Target: >40dB) and frequency accuracy (Target: ±1%).</li>
+            <li><strong>Recalibration Cycle:</strong> The system highlights the validation tool every 30 days to ensure hardware consistency.</li>
+        </ul>
+    </div>
 
-    <h3>2. Notch Therapy</h3>
-    <p>
-        Plays broadband noise with a narrow frequency band removed around the user’s tinnitus pitch.
-        Leverages <b>lateral inhibition</b> to potentially reduce tinnitus loudness by suppressing neurons in the specific frequency range associated with the user's symptoms.
-    </p>
+    <div class="card">
+        <h2>4. Data & Privacy</h2>
+        <p>The Trahreg Suite is a <strong>Private Progressive Web App (PWA)</strong>:</p>
+        <ul>
+            <li><strong>Local Persistence:</strong> All settings and usage logs are stored in your browser's <code>localStorage</code>.</li>
+            <li><strong>Offline Mode:</strong> All signal processing happens locally on your device; no active internet connection is required after the initial load.</li>
+            <li><strong>Clinical Export:</strong> Generates standard <code>.txt</code> reports that can be manually shared with healthcare providers.</li>
+        </ul>
+    </div>
 
-    <h3>3. Lenire‑Style Sound Therapy (Sound‑Only)</h3>
-    <p>
-        An experimental implementation inspired by the auditory component of bimodal neuromodulation research.
-        Utilizes <b>carrier tones, frequency‑shaped noise, amplitude‑modulated noise,</b> and <b>tone‑burst patterns</b> designed to promote neural plasticity.
-    </p>
+    <div class="card">
+        <h2>5. Therapy Guidelines</h2>
+        <p>General recommendations based on current research:</p>
+        <ul>
+            <li><strong>Notch Therapy:</strong> 1-2 hours daily. Results typically manifest over 3-6 months.</li>
+            <li><strong>Neuromodulation:</strong> 20-30 minute sessions, twice daily.</li>
+            <li><strong>Volume:</strong> Always set levels at or slightly below your tinnitus "mixing point."</li>
+        </ul>
+    </div>
 
-    <h3>4. Broadband Sound Therapy</h3>
-    <p>
-        Provides high-fidelity <b>white, pink, and brown noise</b>, alongside nature-inspired soundscapes (rain, ocean, stream, wind) optimized for long-term auditory masking and habituation.
-    </p>
-
-    <h3>5. Noise Generator (Python‑style)</h3>
-    <p>
-        A specialized tool for creating <b>calibrated 16-bit WAV files</b> for offline use. Supports adjustable notch widths (octaves), variable sample rates, and precise noise coloring algorithms.
-    </p>
-</div>
-
-<div class="section">
-    <h2>Research & Methodology</h2>
-    <p>This suite is built upon core principles found in modern tinnitus research:</p>
-    <ul>
-        <li><b>Bimodal Neuromodulation:</b> Implements the sound-only stimulation patterns used in clinical trials, such as synchronous tone bursts.</li>
-        <li><b>Auditory Synchrony Reduction:</b> Decorrelated noise patterns are used to disrupt the pathological firing synchronization of neurons often seen in tinnitus patients.</li>
-        <li><b>Lateral Inhibition:</b> Frequency-notched audio aims to re-balance auditory cortex activity.</li>
-    </ul>
-</div>
-
-<div class="section">
-    <h2>Session Tracking & Persistence</h2>
-    <p>The suite includes a local-first persistence layer powered by <code>storage.js</code>:</p>
-    <ul>
-        <li><b>Automatic Logging:</b> Therapy minutes are tracked and stored in a daily usage log.</li>
-        <li><b>Settings Memory:</b> Your specific frequencies, balance settings, and volume levels are remembered between sessions.</li>
-        <li><b>Privacy:</b> No data is transmitted. All usage logs and settings stay in your browser's local storage.</li>
-    </ul>
-</div>
-
-<div class="section">
-    <h2>Clinical Export & Medical Review</h2>
-    <p>The suite includes features to facilitate communication with your healthcare provider and ensure your protocols align with clinical research.</p>
-    <ul>
-        <li><b>Clinical Export:</b> Use the <b>Clinical Export</b> button on any therapy page to generate a <code>.txt</code> file containing your exact calibration settings, usage logs, and system validation results.</li>
-        <li><b>Email to Audiologist:</b> Enter your clinician's email address in the <b>Project</b> card on the Home page. Once configured, you can use the <b>Email to Audiologist</b> button in therapy modules to generate a pre-formatted email draft for immediate review.</li>
-        <li><b>Preparation for Appointments:</b> We recommend generating these reports before visiting an audiologist or ENT specialist to provide them with a clear history of your protocols.</li>
-        <li><b>Validation Data:</b> Reports automatically include hardware phase status and automated engine validation logs, helping your clinician verify the technical integrity of your listening environment.</li>
-    </ul>
-</div>
-
-<div class="section">
-    <h2>Diagnostic & Visualization Tools</h2>
-
-    <h3>Notch Finder</h3>
-    <p>Helps users identify their specific tinnitus frequency using a narrow band noise slider.</p>
-
-    <h3>Two‑Tone Comparison</h3>
-    <p>Allows A/B comparison of two distinct tones to assist in precise pitch matching.</p>
-
-    <h3>Frequency Sweep</h3>
-    <p>Plays a linear frequency sweep from low to high to help explore hearing range and sensitivity.</p>
-
-    <h3>Spectrogram</h3>
-    <p>Real‑time FFT visualization to verify notch placement and analyze hardware frequency response.</p>
-
-    <h3>Audio Level Meter</h3>
-    <p>Displays peak and RMS amplitude to ensure safe listening levels and prevent audio clipping.</p>
-
-    <h3>Feedback & Support</h3>
-    <p>Provides a standardized way to report issues or suggest features by generating a formatted email or local text file.</p>
-</div>
-
-<div class="section">
-    <h2>Offline Use</h2>
-    <p>The Trahreg Tinnitus Therapy Suite is designed to function entirely without an internet connection.</p>
-    <ul>
-        <li><b>Local Access:</b> Once the files are downloaded to your device, you can open <code>index.html</code> directly from your file system.</li>
-        <li><b>Offline Files:</b> The Python generator script allows you to create therapy files for use on any standard MP3 player.</li>
-    </ul>
-</div>
-
-<div class="section">
-    <h2>Recommended Use</h2>
-    <p>
-        For best results, use:
-        <br>• Wired earbuds  
-        <br>• Bluetooth earbuds (AirPods, Galaxy Buds, etc.)  
-        <br>• Over‑ear headphones  
-        <br>• USB‑C or Lightning headphones  
-        <br>• Bone‑conduction headphones  
-        <br>• Hearing aids with Bluetooth streaming  
-    </p>
-
-    <p>
-        Start with low volume and short sessions.  
-        Increase gradually based on comfort.  
-        Stop immediately if you feel discomfort.
-    </p>
-</div>
-
-<div class="section">
-    <h2>Medical Accuracy Standards</h2>
-    <p>This suite conforms to research-based clinical specifications:</p>
-    <ul>
-        <li><b>Notch Precision:</b> Center frequencies are validated within ±1% of the user target.</li>
-        <li><b>Attenuation Depth:</b> Notch filters are engineered for a minimum of -40 dB reduction at the center frequency.</li>
-        <li><b>Decorrelation:</b> Dual-buffer and temporal offset methods (randomized time-shifts) ensure independent neural stimulation in each ear.</li>
-        <li><b>Loudness Safety:</b> Normalized output levels to prevent clipping and sudden volume spikes during therapy transitions.</li>
-    </ul>
-</div>
-
-<div class="section">
-    <h2>Technical Notes</h2>
-    <p>
-        • Built entirely with HTML, CSS, and JavaScript  
-        <br>• Uses the Web Audio API for real‑time synthesis  
-        <br>• No external libraries  
-        <br>• Works offline once loaded  
-        <br>• Fully open‑source under the MIT License  
-    </p>
-
-    <p>
-        The site is designed to run on:
-        <br>• Chrome  
-        <br>• Edge  
-        <br>• Firefox  
-        <br>• Safari  
-        <br>• Android and iOS browsers  
-    </p>
-</div>
-
-<div class="section">
-    <h2>Safety Notice</h2>
-    <p>
-        This tool is not a medical device and does not diagnose, treat, or cure any condition.  
-        Consult a licensed clinician for medical concerns.  
-        Always keep volume at a safe, comfortable level.
-    </p>
-</div>
-
-<div class="section">
-    <h2>Open‑Source License</h2>
-    <p>
-        This project is released under the MIT License.  
-        You are free to use, modify, and distribute the code with attribution.
-    </p>
-</div>
-</div>
-
-<div style="text-align: center; margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
-    <button onclick="generatePDF()" class="button" style="background: var(--accent); color: white;">Download PDF Manual</button>
-    <a href="../index.html" class="button">Back to Suite</a>
-</div>
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="../index.html" class="button">Return to Dashboard</a>
+    </div>
 </div>
 
 <script>
-async function generatePDF() {
-    const element = document.getElementById('pdfContent');
-    const isDark = !document.body.classList.contains('light-mode');
-    
-    if (isDark) {
-        document.body.classList.add('light-mode');
-        // Wait for CSS transitions/repaints to finish
-        await new Promise(resolve => setTimeout(resolve, 500));
-    }
-
-    const opt = {
-        margin:       [20, 15],
-        filename:     'tinnitus_suite.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { 
-            scale: 2, 
-            useCORS: true, 
-            backgroundColor: '#ffffff',
-            scrollY: 0
-        },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-    };
-
-    try {
-        await html2pdf().set(opt).from(element).save();
-    } finally {
-        if (isDark) document.body.classList.remove('light-mode');
-    }
-}
+window.onload = () => {
+    initNav(`
+        <b>Technical Support:</b> Use the Feedback tool on the home page for bug reports.<br><br>
+        <b>Updates:</b> The suite automatically updates via Service Workers when online.
+    `);
+};
 </script>
 </body>
 </html>

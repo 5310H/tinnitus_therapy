@@ -1,7 +1,7 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.1.1";
 
 function saveSetting(key, value) {
     localStorage.setItem('tts_' + key, value);
@@ -44,7 +44,7 @@ function importAllData(file) {
     reader.readAsText(file);
 }
 
-function generateClinicalReport(modeName, settingsObj) {
+function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
     const engineResults = loadSetting('engine_validation_results', 'Not Performed');
     const phaseStatus = loadSetting('phase_status', 'Not Verified');
     const usage = getDailyUsage();
@@ -55,10 +55,20 @@ function generateClinicalReport(modeName, settingsObj) {
     report += `Export Date: ${new Date().toLocaleString()}\n`;
     report += `-------------------------------------------\n`;
     
+    report += `THERAPY SETTINGS:\n`;
+    
     for (const [label, value] of Object.entries(settingsObj)) {
         report += `${label}: ${value}\n`;
     }
+
+    if (Object.keys(techSpecsObj).length > 0) {
+        report += `\nTECHNICAL SPECIFICATIONS:\n`;
+        for (const [label, value] of Object.entries(techSpecsObj)) {
+            report += `${label}: ${value}\n`;
+        }
+    }
     
+    report += `\nUSAGE & STATUS:\n`;
     report += `Today's Usage: ${Math.round(usage)} minutes\n`;
     report += `Hardware Phase Status: ${phaseStatus}\n\n`;
     report += `AUTOMATED ENGINE VALIDATION:\n${engineResults}\n`;
@@ -151,4 +161,11 @@ if (document.readyState === 'loading') {
 } else {
     applyTheme();
     applyEmailVisibility();
+}
+
+function needsValidation() {
+    const last = loadSetting('last_validation_date', null);
+    if (!last) return true;
+    const diff = Date.now() - new Date(last).getTime();
+    return diff > (30 * 24 * 60 * 60 * 1000); // 30 Days
 }

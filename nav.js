@@ -1,6 +1,8 @@
 function initNav(helpHtml) {
+    const isDocs = window.location.pathname.toLowerCase().includes('/docs/');
+    const homePath = isDocs ? '../index.html' : 'index.html';
     const navHTML = `
-        <a class="back" href="index.html" style="color:var(--accent)">Home</a>
+        <a class="back" href="${homePath}" style="color:var(--accent)">Home</a>
         <div style="position:fixed; top:1rem; right:1rem; display:flex; gap:10px; z-index:100;">
             <button class="help-btn" style="position:static; padding: 8px 10px; border-color:var(--accent); color:var(--accent);" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌓</button>
             ${helpHtml ? `<button class="help-btn" style="position:static; border-color:var(--accent); color:var(--accent);" onclick="openHelp()">Help</button>` : ''}

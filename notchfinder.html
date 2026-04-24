@@ -13,28 +13,91 @@
     <h1>Notch Finder Tool</h1>
     <p class="info">Identify your tinnitus pitch to calibrate Notch Therapy.</p>
 
+    <div class="ctrl" style="border-bottom: 1px dashed var(--border); padding-bottom: 15px; margin-bottom: 20px;">
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <input type="checkbox" id="lockLR" style="width: 20px; height: 20px; margin-top: 0;">
+            <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Lock Left & Right Parameters</span>
+        </label>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="ctrl">
+            <label>Left Ear <span class="val" id="freqValL">1000 Hz</span> <input type="number" id="freqInputL" class="val-input" value="1000" min="100" max="16000"></label>
+            <input id="freqSliderL" type="range" min="100" max="16000" value="1000" step="1">
+            <div class="btn-group" data-target="freqSliderL">
+                <button class="button" data-delta="-100">– 100</button>
+                <button class="button" data-delta="-10">– 10</button>
+                <button class="button" data-delta="10">+ 10</button>
+                <button class="button" data-delta="100">+ 100</button>
+            </div>
+            <button class="button" id="sweepBtnL" style="width:100%; margin-top:5px">Sweep Left</button>
+        </div>
+        <div class="ctrl" id="rightFreqGroup">
+            <label>Right Ear <span class="val" id="freqValR">1000 Hz</span> <input type="number" id="freqInputR" class="val-input" value="1000" min="100" max="16000"></label>
+            <input id="freqSliderR" type="range" min="100" max="16000" value="1000" step="1">
+            <div class="btn-group" data-target="freqSliderR">
+                <button class="button" data-delta="-100">– 100</button>
+                <button class="button" data-delta="-10">– 10</button>
+                <button class="button" data-delta="10">+ 10</button>
+                <button class="button" data-delta="100">+ 100</button>
+            </div>
+            <button class="button" id="sweepBtnR" style="width:100%; margin-top:5px">Sweep Right</button>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="tone-btn" id="syncFreqBtn" style="flex: 1;" onclick="syncFrequencies()">Sync L &rarr; R</button>
+    </div>
+
     <div class="ctrl">
-        <label>Frequency (Hz) <input type="number" id="freqInput" class="val-input" value="1000" min="100" max="16000"></label>
-        <input id="freqSlider" type="range" min="100" max="16000" value="1000" step="10">
+        <label>Auto-Sweep Speed (Interval) <span class="val" id="speedVal">200ms</span></label>
+        <input id="speedSlider" type="range" min="50" max="1000" value="200" step="50">
     </div>
 
     <div class="btn-group">
-        <button class="button" data-delta="-100">– 100</button>
-        <button class="button" data-delta="-10">– 10</button>
-        <button class="button" data-delta="10">+ 10</button>
-        <button class="button" data-delta="100">+ 100</button>
+        <button class="button" id="sweepBtn">Start Auto-Sweep (Both)</button>
     </div>
 
     <div class="ctrl">
-        <label>Volume <span class="val" id="volVal">20%</span></label>
-        <input id="volSlider" type="range" min="0" max="100" value="20">
+        <label style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Master Volume <span class="val" id="volValMaster" style="float:none; margin-left:10px;">100%</span></span>
+            <label style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; color: var(--accent);">
+                <input type="checkbox" id="muteToggle" style="width: 16px; height: 16px; margin: 0;"> Mute
+            </label>
+        </label>
+        <input id="volMaster" type="range" min="0" max="100" value="100">
+        <div class="btn-group" data-target="volMaster">
+            <button class="button" data-delta="-5">-5</button>
+            <button class="button" data-delta="5">+5</button>
+        </div>
     </div>
 
-    <div class="btn-group">
-        <button class="button" id="sweepBtn">Start Auto-Sweep</button>
+    <button class="big-btn" id="playBtn">Play Tones</button>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="ctrl">
+            <label>Volume L <span class="val" id="volValL">20%</span></label>
+            <input id="volSliderL" type="range" min="0" max="100" value="20">
+            <div class="btn-group" data-target="volSliderL">
+                <button class="button" data-delta="-5">-5</button>
+                <button class="button" data-delta="5">+5</button>
+            </div>
+        </div>
+        <div class="ctrl" id="rightVolGroup">
+            <label>Volume R <span class="val" id="volValR">20%</span></label>
+            <input id="volSliderR" type="range" min="0" max="100" value="20">
+            <div class="btn-group" data-target="volSliderR">
+                <button class="button" data-delta="-5">-5</button>
+                <button class="button" data-delta="5">+5</button>
+            </div>
+        </div>
     </div>
 
-    <button class="big-btn" id="playBtn">Play Tone</button>
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="tone-btn" id="syncVolBtn" style="flex: 1;" onclick="syncVolumes()">Sync Volume L &rarr; R</button>
+    </div>
+    <canvas id="volumeViz" class="volume-meter-canvas"></canvas>
+
     <button class="big-btn" style="background:#252545; border:1px solid #333" id="saveBtn">Save to Therapy Settings</button>
     
     <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
@@ -46,63 +109,171 @@
 </div>
 
 <script>
-let audioCtx = null, osc = null, gainNode = null, playing = false;
+let audioCtx = null, oscL = null, oscR = null, gL = null, gR = null, globalMasterGain = null, analyserL = null, analyserR = null, rafViz = null, playing = false;
 
-const slider = document.getElementById("freqSlider");
-const freqInput = document.getElementById("freqInput");
-const volSlider = document.getElementById("volSlider");
-const volLabel = document.getElementById("volVal");
+const sliderL = document.getElementById("freqSliderL");
+const sliderR = document.getElementById("freqSliderR");
+const freqInputL = document.getElementById("freqInputL");
+const freqInputR = document.getElementById("freqInputR");
+const speedSlider = document.getElementById("speedSlider");
+const speedVal = document.getElementById("speedVal");
+const volMasterSlider = document.getElementById("volMaster");
+const volSliderL = document.getElementById("volSliderL");
+const volSliderR = document.getElementById("volSliderR");
+const volLabelL = document.getElementById("volValL");
+const volLabelR = document.getElementById("volValR");
 const playBtn = document.getElementById("playBtn");
 const sweepBtn = document.getElementById("sweepBtn");
+const sweepBtnL = document.getElementById("sweepBtnL");
+const sweepBtnR = document.getElementById("sweepBtnR");
 const saveBtn = document.getElementById("saveBtn");
 const savedMsg = document.getElementById("savedMsg");
 
-/* PLAY TONE */
-function playTone(freq) {
+/* PLAY TONES */
+function playTones() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    stopTone(); // ensure only one tone plays
+    stopTone(); 
 
-    osc = audioCtx.createOscillator();
-    osc.type = "sine";
-    osc.frequency.value = freq;
+    const merger = audioCtx.createChannelMerger(2);
+    globalMasterGain = audioCtx.createGain();
     
-    gainNode = audioCtx.createGain();
-    gainNode.gain.value = volSlider.value / 100;
+    analyserL = audioCtx.createAnalyser(); analyserL.fftSize = 256;
+    analyserR = audioCtx.createAnalyser(); analyserR.fftSize = 256;
 
-    osc.connect(gainNode).connect(audioCtx.destination);
-    osc.start();
+    oscL = audioCtx.createOscillator();
+    oscL.type = "sine";
+    oscL.frequency.value = sliderL.value;
+    gL = audioCtx.createGain();
+    oscL.connect(gL).connect(analyserL).connect(merger, 0, 0);
+
+    oscR = audioCtx.createOscillator();
+    oscR.type = "sine";
+    oscR.frequency.value = sliderR.value;
+    gR = audioCtx.createGain();
+    oscR.connect(gR).connect(analyserR).connect(merger, 0, 1);
+    
+    merger.connect(globalMasterGain).connect(audioCtx.destination);
+    oscL.start();
+    oscR.start();
 
     playing = true;
-    playBtn.textContent = "Stop Tone";
+    updateGains();
+    playBtn.textContent = "Stop Tones";
     playBtn.classList.add("stop-btn");
+    drawVolumeViz();
 }
 
-/* STOP TONE */
 function stopTone() {
-    if (audioCtx) {
-        if (osc) { try { osc.stop(); } catch(e) {} osc = null; }
-    }
+    if (oscL) { try { oscL.stop(); } catch(e) {} oscL = null; }
+    if (oscR) { try { oscR.stop(); } catch(e) {} oscR = null; }
     playing = false;
     stopSweep();
-    playBtn.textContent = "Play Tone";
+    if(rafViz) cancelAnimationFrame(rafViz);
+    const canvas = document.getElementById('volumeViz');
+    const c = canvas.getContext('2d');
+    c.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+    playBtn.textContent = "Play Tones";
     playBtn.classList.remove("stop-btn");
 }
 
-/* UPDATE LABEL */
-function updateLabel() {
-    freqInput.value = slider.value;
-    if (playing && osc) {
-        osc.frequency.setTargetAtTime(slider.value, audioCtx.currentTime, 0.05);
+function updateGains() {
+    if (!playing || !globalMasterGain) return;
+    const isMuted = document.getElementById('muteToggle').checked;
+    const volM = isMuted ? 0 : volMasterSlider.value / 100;
+    globalMasterGain.gain.setTargetAtTime(volM, audioCtx.currentTime, 0.05);
+
+    const volL = (sweeping === 'R') ? 0 : volSliderL.value / 100;
+    const volR = (sweeping === 'L') ? 0 : volSliderR.value / 100;
+
+    if (gL) gL.gain.setTargetAtTime(volL, audioCtx.currentTime, 0.05);
+    if (gR) gR.gain.setTargetAtTime(volR, audioCtx.currentTime, 0.05);
+}
+
+function updateLabels() {
+    const fL = sliderL.value;
+    const fR = sliderR.value;
+    freqInputL.value = fL;
+    freqInputR.value = fR;
+    document.getElementById('freqValL').textContent = fL + " Hz";
+    document.getElementById('freqValR').textContent = fR + " Hz";
+    volLabelL.textContent = volSliderL.value + "%";
+    volLabelR.textContent = volSliderR.value + "%";
+    document.getElementById('volValMaster').textContent = volMasterSlider.value + "%";
+    if (playing) {
+        if (oscL) oscL.frequency.setTargetAtTime(fL, audioCtx.currentTime, 0.05);
+        if (oscR) oscR.frequency.setTargetAtTime(fR, audioCtx.currentTime, 0.05);
     }
+}
+
+function syncFrequencies() {
+    sliderR.value = sliderL.value;
+    updateLabels();
+}
+
+function syncVolumes() {
+    volSliderR.value = volSliderL.value;
+    volSliderR.dispatchEvent(new Event('input'));
+}
+
+function drawVolumeViz() {
+    if (!playing || !analyserL || !analyserR) return;
+
+    const canvas = document.getElementById('volumeViz');
+    const c = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth * 2; // For high-res display
+    canvas.height = 80; // Fixed height for volume bars
+
+    const bufferLength = analyserL.fftSize;
+    const dataArrayL = new Uint8Array(bufferLength);
+    const dataArrayR = new Uint8Array(bufferLength);
+
+    analyserL.getByteTimeDomainData(dataArrayL);
+    analyserR.getByteTimeDomainData(dataArrayR);
+
+    c.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Calculate RMS for Left and Right
+    let sumL = 0;
+    let sumR = 0;
+    for (let i = 0; i < bufferLength; i++) {
+        const sampleL = (dataArrayL[i] - 128) / 128; // Normalize to -1 to 1
+        const sampleR = (dataArrayR[i] - 128) / 128; // Normalize to -1 to 1
+        sumL += sampleL * sampleL;
+        sumR += sampleR * sampleR;
+    }
+    const rmsL = Math.sqrt(sumL / bufferLength);
+    const rmsR = Math.sqrt(sumR / bufferLength);
+
+    // Map RMS to a visual percentage (0-100%)
+    // Max RMS for a sine wave is 0.707, for square wave is 1.0
+    // Scale to fill the bar, adjust multiplier as needed for visual effect
+    const barWidthL = Math.min(canvas.width / 2, rmsL * canvas.width * 0.7);
+    const barWidthR = Math.min(canvas.width / 2, rmsR * canvas.width * 0.7);
+
+    const barHeight = (canvas.height / 2) - 5; // Space for two bars
+
+    // Draw Left bar (Top)
+    c.fillStyle = 'rgba(0, 191, 165, 0.8)'; // Teal
+    c.fillRect(0, 0, barWidthL, barHeight);
+    c.fillText("L", 5, barHeight / 2 + 5);
+
+    // Draw Right bar (Bottom)
+    c.fillStyle = 'rgba(142, 36, 170, 0.8)'; // Purple
+    c.fillRect(0, canvas.height / 2 + 5, barWidthR, barHeight);
+    c.fillText("R", 5, canvas.height / 2 + barHeight / 2 + 5);
+
+    rafViz = requestAnimationFrame(drawVolumeViz);
 }
 
 let sweeping = false, lastStepTime = 0;
 function stopSweep() {
     sweeping = false;
-    sweepBtn.textContent = "Start Auto-Sweep";
+    sweepBtn.textContent = "Start Auto-Sweep (Both)";
+    sweepBtnL.textContent = "Sweep Left";
+    sweepBtnR.textContent = "Sweep Right";
 }
 
 function runSweep(time) {
@@ -110,44 +281,70 @@ function runSweep(time) {
         stopSweep();
         return;
     }
-    // Move frequency up exponentially (doubles every ~12 seconds at 20fps)
-    if (time - lastStepTime > 50) {
-        let val = Number(slider.value);
-        val = val * Math.pow(2, 1/240); 
-        if (val > 16000) val = 100;
-        slider.value = Math.round(val);
-        updateLabel();
+    // Move frequency up exponentially
+    if (time - lastStepTime > Number(speedSlider.value)) {
+        const stepVal = (s) => {
+            let v = Number(s.value) * Math.pow(2, 1/240);
+            if (v > 16000) v = 100;
+            return Math.round(v);
+        };
+        if (sweeping === 'L' || sweeping === 'both') sliderL.value = stepVal(sliderL);
+        if (sweeping === 'R' || sweeping === 'both') sliderR.value = stepVal(sliderR);
+        updateLabels();
         lastStepTime = time;
     }
     requestAnimationFrame(runSweep);
 }
 
-slider.oninput = () => {
-    stopSweep();
-    updateLabel();
+volMasterSlider.oninput = () => {
+    updateGains();
+    updateLabels();
+    saveSetting('nf_volMaster', volMasterSlider.value);
+};
+volSliderL.oninput = () => {
+    updateGains();
+    updateLabels();
+    saveSetting('notchfinder_volL', volSliderL.value);
+};
+volSliderR.oninput = () => {
+    updateGains();
+    updateLabels();
+    saveSetting('notchfinder_volR', volSliderR.value);
 };
 
-freqInput.oninput = () => {
-    stopSweep();
-    let val = Math.min(16000, Math.max(100, freqInput.value));
-    slider.value = val;
-    updateLabel();
+speedSlider.oninput = () => {
+    speedVal.textContent = speedSlider.value + "ms";
+    saveSetting('notchfinder_speed', speedSlider.value);
 };
 
-volSlider.oninput = () => {
-    volLabel.textContent = volSlider.value + "%";
-    if (playing && gainNode) {
-        gainNode.gain.setTargetAtTime(volSlider.value / 100, audioCtx.currentTime, 0.05);
-    }
+document.getElementById('lockLR').onchange = (e) => {
+    saveSetting('nf_lock_lr', e.target.checked);
+    updateLockVisuals();
 };
+
+document.getElementById('muteToggle').onchange = (e) => {
+    saveSetting('nf_mute', e.target.checked);
+    updateGains();
+};
+
+function updateLockVisuals() {
+    const isLocked = document.getElementById('lockLR').checked;
+    const ids = ['rightFreqGroup', 'rightVolGroup', 'syncFreqBtn', 'syncVolBtn', 'sweepBtnR'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('locked-ui', isLocked);
+    });
+    if (isLocked) { syncFrequencies(); syncVolumes(); }
+}
 
 /* BUTTON REPEAT LOGIC */
 let repeatTimeout, repeatInterval;
 function startRepeat(delta) {
     const step = () => {
         stopSweep();
-        slider.value = Math.min(16000, Math.max(100, Number(slider.value) + delta));
-        updateLabel();
+        const target = document.getElementById(repeatTarget);
+        target.value = Math.min(16000, Math.max(100, Number(target.value) + delta));
+        updateLabels();
     };
     step();
     repeatTimeout = setTimeout(() => {
@@ -159,42 +356,70 @@ function stopRepeat() {
     clearInterval(repeatInterval);
 }
 
+let repeatTarget = "";
 document.querySelectorAll('.btn-group .button[data-delta]').forEach(btn => {
     const delta = parseInt(btn.dataset.delta);
-    btn.onmousedown = btn.ontouchstart = (e) => { e.preventDefault(); startRepeat(delta); };
-    btn.onmouseup = btn.onmouseleave = btn.ontouchend = stopRepeat;
+    btn.onmousedown = btn.ontouchstart = (e) => { 
+        e.preventDefault(); 
+        repeatTarget = btn.parentElement.dataset.target; 
+        startRepeat(delta); 
+        const isLocked = document.getElementById('lockLR').checked;
+        if (isLocked && repeatTarget.endsWith('L')) {
+            const rightId = repeatTarget.replace('L', 'R');
+            const rightEl = document.getElementById(rightId);
+            if (rightEl) {
+                setTimeout(() => {
+                    rightEl.value = document.getElementById(repeatTarget).value;
+                    rightEl.dispatchEvent(new Event('input'));
+                }, 10);
+            }
+        }
+    };
+    btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => { stopRepeat(); repeatTarget = ""; };
     // Accessible fallback
     btn.onclick = (e) => { if(!repeatInterval) startRepeat(delta); stopRepeat(); };
 });
 
-sweepBtn.onclick = () => {
-    if (sweeping) {
+function toggleSweep(mode) {
+    if (sweeping === mode) {
         stopSweep();
     } else {
-        if (!playing) playTone(slider.value);
-        sweeping = true;
-        sweepBtn.textContent = "Stop Auto-Sweep";
+        stopSweep();
+        if (!playing) playTones();
+        sweeping = mode;
+        if (mode === 'L') sweepBtnL.textContent = "Stop Sweep";
+        if (mode === 'R') sweepBtnR.textContent = "Stop Sweep";
+        if (mode === 'both') sweepBtn.textContent = "Stop Sweep (Both)";
         lastStepTime = performance.now();
+        updateGains();
         requestAnimationFrame(runSweep);
     }
-};
+}
+
+sweepBtn.onclick = () => toggleSweep('both');
+sweepBtnL.onclick = () => toggleSweep('L');
+sweepBtnR.onclick = () => toggleSweep('R');
 
 playBtn.onclick = () => {
-    if (!playing) playTone(slider.value);
+    if (!playing) playTones();
     else stopTone();
 };
 
 saveBtn.onclick = () => {
-    saveSetting("notch", slider.value);
-    saveSetting("toneFreq", slider.value);
-    savedMsg.textContent = "Frequency saved to therapy settings.";
+    saveSetting("notchL", sliderL.value);
+    saveSetting("notchR", sliderR.value);
+    saveSetting("toneFreqL", sliderL.value);
+    saveSetting("toneFreqR", sliderR.value);
+    savedMsg.textContent = "Frequencies saved to therapy settings.";
     setTimeout(() => savedMsg.textContent = "", 1500);
 };
 
 function getReportData() {
     return {
-        "Target Frequency": slider.value + " Hz",
-        "Test Volume": volSlider.value + "%",
+        "Frequency L": sliderL.value + " Hz",
+        "Frequency R": sliderR.value + " Hz",
+        "Volume L": volSliderL.value + "%",
+        "Volume R": volSliderR.value + "%",
         "Method": "Manual Slider / Auto-Sweep"
     };
 }
@@ -217,9 +442,30 @@ function emailToAudiologist() {
 
 window.onload = () => {
     initNav(`Use the slider or the <b>Auto-Sweep</b> feature to find a tone that matches the pitch of your tinnitus. Auto-sweep slowly raises the pitch to help you identify the "crossing point." Once matched, save the frequency to use it in Notch Therapy.`);
-    slider.value = loadSetting("notch", 6000);
-    updateLabel();
+    sliderL.value = loadSetting("notchL", loadSetting("notch", 6000));
+    sliderR.value = loadSetting("notchR", loadSetting("notch", 6000));
+    speedSlider.value = loadSetting("notchfinder_speed", 200);
+    speedVal.textContent = speedSlider.value + "ms";
+    volMasterSlider.value = loadSetting("nf_volMaster", 100);
+    document.getElementById('muteToggle').checked = loadSetting("nf_mute", "false") === "true";
+    document.getElementById('lockLR').checked = loadSetting("nf_lock_lr", "false") === "true";
+    volSliderL.value = loadSetting("notchfinder_volL", loadSetting("notchfinder_vol", 20));
+    volSliderR.value = loadSetting("notchfinder_volR", loadSetting("notchfinder_vol", 20));
+    
+    updateLockVisuals();
+    updateLabels();
 };
+
+// Mirror logic for sliders
+[sliderL, volSliderL].forEach(el => {
+    el.addEventListener('input', () => {
+        if (document.getElementById('lockLR').checked) {
+            const targetId = el.id.replace('L', 'R');
+            const target = document.getElementById(targetId);
+            if (target) { target.value = el.value; target.dispatchEvent(new Event('input')); }
+        }
+    });
+});
 </script>
 </body>
 </html>

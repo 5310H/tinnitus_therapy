@@ -16,19 +16,60 @@
   <h3>Clinical Significance</h3>
   <p>Per <b>Okamoto et al. (2010)</b>, removing energy at the tinnitus pitch triggers lateral inhibition, which aims to reduce perceived loudness via cortical reorganization over 3–12 months of consistent use.</p>
 </div>
+<div class="ctrl" style="border-bottom: 1px dashed var(--border); padding-bottom: 15px; margin-bottom: 20px;">
+  <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+    <input type="checkbox" id="lockLR" style="width: 20px; height: 20px; margin-top: 0;">
+    <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Lock Left & Right Parameters</span>
+  </label>
+</div>
 <div class="match-section">
   <h3>Step 1 - Find Your Tinnitus Frequency</h3>
-  <div class="ctrl">
-    <label>Test Tone (Hz) <input type="number" id="toneFreqInput" class="val-input" value="6000" min="500" max="16000"></label>
-    <input type="range" id="toneFreq" min="500" max="16000" value="6000" step="1">
-    <div class="btn-group" data-target="toneFreq">
-      <button class="button-step" data-delta="-100">-100</button>
-      <button class="button-step" data-delta="-10">-10</button>
-      <button class="button-step" data-delta="10">+10</button>
-      <button class="button-step" data-delta="100">+100</button>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="ctrl">
+      <label>Left Ear <span class="val" id="toneFreqValL">6000 Hz</span>
+        <div class="input-with-buttons">
+          <input type="number" id="toneFreqInputL" class="val-input" value="6000" min="500" max="16000">
+          <div class="fine-tune-group" data-target="toneFreqL">
+            <button class="fine-tune-btn" data-delta="-5">-5</button>
+            <button class="fine-tune-btn" data-delta="-1">-1</button>
+            <button class="fine-tune-btn" data-delta="1">+1</button>
+            <button class="fine-tune-btn" data-delta="5">+5</button>
+          </div>
+        </div>
+      </label>
+      <input type="range" id="toneFreqL" min="500" max="16000" value="6000" step="1">
+      <div class="btn-group" data-target="toneFreqL">
+        <button class="button-step" data-delta="-100">-100</button>
+        <button class="button-step" data-delta="-10">-10</button>
+        <button class="button-step" data-delta="10">+10</button>
+        <button class="button-step" data-delta="100">+100</button>
+      </div>
+    </div>
+    <div class="ctrl" id="toneFreqRGroup">
+      <label>Right Ear <span class="val" id="toneFreqValR">6000 Hz</span>
+        <div class="input-with-buttons">
+          <input type="number" id="toneFreqInputR" class="val-input" value="6000" min="500" max="16000">
+          <div class="fine-tune-group" data-target="toneFreqR">
+            <button class="fine-tune-btn" data-delta="-5">-5</button>
+            <button class="fine-tune-btn" data-delta="-1">-1</button>
+            <button class="fine-tune-btn" data-delta="1">+1</button>
+            <button class="fine-tune-btn" data-delta="5">+5</button>
+          </div>
+        </div>
+      </label>
+      <input type="range" id="toneFreqR" min="500" max="16000" value="6000" step="1">
+      <div class="btn-group" data-target="toneFreqR">
+        <button class="button-step" data-delta="-100">-100</button>
+        <button class="button-step" data-delta="-10">-10</button>
+        <button class="button-step" data-delta="10">+10</button>
+        <button class="button-step" data-delta="100">+100</button>
+      </div>
     </div>
   </div>
-  <button class="tone-btn" id="toneBtn" onclick="toggleTone()">Play Test Tone</button>
+  <div style="display: flex; gap: 10px;">
+    <button class="tone-btn" id="toneBtn" style="flex: 1;" onclick="toggleTone()">Play Test Tones</button>
+    <button class="tone-btn" id="syncFreqBtn" style="flex: 1;" onclick="syncFrequencies()">Sync L &rarr; R</button>
+  </div>
 </div>
 <div class="ctrl">
   <label>Sound Source</label>
@@ -45,18 +86,85 @@
     </optgroup>
   </select>
 </div>
-<div class="ctrl">
-  <label>Notch Center Frequency (Hz) <input type="number" id="notchInput" class="val-input" value="6000" min="500" max="16000"></label>
-  <input type="range" id="notch" min="500" max="16000" value="6000" step="1">
-  <div class="btn-group" data-target="notch">
-    <button class="button-step" data-delta="-100">-100</button>
-    <button class="button-step" data-delta="-10">-10</button>
-    <button class="button-step" data-delta="10">+10</button>
-    <button class="button-step" data-delta="100">+100</button>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+  <div class="ctrl">
+    <label>Notch L <span class="val" id="notchValL">6000 Hz</span>
+      <div class="input-with-buttons">
+        <input type="number" id="notchInputL" class="val-input" value="6000" min="500" max="16000">
+        <div class="fine-tune-group" data-target="notchL">
+          <button class="fine-tune-btn" data-delta="-5">-5</button>
+          <button class="fine-tune-btn" data-delta="-1">-1</button>
+          <button class="fine-tune-btn" data-delta="1">+1</button>
+          <button class="fine-tune-btn" data-delta="5">+5</button>
+        </div>
+      </div>
+    </label>
+    <input type="range" id="notchL" min="500" max="16000" value="6000" step="1">
+    <div class="btn-group" data-target="notchL">
+      <button class="button-step" data-delta="-100">-100</button>
+      <button class="button-step" data-delta="-10">-10</button>
+      <button class="button-step" data-delta="10">+10</button>
+      <button class="button-step" data-delta="100">+100</button>
+    </div>
+  </div>
+  <div class="ctrl" id="notchRGroup">
+    <label>Notch R <span class="val" id="notchValR">6000 Hz</span>
+      <div class="input-with-buttons">
+        <input type="number" id="notchInputR" class="val-input" value="6000" min="500" max="16000">
+        <div class="fine-tune-group" data-target="notchR">
+          <button class="fine-tune-btn" data-delta="-5">-5</button>
+          <button class="fine-tune-btn" data-delta="-1">-1</button>
+          <button class="fine-tune-btn" data-delta="1">+1</button>
+          <button class="fine-tune-btn" data-delta="5">+5</button>
+        </div>
+      </div>
+    </label>
+    <input type="range" id="notchR" min="500" max="16000" value="6000" step="1">
+    <div class="btn-group" data-target="notchR">
+      <button class="button-step" data-delta="-100">-100</button>
+      <button class="button-step" data-delta="-10">-10</button>
+      <button class="button-step" data-delta="10">+10</button>
+      <button class="button-step" data-delta="100">+100</button>
+    </div>
   </div>
 </div>
 <div class="ctrl"><label>Notch Width <span class="val" id="nwVal">1.0 octave</span></label><input type="range" id="nw" min="0.25" max="2" value="1" step="0.05"></div>
-<div class="ctrl"><label>Volume <span class="val" id="volVal">40%</span></label><input type="range" id="vol" min="0" max="100" value="40"></div>
+<div class="ctrl">
+  <label style="display: flex; justify-content: space-between; align-items: center;">
+    <span>Master Volume <span class="val" id="volValMaster" style="float:none; margin-left:10px;">100%</span></span>
+    <label style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; color: var(--accent);">
+      <input type="checkbox" id="muteToggle" style="width: 16px; height: 16px; margin: 0;"> Mute
+    </label>
+  </label>
+  <input type="range" id="volMaster" min="0" max="100" value="100">
+  <div class="btn-group" data-target="volMaster">
+    <button class="button-step" data-delta="-5">-5</button>
+    <button class="button-step" data-delta="5">+5</button>
+  </div>
+</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+  <div class="ctrl">
+    <label>Volume L <span class="val" id="volValL">40%</span></label>
+    <input type="range" id="volL" min="0" max="100" value="40">
+    <div class="btn-group" data-target="volL">
+      <button class="button-step" data-delta="-5">-5</button>
+      <button class="button-step" data-delta="5">+5</button>
+    </div>
+  </div>
+  <div class="ctrl" id="volRGroup">
+    <label>Volume R <span class="val" id="volValR">40%</span></label>
+    <input type="range" id="volR" min="0" max="100" value="40">
+    <div class="btn-group" data-target="volR">
+      <button class="button-step" data-delta="-5">-5</button>
+      <button class="button-step" data-delta="5">+5</button>
+    </div>
+  </div>
+</div>
+<div style="display: flex; gap: 10px; margin-bottom: 20px;">
+  <button class="tone-btn" id="syncVolBtn" style="flex: 1;" onclick="syncVolToR()">Sync Volume L &rarr; R</button>
+</div>
+<canvas id="volumeViz" class="volume-meter-canvas"></canvas>
+
 <div class="timer-block"><label>Session Timer (minutes)</label><input id="timerInput" type="number" min="1" max="120" value="10"><button class="big-btn play-btn" onclick="startTimer()">Start Timer</button><div class="timer-display" id="timerDisplay"></div></div>
 <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start Notch Therapy</button>
 <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
@@ -69,7 +177,8 @@
 <canvas id="viz"></canvas>
 </div>
 <script>
-let ctx,playing=false,src,analyser,toneCtx,toneOsc,tonePlaying=false,timerInterval=null,lastValidationStatus="Not Validated";
+let ctx,playing=false,src,analyser,analyserL,analyserR,gainL,gainR,masterGain,toneCtx,toneOscL,toneOscR,tonePlaying=false,timerInterval=null,rafVolViz,nodeNotchL,nodeNotchR;
+window.lastValidationStatus = "Not Validated";
 const BUF_SIZE=2*44100;
 
 window.onload = () => {
@@ -80,27 +189,42 @@ window.onload = () => {
         <b>Safety:</b> Keep volume low and comfortable.
     `);
 
-    document.getElementById('toneFreq').value = loadSetting('toneFreq', 6000);
-    document.getElementById('notch').value = loadSetting('notch', 6000);
+    document.getElementById('toneFreqL').value = loadSetting('toneFreqL', loadSetting('toneFreq', 6000));
+    document.getElementById('toneFreqR').value = loadSetting('toneFreqR', loadSetting('toneFreq', 6000));
+    document.getElementById('notchL').value = loadSetting('notchL', loadSetting('notch', 6000));
+    document.getElementById('notchR').value = loadSetting('notchR', loadSetting('notch', 6000));
     document.getElementById('nw').value = loadSetting('nw', 1);
-    document.getElementById('vol').value = loadSetting('vol', 40);
+    document.getElementById('volL').value = loadSetting('volL', loadSetting('vol', 40));
+    document.getElementById('volR').value = loadSetting('volR', loadSetting('vol', 40));
+    document.getElementById('volMaster').value = loadSetting('volMaster', 100);
+    document.getElementById('muteToggle').checked = loadSetting('volMuted', 'false') === 'true';
     document.getElementById('color').value = loadSetting('color', 'pink');
+    
+    document.getElementById('lockLR').checked = loadSetting('notch_lock_lr', 'false') === 'true';
+
+    updateLockVisuals();
     updateUI();
     setupStepButtons();
 };
 
 function updateUI() {
-    const toneFreq = document.getElementById('toneFreq').value;
-    const notchFreq = document.getElementById('notch').value;
-    document.getElementById('toneFreqInput').value = toneFreq;
-    document.getElementById('notchInput').value = notchFreq;
+    document.getElementById('toneFreqInputL').value = document.getElementById('toneFreqL').value;
+    document.getElementById('toneFreqInputR').value = document.getElementById('toneFreqR').value;
+    document.getElementById('notchInputL').value = document.getElementById('notchL').value;
+    document.getElementById('notchInputR').value = document.getElementById('notchR').value;
+    document.getElementById('toneFreqValL').textContent = document.getElementById('toneFreqL').value + ' Hz';
+    document.getElementById('toneFreqValR').textContent = document.getElementById('toneFreqR').value + ' Hz';
+    document.getElementById('notchValL').textContent = document.getElementById('notchL').value + ' Hz';
+    document.getElementById('notchValR').textContent = document.getElementById('notchR').value + ' Hz';
     document.getElementById('nwVal').textContent = document.getElementById('nw').value + ' octave';
-    document.getElementById('volVal').textContent = document.getElementById('vol').value + '%';
+    document.getElementById('volValL').textContent = document.getElementById('volL').value + '%';
+    document.getElementById('volValR').textContent = document.getElementById('volR').value + '%';
+    document.getElementById('volValMaster').textContent = document.getElementById('volMaster').value + '%';
 }
 
 let repeatTimeout, repeatInterval;
 function setupStepButtons() {
-    document.querySelectorAll('.btn-group .button-step').forEach(btn => {
+    document.querySelectorAll('.btn-group .button-step, .fine-tune-btn').forEach(btn => {
         const delta = parseInt(btn.dataset.delta);
         const targetId = btn.parentElement.dataset.target;
         const target = document.getElementById(targetId);
@@ -124,20 +248,43 @@ function setupStepButtons() {
     });
 }
 
-document.getElementById('toneFreqInput').oninput = e => {
-    const val = parseInt(e.target.value);
-    if (!isNaN(val) && val >= 500 && val <= 16000) {
-        document.getElementById('toneFreq').value = val;
-        document.getElementById('toneFreq').dispatchEvent(new Event('input'));
-    }
-};
-document.getElementById('notchInput').oninput = e => {
-    const val = parseInt(e.target.value);
-    if (!isNaN(val) && val >= 500 && val <= 16000) {
-        document.getElementById('notch').value = val;
-        document.getElementById('notch').dispatchEvent(new Event('input'));
-    }
-};
+function syncVolToR() {
+    document.getElementById('volR').value = document.getElementById('volL').value;
+    document.getElementById('volR').dispatchEvent(new Event('input'));
+}
+
+function performGlobalSync() {
+    if (!document.getElementById('lockLR').checked) return;
+    syncFrequencies();
+    syncVolToR();
+}
+
+['L', 'R'].forEach(side => {
+    document.getElementById(`toneFreqInput${side}`).oninput = e => {
+        const val = parseInt(e.target.value);
+        if (!isNaN(val) && val >= 500 && val <= 16000) {
+            const isLocked = document.getElementById('lockLR').checked;
+            if (isLocked && side === 'L') {
+                document.getElementById('toneFreqInputR').value = val;
+            }
+            document.getElementById(`toneFreq${side}`).value = val;
+            document.getElementById(`toneFreqVal${side}`).textContent = val + ' Hz';
+            document.getElementById(`toneFreq${side}`).dispatchEvent(new Event('input'));
+        }
+    };
+    document.getElementById(`notchInput${side}`).oninput = e => {
+        const val = parseInt(e.target.value);
+        if (!isNaN(val) && val >= 500 && val <= 16000) {
+            const isLocked = document.getElementById('lockLR').checked;
+            if (isLocked && side === 'L') {
+                document.getElementById('notchInputR').value = val;
+            }
+            document.getElementById(`notch${side}`).value = val;
+            document.getElementById(`notchVal${side}`).textContent = val + ' Hz';
+            document.getElementById(`notch${side}`).dispatchEvent(new Event('input'));
+        }
+    };
+});
 
 function createNoise(color){
   const buf=ctx.createBuffer(1,BUF_SIZE,ctx.sampleRate);
@@ -150,34 +297,60 @@ function toggle(){if(!playing)start();else stop()}
 function start(){
   ctx=new(window.AudioContext||window.webkitAudioContext)();
   const color=document.getElementById('color').value;
-  const vol=document.getElementById('vol').value/100;
-  const notchF=+document.getElementById('notch').value;
+  const volL=document.getElementById('volL').value/100;
+  const volR=document.getElementById('volR').value/100;
+  const isMuted = document.getElementById('muteToggle').checked;
+  const volMaster = isMuted ? 0 : document.getElementById('volMaster').value/100;
+  const notchFL=+document.getElementById('notchL').value;
+  const notchFR=+document.getElementById('notchR').value;
   const nw=+document.getElementById('nw').value;
   const halfOct=nw/2;
-  const loF=notchF*Math.pow(2,-halfOct);
-  const hiF=notchF*Math.pow(2,halfOct);
-  const notch=ctx.createBiquadFilter();notch.type='notch';notch.frequency.value=notchF;notch.Q.value=notchF/((hiF-loF)||1); // Q value determines steepness. Higher Q for narrower, steeper notch.
-  const g=ctx.createGain();g.gain.value=vol;
+
+  const createFilter = (f) => {
+    const lo = f*Math.pow(2,-halfOct), hi = f*Math.pow(2,halfOct);
+    const n = ctx.createBiquadFilter(); n.type='notch'; n.frequency.value=f; n.Q.value=f/((hi-lo)||1);
+    return n;
+  };
+
+  nodeNotchL = createFilter(notchFL); nodeNotchR = createFilter(notchFR);
+  gainL = ctx.createGain(); gainL.gain.value = volL;
+  gainR = ctx.createGain(); gainR.gain.value = volR;
+  masterGain = ctx.createGain(); masterGain.gain.value = volMaster;
+  
+  analyserL = ctx.createAnalyser(); analyserL.fftSize = 256;
+  analyserR = ctx.createAnalyser(); analyserR.fftSize = 256;
+
+  const merger = ctx.createChannelMerger(2);
   analyser=ctx.createAnalyser();analyser.fftSize=2048;
-  notch.connect(g);g.connect(analyser);analyser.connect(ctx.destination);
+
+  nodeNotchL.connect(gainL).connect(analyserL).connect(merger, 0, 0);
+  nodeNotchR.connect(gainR).connect(analyserR).connect(merger, 0, 1);
+  merger.connect(masterGain).connect(analyser).connect(ctx.destination);
 
   const natureMap = { rain:'audio/rain.mp3', ocean:'audio/ocean.mp3', stream:'audio/stream.mp3', wind:'audio/wind.mp3' };
   if (natureMap[color]) {
     src = new Audio(natureMap[color]); src.loop = true;
     const track = ctx.createMediaElementSource(src);
-    track.connect(notch); src.play();
+    const splitter = ctx.createChannelSplitter(2);
+    track.connect(splitter);
+    splitter.connect(nodeNotchL, 0);
+    splitter.connect(nodeNotchR, 1);
+    src.play();
   } else {
     const buf=createNoise(color);
     src=ctx.createBufferSource();src.buffer=buf;src.loop=true;
-    src.connect(notch); src.start();
+    src.connect(nodeNotchL);
+    src.connect(nodeNotchR);
+    src.start();
   }
 
   playing=true;
-  validateFilter(notch);
+  validateFilter(nodeNotchL);
   document.getElementById('toggleBtn').textContent='Stop';
   document.getElementById('toggleBtn').className='big-btn stop-btn';
-  document.getElementById('status').textContent='Notch at '+notchF+' Hz ('+color+')';
+  document.getElementById('status').textContent=`Notch L:${notchFL} R:${notchFR} (${color})`;
   drawViz();
+  drawVolumeViz();
 }
 
 function validateFilter(filterNode) {
@@ -232,7 +405,7 @@ function validateFilter(filterNode) {
 
     if (attenuationDbAtMin > targetAttenuation) {
         console.warn(`❌ FAIL: Notch is too shallow. Expected < ${targetAttenuation} dB, got ${attenuationDbAtMin.toFixed(2)} dB.`);
-        lastValidationStatus = `FAIL: Shallow Notch (${attenuationDbAtMin.toFixed(2)} dB)`;
+        window.lastValidationStatus = `FAIL: Shallow Notch (${attenuationDbAtMin.toFixed(2)} dB)`;
         passed = false;
     } else {
         console.log(`✅ PASS: Attenuation depth (${attenuationDbAtMin.toFixed(2)} dB) meets target (< ${targetAttenuation} dB).`);
@@ -240,7 +413,7 @@ function validateFilter(filterNode) {
 
     if (Math.abs(minMagFreq - centerFreq) / centerFreq > freqTolerance) {
         console.warn(`❌ FAIL: Notch center frequency mismatch. Expected ${centerFreq.toFixed(2)} Hz, observed min at ${minMagFreq.toFixed(2)} Hz.`);
-        lastValidationStatus = `FAIL: Frequency Mismatch (Observed ${minMagFreq.toFixed(0)} Hz)`;
+        window.lastValidationStatus = `FAIL: Frequency Mismatch (Observed ${minMagFreq.toFixed(0)} Hz)`;
         passed = false;
     } else {
         console.log(`✅ PASS: Notch center frequency (${minMagFreq.toFixed(2)} Hz) is within tolerance of target (${centerFreq.toFixed(2)} Hz).`);
@@ -248,7 +421,7 @@ function validateFilter(filterNode) {
 
     if (passed) {
         console.log(`✨ Notch filter validation PASSED all checks.`);
-        lastValidationStatus = `PASS: Validated -${Math.abs(attenuationDbAtMin).toFixed(1)}dB at ${minMagFreq.toFixed(0)}Hz`;
+        window.lastValidationStatus = `PASS: Validated -${Math.abs(attenuationDbAtMin).toFixed(1)}dB at ${minMagFreq.toFixed(0)}Hz`;
     } else {
         console.log(`⚠️ Notch filter validation FAILED one or more checks.`);
     }
@@ -258,6 +431,59 @@ function stop(){
   if(src && src.pause) src.pause();
   if(ctx){ctx.close();ctx=null}
   playing=false;document.getElementById('toggleBtn').textContent='Start Notch Therapy';document.getElementById('toggleBtn').className='big-btn play-btn';document.getElementById('status').textContent='Stopped'
+  if(rafVolViz) cancelAnimationFrame(rafVolViz);
+  const canvas = document.getElementById('volumeViz');
+  if (canvas) {
+    const c = canvas.getContext('2d');
+    c.clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+function drawVolumeViz() {
+    if (!playing || !analyserL || !analyserR) return;
+
+    const canvas = document.getElementById('volumeViz');
+    const c = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth * 2; 
+    canvas.height = 80; 
+
+    const bufferLength = analyserL.fftSize;
+    const dataArrayL = new Uint8Array(bufferLength);
+    const dataArrayR = new Uint8Array(bufferLength);
+
+    analyserL.getByteTimeDomainData(dataArrayL);
+    analyserR.getByteTimeDomainData(dataArrayR);
+
+    c.clearRect(0, 0, canvas.width, canvas.height);
+
+    let sumL = 0;
+    let sumR = 0;
+    for (let i = 0; i < bufferLength; i++) {
+        const sampleL = (dataArrayL[i] - 128) / 128; 
+        const sampleR = (dataArrayR[i] - 128) / 128; 
+        sumL += sampleL * sampleL;
+        sumR += sampleR * sampleR;
+    }
+    const rmsL = Math.sqrt(sumL / bufferLength);
+    const rmsR = Math.sqrt(sumR / bufferLength);
+
+    const barWidthL = Math.min(canvas.width / 2, rmsL * canvas.width * 0.7);
+    const barWidthR = Math.min(canvas.width / 2, rmsR * canvas.width * 0.7);
+
+    const barHeight = (canvas.height / 2) - 5; 
+
+    // Draw Left bar (Top)
+    c.fillStyle = 'rgba(0, 191, 165, 0.8)'; 
+    c.fillRect(0, 0, barWidthL, barHeight);
+    c.font = "bold 20px Arial";
+    c.fillText("L", 5, barHeight / 2 + 7);
+
+    // Draw Right bar (Bottom)
+    c.fillStyle = 'rgba(142, 36, 170, 0.8)'; 
+    c.fillRect(0, canvas.height / 2 + 5, barWidthR, barHeight);
+    c.fillText("R", 5, canvas.height / 2 + barHeight / 2 + 7);
+
+    rafVolViz = requestAnimationFrame(drawVolumeViz);
 }
 function startTimer(){
   const minutes=parseInt(document.getElementById("timerInput").value);
@@ -283,30 +509,160 @@ function drawViz(){
   c.clearRect(0,0,canvas.width,canvas.height);
   const barW=canvas.width/data.length*2.5;
   for(let i=0;i<data.length/2.5;i++){const h=(data[i]/255)*canvas.height,hue=270-(data[i]/255)*60;c.fillStyle='hsl('+hue+',70%,55%)';c.fillRect(i*barW,canvas.height-h,barW-1,h)}
+
+  // STEREO BALANCE OVERLAY
+  if(analyserL && analyserR) {
+      const bufL = new Uint8Array(analyserL.fftSize), bufR = new Uint8Array(analyserR.fftSize);
+      analyserL.getByteTimeDomainData(bufL); analyserR.getByteTimeDomainData(bufR);
+      let sL=0, sR=0;
+      for(let i=0; i<bufL.length; i++) {
+          let vL=(bufL[i]-128)/128, vR=(bufR[i]-128)/128;
+          sL+=vL*vL; sR+=vR*vR;
+      }
+      const rmsL = Math.sqrt(sL/bufL.length), rmsR = Math.sqrt(sR/bufR.length);
+      const bal = (rmsL + rmsR > 0) ? (rmsR / (rmsL + rmsR)) : 0.5;
+      
+      const ty = 30, tx = 50, tw = canvas.width - 100, th = 6;
+      c.fillStyle = 'rgba(255,255,255,0.1)';
+      c.fillRect(tx, ty, tw, th);
+      c.fillStyle = 'var(--accent)';
+      c.beginPath();
+      c.arc(tx + (bal * tw), ty + th/2, 8, 0, Math.PI*2);
+      c.fill();
+      c.font = "bold 18px sans-serif"; c.fillStyle = "#aaa";
+      c.fillText("L", tx - 30, ty + 12); c.fillText("R", tx + tw + 15, ty + 12);
+  }
   requestAnimationFrame(drawViz);
 }
 function toggleTone(){
   if(!tonePlaying){
     toneCtx=new(window.AudioContext||window.webkitAudioContext)();
-    toneOsc=toneCtx.createOscillator();
-    const g=toneCtx.createGain();g.gain.value=0.15;
-    toneOsc.frequency.value=+document.getElementById('toneFreq').value;
-    toneOsc.connect(g);g.connect(toneCtx.destination);
-    toneOsc.start();tonePlaying=true;
+    const merger = toneCtx.createChannelMerger(2);
+    
+    toneOscL = toneCtx.createOscillator();
+    const gL = toneCtx.createGain(); gL.gain.value = 0.12;
+    toneOscL.frequency.value = +document.getElementById('toneFreqL').value;
+    toneOscL.connect(gL).connect(merger, 0, 0);
+
+    toneOscR = toneCtx.createOscillator();
+    const gR = toneCtx.createGain(); gR.gain.value = 0.12;
+    toneOscR.frequency.value = +document.getElementById('toneFreqR').value;
+    toneOscR.connect(gR).connect(merger, 0, 1);
+
+    merger.connect(toneCtx.destination);
+    toneOscL.start(); toneOscR.start();
+    tonePlaying=true;
     document.getElementById('toneBtn').textContent='Stop Test Tone';
   }else{toneCtx.close();tonePlaying=false;document.getElementById('toneBtn').textContent='Play Test Tone'}
 }
-document.getElementById('toneFreq').oninput=e=>{
-  document.getElementById('toneFreqInput').value=e.target.value;
-  document.getElementById('notch').value=e.target.value;
-  document.getElementById('notchInput').value=e.target.value;
-  saveSetting('toneFreq', e.target.value);saveSetting('notch', e.target.value);
-  if(tonePlaying)toneOsc.frequency.value=+e.target.value;
+
+['L', 'R'].forEach(side => {
+    document.getElementById(`toneFreq${side}`).oninput = e => {
+        const isLocked = document.getElementById('lockLR').checked;
+        if (isLocked && side === 'L') {
+            document.getElementById('toneFreqR').value = e.target.value;
+            document.getElementById('toneFreqR').dispatchEvent(new Event('input'));
+        }
+        document.getElementById(`toneFreqInput${side}`).value = e.target.value;
+        document.getElementById(`toneFreqVal${side}`).textContent = e.target.value + ' Hz';
+        if (tonePlaying) { if(side==='L') toneOscL.frequency.value = e.target.value; else toneOscR.frequency.value = e.target.value; }
+        saveSetting(`toneFreq${side}`, e.target.value);
+    };
+    document.getElementById(`notch${side}`).oninput = e => {
+        const isLocked = document.getElementById('lockLR').checked;
+        if (isLocked && side === 'L') {
+            document.getElementById('notchR').value = e.target.value;
+            document.getElementById('notchR').dispatchEvent(new Event('input'));
+        }
+        document.getElementById(`notchInput${side}`).value = e.target.value;
+        document.getElementById(`notchVal${side}`).textContent = e.target.value + ' Hz';
+        saveSetting(`notch${side}`, e.target.value);
+        if (playing && nodeNotchL && nodeNotchR) {
+            const node = (side === 'L' ? nodeNotchL : nodeNotchR);
+            node.frequency.setTargetAtTime(e.target.value, ctx.currentTime, 0.05);
+            document.getElementById('status').textContent = `Notch L:${document.getElementById('notchL').value} R:${document.getElementById('notchR').value} (${document.getElementById('color').value})`;
+        }
+    };
+});
+
+document.getElementById('volMaster').oninput = e => {
+    const v = e.target.value;
+    document.getElementById('volValMaster').textContent = v + '%';
+    saveSetting('volMaster', v);
+    if (playing && !document.getElementById('muteToggle').checked) { 
+        masterGain.gain.setTargetAtTime(v / 100, ctx.currentTime, 0.05); 
+    }
 };
-document.getElementById('notch').oninput=e=>{document.getElementById('notchInput').value=e.target.value;saveSetting('notch', e.target.value)};
+
+document.getElementById('muteToggle').onchange = e => {
+    const isMuted = e.target.checked;
+    saveSetting('volMuted', isMuted);
+    if (playing && masterGain) {
+        const targetVol = isMuted ? 0 : document.getElementById('volMaster').value / 100;
+        masterGain.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.1); // Smooth 100ms fade
+    }
+};
+
 document.getElementById('nw').oninput=e=>{document.getElementById('nwVal').textContent=e.target.value+' octave';saveSetting('nw', e.target.value)};
-document.getElementById('vol').oninput=e=>{document.getElementById('volVal').textContent=e.target.value+'%';saveSetting('vol', e.target.value)};
+['L', 'R'].forEach(side => {
+    document.getElementById(`vol${side}`).oninput = e => {
+        const isLocked = document.getElementById('lockLR').checked;
+        if (isLocked && side === 'L') {
+            document.getElementById('volR').value = e.target.value;
+            document.getElementById('volR').dispatchEvent(new Event('input'));
+        }
+        const v = e.target.value;
+        document.getElementById(`volVal${side}`).textContent = v + '%';
+        saveSetting(`vol${side}`, v);
+        if (playing) { (side === 'L' ? gainL : gainR).gain.setTargetAtTime(v / 100, ctx.currentTime, 0.05); }
+    };
+});
+
+document.getElementById('lockLR').onchange = (e) => {
+    saveSetting('notch_lock_lr', e.target.checked);
+    updateLockVisuals();
+};
+
+function updateLockVisuals() {
+    const isLocked = document.getElementById('lockLR').checked;
+    const ids = ['toneFreqRGroup', 'notchRGroup', 'volRGroup', 'syncFreqBtn', 'syncVolBtn'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('locked-ui', isLocked);
+    });
+    if (isLocked) performGlobalSync();
+}
+
 document.getElementById('color').onchange=e=>saveSetting('color', e.target.value);
+
+function getReportData() {
+    return {
+        "Sound Source": document.getElementById('color').value,
+        "Notch L Frequency": document.getElementById('notchL').value + " Hz",
+        "Notch R Frequency": document.getElementById('notchR').value + " Hz",
+        "Notch Width": document.getElementById('nw').value + " octave",
+        "Master Volume": document.getElementById('volMaster').value + "%",
+        "Volume L": document.getElementById('volL').value + "%",
+        "Volume R": document.getElementById('volR').value + "%",
+        "DSP Filter Validation": window.lastValidationStatus
+    };
+}
+
+function exportClinicalSettings() {
+    const report = generateClinicalReport("Notch Therapy", getReportData());
+    const blob = new Blob([report], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `tinnitus_clinical_notch.txt`;
+    a.click();
+}
+
+function emailToAudiologist() {
+    const email = loadSetting('audiologist_email', '');
+    if (!email) return alert("Please set your audiologist's email on the Home page.");
+    const report = generateClinicalReport("Notch Therapy", getReportData());
+    window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+}
 
 function openHelp() { document.getElementById("helpModal").style.display = "block"; }
 function closeHelp() { document.getElementById("helpModal").style.display = "none"; }

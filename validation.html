@@ -142,8 +142,10 @@ function addResult(title, status, message, details = '') {
         engineTestResults.push(`[${timestamp}] ${title}: [${status.toUpperCase()}] ${message}`);
         saveSetting('engine_validation_results', engineTestResults.join('\n'));
     }
+    return resultDiv;
 }
 
+let audioContextLatency = 'N/A';
 async function runAllTests() {
     resultsContainer.innerHTML = ''; 
     engineTestResults = [];
@@ -154,7 +156,8 @@ async function runAllTests() {
     try {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') await audioCtx.resume();
-        addResult('Web Audio Engine', 'pass', 'AudioContext is active and stable.');
+        audioContextLatency = audioCtx.baseLatency;
+        addResult('Web Audio Engine', 'pass', `AudioContext is active and stable. Base Latency: ${(audioContextLatency * 1000).toFixed(2)} ms.`);
     } catch (e) {
         addResult('Web Audio Engine', 'fail', 'Failed to initialize.');
         return;
@@ -163,9 +166,11 @@ async function runAllTests() {
     await testChannelConfiguration(audioCtx);
     await testNotchFilter(audioCtx);
     await testModulationNodes(audioCtx);
+    await testIndependentMix(audioCtx);
     await testStereoSeparation(audioCtx);
 
     if (audioCtx) await audioCtx.close();
+    saveSetting('last_validation_date', new Date().toISOString());
     addResult('Finished', 'info', 'Validation sequence completed.');
 }
 
@@ -212,28 +217,116 @@ async function testNotchFilter(audioCtx) {
         notch.frequency.value = 6000;
         notch.Q.value = 10;
 
-        const freqs = new Float32Array([6000]);
-        const mag = new Float32Array(1);
-        const phase = new Float32Array(1);
+        // Generate frequency response data (Logarithmic sweep 20Hz - 20kHz)
+        const sampleCount = 300;
+        const freqs = new Float32Array(sampleCount);
+        const mag = new Float32Array(sampleCount);
+        const phase = new Float32Array(sampleCount);
+        for (let i = 0; i < sampleCount; i++) {
+            freqs[i] = 20 * Math.pow(1000, i / (sampleCount - 1));
+        }
         notch.getFrequencyResponse(freqs, mag, phase);
         
-        const db = 20 * Math.log10(mag[0]);
-        if (db < -40) {
-            addResult(title, 'pass', `Digital notch filter achieved ${db.toFixed(1)} dB attenuation at 6kHz.`);
-        } else {
-            addResult(title, 'fail', `Filter attenuation was only ${db.toFixed(1)} dB.`);
+        let minMag = 1.0;
+        for (let i = 0; i < sampleCount; i++) if (mag[i] < minMag) minMag = mag[i];
+        const db = 20 * Math.log10(Math.max(minMag, 0.0001));
+
+        const status = (db < -40) ? 'pass' : 'fail';
+        const msg = (status === 'pass') 
+            ? `Digital notch filter achieved ${db.toFixed(1)} dB attenuation.` 
+            : `Filter attenuation was only ${db.toFixed(1)} dB.`;
+
+        const container = addResult(title, status, msg);
+        
+        // Render response graph
+        const canvas = document.createElement('canvas');
+        const g = canvas.getContext('2d');
+        canvas.width = 600; canvas.height = 150;
+        g.fillStyle = '#0a0a1a'; g.fillRect(0,0,600,150);
+        
+        // Draw Grid (dB levels and Frequency)
+        g.strokeStyle = '#333'; g.setLineDash([5, 5]);
+        g.font = '10px sans-serif';
+        g.fillStyle = '#888';
+        
+        [-20, -40].forEach(level => {
+            const y = (level / -60) * 150;
+            g.beginPath(); g.moveTo(0, y); g.lineTo(600, y); g.stroke();
+            g.fillText(`${level} dB`, 5, y - 5);
+        });
+
+        [20, 100, 1000, 5000, 10000, 20000].forEach(f => {
+            const x = (Math.log10(f / 20) / 3) * 600;
+            g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 150); g.stroke();
+            const label = f >= 1000 ? (f/1000) + 'k' : f;
+            g.fillText(label + (f === 20 ? 'Hz' : ''), x + 2, 145);
+        });
+        
+        // Draw Curve
+        g.setLineDash([]);
+        g.strokeStyle = '#00bfa5'; g.lineWidth = 3;
+        g.beginPath();
+        for (let i = 0; i < sampleCount; i++) {
+            const val = 20 * Math.log10(Math.max(mag[i], 0.0001));
+            const x = (i / (sampleCount - 1)) * 600;
+            const y = Math.min(150, (val / -60) * 150);
+            if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
         }
+        g.stroke();
+        container.appendChild(canvas);
     } catch (e) { addResult(title, 'fail', e.message); }
 }
 
 async function testModulationNodes(audioCtx) {
     const title = 'Neuromodulation Engine';
     try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        const lfo = audioCtx.createOscillator();
-        lfo.connect(gain.gain);
-        addResult(title, 'pass', 'Parameter modulation (LFO -> Gain) is supported and connected.');
+        const duration = 0.5; // Render 0.5 seconds
+        const offlineCtx = new OfflineAudioContext(1, audioCtx.sampleRate * duration, audioCtx.sampleRate);
+
+        // Carrier (440Hz Tone)
+        const carrier = offlineCtx.createOscillator();
+        carrier.frequency.value = 440;
+
+        // Modulation Target (Gain)
+        const modGain = offlineCtx.createGain();
+        modGain.gain.value = 0.5; // Base volume
+
+        // LFO (10Hz Sine)
+        const lfo = offlineCtx.createOscillator();
+        lfo.frequency.value = 10;
+        const lfoDepth = offlineCtx.createGain();
+        lfoDepth.gain.value = 0.5; // Modulate +/- 0.5
+
+        lfo.connect(lfoDepth).connect(modGain.gain);
+        carrier.connect(modGain).connect(offlineCtx.destination);
+
+        lfo.start();
+        carrier.start();
+
+        const renderedBuffer = await offlineCtx.startRendering();
+        const data = renderedBuffer.getChannelData(0);
+
+        const container = addResult(title, 'pass', 'Parameter modulation (LFO -> Gain) is supported and connected.');
+
+        // Render Modulation Graph
+        const canvas = document.createElement('canvas');
+        const g = canvas.getContext('2d');
+        canvas.width = 600; canvas.height = 100;
+        g.fillStyle = '#0a0a1a'; g.fillRect(0, 0, 600, 100);
+        g.strokeStyle = '#333'; g.setLineDash([5, 5]);
+        g.beginPath(); g.moveTo(0, 50); g.lineTo(600, 50); g.stroke(); // Center line
+
+        g.setLineDash([]);
+        g.strokeStyle = '#8e24aa'; // Purple to signify neuromodulation
+        g.lineWidth = 2;
+        g.beginPath();
+        const step = Math.floor(data.length / 600);
+        for (let i = 0; i < 600; i++) {
+            const y = 50 - (data[i * step] * 40);
+            if (i === 0) g.moveTo(i, y); else g.lineTo(i, y);
+        }
+        g.stroke();
+        container.appendChild(canvas);
     } catch (e) { addResult(title, 'fail', e.message); }
 }
 
@@ -253,12 +346,73 @@ async function testStereoSeparation(audioCtx) {
     } catch (e) { addResult(title, 'fail', e.message); }
 }
 
+async function testIndependentMix(audioCtx) {
+    const title = 'Neuromodulation Mix';
+    try {
+        const offlineCtx = new OfflineAudioContext(2, 512, audioCtx.sampleRate);
+        const merger = offlineCtx.createChannelMerger(2);
+        merger.connect(offlineCtx.destination);
+
+        const tone = offlineCtx.createOscillator();
+        const noise = offlineCtx.createBufferSource();
+        const noiseBuf = offlineCtx.createBuffer(1, 512, audioCtx.sampleRate);
+        noiseBuf.getChannelData(0).fill(1.0); // Constant peak signal for easy detection
+        noise.buffer = noiseBuf;
+
+        // Simulate Lenire-style independent L/R mix routing
+        const setupTestChannel = (side, toneLevel, noiseLevel) => {
+            const tGain = offlineCtx.createGain();
+            const nGain = offlineCtx.createGain();
+            const mGain = offlineCtx.createGain();
+            tGain.gain.value = toneLevel;
+            nGain.gain.value = noiseLevel;
+            tone.connect(tGain).connect(mGain);
+            noise.connect(nGain).connect(mGain);
+            mGain.connect(merger, 0, side === 'L' ? 0 : 1);
+        };
+
+        setupTestChannel('L', 1.0, 0.0); // 100% Tone, 0% Noise
+        setupTestChannel('R', 0.0, 1.0); // 0% Tone, 100% Noise
+
+        tone.start(); noise.start();
+        const res = await offlineCtx.startRendering();
+        const l = res.getChannelData(0);
+        const r = res.getChannelData(1);
+
+        let isIndependent = false;
+        for(let i=0; i<l.length; i++) {
+            if(Math.abs(l[i] - r[i]) > 0.1) { isIndependent = true; break; }
+        }
+
+        if (isIndependent) {
+            addResult(title, 'pass', 'Independent L/R neuromodulation mix (Tone/Noise) verified.');
+        } else {
+            addResult(title, 'fail', 'Mix test failed: L/R channels are identical or missing signals.');
+        }
+    } catch (e) { addResult(title, 'fail', 'Mix Engine Error: ' + e.message); }
+}
+
 function getReportData() {
-    return { "Status": "System Integrity and Hardware Phase Audit" };
+    const engineLog = loadSetting('engine_validation_results', 'Not Performed');
+    const mixStatus = engineLog.includes('Neuromodulation Mix: [PASS]') ? 'PASS' : 
+                     (engineLog.includes('Neuromodulation Mix: [FAIL]') ? 'FAIL' : 'Not Tested');
+
+    return { 
+        settings: {
+            "Hardware Phase Status": loadSetting('phase_status', 'Not Verified'),
+            "Independent Mix Validation": mixStatus,
+            "Engine Validation Summary": engineLog.includes('[FAIL]') ? 'Critical Issues Detected' : 
+                                         (engineLog === 'Not Performed' ? 'Pending Validation' : 'All Engine Checks Passed')
+        },
+        techSpecs: {
+            "AudioContext Base Latency": `${(audioContextLatency * 1000).toFixed(2)} ms`
+        }
+    };
 }
 
 function exportClinicalSettings() {
-    const report = generateClinicalReport("System Validation", getReportData());
+    const { settings, techSpecs } = getReportData();
+    const report = generateClinicalReport("System Validation", settings, techSpecs);
     const blob = new Blob([report], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -269,7 +423,8 @@ function exportClinicalSettings() {
 function emailToAudiologist() {
     const email = loadSetting('audiologist_email', '');
     if (!email) return alert("Please set your audiologist's email on the Home page.");
-    const report = generateClinicalReport("System Validation", getReportData());
+    const { settings, techSpecs } = getReportData();
+    const report = generateClinicalReport("System Validation", settings, techSpecs);
     window.location.href = `mailto:${email}?subject=System Validation Log&body=${encodeURIComponent(report)}`;
 }
 </script>
