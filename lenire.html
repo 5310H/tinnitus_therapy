@@ -540,6 +540,7 @@ function exportClinicalSettings() {
     a.href = URL.createObjectURL(blob);
     a.download = `tinnitus_clinical_lenire_style.txt`;
     a.click();
+    alert("Clinical report downloaded. Please check your browser's Downloads folder.");
 }
 
 function emailToAudiologist() {
@@ -547,6 +548,7 @@ function emailToAudiologist() {
     if (!email) return alert("Please set your audiologist's email on the Home page.");
     const report = generateClinicalReport("Lenire-Style Sound (Experimental)", getReportData());
     window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+    alert("Email client opened. Please review and send the clinical report draft.");
 }
 </script>
 </body>

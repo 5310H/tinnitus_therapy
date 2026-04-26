@@ -431,6 +431,7 @@ function exportClinicalSettings() {
     a.href = URL.createObjectURL(blob);
     a.download = `tinnitus_clinical_notch_finder.txt`;
     a.click();
+    alert("Pitch matching report downloaded. Please check your browser's Downloads folder.");
 }
 
 function emailToAudiologist() {
@@ -438,6 +439,7 @@ function emailToAudiologist() {
     if (!email) return alert("Please set your audiologist's email on the Home page.");
     const report = generateClinicalReport("Notch Finder (Pitch Matching)", getReportData());
     window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+    alert("Email client opened. Please review and send the clinical report draft.");
 }
 
 window.onload = () => {

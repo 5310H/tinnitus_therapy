@@ -130,6 +130,7 @@ function exportClinicalSettings() {
     a.href = URL.createObjectURL(blob);
     a.download = `tinnitus_level_report.txt`;
     a.click();
+    alert("Audio level report downloaded. Please check your browser's Downloads folder.");
 }
 
 function emailToAudiologist() {
@@ -137,6 +138,7 @@ function emailToAudiologist() {
     if (!email) return alert("Please set your audiologist's email on the Home page.");
     const report = generateClinicalReport("Audio Level Analysis", getReportData());
     window.location.href = `mailto:${email}?subject=Audio Level Report&body=${encodeURIComponent(report)}`;
+    alert("Email client opened. Please review and send the audio level report draft.");
 }
 </script>
 

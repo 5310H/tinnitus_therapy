@@ -1,7 +1,7 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "1.1.1";
+const APP_VERSION = "1.1.2";
 
 function saveSetting(key, value) {
     localStorage.setItem('tts_' + key, value);

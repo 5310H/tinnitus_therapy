@@ -21,7 +21,7 @@
     --border: #ccd0d5;
 }
 body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
-a.back { position: fixed; top: 1rem; left: 1rem; color: var(--accent); text-decoration: none; font-size: .9rem; z-index: 10; }
+a.back { position: fixed; top: 1rem; left: 1rem; color: var(--accent); text-decoration: none; font-size: .9rem; z-index: 110; }
 .help-btn { position: fixed; top: 1rem; right: 1rem; background: var(--card-bg); color: var(--accent); border: 1px solid var(--accent); padding: 8px 14px; border-radius: 8px; font-size: .9rem; cursor: pointer; z-index: 10; }
 .help-btn:hover { background: var(--accent); color: white; }
 .panel { max-width: 520px; width: 90%; margin: 3rem auto; text-align: center; }
@@ -120,9 +120,16 @@ canvas { width: 100%; height: 120px; margin-top: 1rem; border-radius: 8px; backg
 .section-title{font-weight:700;margin-top:20px;font-size:1rem;color:var(--accent);text-transform:uppercase;letter-spacing:1px;text-align:left}
 
 /* Grid / Home styles */
-.grid { display: grid; grid-template-columns: 1fr; gap: 15px; padding: 15px; max-width: 500px; margin: 0 auto; }
+.grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 15px; 
+    padding: 15px; 
+    max-width: 900px; 
+    margin: 0 auto; 
+}
 .grid .card h2 { text-align: center; color: var(--muted); font-size: 1.1rem; }
-.grid .button { display: block; background: var(--surface); color: var(--text); padding: 12px; margin: 6px auto; width: 90%; border-radius: 8px; text-decoration: none; font-size: 0.95rem; transition: all 0.2s ease; text-align: center; border: 1px solid var(--border); }
+.grid .button { display: block; background: var(--surface); color: var(--text); padding: 12px; margin: 8px 0; width: 100%; border-radius: 8px; text-decoration: none; font-size: 0.95rem; transition: all 0.2s ease; text-align: center; border: 1px solid var(--border); }
 .grid .button:hover { background: var(--accent); color: white; border-color: var(--accent); }
 
 .highlight-btn {
@@ -132,8 +139,8 @@ canvas { width: 100%; height: 120px; margin-top: 1rem; border-radius: 8px; backg
 }
 
 details { margin-top: 8px; }
-summary { cursor: pointer; padding: 10px; background: var(--surface); border-radius: 8px; list-style: none; text-align: center; font-size: 0.95rem; }
-summary:hover { background: var(--accent); color: white; }
+summary { cursor: pointer; padding: 12px; background: var(--surface); border-radius: 8px; list-style: none; text-align: center; font-size: 0.95rem; font-weight: 600; color: var(--accent); border: 1px solid var(--border); transition: background 0.2s; }
+summary:hover { background: rgba(0, 191, 165, 0.1); }
 
 /* Navbar (Legacy/Twotone) */
 .navbar { background-color: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; padding: 10px; width: 100%; }

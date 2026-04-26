@@ -418,6 +418,7 @@ function exportClinicalSettings() {
     a.href = URL.createObjectURL(blob);
     a.download = `tinnitus_validation_log.txt`;
     a.click();
+    alert("Validation log downloaded. Please check your browser's Downloads folder.");
 }
 
 function emailToAudiologist() {
@@ -426,6 +427,7 @@ function emailToAudiologist() {
     const { settings, techSpecs } = getReportData();
     const report = generateClinicalReport("System Validation", settings, techSpecs);
     window.location.href = `mailto:${email}?subject=System Validation Log&body=${encodeURIComponent(report)}`;
+    alert("Email client opened. Please review and send the validation log draft.");
 }
 </script>
 </body>
