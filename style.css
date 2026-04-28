@@ -1,14 +1,14 @@
 /* Shared Styles for Tinnitus Therapy Suite */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-    --bg: #0a0a1a;
-    --card-bg: #1a1a2e;
-    --surface: #252545;
+    --bg: #000b18;
+    --card-bg: #00162d;
+    --surface: #002b54;
     --text: #e0e0e0;
     --text-dim: #888;
     --muted: #aaa;
     --accent: #00bfa5;
-    --border: #333;
+    --border: #003b73;
 }
 .light-mode {
     --bg: #f0f2f5;
@@ -24,11 +24,12 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 a.back { position: fixed; top: 1rem; left: 1rem; color: var(--accent); text-decoration: none; font-size: .9rem; z-index: 110; }
 .help-btn { position: fixed; top: 1rem; right: 1rem; background: var(--card-bg); color: var(--accent); border: 1px solid var(--accent); padding: 8px 14px; border-radius: 8px; font-size: .9rem; cursor: pointer; z-index: 10; }
 .help-btn:hover { background: var(--accent); color: white; }
-.panel { max-width: 520px; width: 90%; margin: 3rem auto; text-align: center; }
+.main-header { text-align: center; padding: 2rem 1rem 1rem; }
+.panel { max-width: 520px; width: 90%; margin: 1.5rem auto; text-align: center; }
 h1 { font-size: 1.8rem; margin-bottom: .3rem; color: var(--accent); }
 h2 { font-size: 1.2rem; margin-bottom: 1rem; color: var(--accent); }
-.info { color: var(--text-dim); font-size: .85rem; margin-bottom: 2rem; }
-.card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-top: 20px; text-align: left; }
+.info { color: var(--text-dim); font-size: .85rem; margin-bottom: 1rem; }
+.card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); text-align: left; }
 .ctrl { margin: 1rem 0; text-align: left; }
 .ctrl label { display: block; font-size: .85rem; color: #aaa; margin-bottom: .3rem; }
 .ctrl input[type=range], .ctrl select, .ctrl input[type=number], .ctrl textarea { width: 100%; accent-color: var(--accent); padding: .6rem; background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; margin-top: 0.4rem; outline: none; font-family: inherit; }
@@ -60,7 +61,7 @@ h2 { font-size: 1.2rem; margin-bottom: 1rem; color: var(--accent); }
 .button-step:hover, .button:hover { background: var(--accent); color: #fff; }
 .big-btn { width: 100%; padding: 1rem; margin-top: 1.5rem; font-size: 1.2rem; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; transition: all .2s; text-align: center; text-decoration: none; display: block; }
 .big-btn:hover { transform: scale(1.02); }
-.play-btn { background: linear-gradient(135deg, var(--accent), #8e24aa); color: #fff; }
+.play-btn { background: linear-gradient(135deg, var(--accent), #001f3f); color: #fff; }
 .stop-btn { background: linear-gradient(135deg, #ef5350, #e53935); color: #fff; }
 .status, #savedMsg { margin-top: 1rem; font-size: .9rem; color: var(--text-dim); min-height: 1.5rem; text-align: center; }
 canvas { width: 100%; height: 120px; margin-top: 1rem; border-radius: 8px; background: var(--bg); }
@@ -113,7 +114,7 @@ canvas { width: 100%; height: 120px; margin-top: 1rem; border-radius: 8px; backg
 .sm-btn.active{background:var(--accent);color:#fff;border-color:#fff}
 .bal-viz{margin-top:12px;padding:0 5px}
 .bal-track{height:4px;background:var(--border);border-radius:2px;position:relative;margin-bottom:4px}
-.bal-marker{width:12px;height:12px;background:var(--accent);border-radius:50%;position:absolute;top:-4px;left:50%;transform:translateX(-50%);transition:left 0.1s ease-out;box-shadow:0 0 8px rgba(171, 71, 188, 0.4)}
+.bal-marker{width:12px;height:12px;background:var(--accent);border-radius:50%;position:absolute;top:-4px;left:50%;transform:translateX(-50%);transition:left 0.1s ease-out;box-shadow:0 0 8px rgba(0, 31, 63, 0.5)}
 .bal-labels{display:flex;justify-content:space-between;font-size:0.65rem;color:#666;text-transform:uppercase;letter-spacing:1px}
 
 /* Tools / Hearing Test specific */
@@ -122,15 +123,29 @@ canvas { width: 100%; height: 120px; margin-top: 1rem; border-radius: 8px; backg
 /* Grid / Home styles */
 .grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    grid-template-columns: 1fr;
     gap: 15px; 
     padding: 15px; 
     max-width: 900px; 
     margin: 0 auto; 
 }
+.grid .card { margin-top: 15px; }
 .grid .card h2 { text-align: center; color: var(--muted); font-size: 1.1rem; }
 .grid .button { display: block; background: var(--surface); color: var(--text); padding: 12px; margin: 8px 0; width: 100%; border-radius: 8px; text-decoration: none; font-size: 0.95rem; transition: all 0.2s ease; text-align: center; border: 1px solid var(--border); }
 .grid .button:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+@media (max-width: 600px) {
+    .main-header { padding: 0.5rem 1rem 0; }
+    .panel { margin: 0.5rem auto; width: 95%; }
+    h1 { font-size: 1.2rem; margin-bottom: 0.1rem; }
+    .info { margin-bottom: 0.3rem; font-size: 0.75rem; }
+    .grid { /* grid-template-columns: 1fr; */ gap: 10px; padding: 10px; } /* grid-template-columns is now always 1fr */
+    .grid .card { padding: 12px; margin-top: 0; }
+    .grid .card h2 { margin-bottom: 0.3rem; font-size: 0.95rem; }
+    summary { padding: 10px; font-size: 0.85rem; }
+    .grid .button { padding: 10px; margin: 5px 0; font-size: 0.85rem; }
+    details { margin-top: 5px; }
+}
 
 .highlight-btn {
     border: 1px solid var(--accent) !important;
