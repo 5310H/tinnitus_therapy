@@ -1,17 +1,17 @@
 # Trahreg Tinnitus Therapy Suite  
 Open‑source, browser‑based sound therapy tools for tinnitus research and experimentation.
 
-This project provides several sound‑based tinnitus therapy methods implemented entirely in the browser using the Web Audio API. No downloads, no accounts, no tracking, and no external dependencies.
+This project provides research‑based sound therapy tools implemented entirely in the browser. It features a high-precision DSP engine that supports internal noise generators, custom media uploads, and live system audio capture.
 
 ---
 
 ## 🎧 Therapy Modes
 
 ### **1. Decorrelated Noise Therapy**
-Left/right decorrelated broadband noise designed to reduce auditory synchrony.
+Left/right decorrelated broadband noise designed to reduce auditory synchrony. Supports independent L/R processing for internal noise, nature sounds, and custom media.
 
 ### **2. Notch Therapy**
-Broadband noise with a narrow frequency band removed around the user’s tinnitus pitch.
+Broadband noise with a narrow frequency band removed around the user’s tinnitus pitch. Users can process built-in noise, local files, or live streams from other applications.
 
 ### **3. Lenire‑Style Sound Therapy (Sound‑Only)**
 A sound‑only implementation inspired by the auditory component of Lenire’s bimodal neuromodulation research.  
@@ -30,6 +30,20 @@ White, pink, brown noise and nature‑style soundscapes for masking and habituat
 ### **5. Noise Generator (Python‑style)**
 Simple broadband noise generator with adjustable parameters.
 
+---
+
+## 🎵 Flexible Audio Sources
+All therapy modules now support three primary input methods:
+- **Internal Generators:** Calibrated white, pink, and brown noise.
+- **Custom Files:** Upload your own relaxing music or nature soundscapes from your device.
+- **Live System Audio:** Capture audio from other tabs (Spotify, YouTube) or applications to process them through the therapy engine in real-time.
+
+## 📊 Clinical Validation & Reporting
+The suite includes an automated validation engine to ensure therapy integrity:
+- **Real-time DSP Checks:** Verifies notch depth (target >40dB) and frequency alignment.
+- **Clinical Export:** Generates detailed reports including therapy parameters, the specific audio source used, and hardware calibration status.
+- **Actionable Recommendations:** Provides automated troubleshooting for common system issues (e.g., detecting "Shallow Notch" errors caused by browser audio enhancers).
+ 
 ---
 
 ## 🛠 Tools
@@ -91,6 +105,8 @@ To use the suite offline:
 1. Download the project repository as a ZIP file.
 2. Extract the contents to a local folder.
 3. Open `index.html` in any modern web browser.
+
+Additionally, the suite is a **Progressive Web App (PWA)**. Once loaded, you can install it via the "Tools" menu for a native-like offline experience.
 
 ---
 

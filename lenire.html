@@ -553,7 +553,15 @@ document.getElementById('muteToggle').onchange = (e) => {
 }});
 
 function getReportData() {
+    let bgSource = "Internal White Noise";
+    if (document.getElementById('useLiveAudio').checked) {
+        bgSource = "Live System Audio (Browser/App Capture)"; // Live audio takes precedence
+    } else {
+        const file = document.getElementById('customFile').files[0];
+        if (file) bgSource = `Custom File: ${file.name}`;
+    }
     return {
+        "Carrier Source": bgSource,
         "Carrier Frequency L": freqLEl.value + " Hz",
         "Carrier Frequency R": freqREl.value + " Hz",
         "Master Volume": volMasterEl.value + "%",

@@ -672,8 +672,16 @@ document.getElementById('color').onchange=e=>{
 };
 
 function getReportData() {
+    const color = document.getElementById('color').value;
+    let sourceDetail = color;
+    if (color === 'custom') { // Check if custom file is selected
+        const file = document.getElementById('customFile').files[0];
+        sourceDetail = `Custom File: ${file ? file.name : 'None Selected'}`;
+    } else if (color === 'live') {
+        sourceDetail = "Live System Audio (Browser/App Capture)";
+    }
     return {
-        "Sound Source": document.getElementById('color').value,
+        "Sound Source": sourceDetail,
         "Notch L Frequency": document.getElementById('notchL').value + " Hz",
         "Notch R Frequency": document.getElementById('notchR').value + " Hz",
         "Notch Width": document.getElementById('nw').value + " octave",

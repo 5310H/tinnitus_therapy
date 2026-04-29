@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trahreg-tinnitus-suite-v1.1.2';
+const CACHE_NAME = 'trahreg-tinnitus-suite-v1.1.4';
 const ASSETS = [
     './',
     './index.html',
@@ -18,12 +18,16 @@ const ASSETS = [
     './notchfinder.html',
     './recommended.html',
     './research.html',
+    './soundtherapy.html',
     './spectrogram.html',
     './sweep.html',
     './twotone.html',
     './validation.html',
     './disclaimer.html',
-    './docs/index.html'
+    './docs/index.html',
+    './icon-192.png',
+    './icon-512.png',
+    'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
 ];
 
 // Install: Cache all essential assets

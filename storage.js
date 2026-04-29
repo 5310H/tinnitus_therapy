@@ -1,7 +1,7 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "1.1.2";
+const APP_VERSION = "1.1.4";
 
 function saveSetting(key, value) {
     localStorage.setItem('tts_' + key, value);
@@ -76,6 +76,28 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
     if (window.lastValidationStatus) {
         report += `\nINTERNAL DSP VALIDATION:\nStatus: ${window.lastValidationStatus}\n`;
     }
+
+    const recommendations = [];
+    if (engineResults === 'Not Performed' || engineResults.includes('[FAIL]')) {
+        recommendations.push("- Automated Engine Validation is missing or failed. Please run the 'System Validation' tool on the home page.");
+    }
+    if (phaseStatus === 'Not Verified') {
+        recommendations.push("- Hardware Phase is unverified. Use the 'Phase Test' in System Validation to confirm headphone wiring.");
+    } else if (phaseStatus.includes('Error')) {
+        recommendations.push("- Phase error detected. Check for loose connections or virtual surround sound software.");
+    }
+    if (window.lastValidationStatus && window.lastValidationStatus.includes('FAIL')) {
+        if (window.lastValidationStatus.includes('Shallow Notch')) {
+            recommendations.push("- Shallow Notch failure: Clinical research targets >40dB attenuation. Disable any audio 'enhancer' or 'booster' browser extensions.");
+        }
+        if (window.lastValidationStatus.includes('Frequency Mismatch')) {
+            recommendations.push("- Frequency mismatch failure: Ensure your OS audio settings are set to 44.1kHz or 48kHz and restart your browser.");
+        }
+    }
+    if (recommendations.length > 0) {
+        report += `\nACTIONABLE RECOMMENDATIONS:\n${recommendations.join('\n')}\n`;
+    }
+
     report += `-------------------------------------------`;
     return report;
 }
@@ -105,7 +127,7 @@ function applyEmailVisibility() {
     const email = loadSetting('audiologist_email', '');
     const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     document.querySelectorAll('.email-audiologist-btn').forEach(btn => {
-        btn.style.display = isValid ? 'block' : 'none';
+        btn.classList.toggle('hidden', !isValid);
     });
 }
 

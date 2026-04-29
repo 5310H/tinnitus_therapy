@@ -11,7 +11,7 @@
 <body>
 <div class="panel" style="text-align: left;">
     <h1>Suite Documentation</h1>
-    <p class="info">Technical specifications and user guides for v1.1.1</p>
+    <p class="info">Technical specifications and user guides for v1.1.3</p>
 
     <div class="card">
         <h2>1. Stereo Architecture</h2>
@@ -48,7 +48,12 @@
         <ul>
             <li><strong>Local Persistence:</strong> All settings and usage logs are stored in your browser's <code>localStorage</code>.</li>
             <li><strong>Offline Mode:</strong> All signal processing happens locally on your device; no active internet connection is required after the initial load.</li>
-            <li><strong>Clinical Export:</strong> Generates standard <code>.txt</code> reports that can be manually shared with healthcare providers.</li>
+            <li><strong>Installation:</strong> 
+                <ul>
+                    <li><strong>Desktop/Android:</strong> Click "Install App" in the Tools menu on the dashboard.</li>
+                    <li><strong>iOS (Safari):</strong> Tap the 'Share' icon and select 'Add to Home Screen'.</li>
+                </ul>
+            </li>
         </ul>
     </div>
 
@@ -60,6 +65,22 @@
             <li><strong>Neuromodulation:</strong> 20-30 minute sessions, twice daily.</li>
             <li><strong>Volume:</strong> Always set levels at or slightly below your tinnitus "mixing point."</li>
         </ul>
+    </div>
+
+    <div class="card" style="border-left: 4px solid #f44336;">
+        <h2>6. Troubleshooting & Error Resolution</h2>
+        <p>The suite performs real-time validation of the audio signal. If you see a failure in your clinical report or the status bar, follow these steps:</p>
+        
+        <h3>"Shallow Notch" Failure</h3>
+        <p>This error occurs when the DSP engine detects that the notch filter is not reducing sound energy by at least <b>40dB</b> at your target frequency. Clinical research suggests that a deep notch is required to effectively trigger lateral inhibition.</p>
+        <ul>
+            <li><strong>Disable Audio Enhancers:</strong> "Volume Boosters" or "Equalizer" browser extensions often compress the audio signal, which "fills in" the notch. Disable these during therapy.</li>
+            <li><strong>System Post-Processing:</strong> Turn off "Spatial Sound," "Dolby Atmos," or "Audio Enhancements" in your Windows/macOS sound settings. These algorithms interfere with precision filter slopes.</li>
+            <li><strong>Sample Rate Alignment:</strong> Ensure your OS audio output is set to 44.1kHz or 48kHz. Extreme sample rate mismatches can lead to mathematical rounding errors in filter calculations.</li>
+        </ul>
+
+        <h3>"Frequency Mismatch" Failure</h3>
+        <p>Occurs when the measured output frequency deviates by more than 1% from the target. This is typically caused by virtual surround sound software re-sampling the audio in real-time.</p>
     </div>
 
     <div style="text-align: center; margin-top: 2rem;">

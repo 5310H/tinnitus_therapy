@@ -38,7 +38,10 @@
       <option value="stream">Stream</option>
       <option value="wind">Wind</option>
     </optgroup>
+    <option value="custom">Custom File (Upload)</option>
+    <option value="live">Live System Audio (Tab/App)</option>
   </select>
+  <input type="file" id="customFile" accept="audio/*" style="display:none; margin-top:10px;">
 </div>
 <div class="ctrl">
   <label style="display: flex; justify-content: space-between; align-items: center;">
@@ -180,7 +183,7 @@
 <canvas id="decorrelationViz" class="decorrelation-canvas"></canvas>
 </div>
 <script>
-let ctx,playing=false,nodesL,nodesR,audioL,audioR,timerInterval=null,analyserL,analyserR,rafViz,globalMasterGain;
+let ctx,playing=false,nodesL,nodesR,audioL,audioR,timerInterval=null,analyserL,analyserR,rafViz,globalMasterGain,liveStream;
 const BUF_SIZE=2*44100;
 
 window.onload = () => {
@@ -201,6 +204,7 @@ window.onload = () => {
     document.getElementById('hcL').value = loadSetting('dec_hcL', loadSetting('dec_hc', 14000));
     document.getElementById('hcR').value = loadSetting('dec_hcR', loadSetting('dec_hc', 14000));
     document.getElementById('color').value = loadSetting('dec_color', 'pink');
+    if (document.getElementById('color').value === 'custom') document.getElementById('customFile').style.display = 'block';
     
     document.getElementById('lockLR').checked = loadSetting('dec_lock_lr', 'false') === 'true';
 
@@ -310,8 +314,8 @@ function createFilterChain(sourceNode, vol, lc, hc, analyser) {
     return { gain: g, lo: lo, hi: hi }; // Return the nodes for later manipulation
 }
 
-function toggle(){if(!playing)start();else stop()}
-function start(){
+async function toggle(){if(!playing) await start();else stop()}
+async function start(){
   ctx=new(window.AudioContext||window.webkitAudioContext)();
   const color=document.getElementById('color').value;
   const volL=document.getElementById('volL').value/100;
@@ -573,11 +577,22 @@ document.getElementById('muteToggle').onchange = e => {
         if(playing && nodesL && nodesR) { (side === 'L' ? nodesL : nodesR).hi.frequency.value = +e.target.value; }
     };
 });
-document.getElementById('color').onchange=e=>saveSetting('dec_color',e.target.value);
+document.getElementById('color').onchange=e=>{
+    saveSetting('dec_color',e.target.value);
+    document.getElementById('customFile').style.display = (e.target.value === 'custom') ? 'block' : 'none';
+};
 
 function getReportData() {
+    const color = document.getElementById('color').value;
+    let sourceDetail = color;
+    if (color === 'custom') { // Check if custom file is selected
+        const file = document.getElementById('customFile').files[0];
+        sourceDetail = `Custom File: ${file ? file.name : 'None Selected'}`;
+    } else if (color === 'live') {
+        sourceDetail = "Live System Audio (Browser/App Capture)";
+    }
     return {
-        "Sound Source": document.getElementById('color').value,
+        "Sound Source": sourceDetail,
         "Master Volume": document.getElementById('volMaster').value + "%",
         "Volume L": document.getElementById('volL').value + "%",
         "Volume R": document.getElementById('volR').value + "%",
