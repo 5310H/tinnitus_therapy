@@ -84,7 +84,10 @@
       <option value="stream">Stream</option>
       <option value="wind">Wind</option>
     </optgroup>
+    <option value="custom">Custom File (Upload)</option>
+    <option value="live">Live System Audio (Tab/App)</option>
   </select>
+  <input type="file" id="customFile" accept="audio/*" style="display:none; margin-top:10px;">
 </div>
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
   <div class="ctrl">
@@ -199,6 +202,7 @@ window.onload = () => {
     document.getElementById('volMaster').value = loadSetting('volMaster', 100);
     document.getElementById('muteToggle').checked = loadSetting('volMuted', 'false') === 'true';
     document.getElementById('color').value = loadSetting('color', 'pink');
+    if (document.getElementById('color').value === 'custom') document.getElementById('customFile').style.display = 'block';
     
     document.getElementById('lockLR').checked = loadSetting('notch_lock_lr', 'false') === 'true';
 
@@ -293,8 +297,9 @@ function createNoise(color){
   else{let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<BUF_SIZE;i++){const w=Math.random()*2-1;b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8687*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926}}
   return buf;
 }
-function toggle(){if(!playing)start();else stop()}
-function start(){
+let liveStream;
+async function toggle(){if(!playing) await start();else stop()}
+async function start(){
   ctx=new(window.AudioContext||window.webkitAudioContext)();
   const color=document.getElementById('color').value;
   const volL=document.getElementById('volL').value/100;
@@ -328,14 +333,38 @@ function start(){
   merger.connect(masterGain).connect(analyser).connect(ctx.destination);
 
   const natureMap = { rain:'audio/rain.mp3', ocean:'audio/ocean.mp3', stream:'audio/stream.mp3', wind:'audio/wind.mp3' };
-  if (natureMap[color]) {
-    src = new Audio(natureMap[color]); src.loop = true;
-    const track = ctx.createMediaElementSource(src);
+  let audioSource;
+  if (color === 'live') {
+    try {
+      liveStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      if (!liveStream.getAudioTracks().length) {
+         alert("No audio track found. Please ensure 'Share Audio' is checked in the capture dialog.");
+         stop(); return;
+      }
+      const streamSource = ctx.createMediaStreamSource(liveStream);
+      const splitter = ctx.createChannelSplitter(2);
+      streamSource.connect(splitter);
+      splitter.connect(nodeNotchL, 0);
+      splitter.connect(nodeNotchR, 1);
+    } catch (err) {
+      console.error(err); stop(); return;
+    }
+  } else if (color === 'custom') {
+    const file = document.getElementById('customFile').files[0];
+    if (file) audioSource = new Audio(URL.createObjectURL(file));
+    else { alert("Please select a file."); stop(); return; }
+  } else if (natureMap[color]) {
+    audioSource = new Audio(natureMap[color]);
+  }
+
+  if (audioSource) {
+    src = audioSource; src.loop = true;
+    const track = ctx.createMediaElementSource(audioSource);
     const splitter = ctx.createChannelSplitter(2);
     track.connect(splitter);
     splitter.connect(nodeNotchL, 0);
     splitter.connect(nodeNotchR, 1);
-    src.play();
+    audioSource.play();
   } else {
     const buf=createNoise(color);
     src=ctx.createBufferSource();src.buffer=buf;src.loop=true;
@@ -429,6 +458,10 @@ function validateFilter(filterNode) {
 
 function stop(){
   if(src && src.pause) src.pause();
+  if(liveStream) {
+      liveStream.getTracks().forEach(t => t.stop());
+      liveStream = null;
+  }
   if(ctx){ctx.close();ctx=null}
   playing=false;document.getElementById('toggleBtn').textContent='Start Notch Therapy';document.getElementById('toggleBtn').className='big-btn play-btn';document.getElementById('status').textContent='Stopped'
   if(rafVolViz) cancelAnimationFrame(rafVolViz);
@@ -633,7 +666,10 @@ function updateLockVisuals() {
     if (isLocked) performGlobalSync();
 }
 
-document.getElementById('color').onchange=e=>saveSetting('color', e.target.value);
+document.getElementById('color').onchange=e=>{
+    saveSetting('color', e.target.value);
+    document.getElementById('customFile').style.display = (e.target.value === 'custom') ? 'block' : 'none';
+};
 
 function getReportData() {
     return {

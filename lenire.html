@@ -192,6 +192,15 @@
         <button class="tone-btn" style="flex: 1;" onclick="syncBurstToR()">Sync Burst L &rarr; R</button>
     </div>
 
+    <div class="ctrl">
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 10px;">
+            <input type="checkbox" id="useLiveAudio" style="width: 20px; height: 20px;">
+            <span style="color: var(--accent); font-weight: bold;">Use Live System Audio (Spotify/YouTube)</span>
+        </label>
+        <label>Or Upload Custom File</label>
+        <input type="file" id="customFile" accept="audio/*">
+    </div>
+
     <button id="startBtn" class="big-btn play-btn" onclick="startSession()">Start Session</button>
     <button id="stopBtn" class="big-btn stop-btn" style="display:none" onclick="stopSession()">Stop Session</button>
     <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
@@ -204,7 +213,7 @@
     <canvas id="viz"></canvas>
 </div>
 <script>
-let audioCtx,merger,analyserL,analyserR,rafViz,nodesL,nodesR;
+let audioCtx,merger,analyserL,analyserR,rafViz,nodesL,nodesR,bgSrc,globalMasterGain,liveStream;
 let running=false,remaining=0,timerId=null,sessionSeconds=1200;
 
 window.onload = () => {
@@ -317,10 +326,10 @@ const freqLEl=document.getElementById('freqL'),freqREl=document.getElementById('
 const volLEl=document.getElementById('volL'),volREl=document.getElementById('volR');
 const mixLEl=document.getElementById('mixL'),mixREl=document.getElementById('mixR'),modLEl=document.getElementById('modRateL'),modREl=document.getElementById('modRateR'),burstLEl=document.getElementById('burstRateL'),burstREl=document.getElementById('burstRateR'),timerEl=document.getElementById('timer');
 
-function startSession(){
+async function startSession(){
   if(running)return;
   sessionSeconds=parseInt(document.getElementById('session').value); remaining=sessionSeconds;
-  if(!audioCtx)setupAudio();
+  if(!audioCtx) await setupAudio();
   validateLenireParams();
   updateParams(); running=true;
   drawViz();
@@ -342,11 +351,17 @@ function stopSession(){
   document.getElementById('stopBtn').style.display='none';
   if(timerId)clearInterval(timerId);
   if(rafViz)cancelAnimationFrame(rafViz);
+  if(liveStream) {
+      liveStream.getTracks().forEach(t => t.stop());
+      liveStream = null;
+  }
+  if(bgSrc && bgSrc.pause) bgSrc.pause();
+  if(audioCtx) { audioCtx.close(); audioCtx = null; }
   remaining=0;
   updateTimerDisplay();
 }
 
-function setupAudio(){
+async function setupAudio(){
   audioCtx=new(window.AudioContext||window.webkitAudioContext)();
   merger = audioCtx.createChannelMerger(2);
   globalMasterGain = audioCtx.createGain();
@@ -355,6 +370,21 @@ function setupAudio(){
   // Shared Noise Buffer
   const buf=audioCtx.createBuffer(1,audioCtx.sampleRate*2,audioCtx.sampleRate),d=buf.getChannelData(0);
   for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+
+  let customSourceNode = null, splitter = null;
+  if (document.getElementById('useLiveAudio').checked) {
+      liveStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      customSourceNode = audioCtx.createMediaStreamSource(liveStream);
+      splitter = audioCtx.createChannelSplitter(2); customSourceNode.connect(splitter);
+  }
+
+  const fileInput = document.getElementById('customFile');
+  const file = fileInput.files[0];
+  if (file && !customSourceNode) {
+      bgSrc = new Audio(URL.createObjectURL(file)); bgSrc.loop = true;
+      customSourceNode = audioCtx.createMediaElementSource(bgSrc);
+      splitter = audioCtx.createChannelSplitter(2); customSourceNode.connect(splitter);
+  }
 
       const noiseModOsc = audioCtx.createOscillator();
       const noiseModGain = audioCtx.createGain(); noiseModGain.gain.value = 0.4;
@@ -365,11 +395,16 @@ function setupAudio(){
       const toneGain = audioCtx.createGain();
       toneOsc.connect(toneGain);
 
-      const noiseSource = audioCtx.createBufferSource();
-      noiseSource.buffer = buf; noiseSource.loop = true;
+      let noiseSource = null;
+      if (!customSourceNode) {
+          noiseSource = audioCtx.createBufferSource();
+          noiseSource.buffer = buf; noiseSource.loop = true;
+      }
       const noiseFilter = audioCtx.createBiquadFilter(); noiseFilter.type='bandpass'; noiseFilter.Q.value=1.5;
       const noiseGain = audioCtx.createGain();
-      noiseSource.connect(noiseFilter).connect(noiseGain);
+      if (customSourceNode) splitter.connect(noiseFilter, (side === 'L' ? 0 : 1));
+      else noiseSource.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
 
       const masterGain = audioCtx.createGain();
       const analyser = audioCtx.createAnalyser();
@@ -394,8 +429,9 @@ function setupAudio(){
   analyserL = nodesL.analyser;
   analyserR = nodesR.analyser;
 
-  nodesL.toneOsc.start(); nodesL.noiseSource.start();
-  nodesR.toneOsc.start(); nodesR.noiseSource.start();
+  nodesL.toneOsc.start(); if(nodesL.noiseSource) nodesL.noiseSource.start();
+  nodesR.toneOsc.start(); if(nodesR.noiseSource) nodesR.noiseSource.start();
+  if (bgSrc) bgSrc.play();
   nodesL.burstOsc.start();
   nodesR.burstOsc.start();
   nodesL.noiseModOsc.start();
