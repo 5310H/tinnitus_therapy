@@ -1,7 +1,7 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "1.1.4";
+const APP_VERSION = "1.2.0";
 
 function saveSetting(key, value) {
     localStorage.setItem('tts_' + key, value);
@@ -138,6 +138,14 @@ function toggleTheme() {
     applyTheme();
 }
 
+function syncUIVersion() {
+    document.querySelectorAll('.app-version-label').forEach(el => {
+        const prefix = el.dataset.versionPrefix || '';
+        const suffix = el.dataset.versionSuffix || '';
+        el.textContent = `${prefix}${APP_VERSION}${suffix}`;
+    });
+}
+
 // Immediate application to prevent flash of unstyled content
 (function() {
     const theme = localStorage.getItem('tts_theme');
@@ -179,10 +187,12 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         applyTheme();
         applyEmailVisibility();
+        syncUIVersion();
     });
 } else {
     applyTheme();
     applyEmailVisibility();
+    syncUIVersion();
 }
 
 function needsValidation() {

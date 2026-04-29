@@ -7,14 +7,13 @@
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
 <script src="storage.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="nav.js"></script>
 </head>
 <body>
 <header class="main-header">
     <h1>Trahreg Tinnitus Therapy Suite</h1>
     <p class="info" style="margin-bottom: 0.5rem;">Open‑source auditory research & therapy tools</p>
-    <p style="font-size: 0.75rem; color: var(--text-dim); opacity: 0.8;">[ Beta 1.1.4 ]</p>
+    <p style="font-size: 0.75rem; color: var(--text-dim); opacity: 0.8;">Version <span class="app-version-label"></span></p>
 </header>
 
 <div class="grid">
@@ -44,7 +43,6 @@
             <p id="iosInstallNote" class="hidden" style="font-size:0.75rem; color:var(--accent); margin-top:5px; text-align:center;">iOS Users: Tap the Share icon and <b>'Add to Home Screen'</b> for offline use.</p>
             <p id="otherInstallNote" class="hidden" style="font-size:0.75rem; color:var(--text-dim); margin-top:5px; text-align:center;">Manual Install: Open browser menu and look for <b>"Install"</b> or <b>"Add to Home Screen"</b>.</p>
             <button class="button" style="border-color: var(--text-dim); color: var(--text-dim);" onclick="checkForUpdates()">Check for Updates</button>
-            <button class="button btn-accent" id="snapBtn" onclick="takeSnapshot()">Take Snapshot (Image)</button>
         </details>
     </div>
     <div class="card">
@@ -196,29 +194,6 @@ async function checkForUpdates() {
             alert("Update check failed. Please ensure you are online.");
         }
     }
-}
-
-async function takeSnapshot() {
-    if (typeof html2canvas === 'undefined') {
-        alert("Snapshot engine loading... please try again in a moment.");
-        return;
-    }
-    const btn = document.getElementById('snapBtn');
-    const originalText = btn.textContent;
-    btn.textContent = "Capturing...";
-    
-    try {
-        const canvas = await html2canvas(document.body, {
-            backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#000b18',
-            scale: 2,
-            ignoreElements: (el) => el.tagName === 'BUTTON' || el.tagName === 'SUMMARY' || el.classList.contains('fine-tune-group')
-        });
-        const link = document.createElement('a');
-        link.download = `trahreg_snapshot_${new Date().toISOString().slice(0,10)}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-    } catch (e) { alert("Error capturing snapshot."); }
-    btn.textContent = originalText;
 }
 
 document.getElementById('goalInput').oninput = (e) => {
