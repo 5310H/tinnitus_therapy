@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acoustic CR Neuromodulation</title>
+<script src="storage.js"></script>
+<script src="nav.js"></script>
+<link rel="stylesheet" href="style.css">
+<style>
+    .tone-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin: 15px 0; }
+    .tone-box { 
+        padding: 15px 5px; background: var(--surface); border: 1px solid var(--border); 
+        border-radius: 8px; text-align: center; font-size: 0.75rem; transition: all 0.1s; 
+        color: var(--text-dim);
+    }
+    .tone-box.active { 
+        background: var(--accent); color: white; border-color: white; 
+        transform: scale(1.05); box-shadow: 0 0 10px var(--accent);
+    }
+
+    .bal-slider-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-top: 5px; } /* Default to 4 columns */
+    .bal-slider { width: 100%; accent-color: var(--accent); cursor: pointer; }
+    .bal-label { font-size: 0.65rem; color: var(--text-dim); text-align: center; margin-top: 2px; }
+
+    .cycle-grid { display: flex; justify-content: center; gap: 12px; margin-top: 20px; }
+    .cycle-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); position: relative; }
+    .cycle-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 10px var(--accent); }
+    .cycle-dot.silence { border-style: dashed; }
+    .cycle-dot.active.silence { background: var(--text-dim); box-shadow: none; }
+
+    #cycleLabel { font-weight: bold; color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="panel">
+    <h1>Acoustic CR Tones</h1>
+    <p class="info">Experimental Coordinated Reset (CR) Neuromodulation tones.</p>
+
+    <div class="card">
+        <h3>Tinnitus Pitch Bracketing</h3>
+        <p class="info">Use this tool to fine-tune your tinnitus pitch before calculating CR tones. Adjust the tone until it matches your tinnitus.</p>
+        <div class="ctrl">
+            <label>Test Tone Frequency (Hz) <input type="number" id="freqBracketInput" class="val-input" value="6000" min="500" max="16000"></label>
+            <input id="freqBracketSlider" type="range" min="500" max="16000" value="6000" step="1">
+            <div class="fine-tune-group" data-target="freqBracketInput">
+                <button class="fine-tune-btn" data-delta="-100">-100</button>
+                <button class="fine-tune-btn" data-delta="-10">-10</button>
+                <button class="fine-tune-btn" data-delta="-1">-1</button>
+                <button class="fine-tune-btn" data-delta="1">+1</button>
+                <button class="fine-tune-btn" data-delta="10">+10</button>
+                <button class="fine-tune-btn" data-delta="100">+100</button>
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button class="button" style="flex: 1;" id="playBracketBtn" onclick="toggleBracketTone()">Play Test Tone</button>
+            <button class="button" style="flex: 1; background: var(--accent); color: white;" onclick="saveBracketToBaseFreq()">Use as Base Frequency</button>
+        </div>
+        <p class="info" style="text-align: center; margin-top: 10px;">
+            <i>Tip: Use the fine-tune buttons for precise adjustments.</i>
+        </p>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <h3>Step 1: Calibration</h3>
+        <p class="info">Enter your matched tinnitus frequency to calculate the four therapeutic CR tones.</p>
+        <div class="ctrl">
+            <label>Tinnitus Frequency (Hz) <input type="number" id="baseFreq" class="val-input" value="6000" min="500" max="12000"></label>
+            <button class="button" style="width:100%; margin-top:10px;" onclick="calculateTones()">Calculate CR Frequencies</button>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 20px;"> <!-- No responsive-grid needed here, tone-grid handles its own responsiveness -->
+        <h3>Playback Status</h3>
+        <div id="toneIndicators" class="tone-grid">
+            <div class="tone-box" id="tone0">-</div>
+            <div class="tone-box" id="tone1">-</div>
+            <div class="tone-box" id="tone2">-</div>
+            <div class="tone-box" id="tone3">-</div>
+        </div>
+        <div class="bal-slider-row">
+            <input type="range" id="bal0" class="bal-slider" min="0" max="100" value="100">
+            <input type="range" id="bal1" class="bal-slider" min="0" max="100" value="100">
+            <input type="range" id="bal2" class="bal-slider" min="0" max="100" value="100">
+            <input type="range" id="bal3" class="bal-slider" min="0" max="100" value="100">
+        </div>
+        <div class="bal-slider-row">
+            <div class="bal-label">Bal 1</div><div class="bal-label">Bal 2</div><div class="bal-label">Bal 3</div><div class="bal-label">Bal 4</div>
+        </div>
+        <p class="info" style="text-align: center; font-size: 0.7rem; margin-top: 10px;">Adjust sliders to balance the perceived loudness of each tone.</p>
+        <div id="cycleIndicators" class="cycle-grid">
+            <div class="cycle-dot" title="Cycle 1 (Play)"></div>
+            <div class="cycle-dot" title="Cycle 2 (Play)"></div>
+            <div class="cycle-dot" title="Cycle 3 (Play)"></div>
+            <div class="cycle-dot silence" title="Cycle 4 (Pause)"></div>
+            <div class="cycle-dot silence" title="Cycle 5 (Pause)"></div>
+        </div>
+        <p class="info" style="text-align: center; margin-top: 15px;">
+            Status: <span id="cycleLabel">Stopped</span>
+        </p>
+    </div>
+
+    <div class="ctrl">
+        <label>Master Volume <span class="val" id="volVal">20%</span></label>
+        <input id="volSlider" type="range" min="0" max="100" value="20">
+    </div>
+
+    <div class="timer-block">
+        <label>Session Timer (minutes)</label>
+        <input id="timerInput" type="number" min="1" max="120" value="20">
+        <div class="timer-display" id="timerDisplay"></div>
+    </div>
+
+    <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start CR Therapy</button>
+    <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+    <a class="button" href="ri.html" style="width:100%; margin-top:10px; background:var(--surface);">Test Suppression (RI)</a>
+    
+    <div class="usage-progress">
+        <div id="usageBar" class="usage-bar" style="width: 0%"></div>
+    </div>
+    <div id="usageText" class="usage-text">Today's Progress: 0 / 20 mins</div>
+</div>
+
+<script>
+let audioCtx, playing = false, timerInterval, frequencies = [], masterGain, toneBalFactors = [1,1,1,1];
+let nextToneTime = 0, currentSequence = [], sequenceIdx = 0, cycleCount = 0;
+const TONE_DURATION = 0.120; // 120ms per tone
+const CYCLE_PERIOD = 0.666; // 1.5 Hz clinical cycle rate (666ms per cycle)
+
+// New variables for bracketing tool
+let bracketAudioCtx = null, bracketOsc = null, bracketGain = null, bracketPlaying = false;
+
+window.onload = () => {
+    initNav(`
+        <b>Pitch Bracketing:</b> Use the test tone to precisely match your tinnitus pitch. This frequency will then be used to calculate the four CR tones.<br><br>
+        <b>Coordinated Reset (CR):</b> Plays a pseudo-random sequence of four tones calculated relative to your tinnitus pitch.<br><br>
+        <b>The Protocol:</b> Based on Tass (2012), sequences are played in a "3-on/2-off" cycle pattern to disrupt pathological neural synchrony.<br><br>
+        <b>Calibration:</b> Adjust the balance sliders until all four tones sound equally loud. This ensures balanced neural stimulation.<br><br>
+        <b>Indicators:</b> The dots represent the 5-cycle loop. Solid dots are playback cycles; dashed dots are pause cycles.
+    `);
+    document.getElementById('baseFreq').value = loadSetting('notchL', 6000);
+
+    // Initialize bracketing tool
+    const savedBracketFreq = loadSetting('cr_bracketFreq', 6000);
+    document.getElementById('freqBracketInput').value = savedBracketFreq;
+    document.getElementById('freqBracketSlider').value = savedBracketFreq;
+    document.getElementById('freqBracketSlider').oninput = (e) => {
+        document.getElementById('freqBracketInput').value = e.target.value;
+        saveSetting('cr_bracketFreq', e.target.value);
+        if (bracketPlaying && bracketOsc) bracketOsc.frequency.setTargetAtTime(e.target.value, bracketAudioCtx.currentTime, 0.05);
+    };
+    document.getElementById('freqBracketInput').oninput = (e) => {
+        const val = parseFloat(e.target.value);
+        if (!isNaN(val) && val >= 500 && val <= 16000) {
+            document.getElementById('freqBracketSlider').value = val;
+            saveSetting('cr_bracketFreq', val);
+            if (bracketPlaying && bracketOsc) bracketOsc.frequency.setTargetAtTime(val, bracketAudioCtx.currentTime, 0.05);
+        }
+    };
+
+    for(let i=0; i<4; i++) {
+        const bal = document.getElementById(`bal${i}`);
+        bal.value = loadSetting(`cr_bal_${i}`, 100);
+        toneBalFactors[i] = bal.value / 100;
+        bal.oninput = (e) => {
+            toneBalFactors[i] = e.target.value / 100;
+            saveSetting(`cr_bal_${i}`, e.target.value);
+        };
+    }
+    setupStepButtons(); // Apply step button logic to new bracketing controls
+    calculateTones();
+    refreshUsageUI();
+};
+
+function calculateTones() {
+    const f = parseFloat(document.getElementById('baseFreq').value);
+    // Logarithmic ratios based on Tass et al. (2012)
+    frequencies = [f * 0.77, f * 0.90, f * 1.10, f * 1.32];
+    frequencies.forEach((freq, i) => {
+        document.getElementById(`tone${i}`).textContent = Math.round(freq) + " Hz";
+    });
+    saveSetting('cr_baseFreq', f); // Save the base frequency for persistence
+}
+
+function refreshUsageUI() {
+    const current = getDailyUsage();
+    const goal = loadSetting('daily_goal', 20);
+    document.getElementById('usageBar').style.width = Math.min(100, (current / goal) * 100) + '%';
+    document.getElementById('usageText').textContent = `Today's Progress: ${Math.round(current)} / ${goal} mins`;
+}
+
+async function toggle() {
+    if (playing) { stop(); return; }
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    stopBracketTone(); // Stop bracketing tone if playing
+    
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = document.getElementById('volSlider').value / 100;
+    masterGain.connect(audioCtx.destination);
+
+    playing = true;
+    document.getElementById('toggleBtn').textContent = "Stop Therapy";
+    document.getElementById('toggleBtn').className = "big-btn stop-btn";
+    
+    nextToneTime = audioCtx.currentTime + 0.1;
+    cycleCount = 0;
+    sequenceIdx = 0;
+    scheduler();
+    startTimer();
+}
+
+function stop() {
+    playing = false;
+    clearInterval(timerInterval);
+    if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    stopBracketTone(); // Ensure bracket tone is stopped when main therapy stops
+    document.getElementById('toggleBtn').textContent = "Start CR Therapy";
+    document.getElementById('toggleBtn').className = "big-btn play-btn";
+    document.getElementById('cycleLabel').textContent = "Stopped";
+    document.querySelectorAll('.tone-box, .cycle-dot').forEach(el => el.classList.remove('active'));
+}
+
+function scheduler() {
+    if (!playing) return;
+    while (nextToneTime < audioCtx.currentTime + 0.2) {
+        scheduleTone();
+    }
+    setTimeout(scheduler, 50);
+}
+
+function scheduleTone() {
+    const isPlayCycle = cycleCount < 3;
+    const schedTime = nextToneTime;
+    const currentCycle = cycleCount;
+    const currentSeqIdx = sequenceIdx;
+
+    if (isPlayCycle) {
+        if (sequenceIdx === 0) currentSequence = [...frequencies].sort(() => Math.random() - 0.5);
+        
+        const freq = currentSequence[sequenceIdx];
+        const toneIdx = frequencies.indexOf(freq);
+
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        const b = toneBalFactors[toneIdx];
+        osc.frequency.value = freq;
+        
+        g.gain.setValueAtTime(0, schedTime);
+        g.linearRampToValueAtTime(b, schedTime + 0.01);
+        g.gain.setValueAtTime(b, schedTime + TONE_DURATION - 0.01);
+        g.gain.linearRampToValueAtTime(0, schedTime + TONE_DURATION);
+
+        osc.connect(g).connect(masterGain);
+        osc.start(schedTime);
+        osc.stop(schedTime + TONE_DURATION);
+
+        // Visual Sync for Tone
+        setTimeout(() => {
+            if (!playing) return;
+            document.querySelectorAll('.tone-box').forEach((box, i) => box.classList.toggle('active', i === toneIdx));
+        }, (schedTime - audioCtx.currentTime) * 1000);
+    }
+
+    // Visual Sync for Cycle
+    if (sequenceIdx === 0) {
+        setTimeout(() => {
+            if (!playing) return;
+            document.getElementById('cycleLabel').textContent = `Cycle ${currentCycle + 1} / 5 (${currentCycle < 3 ? 'Play' : 'Pause'})`;
+            document.querySelectorAll('.cycle-dot').forEach((dot, i) => dot.classList.toggle('active', i === currentCycle));
+            if (currentCycle >= 3) document.querySelectorAll('.tone-box').forEach(box => box.classList.remove('active'));
+        }, (schedTime - audioCtx.currentTime) * 1000);
+    }
+
+    sequenceIdx++;
+    if (sequenceIdx >= 4) { 
+        sequenceIdx = 0; 
+        cycleCount = (cycleCount + 1) % 5;
+        nextToneTime += (CYCLE_PERIOD - (4 * TONE_DURATION));
+    }
+    nextToneTime += TONE_DURATION;
+}
+
+let repeatTimeout, repeatInterval;
+function setupStepButtons() {
+    document.querySelectorAll('.btn-group .button-step, .fine-tune-group .fine-tune-btn').forEach(btn => {
+        const delta = parseFloat(btn.dataset.delta);
+        let targetElement;
+
+        // Determine the target input element for the button
+        if (btn.classList.contains('fine-tune-btn')) {
+            // For fine-tune buttons, the target is the input[type="number"] in the same parent .ctrl
+            targetElement = btn.closest('.ctrl').querySelector('input[type="number"]');
+        } else {
+            // For button-step, the target is the input specified by data-target on its parent .btn-group
+            targetElement = document.getElementById(btn.parentElement.dataset.target);
+        }
+
+        if (!targetElement) {
+            console.warn("Could not find target element for button:", btn);
+            return;
+        }
+
+        const step = () => {
+            let val = (parseFloat(targetElement.value) + delta);
+            if (targetElement.step && targetElement.step.includes('.')) val = parseFloat(val.toFixed(1));
+            targetElement.value = Math.min(targetElement.max, Math.max(targetElement.min, val));
+            targetElement.dispatchEvent(new Event('input')); // Trigger input event to update linked slider/label
+        };
+
+        btn.onmousedown = btn.ontouchstart = (e) => {
+            e.preventDefault();
+            step();
+            repeatTimeout = setTimeout(() => { repeatInterval = setInterval(step, 80); }, 500);
+        };
+        btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => {
+            clearInterval(repeatInterval);
+            clearTimeout(repeatTimeout);
+            repeatInterval = null;
+        };
+        btn.onclick = (e) => { if(!repeatInterval) step(); }; // Accessible fallback
+    });
+}
+
+function toggleBracketTone() {
+    if (bracketPlaying) {
+        stopBracketTone();
+    } else {
+        playBracketTone();
+    }
+}
+
+function playBracketTone() {
+    stopBracketTone(); // Clean up existing context/oscillator first
+    bracketAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    bracketOsc = bracketAudioCtx.createOscillator(); bracketOsc.type = "sine";
+    bracketOsc.frequency.value = parseFloat(document.getElementById('freqBracketSlider').value);
+    bracketGain = bracketAudioCtx.createGain(); bracketGain.gain.value = 0.1; // Fixed low volume for test tone
+    bracketOsc.connect(bracketGain).connect(bracketAudioCtx.destination);
+    bracketOsc.start(); bracketPlaying = true;
+    document.getElementById('playBracketBtn').textContent = "Stop Test Tone";
+}
+
+function stopBracketTone() {
+    if (bracketOsc) { try { bracketOsc.stop(); } catch(e) {} bracketOsc = null; }
+    if (bracketAudioCtx) { try { bracketAudioCtx.close(); } catch(e) {} bracketAudioCtx = null; }
+    bracketPlaying = false;
+    document.getElementById('playBracketBtn').textContent = "Play Test Tone";
+}
+
+function saveBracketToBaseFreq() {
+    const bracketFreq = document.getElementById('freqBracketSlider').value;
+    document.getElementById('baseFreq').value = bracketFreq;
+    saveSetting('cr_baseFreq', bracketFreq); // Save this as the new base for CR
+    calculateTones();
+    stopBracketTone();
+    alert(`Tinnitus base frequency set to ${bracketFreq} Hz.`);
+}
+
+function startTimer() {
+    const mins = parseInt(document.getElementById('timerInput').value);
+    let rem = mins * 60;
+    timerInterval = setInterval(() => {
+        rem--;
+        document.getElementById('timerDisplay').textContent = "Time left: " + Math.floor(rem/60) + ":" + (rem%60).toString().padStart(2,'0');
+        if (rem <= 0) { logUsageMinutes(mins); stop(); refreshUsageUI(); }
+    }, 1000);
+}
+
+document.getElementById('volSlider').oninput = e => {
+    if (masterGain) masterGain.gain.setTargetAtTime(e.target.value / 100, audioCtx.currentTime, 0.05);
+    document.getElementById('volVal').textContent = e.target.value + "%";
+};
+
+function exportClinicalSettings() {
+    const data = {
+        "Base Tinnitus Frequency": document.getElementById('baseFreq').value + " Hz",
+        "Bracketed Tinnitus Frequency": document.getElementById('freqBracketSlider').value + " Hz", // New field
+        "Calculated F1": Math.round(frequencies[0]) + " Hz",
+        "Calculated F2": Math.round(frequencies[1]) + " Hz",
+        "Calculated F3": Math.round(frequencies[2]) + " Hz",
+        "Calculated F4": Math.round(frequencies[3]) + " Hz",
+        "Tone 1 Balance": document.getElementById('bal0').value + "%",
+        "Tone 2 Balance": document.getElementById('bal1').value + "%",
+        "Tone 3 Balance": document.getElementById('bal2').value + "%",
+        "Tone 4 Balance": document.getElementById('bal3').value + "%",
+        "Tone Duration": "120ms",
+        "Sequence": "3-on/2-off (1.5 Hz)"
+    };
+    const report = generateClinicalReport("Acoustic CR Neuromodulation", data);
+    const blob = new Blob([report], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `clinical_cr_tones.txt`;
+    a.click();
+}
+</script>
+</body>
+</html>

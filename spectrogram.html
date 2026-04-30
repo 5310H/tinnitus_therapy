@@ -20,22 +20,32 @@
 </div>
 <script>
 window.onload = () => initNav();
-let ctx, analyser, source, raf;
+let ctx, analyser, source, raf, streamRef = null;
 let audioCtx=null;
 
 function start(){
+    stop();
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+
     navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+        streamRef = stream;
         source=audioCtx.createMediaStreamSource(stream);
         analyser=audioCtx.createAnalyser();
         analyser.fftSize=2048;
         source.connect(analyser);
         draw();
+    }).catch(err => {
+        alert("Microphone access is required for the spectrogram to visualize external sounds.");
     });
 }
 
 function stop(){
     if(raf) cancelAnimationFrame(raf);
+    if(streamRef) {
+        streamRef.getTracks().forEach(track => track.stop());
+        streamRef = null;
+    }
 }
 
 function draw(){

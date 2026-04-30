@@ -56,7 +56,7 @@
     <button class="button-step" data-delta="5">+5</button>
   </div>
 </div>
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+<div class="responsive-grid">
   <div class="ctrl">
     <label>Volume L <span class="val" id="volValL">40%</span></label>
     <input type="range" id="volL" min="0" max="100" value="40">
@@ -78,8 +78,7 @@
   <button class="tone-btn" id="syncVolBtn" style="flex: 1;" onclick="syncVolToR()">Sync Volume L &rarr; R</button>
 </div>
 <div class="ctrl"><label>Decorrelation Amount <span class="val" id="decVal">100%</span></label><input type="range" id="dec" min="0" max="100" value="100"></div>
-
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+<div class="responsive-grid">
   <div class="ctrl">
     <label>Low-Cut L (Hz)
       <div class="input-with-buttons">
@@ -124,8 +123,7 @@
 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
   <button class="tone-btn" id="syncLCBtn" style="flex: 1;" onclick="syncLCToR()">Sync Low-Cut L &rarr; R</button>
 </div>
-
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+<div class="responsive-grid">
   <div class="ctrl">
     <label>High-Cut L (Hz)
       <div class="input-with-buttons">
@@ -174,7 +172,7 @@
 <div class="match-section">
   <h3>Hearing Compensation (EQ)</h3>
   <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+  <div class="responsive-grid">
     <div id="eqControlsL"></div>
     <div id="eqControlsR"></div>
   </div>
@@ -340,6 +338,8 @@ function createFilterChain(sourceNode, side, vol, lc, hc, analyser) {
 async function toggle(){if(!playing) await start();else stop()}
 async function start(){
   ctx=new(window.AudioContext||window.webkitAudioContext)();
+  if (ctx.state === 'suspended') await ctx.resume();
+
   const color=document.getElementById('color').value;
   const volL=document.getElementById('volL').value/100;
   const volR=document.getElementById('volR').value/100;

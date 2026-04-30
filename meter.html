@@ -48,6 +48,7 @@ window.onload = () => initNav(`
 let audioCtx=null, analyser, source, raf, streamRef=null, peakLevel=0, lastPeakUpdate=0;
 
 function start(){
+    stop();
     document.getElementById("validationBox").style.display = "block";
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
     if(audioCtx.state === 'suspended') audioCtx.resume();

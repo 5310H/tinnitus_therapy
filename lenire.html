@@ -24,7 +24,7 @@
         </label>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="responsive-grid">
         <div class="ctrl">
             <label>Carrier Freq L (Hz)
                 <div class="input-with-buttons">
@@ -102,7 +102,7 @@
         <button class="tone-btn" style="flex: 1;" onclick="syncVolToR()">Sync Volume L &rarr; R</button>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="responsive-grid">
         <div class="ctrl">
             <label>Tone/Noise Mix L <span class="val" id="mixValL">50%</span></label>
             <input id="mixL" type="range" min="0" max="1" step="0.01" value="0.5">
@@ -124,7 +124,7 @@
         <button class="tone-btn" style="flex: 1;" onclick="syncMixToR()">Sync Mix L &rarr; R</button>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="responsive-grid">
         <div class="ctrl">
             <label>Noise Mod L (Hz)
                 <div class="input-with-buttons">
@@ -158,7 +158,7 @@
         <button class="tone-btn" style="flex: 1;" onclick="syncModToR()">Sync Noise Mod L &rarr; R</button>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="responsive-grid">
         <div class="ctrl">
             <label>Burst Rate L (Hz)
                 <div class="input-with-buttons">
@@ -195,7 +195,7 @@
     <div class="match-section">
         <h3>Hearing Compensation (EQ)</h3>
         <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="responsive-grid">
             <div id="eqControlsL"></div>
             <div id="eqControlsR"></div>
         </div>

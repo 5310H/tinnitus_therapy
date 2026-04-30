@@ -1,7 +1,7 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "1.2.2";
+const APP_VERSION = "1.2.6";
 
 function saveSetting(key, value) {
     localStorage.setItem('tts_' + key, value);
@@ -49,6 +49,14 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
     const phaseStatus = loadSetting('phase_status', 'Not Verified');
     const usage = getDailyUsage();
 
+    const riLog = getRIResults();
+    const riDates = Object.keys(riLog).sort((a, b) => new Date(b) - new Date(a));
+    let riSummary = "N/A";
+    if (riDates.length > 0) {
+        const latestDate = riDates[0];
+        riSummary = `Date: ${latestDate} | Suppression Results: ${riLog[latestDate].join('s, ')}s`;
+    }
+
     const lastTHI = getLastTHIAssessmentDate();
     const distressScores = getDistressScores();
     const lastScoreVal = lastTHI ? distressScores[lastTHI.toISOString().split('T')[0]] : null;
@@ -92,6 +100,9 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
     report += `Last THI Date: ${lastTHI ? lastTHI.toLocaleDateString() : 'N/A'}\n`;
     report += `Thought Records Logged: ${thoughtRecordsCount}\n`;
     report += `Most Recent Record:\n${recentThoughtSummary}\n`;
+
+    report += `\nRESIDUAL INHIBITION (RI):\n`;
+    report += `Latest RI Result: ${riSummary}\n`;
 
     report += `\nSYSTEM STATUS:\n`;
     report += `Hardware Phase Status: ${phaseStatus}\n`;

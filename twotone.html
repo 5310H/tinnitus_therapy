@@ -72,6 +72,7 @@
 
         function initAudio() {
             if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (ctx.state === 'suspended') ctx.resume();
         }
 
         function updateUI() {

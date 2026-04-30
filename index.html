@@ -25,6 +25,7 @@
             <a class="button" href="notch.html">Notch Therapy</a>
             <a class="button" href="lenire.html">Lenire‑style</a>
             <a class="button" href="soundtherapy.html">Sound Therapy</a>
+            <a class="button" href="cr.html">CR Neuromodulation</a>
             <a class="button" href="cbt.html">CBT & Wellness</a>
         </details>
     </div>
@@ -58,7 +59,7 @@
                 <!-- Bars injected by JS -->
             </div>
             <p class="usage-text" id="weeklyTotal">Total: 0 mins this week</p>
-            <div style="display: flex; gap: 8px; margin-top: 15px;">
+            <div style="display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap;">
                 <button class="button" style="flex: 1;" onclick="exportAllData()">Backup Data</button>
                 <button class="button" style="flex: 1;" onclick="document.getElementById('importFile').click()">Restore</button>
                 <input type="file" id="importFile" style="display:none" onchange="importAllData(this.files[0])" accept=".json">
@@ -212,6 +213,7 @@ document.getElementById('goalInput').oninput = (e) => {
 
 document.getElementById('audioEmail').oninput = (e) => {
     saveSetting('audiologist_email', e.target.value);
+    applyEmailVisibility(); // Immediate feedback for button visibility
 };
 
 window.restartOnboarding = () => {

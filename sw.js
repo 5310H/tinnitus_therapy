@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trahreg-tinnitus-suite-v1.2.2';
+const CACHE_NAME = 'trahreg-tinnitus-suite-v1.2.6';
 const ASSETS = [
     './',
     './index.html',
@@ -9,6 +9,7 @@ const ASSETS = [
     './about.html',
     './decorrelated.html',
     './feedback.html',
+    './cr.html',
     './cbt.html',
     './generator.html',
     './hearingtest.html',
@@ -27,7 +28,13 @@ const ASSETS = [
     './ri.html',
     './validation.html',
     './disclaimer.html',
+    './disclaimer.txt',
     './docs/index.html',
+    './tinnitus_generator.py',
+    './audio/rain.mp3',
+    './audio/ocean.mp3',
+    './audio/stream.mp3',
+    './audio/wind.mp3',
     './icon-192.png',
     './icon-512.png',
     'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'

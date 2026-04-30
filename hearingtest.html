@@ -58,6 +58,7 @@ let osc = null;
 /* PLAY TONE */
 function play(freq) {
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
 
     stopTone(); // ensure only one tone plays
 

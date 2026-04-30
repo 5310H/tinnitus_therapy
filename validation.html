@@ -54,7 +54,7 @@
         
         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); text-align: center;">
             <p style="font-size: 0.85rem; margin-bottom: 10px;">Does the In-Phase tone sound centered?</p>
-            <div style="display: flex; gap: 10px; justify-content: center;">
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                 <button class="button" style="border-color: #4CAF50; color: #4CAF50;" onclick="savePhaseStatus('Verified: In-Phase (Correct)')">Yes (Correct)</button>
                 <button class="button" style="border-color: #f44336; color: #f44336;" onclick="savePhaseStatus('Error: Out-of-Phase Detected')">No (Phase Issue)</button>
             </div>
@@ -99,6 +99,8 @@ let phaseCtx, phaseOsc, engineTestResults = [];
 function testPhase(mode) {
     stopPhase();
     phaseCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (phaseCtx.state === 'suspended') phaseCtx.resume();
+
     phaseOsc = phaseCtx.createOscillator();
     phaseOsc.frequency.value = 440;
 

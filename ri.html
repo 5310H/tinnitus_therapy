@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Residual Inhibition Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
+</head>
+<body>
+<div class="panel">
+    <h1>Residual Inhibition (RI) Test</h1>
+    <p class="info">Test if your tinnitus can be suppressed by sound.</p>
+
+    <div class="card" id="testArea">
+        <div id="step1">
+            <h3>Step 1: Preparation</h3>
+            <p class="info">We will play broadband noise at a level that completely masks your tinnitus for 60 seconds.</p>
+            <button class="big-btn play-btn" onclick="startMasking()">Start 60s Masking</button>
+        </div>
+
+        <div id="step2" style="display:none;">
+            <h2 id="timer">60</h2>
+            <p>Listen to the noise. It should be just loud enough to hide your tinnitus.</p>
+            <div class="usage-progress"><div id="pBar" class="usage-bar" style="width: 100%"></div></div>
+        </div>
+
+        <div id="step3" style="display:none;">
+            <h3 style="color: var(--accent);">Noise Stopped!</h3>
+            <p>Is your tinnitus quieter or gone? Click the button the <b>moment</b> your tinnitus returns to its normal level.</p>
+            <h2 id="stopwatch">0.0s</h2>
+            <button class="big-btn stop-btn" onclick="stopMeasurement()">Tinnitus Has Returned</button>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <h3>Results History</h3>
+        <div id="riHistory" class="info">No tests recorded yet.</div>
+    </div>
+</div>
+
+<script>
+let audioCtx, noise, gain, startTime, measureInterval, maskingTimeout;
+
+window.onload = () => {
+    initNav("Residual Inhibition (RI) is the temporary suppression of tinnitus following auditory stimulation. Approximately 70-90% of sufferers experience some form of RI.");
+    renderHistory();
+};
+
+function startMasking() {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const bufSize = audioCtx.sampleRate * 2;
+    const buffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+
+    noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    noise.loop = true;
+    gain = audioCtx.createGain();
+    gain.gain.value = 0.3; // Calibrated comfort level
+    noise.connect(gain).connect(audioCtx.destination);
+    
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+    noise.start();
+
+    let timeLeft = 60;
+    maskingTimeout = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').textContent = timeLeft;
+        document.getElementById('pBar').style.width = (timeLeft / 60 * 100) + "%";
+        if (timeLeft <= 0) {
+            clearInterval(maskingTimeout);
+            startMeasurement();
+        }
+    }, 1000);
+}
+
+function startMeasurement() {
+    noise.stop();
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'block';
+    startTime = performance.now();
+    measureInterval = setInterval(() => {
+        const elapsed = (performance.now() - startTime) / 1000;
+        document.getElementById('stopwatch').textContent = elapsed.toFixed(1) + "s";
+    }, 100);
+}
+
+function stopMeasurement() {
+    clearInterval(measureInterval);
+    const finalTime = (performance.now() - startTime) / 1000;
+    logRIResult(Math.round(finalTime));
+    alert("Result saved: " + finalTime.toFixed(1) + " seconds of suppression.");
+    location.reload();
+}
+
+function renderHistory() {
+    const log = getRIResults();
+    const history = document.getElementById('riHistory');
+    const entries = Object.entries(log).reverse();
+    if (entries.length > 0) {
+        history.innerHTML = entries.map(([date, times]) => 
+            `<div><b>${date}:</b> ${times.join('s, ')}s</div>`
+        ).join('');
+    }
+}
+</script>
+</body>
+</html>

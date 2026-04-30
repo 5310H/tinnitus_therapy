@@ -20,7 +20,7 @@
         </label>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="responsive-grid">
         <div class="ctrl">
             <label>Left Ear <span class="val" id="freqValL">1000 Hz</span> <input type="number" id="freqInputL" class="val-input" value="1000" min="100" max="16000"></label>
             <input id="freqSliderL" type="range" min="100" max="16000" value="1000" step="1">
@@ -134,6 +134,7 @@ function playTones() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
 
     stopTone(); 
 

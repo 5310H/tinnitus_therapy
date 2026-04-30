@@ -201,6 +201,7 @@ document.getElementById('balInput').oninput = e => {
 function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
         gainNode = audioCtx.createGain();
         gainNode.channelCount = 2;
         gainNode.channelCountMode = 'explicit';
@@ -228,6 +229,7 @@ function initAudio() {
         merger.connect(pannerNode).connect(audioCtx.destination);
         syncAudioNodes();
     }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 function syncAudioNodes() { setVolume(document.getElementById('volume').value); setBalance(document.getElementById('balance').value); }
 
