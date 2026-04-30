@@ -17,10 +17,10 @@
   <p>Based on research by <b>Tass et al. (2012)</b>, decorrelated noise disrupts pathological neural synchrony by providing independent, non-correlated signals to each ear to promote neural desynchronization.</p>
 </div>
 
-<div class="ctrl" style="border-bottom: 1px dashed var(--border); padding-bottom: 15px; margin-bottom: 20px;">
+<div class="ctrl" style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
   <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
     <input type="checkbox" id="lockLR" style="width: 20px; height: 20px; margin-top: 0;">
-    <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Lock Left & Right Parameters</span>
+    <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Lock L & R Parameters</span>
   </label>
 </div>
 
@@ -65,7 +65,7 @@
       <button class="button-step" data-delta="5">+5</button>
     </div>
   </div>
-  <div class="ctrl">
+  <div class="ctrl" id="volRGroup">
     <label>Volume R <span class="val" id="volValR">40%</span></label>
     <input type="range" id="volR" min="0" max="100" value="40">
     <div class="btn-group" data-target="volR">
@@ -75,7 +75,7 @@
   </div>
 </div>
 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-  <button class="tone-btn" style="flex: 1;" onclick="syncVolToR()">Sync Volume L &rarr; R</button>
+  <button class="tone-btn" id="syncVolBtn" style="flex: 1;" onclick="syncVolToR()">Sync Volume L &rarr; R</button>
 </div>
 <div class="ctrl"><label>Decorrelation Amount <span class="val" id="decVal">100%</span></label><input type="range" id="dec" min="0" max="100" value="100"></div>
 
@@ -100,7 +100,7 @@
       <button class="button-step" data-delta="100">+100</button>
     </div>
   </div>
-  <div class="ctrl">
+  <div class="ctrl" id="lcRGroup">
     <label>Low-Cut R (Hz)
       <div class="input-with-buttons">
         <input type="number" id="lcInputR" class="val-input" value="80" min="20" max="500">
@@ -122,7 +122,7 @@
   </div>
 </div>
 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-  <button class="tone-btn" style="flex: 1;" onclick="syncLCToR()">Sync Low-Cut L &rarr; R</button>
+  <button class="tone-btn" id="syncLCBtn" style="flex: 1;" onclick="syncLCToR()">Sync Low-Cut L &rarr; R</button>
 </div>
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -146,7 +146,7 @@
       <button class="button-step" data-delta="500">+500</button>
     </div>
   </div>
-  <div class="ctrl">
+  <div class="ctrl" id="hcRGroup">
     <label>High-Cut R (Hz)
       <div class="input-with-buttons">
         <input type="number" id="hcInputR" class="val-input" value="14000" min="2000" max="20000">
@@ -168,10 +168,20 @@
   </div>
 </div>
 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-  <button class="tone-btn" style="flex: 1;" onclick="syncHCToR()">Sync High-Cut L &rarr; R</button>
+  <button class="tone-btn" id="syncHCBtn" style="flex: 1;" onclick="syncHCToR()">Sync High-Cut L &rarr; R</button>
+</div>
+
+<div class="match-section">
+  <h3>Hearing Compensation (EQ)</h3>
+  <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div id="eqControlsL"></div>
+    <div id="eqControlsR"></div>
+  </div>
 </div>
 
 <div class="timer-block"><label>Session Timer (minutes)</label><input id="timerInput" type="number" min="1" max="120" value="10"><button class="big-btn play-btn" onclick="startTimer()">Start Timer</button><div class="timer-display" id="timerDisplay"></div></div>
+<canvas id="volumeViz" class="volume-meter-canvas"></canvas>
 <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start Therapy</button>
 <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
 <button class="button email-audiologist-btn" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
@@ -183,8 +193,9 @@
 <canvas id="decorrelationViz" class="decorrelation-canvas"></canvas>
 </div>
 <script>
-let ctx,playing=false,nodesL,nodesR,audioL,audioR,timerInterval=null,analyserL,analyserR,rafViz,globalMasterGain,liveStream;
+let ctx,playing=false,nodesL,nodesR,audioL,audioR,timerInterval=null,analyserL,analyserR,rafViz,rafVolViz,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[];
 const BUF_SIZE=2*44100;
+const eqBands = [2000, 4000, 8000, 12000];
 
 window.onload = () => {
     initNav(`
@@ -302,14 +313,26 @@ function createNoise(color){
   return buf;
 }
 
-function createFilterChain(sourceNode, vol, lc, hc, analyser) {
+function createFilterChain(sourceNode, side, vol, lc, hc, analyser) {
     const g = ctx.createGain(); g.gain.value = vol;
     const lo = ctx.createBiquadFilter(); lo.type = 'highpass'; lo.frequency.value = lc;
     const hi = ctx.createBiquadFilter(); hi.type = 'lowpass'; hi.frequency.value = hc;
 
     sourceNode.connect(lo);
     lo.connect(hi);
-    hi.connect(g);
+
+    // Build EQ Chain
+    let head = hi;
+    const nodes = eqBands.map(freq => {
+        const f = ctx.createBiquadFilter();
+        f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1;
+        f.gain.value = parseFloat(loadSetting(`eq_dec_${side}_${freq}`, 0));
+        head.connect(f); head = f;
+        return f;
+    });
+    if (side === 'L') eqNodesL = nodes; else eqNodesR = nodes;
+
+    head.connect(g);
     if (analyser) g.connect(analyser);
     return { gain: g, lo: lo, hi: hi }; // Return the nodes for later manipulation
 }
@@ -341,7 +364,7 @@ async function start(){
   if (natureMap[color]) {
     audioL = new Audio(natureMap[color]); audioL.loop = true;
     const trackL = ctx.createMediaElementSource(audioL);
-    nodesL = createFilterChain(trackL, volL, lcL, hcL, analyserL);
+    nodesL = createFilterChain(trackL, 'L', volL, lcL, hcL, analyserL);
     nodesL.gain.connect(merger, 0, 0);
     nodesL.src = audioL; // Store the Audio element for stopping
     audioL.play();
@@ -350,15 +373,13 @@ async function start(){
       audioR = new Audio(natureMap[color]); audioR.loop = true;
       audioR.oncanplay = () => { if(audioR.currentTime === 0) audioR.currentTime = Math.random() * 30; };
       const trackR = ctx.createMediaElementSource(audioR);
-      nodesR = createFilterChain(trackR, volR, lcR, hcR, analyserR);
+      nodesR = createFilterChain(trackR, 'R', volR, lcR, hcR, analyserR);
       nodesR.gain.connect(merger, 0, 1);
       nodesR.src = audioR; // Store the Audio element for stopping
       audioR.play();
     } else {
-      // If decorrelation is 0, use the same source for R, but with its own filters
-      // This creates a mono source with independent filtering per channel
-      const trackR_mono = ctx.createMediaElementSource(audioL); // Use the same audioL source
-      nodesR = createFilterChain(trackR_mono, volR, lcR, hcR, analyserR);
+      // If decorrelation is 0, branch the same trackL to both ears with independent filters
+      nodesR = createFilterChain(trackL, 'R', volR, lcR, hcR, analyserR);
       nodesR.gain.connect(merger, 0, 1);
       nodesR.src = audioL; // Reference the same Audio element
     }
@@ -369,10 +390,10 @@ async function start(){
     const srcL = ctx.createBufferSource(); srcL.buffer = bufL; srcL.loop = true;
     const srcR = ctx.createBufferSource(); srcR.buffer = bufR; srcR.loop = true;
 
-    nodesL = createFilterChain(srcL, volL, lcL, hcL, analyserL);
+    nodesL = createFilterChain(srcL, 'L', volL, lcL, hcL, analyserL);
     nodesL.gain.connect(merger, 0, 0);
 
-    nodesR = createFilterChain(srcR, volR, lcR, hcR, analyserR);
+    nodesR = createFilterChain(srcR, 'R', volR, lcR, hcR, analyserR);
     nodesR.gain.connect(merger, 0, 1);
 
     nodesL.src = srcL; // Store source for stopping
@@ -387,8 +408,9 @@ async function start(){
   playing=true;
   document.getElementById('toggleBtn').textContent='Stop';
   document.getElementById('toggleBtn').className='big-btn stop-btn';
+  drawVolumeViz();
+  drawViz();
 }
-drawViz(); // Start visualization loop
 
 function stop(){
   if(nodesL && nodesL.src){
@@ -404,10 +426,14 @@ function stop(){
   }
   if(ctx){ctx.close();ctx=null}
   playing=false;
+  eqNodesL = []; eqNodesR = [];
   if(rafViz) cancelAnimationFrame(rafViz); // Stop visualization loop
+  if(rafVolViz) cancelAnimationFrame(rafVolViz);
   document.getElementById('toggleBtn').textContent='Start Therapy';
   document.getElementById('toggleBtn').className='big-btn play-btn';
   document.getElementById('status').textContent='Stopped'
+  const canvas = document.getElementById('volumeViz');
+  if (canvas) canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
 }
 
 function drawViz() {
@@ -438,6 +464,44 @@ function drawViz() {
         rafViz = requestAnimationFrame(loop);
     }
     loop();
+}
+
+function drawVolumeViz() {
+    if (!playing || !analyserL || !analyserR) return;
+    const canvas = document.getElementById('volumeViz');
+    const c = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth * 2; canvas.height = 80; 
+
+    const bufferLength = analyserL.fftSize;
+    const dataArrayL = new Uint8Array(bufferLength);
+    const dataArrayR = new Uint8Array(bufferLength);
+
+    analyserL.getByteTimeDomainData(dataArrayL);
+    analyserR.getByteTimeDomainData(dataArrayR);
+
+    c.clearRect(0, 0, canvas.width, canvas.height);
+    let sumL = 0, sumR = 0;
+    for (let i = 0; i < bufferLength; i++) {
+        const sL = (dataArrayL[i]-128)/128, sR = (dataArrayR[i]-128)/128;
+        sumL += sL*sL; sumR += sR*sR;
+    }
+    const rmsL = Math.sqrt(sumL / bufferLength), rmsR = Math.sqrt(sumR / bufferLength);
+    const barWidthL = Math.min(canvas.width / 2, rmsL * canvas.width * 0.7);
+    const barWidthR = Math.min(canvas.width / 2, rmsR * canvas.width * 0.7);
+    const barHeight = (canvas.height / 2) - 5; 
+
+    // Draw Left bar (Top)
+    c.fillStyle = 'rgba(0, 191, 165, 0.8)'; 
+    c.fillRect(0, 0, barWidthL, barHeight);
+    c.font = "bold 20px Arial"; c.fillStyle = "white";
+    c.fillText("L", 5, barHeight / 2 + 7);
+
+    // Draw Right bar (Bottom)
+    c.fillStyle = 'rgba(255, 165, 0, 0.8)'; 
+    c.fillRect(0, canvas.height / 2 + 5, barWidthR, barHeight);
+    c.fillText("R", 5, canvas.height / 2 + barHeight / 2 + 7);
+
+    rafVolViz = requestAnimationFrame(drawVolumeViz);
 }
 
 function drawWaveform(c, canvas, dataArray, color) {
@@ -591,7 +655,7 @@ function getReportData() {
     } else if (color === 'live') {
         sourceDetail = "Live System Audio (Browser/App Capture)";
     }
-    return {
+    const data = {
         "Sound Source": sourceDetail,
         "Master Volume": document.getElementById('volMaster').value + "%",
         "Volume L": document.getElementById('volL').value + "%",
@@ -602,6 +666,11 @@ function getReportData() {
         "High-Cut Filter L": document.getElementById('hcL').value + " Hz",
         "High-Cut Filter R": document.getElementById('hcR').value + " Hz"
     };
+    eqBands.forEach(f => {
+        data[`EQ L ${f}Hz`] = loadSetting(`eq_dec_L_${f}`, 0) + " dB";
+        data[`EQ R ${f}Hz`] = loadSetting(`eq_dec_R_${f}`, 0) + " dB";
+    });
+    return data;
 }
 
 function exportClinicalSettings() {

@@ -6,9 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="style.css">
 <script src="storage.js"></script>
+<script src="nav.js"></script>
 </head>
 <body>
-<a class="back" href="index.html">Home</a>
 <div class="panel">
     <h1>Feedback & Support</h1>
     <p class="info">Submit suggestions, issues, or feature requests.</p>
@@ -43,13 +43,17 @@
 </div>
 
 <script>
+window.onload = () => initNav();
+
 // Replace 'YOUR_FORMSPREE_ID' with the unique ID provided by Formspree
 const FEEDBACK_ENDPOINT = 'https://formspree.io/f/xqewyzeb';
 const messageTextarea = document.getElementById('message');
 const charCountSpan = document.getElementById('charCount');
 
 function updateCharCount() {
-    charCountSpan.textContent = messageTextarea.value.length;
+    const len = messageTextarea.value.length;
+    charCountSpan.textContent = len;
+    charCountSpan.style.color = (len >= 500) ? '#ef5350' : 'var(--text-dim)';
 }
 
 messageTextarea.addEventListener('input', updateCharCount);

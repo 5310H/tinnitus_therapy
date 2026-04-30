@@ -27,6 +27,11 @@ This is an experimental sound‑only tool based on publicly available research.
 ### **4. Broadband Sound Therapy**
 White, pink, brown noise and nature‑style soundscapes for masking and habituation.
 
+### **5. CBT & Wellness**
+Psychological tools for tinnitus habituation, including:
+- **Tinnitus Handicap Inventory (THI):** Clinically validated impact tracking.
+- **Cognitive Restructuring:** Interactive thought records to reframe negative reactions.
+
 ### **5. Noise Generator (Python‑style)**
 Simple broadband noise generator with adjustable parameters.
 

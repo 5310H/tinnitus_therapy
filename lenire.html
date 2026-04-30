@@ -192,6 +192,15 @@
         <button class="tone-btn" style="flex: 1;" onclick="syncBurstToR()">Sync Burst L &rarr; R</button>
     </div>
 
+    <div class="match-section">
+        <h3>Hearing Compensation (EQ)</h3>
+        <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div id="eqControlsL"></div>
+            <div id="eqControlsR"></div>
+        </div>
+    </div>
+
     <div class="ctrl">
         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 10px;">
             <input type="checkbox" id="useLiveAudio" style="width: 20px; height: 20px;">
@@ -213,8 +222,9 @@
     <canvas id="viz"></canvas>
 </div>
 <script>
-let audioCtx,merger,analyserL,analyserR,rafViz,nodesL,nodesR,bgSrc,globalMasterGain,liveStream;
+let audioCtx,merger,analyserL,analyserR,rafViz,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[];
 let running=false,remaining=0,timerId=null,sessionSeconds=1200;
+const eqBands = [2000, 4000, 8000, 12000];
 
 window.onload = () => {
     initNav(`
@@ -239,9 +249,48 @@ window.onload = () => {
     
     document.getElementById('lockLR').checked = loadSetting('len_lock_lr', 'false') === 'true';
 
+    createEqUI();
+    updateLockVisuals();
     updateLabels();
     setupStepButtons();
     refreshUsageUI();
+};
+
+function createEqUI() {
+    ['L', 'R'].forEach(side => {
+        const container = document.getElementById(`eqControls${side}`);
+        container.innerHTML = `<h4 style="color:var(--accent); font-size:0.8rem; margin-bottom:10px;">${side === 'L' ? 'Left' : 'Right'} Ear</h4>`;
+        eqBands.forEach(freq => {
+            const val = loadSetting(`eq_len_${side}_${freq}`, 0);
+            const div = document.createElement('div');
+            div.className = 'ctrl';
+            div.innerHTML = `
+                <label>${freq >= 1000 ? (freq/1000)+'k' : freq} Hz Boost <span class="val" id="eqVal_len_${side}_${freq}">${val} dB</span></label>
+                <input type="range" id="eq_len_${side}_${freq}" min="-12" max="12" value="${val}" step="1">
+            `;
+            container.appendChild(div);
+            const slider = div.querySelector('input');
+            slider.oninput = (e) => {
+                const v = e.target.value;
+                document.getElementById(`eqVal_len_${side}_${freq}`).textContent = v + ' dB';
+                saveSetting(`eq_len_${side}_${freq}`, v);
+                if (document.getElementById('lockLR').checked && side === 'L') {
+                    const rSlider = document.getElementById(`eq_len_R_${freq}`);
+                    if (rSlider) { rSlider.value = v; rSlider.dispatchEvent(new Event('input')); }
+                }
+                if (audioCtx) {
+                    const nodes = side === 'L' ? eqNodesL : eqNodesR;
+                    const node = nodes.find(n => n.frequency.value === freq);
+                    if (node) node.gain.setTargetAtTime(v, audioCtx.currentTime, 0.05);
+                }
+            };
+        });
+    });
+}
+
+document.getElementById('lockLR').onchange = (e) => {
+    saveSetting('len_lock_lr', e.target.checked);
+    updateLockVisuals();
 };
 
 function refreshUsageUI() {
@@ -320,6 +369,16 @@ function updateLabels(){
     document.getElementById('mixValR').textContent = Math.round(document.getElementById('mixR').value*100) + '%';
 }
 
+function updateLockVisuals() {
+    const isLocked = document.getElementById('lockLR').checked;
+    const ids = ['freqR', 'volR', 'mixR', 'modRateR', 'burstRateR', 'eqControlsR'];
+    ids.forEach(id => {
+        const el = document.getElementById(id)?.closest('.ctrl');
+        if (el) el.classList.toggle('locked-ui', isLocked);
+    });
+    if (isLocked) performGlobalSync();
+}
+
 function formatTime(s){return Math.floor(s/60).toString().padStart(2,'0')+':'+(s%60).toString().padStart(2,'0')}
 function updateTimerDisplay(){timerEl.textContent='Session: '+formatTime(sessionSeconds-remaining)+' / '+formatTime(sessionSeconds)}
 const freqLEl=document.getElementById('freqL'),freqREl=document.getElementById('freqR'),volMasterEl=document.getElementById('volMaster');
@@ -347,6 +406,7 @@ async function startSession(){
 }
 function stopSession(){
   running=false;
+  eqNodesL = []; eqNodesR = [];
   document.getElementById('startBtn').style.display='block';
   document.getElementById('stopBtn').style.display='none';
   if(timerId)clearInterval(timerId);
@@ -407,6 +467,17 @@ async function setupAudio(){
       noiseFilter.connect(noiseGain);
 
       const masterGain = audioCtx.createGain();
+
+      // Build EQ Chain
+      let head = masterGain;
+      const eqNodes = eqBands.map(freq => {
+          const f = audioCtx.createBiquadFilter();
+          f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1;
+          f.gain.value = parseFloat(loadSetting(`eq_len_${side}_${freq}`, 0));
+          head.connect(f); head = f;
+          return f;
+      });
+
       const analyser = audioCtx.createAnalyser();
       analyser.fftSize = 2048;
 
@@ -415,19 +486,21 @@ async function setupAudio(){
 
       toneGain.connect(masterGain);
       noiseGain.connect(masterGain);
-      masterGain.connect(analyser).connect(merger, 0, (side === 'L' ? 0 : 1));
+      head.connect(analyser).connect(merger, 0, (side === 'L' ? 0 : 1));
 
       // Connect shared modulation
       noiseModGain.connect(noiseGain.gain);
       burstGain.connect(toneGain.gain);
 
-      return { toneOsc, toneGain, noiseSource, noiseFilter, noiseGain, masterGain, analyser, burstOsc, burstGain, noiseModOsc, noiseModGain };
+      return { toneOsc, toneGain, noiseSource, noiseFilter, noiseGain, masterGain, analyser, burstOsc, burstGain, noiseModOsc, noiseModGain, eqNodes };
   };
 
   nodesL = setupChannel('L');
   nodesR = setupChannel('R');
   analyserL = nodesL.analyser;
   analyserR = nodesR.analyser;
+  eqNodesL = nodesL.eqNodes;
+  eqNodesR = nodesR.eqNodes;
 
   nodesL.toneOsc.start(); if(nodesL.noiseSource) nodesL.noiseSource.start();
   nodesR.toneOsc.start(); if(nodesR.noiseSource) nodesR.noiseSource.start();
@@ -489,6 +562,13 @@ function updateParams(){
   if(!audioCtx)return;
   const fL=+freqLEl.value, fR=+freqREl.value, vL=+volLEl.value, vR=+volREl.value, mL=+mixLEl.value, mR=+mixREl.value, mrL=+modLEl.value, mrR=+modREl.value, brL=+burstLEl.value, brR=+burstREl.value;
   
+  // Master Volume & Mute handling
+  const isMuted = document.getElementById('muteToggle').checked;
+  const mVol = isMuted ? 0 : volMasterEl.value / 100;
+  if (globalMasterGain) {
+      globalMasterGain.gain.setTargetAtTime(mVol, audioCtx.currentTime, 0.05);
+  }
+
   nodesL.toneOsc.frequency.setTargetAtTime(fL,audioCtx.currentTime,0.05); nodesL.noiseFilter.frequency.setTargetAtTime(fL,audioCtx.currentTime,0.05);
   nodesR.toneOsc.frequency.setTargetAtTime(fR,audioCtx.currentTime,0.05); nodesR.noiseFilter.frequency.setTargetAtTime(fR,audioCtx.currentTime,0.05);
   
@@ -560,7 +640,7 @@ function getReportData() {
         const file = document.getElementById('customFile').files[0];
         if (file) bgSource = `Custom File: ${file.name}`;
     }
-    return {
+    const data = {
         "Carrier Source": bgSource,
         "Carrier Frequency L": freqLEl.value + " Hz",
         "Carrier Frequency R": freqREl.value + " Hz",
@@ -575,6 +655,11 @@ function getReportData() {
         "Tone Burst Rate R": burstREl.value + " Hz",
         "Set Session Length": (document.getElementById('session').value / 60) + " minutes"
     };
+    eqBands.forEach(f => {
+        data[`EQ L ${f}Hz`] = loadSetting(`eq_len_L_${f}`, 0) + " dB";
+        data[`EQ R ${f}Hz`] = loadSetting(`eq_len_R_${f}`, 0) + " dB";
+    });
+    return data;
 }
 
 function exportClinicalSettings() {

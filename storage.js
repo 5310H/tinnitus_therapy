@@ -1,7 +1,7 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.2.1";
 
 function saveSetting(key, value) {
     localStorage.setItem('tts_' + key, value);
@@ -48,6 +48,22 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
     const engineResults = loadSetting('engine_validation_results', 'Not Performed');
     const phaseStatus = loadSetting('phase_status', 'Not Verified');
     const usage = getDailyUsage();
+
+    const lastTHI = getLastTHIAssessmentDate();
+    const distressScores = getDistressScores();
+    const lastScoreVal = lastTHI ? distressScores[lastTHI.toISOString().split('T')[0]] : null;
+    const lastScore = lastScoreVal !== null ? `${lastScoreVal}/100` : 'Not Performed';
+    
+    const thoughtRecords = getThoughtRecords();
+    const thoughtRecordsCount = thoughtRecords.length;
+    let recentThoughtSummary = "N/A";
+    if (thoughtRecordsCount > 0) {
+        const latest = thoughtRecords[thoughtRecordsCount - 1];
+        recentThoughtSummary = `Date: ${new Date(latest.timestamp).toLocaleDateString()}\n`;
+        recentThoughtSummary += `  - Situation: ${latest.situation}\n`;
+        recentThoughtSummary += `  - Automatic Thought: ${latest.automaticThoughts}\n`;
+        recentThoughtSummary += `  - Balanced Thought: ${latest.balancedThought}`;
+    }
     
     let report = `TRAHREG TINNITUS THERAPY SUITE - CLINICAL REPORT\n`;
     report += `App Version: ${APP_VERSION}\n`;
@@ -70,7 +86,15 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
     
     report += `\nUSAGE & STATUS:\n`;
     report += `Today's Usage: ${Math.round(usage)} minutes\n`;
-    report += `Hardware Phase Status: ${phaseStatus}\n\n`;
+
+    report += `\nPSYCHOLOGICAL BASELINE (CBT):\n`;
+    report += `Last THI Score: ${lastScore}\n`;
+    report += `Last THI Date: ${lastTHI ? lastTHI.toLocaleDateString() : 'N/A'}\n`;
+    report += `Thought Records Logged: ${thoughtRecordsCount}\n`;
+    report += `Most Recent Record:\n${recentThoughtSummary}\n`;
+
+    report += `\nSYSTEM STATUS:\n`;
+    report += `Hardware Phase Status: ${phaseStatus}\n`;
     report += `AUTOMATED ENGINE VALIDATION:\n${engineResults}\n`;
     
     if (window.lastValidationStatus) {
@@ -107,6 +131,77 @@ function logUsageMinutes(mins) {
     const usage = JSON.parse(localStorage.getItem('tts_usage_log') || '{}');
     usage[today] = (usage[today] || 0) + mins;
     localStorage.setItem('tts_usage_log', JSON.stringify(usage));
+}
+
+/**
+ * Logs a Tinnitus Thought Record entry.
+ * @param {object} entry - The thought record entry object.
+ */
+function logThoughtRecordEntry(entry) {
+    const log = JSON.parse(localStorage.getItem('tts_thought_records') || '[]');
+    log.push({ ...entry, timestamp: new Date().toISOString() }); // Add timestamp
+    localStorage.setItem('tts_thought_records', JSON.stringify(log));
+}
+
+/**
+ * Retrieves all stored Tinnitus Thought Record entries.
+ * @returns {Array} An array of thought record entries.
+ */
+function getThoughtRecords() {
+    return JSON.parse(localStorage.getItem('tts_thought_records') || '[]');
+}
+
+/**
+ * Logs a Tinnitus Handicap Inventory (THI) or distress score (0-100)
+ */
+function logDistressScore(score) {
+    const today = new Date().toISOString().split('T')[0];
+    const log = JSON.parse(localStorage.getItem('tts_distress_log') || '{}');
+    log[today] = score;
+    localStorage.setItem('tts_distress_log', JSON.stringify(log));
+}
+
+/**
+ * Retrieves all stored Tinnitus Handicap Inventory (THI) or distress scores.
+ */
+function getDistressScores() {
+    return JSON.parse(localStorage.getItem('tts_distress_log') || '{}');
+}
+
+/**
+ * Logs a Residual Inhibition (RI) result (seconds of silence/reduction)
+ */
+function logRIResult(seconds) {
+    const today = new Date().toISOString().split('T')[0];
+    const log = JSON.parse(localStorage.getItem('tts_ri_log') || '{}');
+    if (!log[today]) log[today] = [];
+    log[today].push(seconds);
+    localStorage.setItem('tts_ri_log', JSON.stringify(log));
+}
+
+/**
+ * Retrieves RI results log.
+ */
+function getRIResults() {
+    return JSON.parse(localStorage.getItem('tts_ri_log') || '{}');
+}
+
+/**
+ * Retrieves the date of the most recent Tinnitus Handicap Inventory (THI) assessment.
+ * @returns {Date|null} The Date object of the last assessment, or null if none found.
+ */
+function getLastTHIAssessmentDate() {
+    const scores = getDistressScores();
+    const dates = Object.keys(scores);
+    if (dates.length === 0) {
+        return null;
+    }
+    // Convert date strings to Date objects and find the maximum (most recent)
+    const latestDate = dates.reduce((maxDate, currentDateStr) => {
+        const currentDate = new Date(currentDateStr);
+        return (maxDate === null || currentDate > maxDate) ? currentDate : maxDate;
+    }, null);
+    return latestDate;
 }
 
 function getDailyUsage() {

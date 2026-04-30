@@ -25,6 +25,7 @@
             <a class="button" href="notch.html">Notch Therapy</a>
             <a class="button" href="lenire.html">Lenire‑style</a>
             <a class="button" href="soundtherapy.html">Sound Therapy</a>
+            <a class="button" href="cbt.html">CBT & Wellness</a>
         </details>
     </div>
     <div class="card">
@@ -37,6 +38,7 @@
             <a class="button" href="hearingtest.html">Hearing Test</a>
             <a class="button" href="spectrogram.html">Spectrogram</a>
             <a class="button" href="meter.html">Audio Meter</a>
+            <a class="button" href="ri.html">RI Suppression Test</a>
             <a class="button" href="validation.html" id="validationBtn">System Validation</a>
             <button class="button btn-accent" id="installPwaBtn" onclick="installPwa()">Install App (Offline)</button>
             <p id="pwaNote" class="hidden" style="font-size:0.75rem; color:var(--text-dim); margin-top:5px; text-align:center;">Follow the browser prompt to install for full offline use.</p>
@@ -61,6 +63,12 @@
                 <button class="button" style="flex: 1;" onclick="document.getElementById('importFile').click()">Restore</button>
                 <input type="file" id="importFile" style="display:none" onchange="importAllData(this.files[0])" accept=".json">
             </div>
+            <div class="card" id="thiReminderCard" style="display:none; background: rgba(255, 165, 0, 0.1); border-color: #ff9800; margin-top: 15px;">
+                <h2 style="color: #ff9800; margin-bottom: 5px;">Monthly THI Assessment Due!</h2>
+                <p class="info" style="color: var(--text);">It's been over a month since your last Tinnitus Handicap Inventory. Regular assessments help track your progress.</p>
+                <a href="cbt.html" class="big-btn play-btn" style="margin-top: 10px;">Take THI Assessment Now</a>
+            </div>
+            <a class="button" href="stats.html" style="width:100%; margin-top:10px;">View THI Progress</a>
         </details>
     </div>
     <div class="card">
@@ -120,7 +128,7 @@ window.onload = () => {
 
     // Onboarding Wizard Initialization
     const step = parseInt(loadSetting('onboarding_step', 0));
-    if (step < 5) {
+    if (step < 6) {
         showOnboardingStep(step);
     }
 
@@ -134,6 +142,7 @@ window.onload = () => {
     }
 
     renderStats();
+    checkTHIReminder();
 
     // Detect iOS and show manual installation instructions
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -216,11 +225,11 @@ function showOnboardingStep(step) {
     document.getElementById('onboardingModal').style.display = 'block';
 
     // Update progress bar
-    const progress = ((step + 1) / 5) * 100;
+    const progress = ((step + 1) / 6) * 100;
     const progressBar = document.getElementById('onboardingProgressBar');
     if (progressBar) progressBar.style.width = progress + '%';
 
-    for (let i = 0; i <= 4; i++) {
+    for (let i = 0; i <= 5; i++) {
         const el = document.getElementById(`onboarding-${i}`);
         if (el) el.style.display = (i === step) ? 'block' : 'none';
     }
@@ -232,7 +241,7 @@ window.nextOnboardingStep = (step) => {
 };
 
 window.finishOnboarding = () => {
-    saveSetting('onboarding_step', 5);
+    saveSetting('onboarding_step', 6);
     document.getElementById('onboardingModal').style.display = 'none';
 };
 
@@ -277,37 +286,46 @@ function renderStats() {
              <button onclick="nextOnboardingStep(1)" class="big-btn play-btn">I Accept & Understand</button>
         </div>
         <div id="onboarding-1" style="display:none;">
-             <h2>Step 1: System Calibration</h2>
-             <p>Ensure your audio engine and hardware are functioning correctly before starting therapy.</p>
-             <a href="validation.html" class="big-btn play-btn" onclick="nextOnboardingStep(2)">Run System Validation</a>
+             <h2>Step 1: Initial Assessment</h2>
+             <p>Before starting, it's helpful to establish a baseline of how tinnitus affects your daily life using the THI assessment.</p>
+             <a href="cbt.html" class="big-btn play-btn" onclick="nextOnboardingStep(2)">Take THI Assessment</a>
              <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button onclick="nextOnboardingStep(0)" class="button" style="flex: 1;">Back</button>
                 <button onclick="nextOnboardingStep(2)" class="button" style="flex: 1;">Skip for now</button>
              </div>
         </div>
         <div id="onboarding-2" style="display:none;">
-             <h2>Step 2: Hearing Check</h2>
-             <p>It's vital to check your hearing thresholds before using high-frequency noise therapy.</p>
-             <a href="hearingtest.html" class="big-btn play-btn" onclick="nextOnboardingStep(3)">Go to Hearing Test</a>
+             <h2>Step 2: System Calibration</h2>
+             <p>Ensure your audio engine and hardware are functioning correctly before starting therapy.</p>
+             <a href="validation.html" class="big-btn play-btn" onclick="nextOnboardingStep(3)">Run System Validation</a>
              <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button onclick="nextOnboardingStep(1)" class="button" style="flex: 1;">Back</button>
                 <button onclick="nextOnboardingStep(3)" class="button" style="flex: 1;">Skip for now</button>
              </div>
         </div>
         <div id="onboarding-3" style="display:none;">
-             <h2>Step 3: Pitch Matching</h2>
-             <p>To use Notch Therapy effectively, you should identify your specific tinnitus frequency.</p>
-             <a href="notchfinder.html" class="big-btn play-btn" onclick="nextOnboardingStep(4)">Go to Notch Finder</a>
+             <h2>Step 3: Hearing Check</h2>
+             <p>It's vital to check your hearing thresholds before using high-frequency noise therapy.</p>
+             <a href="hearingtest.html" class="big-btn play-btn" onclick="nextOnboardingStep(4)">Go to Hearing Test</a>
              <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button onclick="nextOnboardingStep(2)" class="button" style="flex: 1;">Back</button>
                 <button onclick="nextOnboardingStep(4)" class="button" style="flex: 1;">Skip for now</button>
              </div>
         </div>
         <div id="onboarding-4" style="display:none;">
+             <h2>Step 4: Pitch Matching</h2>
+             <p>To use Notch Therapy effectively, you should identify your specific tinnitus frequency.</p>
+             <a href="notchfinder.html" class="big-btn play-btn" onclick="nextOnboardingStep(5)">Go to Notch Finder</a>
+             <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button onclick="nextOnboardingStep(3)" class="button" style="flex: 1;">Back</button>
+                <button onclick="nextOnboardingStep(5)" class="button" style="flex: 1;">Skip for now</button>
+             </div>
+        </div>
+        <div id="onboarding-5" style="display:none;">
              <h2>Setup Complete!</h2>
              <p>You're ready to start your journey. You can access all tools from the main dashboard.</p>
              <button onclick="finishOnboarding()" class="big-btn play-btn">Start Exploring</button>
-             <button onclick="nextOnboardingStep(3)" class="button" style="width:100%; margin-top:10px;">Back</button>
+             <button onclick="nextOnboardingStep(4)" class="button" style="width:100%; margin-top:10px;">Back</button>
         </div>
 
         <button onclick="finishOnboarding()" class="button" style="width:100%; margin-top:20px; border-color: var(--text-dim); color: var(--text-dim); font-weight: normal;">Exit Wizard</button>

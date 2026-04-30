@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trahreg-tinnitus-suite-v1.2.0';
+const CACHE_NAME = 'trahreg-tinnitus-suite-v1.2.1';
 const ASSETS = [
     './',
     './index.html',
@@ -9,6 +9,7 @@ const ASSETS = [
     './about.html',
     './decorrelated.html',
     './feedback.html',
+    './cbt.html',
     './generator.html',
     './hearingtest.html',
     './lenire.html',
@@ -20,8 +21,10 @@ const ASSETS = [
     './research.html',
     './soundtherapy.html',
     './spectrogram.html',
+    './stats.html',
     './sweep.html',
     './twotone.html',
+    './ri.html',
     './validation.html',
     './disclaimer.html',
     './docs/index.html',
