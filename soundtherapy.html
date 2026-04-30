@@ -89,6 +89,11 @@
     <div class="ctrl" style="text-align:center">
         <h3>Session Timer</h3>
         <input id="timer" type="number" min="1" max="120" value="10" style="width:60px;padding:5px;border-radius:4px;border:1px solid #333;background:#0a0a1a;color:#fff"> min
+        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <input type="checkbox" id="sleepMode" style="width: 18px; height: 18px;">
+            <label for="sleepMode" style="margin: 0; color: var(--accent); font-size: 0.85rem;">Sleep Fade (60s gradual fade)</label>
+        </div>
+        
         <button class="big-btn" onclick="startTimer()">Start Timer</button>
         <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
         <button class="button email-audiologist-btn" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
@@ -108,7 +113,7 @@ const eqBands = [2000, 4000, 8000, 12000];
 window.onload = () => {
     initNav(`
         <b>Purpose:</b> Reduces contrast between tinnitus and silence, helping the brain ignore the phantom signal.<br><br>
-        <b>Usage:</b> Aim for "partial masking" where you can still hear the tinnitus slightly behind the noise.<br><br>
+        <b>Mixing Point Method:</b> Per Eric Mounts (<i>Finally Quiet</i>), adjust volume until the noise and tinnitus "mix." Do not fully mask the sound; your brain must hear both to learn to ignore the tinnitus.<br><br>
         <b>Nature Sounds:</b> Useful for long sessions to reduce "listener fatigue."
     `);
 
@@ -325,8 +330,15 @@ function startTimer() {
     const minutes = parseInt(document.getElementById("timer").value);
     let rem = minutes * 60;
     clearInterval(timerInterval);
+    const useSleepFade = document.getElementById('sleepMode').checked;
+
     timerInterval = setInterval(() => {
         rem--; document.getElementById("timerDisplay").innerText = "Time left: "+Math.floor(rem/60)+":"+(rem%60).toString().padStart(2,'0');
+        
+        if (useSleepFade && rem === 60 && gainNode && audioCtx) {
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 60);
+        }
+
         if(rem<=0){
             logUsageMinutes(minutes);
             stopAll();

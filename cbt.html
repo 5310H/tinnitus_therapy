@@ -339,6 +339,45 @@ function emailToAudiologist() {
     const report = generateClinicalReport("CBT & Wellness", getReportData());
     window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report (CBT)&body=${encodeURIComponent(report)}`;
 }
+
+const pmrSteps = [
+    "Take 3 deep breaths. Focus on the air entering and leaving.",
+    "Tense your feet and toes tightly for 5 seconds... Now release completely.",
+    "Tense your calves and thighs... Hold... Now release and feel the heaviness.",
+    "Squeeze your glutes and pelvic muscles... Hold... Now release.",
+    "Tighten your stomach and chest... Hold... Now release.",
+    "Squeeze your hands into fists and tense your arms... Hold... Now release.",
+    "Shrug your shoulders up to your ears... Hold... Now release.",
+    "Clench your jaw and squint your eyes... Hold... Now release.",
+    "Tense your entire body at once... Hold... and let it all go.",
+    "Sit in the stillness for 60 seconds. Observe your tinnitus as just a neutral sound."
+];
+let pmrActive = false, pmrIdx = 0, pmrTimer;
+
+function startPMR() {
+    if (pmrActive) {
+        clearTimeout(pmrTimer);
+        pmrActive = false;
+        document.getElementById('pmrBtn').textContent = "Start PMR Sequence";
+        document.getElementById('pmrStepText').textContent = "Sequence stopped.";
+        return;
+    }
+    pmrActive = true; pmrIdx = 0;
+    document.getElementById('pmrBtn').textContent = "Stop Sequence";
+    runPmrStep();
+}
+
+function runPmrStep() {
+    if (pmrIdx >= pmrSteps.length) {
+        document.getElementById('pmrStepText').textContent = "Sequence complete. You are relaxed and safe.";
+        document.getElementById('pmrBtn').textContent = "Restart PMR Sequence";
+        pmrActive = false;
+        return;
+    }
+    document.getElementById('pmrStepText').textContent = pmrSteps[pmrIdx];
+    pmrIdx++;
+    pmrTimer = setTimeout(runPmrStep, 8000); // 8 seconds per step
+}
 </script>
 </body>
 </html>

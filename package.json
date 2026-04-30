@@ -1,6 +1,6 @@
 {
   "name": "trahreg-tinnitus-suite",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Open-source tinnitus therapy suite",
   "scripts": {
     "sync-version": "node sync-version.js",
