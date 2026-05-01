@@ -27,12 +27,22 @@ This is an experimental sound‑only tool based on publicly available research.
 ### **4. Broadband Sound Therapy**
 White, pink, brown noise and nature‑style soundscapes for masking and habituation.
 
-### **5. CBT & Wellness**
+### **5. Acoustic Coordinated Reset (CR)**
+Pseudo-random sequences of four tones relative to tinnitus pitch (Tass, 2012) designed to desynchronize neural clusters.
+
+### **6. Binaural Beat Entrainment**
+Uses frequency offsets to induce specific brainwave states for relaxation, focus, or sleep.
+
+### **7. CBT & Wellness**
 Psychological tools for tinnitus habituation, including:
 - **Tinnitus Handicap Inventory (THI):** Clinically validated impact tracking.
 - **Cognitive Restructuring:** Interactive thought records to reframe negative reactions.
+- **Relaxation Training:** Guided Progressive Muscle Relaxation (PMR) and breathing pacers.
 
-### **5. Noise Generator (Python‑style)**
+### **8. Personalized Recommendations**
+Algorithmically generated therapy suggestions based on current THI (distress) and MML (loudness) assessments.
+
+### **9. Noise Generator (Python‑style)**
 Simple broadband noise generator with adjustable parameters.
 
 ---
@@ -61,6 +71,15 @@ Allows A/B comparison of two tones for pitch matching.
 
 ### **Frequency Sweep**
 Plays a sweep from low to high frequencies for hearing range testing.
+
+### **Tinnitus Masking Curve (TMC)**
+Maps Minimum Masking Levels across frequencies to identify auditory filter sharpness (Q-factor).
+
+### **Loudness Growth (LG)**
+Evaluates hyperacusis by mapping subjective loudness against objective volume increments.
+
+### **Suppression Test (RI)**
+Measures the duration of Residual Inhibition (temporary silence) after sound stimulation.
 
 ### **Hearing Range Test**
 Simple hearing threshold exploration (non‑clinical).
