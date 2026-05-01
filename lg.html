@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Loudness Growth Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
+</head>
+<body>
+<div class="panel">
+    <h1>Loudness Growth Test</h1>
+    <p class="info">Map your subjective loudness perception against objective volume levels.</p>
+
+    <div class="card">
+        <h3>1. Test Setup</h3>
+        <p class="info">Play a tone and adjust its objective volume. Rate your subjective perception of its loudness.</p>
+        
+        <div class="ctrl">
+            <label>Test Frequency (Hz) <span class="val" id="freqVal">1000 Hz</span></label>
+            <input id="freqSlider" type="range" min="500" max="8000" step="100" value="1000">
+            <div class="btn-group" data-target="freqSlider">
+                <button class="button-step" data-delta="-500">-500</button>
+                <button class="button-step" data-delta="-100">-100</button>
+                <button class="button-step" data-delta="100">+100</button>
+                <button class="button-step" data-delta="500">+500</button>
+            </div>
+        </div>
+
+        <div class="ctrl">
+            <label>Objective Volume (%) <span class="val" id="volVal">10%</span></label>
+            <input id="volSlider" type="range" min="0" max="100" value="10">
+            <div class="btn-group" data-target="volSlider">
+                <button class="button-step" data-delta="-5">-5</button>
+                <button class="button-step" data-delta="5">+5</button>
+            </div>
+        </div>
+
+        <button class="button" id="toggleBtn" onclick="toggle()">Start Tone</button>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <h3>2. Subjective Loudness Rating</h3>
+        <p class="info">How loud does the tone sound to you at the current volume?</p>
+        <div class="btn-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));">
+            <button class="sm-btn" onclick="savePoint(1)">Very Soft</button>
+            <button class="sm-btn" onclick="savePoint(2)">Soft</button>
+            <button class="sm-btn" onclick="savePoint(3)">Medium</button>
+            <button class="sm-btn" onclick="savePoint(4)">Loud</button>
+            <button class="sm-btn" onclick="savePoint(5)">Very Loud</button>
+            <button class="sm-btn" onclick="savePoint(6)">Uncomfortably Loud</button>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <h3>3. Loudness Growth Curve</h3>
+        <canvas id="lgChart" style="height: 250px;"></canvas>
+        <button class="button stop-btn" style="width: 100%; margin-top: 10px;" onclick="resetCurve()">Clear Today's Data</button>
+    </div>
+
+    <div style="margin-top: 15px;">
+        <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+    </div>
+</div>
+
+<script>
+let audioCtx, osc, gainNode, playing = false;
+const subjectiveLabels = ["", "Very Soft", "Soft", "Medium", "Loud", "Very Loud", "Uncomfortably Loud"];
+
+window.onload = () => {
+    initNav("The Loudness Growth test helps identify hyperacusis (abnormal loudness perception). A 'normal' curve shows a gradual increase in subjective loudness with objective volume. A steep curve indicates hyperacusis.");
+    setupStepButtons();
+    updateUI();
+    drawCurve();
+};
+
+function setupStepButtons() {
+    document.querySelectorAll('.btn-group .button-step').forEach(btn => {
+        const delta = parseInt(btn.dataset.delta);
+        const target = document.getElementById(btn.parentElement.dataset.target);
+        btn.onclick = () => {
+            target.value = Math.min(target.max, Math.max(target.min, Number(target.value) + delta));
+            target.dispatchEvent(new Event('input'));
+        };
+    });
+}
+
+function updateUI() {
+    const f = document.getElementById('freqSlider').value;
+    const v = document.getElementById('volSlider').value;
+    document.getElementById('freqVal').textContent = f + " Hz";
+    document.getElementById('volVal').textContent = v + "%";
+    
+    if (playing) {
+        osc.frequency.setTargetAtTime(f, audioCtx.currentTime, 0.05);
+        gainNode.gain.setTargetAtTime(v / 100, audioCtx.currentTime, 0.05);
+    }
+}
+
+async function toggle() {
+    if (playing) { stop(); return; }
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+    osc = audioCtx.createOscillator();
+    gainNode = audioCtx.createGain();
+    osc.type = 'sine';
+    
+    osc.connect(gainNode).connect(audioCtx.destination);
+    osc.start();
+    playing = true;
+    updateUI();
+    document.getElementById('toggleBtn').textContent = "Stop Tone";
+}
+
+function stop() {
+    if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    playing = false;
+    document.getElementById('toggleBtn').textContent = "Start Tone";
+}
+
+function savePoint(subjectiveRating) {
+    const freq = document.getElementById('freqSlider').value;
+    const objVol = document.getElementById('volSlider').value;
+    logLoudnessGrowthPoint(freq, objVol, subjectiveRating);
+    drawCurve();
+}
+
+function resetCurve() {
+    if (confirm("Clear all Loudness Growth data for today?")) {
+        const today = new Date().toISOString().split('T')[0];
+        const log = getLoudnessGrowthLog();
+        delete log[today];
+        localStorage.setItem('tts_lg_log', JSON.stringify(log));
+        drawCurve();
+    }
+}
+
+function drawCurve() {
+    const canvas = document.getElementById('lgChart');
+    const ctx = canvas.getContext('2d');
+    const today = new Date().toISOString().split('T')[0];
+    const allLog = getLoudnessGrowthLog();
+    const data = allLog[today] || [];
+
+    const dpi = window.devicePixelRatio || 1;
+    canvas.width = canvas.offsetWidth * dpi; canvas.height = canvas.offsetHeight * dpi; ctx.scale(dpi, dpi);
+    const w = canvas.offsetWidth, h = canvas.offsetHeight, pad = 40;
+    ctx.clearRect(0, 0, w, h);
+    
+    // Draw Grid
+    ctx.strokeStyle = 'var(--border)'; ctx.lineWidth = 1; ctx.setLineDash([5, 5]);
+    for (let i = 0; i <= 5; i++) { // 0 to 5 for subjective ratings (excluding 0)
+        const y = pad + (h - 2 * pad) * (i / 5);
+        ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(w - pad, y); ctx.stroke();
+        ctx.fillStyle = 'var(--text-dim)'; ctx.font = '10px Arial'; 
+        if (i > 0) ctx.fillText(subjectiveLabels[6 - i], 5, y + 4); // Labels from top to bottom
+    }
+    ctx.setLineDash([]);
+    
+    // X-axis labels (Objective Volume)
+    ctx.fillStyle = 'var(--text-dim)'; ctx.font = '10px Arial';
+    ctx.textAlign = 'left'; ctx.fillText("0%", pad, h - pad + 15);
+    ctx.textAlign = 'right'; ctx.fillText("100%", w - pad, h - pad + 15);
+
+    if (data.length < 1) { 
+        ctx.textAlign = 'center'; 
+        ctx.fillStyle = 'var(--text-dim)';
+        ctx.fillText("No data points saved for today.", w / 2, h / 2); 
+        return; 
+    }
+    
+    // Sort data by objective volume for plotting
+    data.sort((a, b) => a.obj - b.obj);
+
+    const getX = (objVol) => pad + (w - 2 * pad) * (objVol / 100);
+    const getY = (subjRating) => h - pad - (h - 2 * pad) * ((subjRating - 1) / 5); // Scale 1-6 to 0-5 for plotting
+
+    ctx.beginPath(); ctx.strokeStyle = 'var(--accent)'; ctx.lineWidth = 3;
+    data.forEach((point, i) => { 
+        const x = getX(point.obj);
+        const y = getY(point.subj);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); 
+    });
+    ctx.stroke();
+    
+    data.forEach(point => { 
+        ctx.beginPath(); ctx.arc(getX(point.obj), getY(point.subj), 5, 0, Math.PI * 2); 
+        ctx.fillStyle = 'var(--accent)'; ctx.fill(); 
+    });
+}
+
+document.getElementById('freqSlider').oninput = updateUI;
+document.getElementById('volSlider').oninput = updateUI;
+
+function exportClinicalSettings() {
+    const today = new Date().toISOString().split('T')[0];
+    const data = getLoudnessGrowthLog()[today] || [];
+    let curveStr = ""; 
+    data.forEach(point => { curveStr += `Freq: ${point.freq}Hz | Obj Vol: ${point.obj}% | Subj Rating: ${subjectiveLabels[point.subj]}\n`; });
+    
+    const report = generateClinicalReport("Loudness Growth Test", { "Test Date": today, "Data Points": data.length }, { "Loudness Growth Data": "\n" + curveStr });
+    const blob = new Blob([report], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `tinnitus_clinical_lg.txt`; a.click();
+}
+</script>
+</body>
+</html>

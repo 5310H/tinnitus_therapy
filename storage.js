@@ -1,7 +1,7 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "1.2.6";
+const APP_VERSION = "1.2.14";
 
 function saveSetting(key, value) {
     localStorage.setItem('tts_' + key, value);
@@ -48,6 +48,27 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
     const engineResults = loadSetting('engine_validation_results', 'Not Performed');
     const phaseStatus = loadSetting('phase_status', 'Not Verified');
     const usage = getDailyUsage();
+
+    const mmlLog = getMMLResults();
+    const mmlDates = Object.keys(mmlLog).sort((a, b) => new Date(b) - new Date(a));
+    let mmlSummary = "N/A";
+    if (mmlDates.length > 0) {
+        mmlSummary = `Latest MML: ${mmlLog[mmlDates[0]].slice(-1)[0]}%`;
+    }
+
+    const lgLog = getLoudnessGrowthLog();
+    const lgDates = Object.keys(lgLog).sort((a, b) => new Date(b) - new Date(a));
+    let latestLGSummary = "N/A";
+    if (lgDates.length > 0) {
+        latestLGSummary = `Points: ${lgLog[lgDates[0]].length}`;
+    }
+
+    const qFactors = getQFactors();
+    const qFactorDates = Object.keys(qFactors).sort((a, b) => new Date(b) - new Date(a));
+    let latestQFactor = "N/A";
+    if (qFactorDates.length > 0) {
+        latestQFactor = qFactors[qFactorDates[0]];
+    }
 
     const riLog = getRIResults();
     const riDates = Object.keys(riLog).sort((a, b) => new Date(b) - new Date(a));
@@ -104,6 +125,15 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
     report += `\nRESIDUAL INHIBITION (RI):\n`;
     report += `Latest RI Result: ${riSummary}\n`;
 
+    report += `\nMINIMUM MASKING LEVEL (MML):\n`;
+    report += `Latest MML Result: ${mmlSummary}\n`;
+
+    report += `\nLOUDNESS GROWTH (LG):\n`;
+    report += `Latest LG Test: ${latestLGSummary}\n`;
+
+    report += `\nTINNITUS MASKING CURVE (TMC):\n`;
+    report += `Latest Q-factor: ${latestQFactor}\n`;
+
     report += `\nSYSTEM STATUS:\n`;
     report += `Hardware Phase Status: ${phaseStatus}\n`;
     report += `AUTOMATED ENGINE VALIDATION:\n${engineResults}\n`;
@@ -135,6 +165,78 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
 
     report += `-------------------------------------------`;
     return report;
+}
+
+/**
+ * Generates personalized therapy recommendations based on THI and MML scores.
+ */
+function getTherapyRecommendations() {
+    const lastTHI = getLastTHIAssessmentDate();
+    const distressScores = getDistressScores();
+    const thiScore = lastTHI ? distressScores[lastTHI.toISOString().split('T')[0]] : null;
+
+    const mmlLog = getMMLResults();
+    const mmlDates = Object.keys(mmlLog).sort((a, b) => new Date(b) - new Date(a));
+    const lastMML = mmlDates.length > 0 ? mmlLog[mmlDates[0]].slice(-1)[0] : null;
+
+    if (thiScore === null) {
+        return { status: 'incomplete', message: 'Please complete the THI Assessment in CBT & Wellness to get personalized recommendations.' };
+    }
+
+    const recs = [];
+    const reportsSleepIssues = loadSetting('reports_sleep_issues', 'false') === 'true';
+
+    // Prioritize CBT for High distress
+    if (thiScore >= 58) {
+        recs.push({
+            mode: "CBT & Wellness",
+            url: "cbt.html",
+            reason: "Your score indicates significant distress. CBT is the clinical gold standard for managing the psychological impact and handicap of tinnitus."
+        });
+    }
+
+    // Neuromodulation for Moderate/High
+    if (thiScore >= 38) {
+        recs.push({
+            mode: "CR Neuromodulation",
+            url: "cr.html",
+            reason: "Acoustic Coordinated Reset is designed for moderate-to-severe cases to disrupt synchronized neural firing in the auditory cortex."
+        });
+        recs.push({
+            mode: "Lenire-Style Sound",
+            url: "lenire.html",
+            reason: "Structured burst patterns can help drive neuroplasticity when simple broadband masking is insufficient."
+        });
+    } else {
+        // Mild cases
+        recs.push({
+            mode: "Notch Therapy",
+            url: "notch.html",
+            reason: "Targeted Notch Therapy is ideal for mild-to-moderate tonal tinnitus, encouraging long-term cortical reorganization."
+        });
+    }
+
+    // Binaural Beats for Sleep or Low Distress
+    if (thiScore < 38 || reportsSleepIssues) {
+        recs.push({
+            mode: "Binaural Beats",
+            url: "binaural.html",
+            reason: reportsSleepIssues 
+                ? "Delta and Theta binaural beats are specifically designed to help transition the brain into deep sleep states and reduce nighttime anxiety."
+                : "Since your distress level is low, Binaural Beat entrainment can help maintain relaxation and prevent stress-related spikes."
+        });
+    }
+
+    // MML specific
+    if (lastMML !== null && lastMML > 50) {
+        recs.push({
+            mode: "Decorrelated Noise",
+            url: "decorrelated.html",
+            reason: "Since your masking level is high, decorrelated noise can provide effective relief by presenting independent signals to each ear."
+        });
+    }
+
+    return { status: 'complete', thi: thiScore, mml: lastMML, recommendations: recs };
 }
 
 function logUsageMinutes(mins) {
@@ -195,6 +297,70 @@ function logRIResult(seconds) {
  */
 function getRIResults() {
     return JSON.parse(localStorage.getItem('tts_ri_log') || '{}');
+}
+
+/**
+ * Logs a Minimum Masking Level (MML) result
+ */
+function logMML(percent) {
+    const today = new Date().toISOString().split('T')[0];
+    const log = JSON.parse(localStorage.getItem('tts_mml_log') || '{}');
+    if (!log[today]) log[today] = [];
+    log[today].push(percent);
+    localStorage.setItem('tts_mml_log', JSON.stringify(log));
+}
+
+function getMMLResults() {
+    return JSON.parse(localStorage.getItem('tts_mml_log') || '{}');
+}
+
+/**
+ * Logs a Loudness Growth (LG) data point.
+ */
+function logLoudnessGrowthPoint(freq, objectiveLevel, subjectiveRating) {
+    const today = new Date().toISOString().split('T')[0];
+    const log = JSON.parse(localStorage.getItem('tts_lg_log') || '{}');
+    if (!log[today]) log[today] = [];
+    log[today].push({ freq: parseFloat(freq), obj: parseFloat(objectiveLevel), subj: subjectiveRating });
+    localStorage.setItem('tts_lg_log', JSON.stringify(log));
+}
+
+function getLoudnessGrowthLog() {
+    return JSON.parse(localStorage.getItem('tts_lg_log') || '{}');
+}
+
+/**
+ * Logs a calculated Q-factor for a given date.
+ */
+function logQFactor(qFactor) {
+    const today = new Date().toISOString().split('T')[0];
+    const log = JSON.parse(localStorage.getItem('tts_q_factor_log') || '{}');
+    log[today] = qFactor; // Store the latest Q-factor for the day
+    localStorage.setItem('tts_q_factor_log', JSON.stringify(log));
+}
+
+/**
+ * Retrieves all stored Q-factors.
+ */
+function getQFactors() {
+    return JSON.parse(localStorage.getItem('tts_q_factor_log') || '{}');
+}
+
+/**
+ * Logs a Tinnitus Masking Curve (TMC) point.
+ */
+function logTMCPoint(freq, level) {
+    const log = JSON.parse(localStorage.getItem('tts_tmc_log') || '{}');
+    log[freq] = level;
+    localStorage.setItem('tts_tmc_log', JSON.stringify(log));
+}
+
+function getTMCLog() {
+    return JSON.parse(localStorage.getItem('tts_tmc_log') || '{}');
+}
+
+function clearTMCLog() {
+    localStorage.removeItem('tts_tmc_log');
 }
 
 /**

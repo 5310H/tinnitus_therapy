@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tinnitus Masking Curve (TMC)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
+</head>
+<body>
+<div class="panel">
+    <h1>Tinnitus Masking Curve (TMC)</h1>
+    <p class="info">Map the minimum masking levels across frequencies and compare against a standard tuning curve.</p>
+
+    <div class="card">
+        <h3>1. Calibration</h3>
+        <p class="info">Select a frequency and find the lowest volume (MML) that completely masks your tinnitus.</p>
+        
+        <div class="ctrl">
+            <label>Test Frequency (Hz) <span class="val" id="freqVal">4000 Hz</span></label>
+            <input id="freqSlider" type="range" min="500" max="12000" step="100" value="4000">
+            <div class="btn-group" data-target="freqSlider">
+                <button class="button-step" data-delta="-500">-500</button>
+                <button class="button-step" data-delta="-100">-100</button>
+                <button class="button-step" data-delta="100">+100</button>
+                <button class="button-step" data-delta="500">+500</button>
+            </div>
+        </div>
+
+        <div class="ctrl">
+            <label>Volume / Masking Level <span class="val" id="volVal">10%</span></label>
+            <input id="volSlider" type="range" min="0" max="100" value="10">
+        </div>
+
+        <div class="responsive-grid" style="margin-bottom: 10px;">
+            <button class="button" id="toggleBtn" onclick="toggle()">Start Tone</button>
+            <button class="button" style="background: var(--accent); color: white;" onclick="savePoint()">Save Point</button>
+        </div>
+        
+        <button class="button" style="width: 100%; border-color: var(--text-dim); color: var(--text-dim); margin-top: 5px;" onclick="importNotchFreq()">Import Tinnitus Pitch from Notch Finder</button>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <h3>2. Masking Curve</h3>
+        <div class="ctrl" style="margin-bottom: 15px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="showRef" onchange="drawCurve()" style="width: 18px; height: 18px; margin: 0;">
+                <span style="font-size: 0.9rem; color: var(--accent); font-weight: bold;">Overlay Standard Tuning Reference</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 5px;">
+                <input type="checkbox" id="showNotch" onchange="drawCurve()" style="width: 18px; height: 18px; margin: 0;">
+                <span style="font-size: 0.9rem; color: #ef5350; font-weight: bold;">Show Notch Therapy Region</span>
+            </label>
+        </div>
+        <canvas id="tmcChart" style="height: 250px;"></canvas>
+        <p class="info" style="text-align: center; margin-top: 10px;">
+            Calculated Q-factor: <span id="qFactorDisplay" style="font-weight: bold; color: var(--accent);">N/A</span>
+        </p>
+        <button class="button stop-btn" style="width: 100%; margin-top: 10px;" onclick="resetCurve()">Clear Curve</button>
+    </div>
+
+    <div style="margin-top: 15px;">
+        <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+    </div>
+</div>
+
+<script>
+let audioCtx, osc, gainNode, playing = false;
+
+window.onload = () => {
+    initNav("The Tinnitus Masking Curve (TMC) maps your masking thresholds. The dashed 'Reference' curve represents a normal auditory filter; comparing your results to this can indicate if your tinnitus behaves like an external tone (Tonal) or more like a broad signal (Noise-like).");
+    setupStepButtons();
+    updateUI();
+    drawCurve();
+};
+
+function importNotchFreq() {
+    const f = loadSetting('notchL', 4000);
+    document.getElementById('freqSlider').value = f;
+    updateUI();
+    drawCurve();
+}
+
+function setupStepButtons() {
+    document.querySelectorAll('.btn-group .button-step').forEach(btn => {
+        const delta = parseInt(btn.dataset.delta);
+        const target = document.getElementById(btn.parentElement.dataset.target);
+        btn.onclick = () => {
+            target.value = Math.min(target.max, Math.max(target.min, Number(target.value) + delta));
+            target.dispatchEvent(new Event('input'));
+        };
+    });
+}
+
+function updateUI() {
+    const f = document.getElementById('freqSlider').value;
+    const v = document.getElementById('volSlider').value;
+    document.getElementById('freqVal').textContent = f + " Hz";
+    document.getElementById('volVal').textContent = v + "%";
+    
+    if (playing) {
+        osc.frequency.setTargetAtTime(f, audioCtx.currentTime, 0.05);
+        gainNode.gain.setTargetAtTime(v / 100, audioCtx.currentTime, 0.05);
+    }
+}
+
+async function toggle() {
+    if (playing) { stop(); return; }
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+    osc = audioCtx.createOscillator();
+    gainNode = audioCtx.createGain();
+    osc.type = 'sine';
+    
+    osc.connect(gainNode).connect(audioCtx.destination);
+    osc.start();
+    playing = true;
+    updateUI();
+    document.getElementById('toggleBtn').textContent = "Stop Tone";
+}
+
+function stop() {
+    if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    playing = false;
+    document.getElementById('toggleBtn').textContent = "Start Tone";
+}
+
+function savePoint() {
+    const f = document.getElementById('freqSlider').value;
+    const v = document.getElementById('volSlider').value;
+    logTMCPoint(f, v);
+    drawCurve();
+}
+
+function resetCurve() {
+    if (confirm("Reset the entire masking curve?")) {
+        clearTMCLog();
+        drawCurve();
+    }
+}
+
+function drawCurve() {
+    const canvas = document.getElementById('tmcChart');
+    const ctx = canvas.getContext('2d');
+    const log = getTMCLog();
+    const data = Object.entries(log).sort((a, b) => a[0] - b[0]);
+    const dpi = window.devicePixelRatio || 1;
+    canvas.width = canvas.offsetWidth * dpi; canvas.height = canvas.offsetHeight * dpi; ctx.scale(dpi, dpi);
+    const w = canvas.offsetWidth, h = canvas.offsetHeight, pad = 40;
+    ctx.clearRect(0, 0, w, h);
+    
+    ctx.strokeStyle = 'var(--border)'; ctx.lineWidth = 1; ctx.setLineDash([5, 5]);
+    for (let i = 0; i <= 4; i++) {
+        const y = pad + (h - 2 * pad) * (i / 4);
+        ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(w - pad, y); ctx.stroke();
+        ctx.fillStyle = 'var(--text-dim)'; ctx.font = '10px Arial'; ctx.fillText((100 - i * 25) + "%", 5, y + 4);
+    }
+    ctx.setLineDash([]);
+    
+    const minF = 500, maxF = 12000, logMin = Math.log10(minF), logMax = Math.log10(maxF);
+    const getX = (f) => pad + (w - 2 * pad) * (Math.log10(f) - logMin) / (logMax - logMin);
+    const getY = (v) => h - pad - (h - 2 * pad) * (v / 100);
+
+    // Draw Notch Region Shading
+    if (document.getElementById('showNotch').checked) {
+        const fc = parseFloat(loadSetting('notchL', 0));
+        const nw = parseFloat(loadSetting('nw', 1));
+        if (fc > 0) {
+            const f_low = fc * Math.pow(2, -nw / 2);
+            const f_high = fc * Math.pow(2, nw / 2);
+            const xL = getX(Math.max(minF, f_low));
+            const xH = getX(Math.min(maxF, f_high));
+            ctx.fillStyle = 'rgba(239, 83, 80, 0.12)';
+            ctx.fillRect(xL, pad, xH - xL, h - 2 * pad);
+            ctx.fillStyle = '#ef5350';
+            ctx.font = '10px Arial';
+            ctx.fillText("Therapy Notch", xL + 2, pad + 15);
+        }
+    }
+
+    if (document.getElementById('showRef').checked) {
+        const fc = parseFloat(loadSetting('notchL', 4000));
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(0, 191, 165, 0.3)';
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 2;
+        
+        const mmlAtCenter = log[fc] || 10;
+
+        for (let f = minF; f <= maxF; f *= 1.05) {
+            const x = getX(f);
+            const dist = Math.abs(Math.log10(f) - Math.log10(fc));
+            const refV = mmlAtCenter + (dist * 180);
+            const y = getY(Math.min(98, refV));
+            if (f === minF) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'var(--accent)';
+        ctx.fillText("Standard Reference", getX(fc) - 40, h - pad + 30);
+    }
+
+    // --- Q-factor Calculation ---
+    let qFactor = "N/A";
+    if (data.length >= 2) {
+        const fc_ref = parseFloat(loadSetting('notchL', 4000)); // Use notchL as reference Fc
+        
+        // Find MML at fc_ref (interpolate if not exact point)
+        let mml_fc = null;
+        let f_prev = null, v_prev = null;
+        for (let i = 0; i < data.length; i++) {
+            const [f_curr, v_curr] = data[i];
+            if (f_curr == fc_ref) {
+                mml_fc = v_curr;
+                break;
+            }
+            if (f_prev !== null && f_curr > fc_ref && f_prev < fc_ref) {
+                mml_fc = linearInterpolate(f_prev, v_prev, f_curr, v_curr, fc_ref);
+                break;
+            }
+            f_prev = f_curr;
+            v_prev = v_curr;
+        }
+
+        // If fc_ref is outside recorded range or no data, find the minimum MML in the recorded data
+        if (mml_fc === null) {
+            let minMML = 101; // Max possible MML is 100
+            let minMMLFreq = 0;
+            data.forEach(([f, v]) => {
+                if (v < minMML) {
+                    minMML = v;
+                    minMMLFreq = f;
+                }
+            });
+            if (minMMLFreq > 0) {
+                mml_fc = minMML;
+                fc_ref = minMMLFreq; // Use the frequency of the minimum MML as Fc
+            }
+        }
+
+        if (mml_fc !== null) {
+            const targetLevel = mml_fc + 10; // 10 dB above the tip
+            let f1 = null, f2 = null;
+
+            // Find f1 (lower frequency at targetLevel)
+            f_prev = null; v_prev = null;
+            for (let i = 0; i < data.length; i++) {
+                const [f_curr, v_curr] = data[i];
+                if (f_curr < fc_ref && f_prev !== null && v_prev <= targetLevel && v_curr > targetLevel) {
+                    f1 = linearInterpolate(v_prev, f_prev, v_curr, f_curr, targetLevel);
+                    break;
+                }
+                f_prev = f_curr; v_prev = v_curr;
+            }
+
+            // Find f2 (upper frequency at targetLevel)
+            f_prev = null; v_prev = null;
+            for (let i = data.length - 1; i >= 0; i--) {
+                const [f_curr, v_curr] = data[i];
+                if (f_curr > fc_ref && f_prev !== null && v_prev <= targetLevel && v_curr > targetLevel) {
+                    f2 = linearInterpolate(v_prev, f_prev, v_curr, f_curr, targetLevel);
+                    break;
+                }
+                f_prev = f_curr; v_prev = v_curr;
+            }
+
+            if (f1 !== null && f2 !== null && f2 > f1) {
+                qFactor = (fc_ref / (f2 - f1)).toFixed(2);
+                logQFactor(parseFloat(qFactor)); // Log the Q-factor
+            }
+        }
+    }
+    document.getElementById('qFactorDisplay').textContent = qFactor;
+
+    if (data.length < 1) { 
+        ctx.textAlign = 'center'; 
+        ctx.fillStyle = 'var(--text-dim)';
+        ctx.fillText("No data points saved. Use 'Save Point' to map your curve.", w / 2, h / 2); 
+        return; 
+    }
+    
+    ctx.beginPath(); ctx.strokeStyle = 'var(--accent)'; ctx.lineWidth = 3;
+    data.forEach(([f, v], i) => { const x = getX(f), y = getY(v); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
+    ctx.stroke();
+    data.forEach(([f, v]) => { ctx.beginPath(); ctx.arc(getX(f), getY(v), 5, 0, Math.PI * 2); ctx.fillStyle = 'var(--accent)'; ctx.fill(); });
+    
+    ctx.fillStyle = 'var(--text-dim)';
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText("500Hz", pad, h - pad + 15);
+    ctx.textAlign = 'right';
+    ctx.fillText("12kHz", w - pad, h - pad + 15);
+}
+
+document.getElementById('freqSlider').oninput = updateUI;
+document.getElementById('volSlider').oninput = updateUI;
+
+function exportClinicalSettings() {
+    const log = getTMCLog(); let curveStr = ""; const entries = Object.entries(log).sort((a,b)=>a[0]-b[0]);
+    entries.forEach(([f,v]) => { curveStr += `Freq: ${f}Hz | Level: ${v}%\n`; });
+    const report = generateClinicalReport("Tinnitus Masking Curve", { "Data Points": entries.length }, { "Curve Data": "\n" + curveStr });
+    
+    // Add Q-factor to report
+    const qFactor = document.getElementById('qFactorDisplay').textContent;
+    report += `\nCalculated Q-factor: ${qFactor}\n`;
+
+    const blob = new Blob([report], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `tinnitus_clinical_tmc.txt`; a.click();
+}
+</script>
+</body>
+</html>
+
+<script>
+function linearInterpolate(x1, y1, x2, y2, x_target) {
+    if (x1 === x2) return y1; // Avoid division by zero
+    return y1 + (y2 - y1) * (x_target - x1) / (x2 - x1);
+}
+</script>

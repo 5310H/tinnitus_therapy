@@ -17,6 +17,13 @@
         <p>Inspired by the <b>TENT-A Clinical Trial (2020)</b>, these structured auditory patterns (tone bursts and modulated noise) are designed to engage neuroplasticity and disrupt tinnitus-related brain activity.</p>
     </div>
 
+    <div class="ctrl" style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <input type="checkbox" id="visualPulse" style="width: 20px; height: 20px; margin-top: 0;">
+            <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Enable Visual Bimodal Pulse</span>
+        </label>
+    </div>
+
     <div class="ctrl" style="border-bottom: 1px dashed var(--border); padding-bottom: 15px; margin-bottom: 20px;">
         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
             <input type="checkbox" id="lockLR" style="width: 20px; height: 20px; margin-top: 0;">
@@ -222,7 +229,7 @@
     <canvas id="viz"></canvas>
 </div>
 <script>
-let audioCtx,merger,analyserL,analyserR,rafViz,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[];
+let audioCtx,merger,analyserL,analyserR,rafViz,rafPulse,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[];
 let running=false,remaining=0,timerId=null,sessionSeconds=1200;
 const eqBands = [2000, 4000, 8000, 12000];
 
@@ -248,6 +255,7 @@ window.onload = () => {
     document.getElementById('burstRateR').value = loadSetting('len_burstR', loadSetting('len_burst', 1.5));
     
     document.getElementById('lockLR').checked = loadSetting('len_lock_lr', 'false') === 'true';
+    document.getElementById('visualPulse').checked = loadSetting('len_visual_pulse', 'false') === 'true';
 
     createEqUI();
     updateLockVisuals();
@@ -379,6 +387,35 @@ function updateLockVisuals() {
     if (isLocked) performGlobalSync();
 }
 
+function runVisualPulse() {
+    if (!running || !document.getElementById('visualPulse').checked) {
+        document.body.style.background = '';
+        return;
+    }
+    
+    // Detect signal peaks from the analyzer to drive the visual flicker
+    const data = new Uint8Array(analyserL.frequencyBinCount);
+    analyserL.getByteTimeDomainData(data);
+    let sum = 0;
+    for(let i=0; i<data.length; i++) {
+        const s = (data[i]-128)/128;
+        sum += s*s;
+    }
+    const rms = Math.sqrt(sum/data.length);
+    
+    // High-contrast flicker synchronized to the auditory bursts
+    if (rms > 0.08) {
+        document.body.style.background = 'rgba(0, 191, 165, 0.15)';
+    } else {
+        document.body.style.background = '';
+    }
+    rafPulse = requestAnimationFrame(runVisualPulse);
+}
+
+document.getElementById('visualPulse').onchange = (e) => {
+    saveSetting('len_visual_pulse', e.target.checked);
+};
+
 function formatTime(s){return Math.floor(s/60).toString().padStart(2,'0')+':'+(s%60).toString().padStart(2,'0')}
 function updateTimerDisplay(){timerEl.textContent='Session: '+formatTime(sessionSeconds-remaining)+' / '+formatTime(sessionSeconds)}
 const freqLEl=document.getElementById('freqL'),freqREl=document.getElementById('freqR'),volMasterEl=document.getElementById('volMaster');
@@ -392,6 +429,7 @@ async function startSession(){
   validateLenireParams();
   updateParams(); running=true;
   drawViz();
+  runVisualPulse();
   document.getElementById('startBtn').style.display='none';
   document.getElementById('stopBtn').style.display='block';
   timerId=setInterval(()=>{
@@ -411,6 +449,7 @@ function stopSession(){
   document.getElementById('stopBtn').style.display='none';
   if(timerId)clearInterval(timerId);
   if(rafViz)cancelAnimationFrame(rafViz);
+  if(rafPulse)cancelAnimationFrame(rafPulse);
   if(liveStream) {
       liveStream.getTracks().forEach(t => t.stop());
       liveStream = null;
