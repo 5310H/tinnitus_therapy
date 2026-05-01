@@ -185,6 +185,12 @@ window.onload = () => {
 
     checkTHIReminderCBT();
 
+    const sleepIssues = loadSetting('reports_sleep_issues', 'false') === 'true';
+    document.getElementById('sleepIssuesToggle').checked = sleepIssues;
+    document.getElementById('sleepIssuesToggle').onchange = (e) => {
+        saveSetting('reports_sleep_issues', e.target.checked);
+    };
+
     // Initialize character counters for Thought Record textareas
     document.querySelectorAll('.card textarea[id^="tr"]').forEach(textarea => {
         const countSpan = document.getElementById('count_' + textarea.id);

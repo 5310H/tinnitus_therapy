@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Binaural Beat Entrainment</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
+</head>
+<body>
+<div class="panel">
+    <h1>Binaural Beats</h1>
+    <p class="info">Uses frequency offsets to induce specific brain states.</p>
+
+    <div class="card">
+        <h3>Entrainment Presets</h3>
+        <div class="btn-grid">
+            <button class="sm-btn" onclick="setPreset(2.5, 'Delta (Sleep)')">Delta (2.5Hz)</button>
+            <button class="sm-btn" onclick="setPreset(6, 'Theta (Meditation)')">Theta (6Hz)</button>
+            <button class="sm-btn" onclick="setPreset(10, 'Alpha (Relaxation)')">Alpha (10Hz)</button>
+            <button class="sm-btn" onclick="setPreset(40, 'Gamma (Focus/Health)')">Gamma (40Hz)</button>
+        </div>
+    </div>
+
+    <div class="ctrl">
+        <label>Base Frequency (Hz) <span class="val" id="baseVal">200 Hz</span></label>
+        <input id="baseSlider" type="range" min="100" max="1000" value="200">
+        <label style="margin-top:10px;">Beat Frequency (Hz) <span class="val" id="beatVal">10 Hz</span></label>
+        <input id="beatSlider" type="range" min="0.5" max="50" step="0.5" value="10">
+    </div>
+
+    <div class="ctrl">
+        <label>Master Volume <span class="val" id="volVal">20%</span></label>
+        <input id="volSlider" type="range" min="0" max="100" value="20">
+    </div>
+
+    <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start Binaural Therapy</button>
+    <div class="status" id="status">Stopped</div>
+
+    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+        <button class="button email-audiologist-btn" style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
+    </div>
+</div>
+
+<script>
+let ctx, oscL, oscR, masterGain, playing = false, currentPreset = "Manual";
+
+window.onload = () => {
+    initNav("Binaural beats occur when two tones of slightly different frequencies are played in each ear. The brain perceives a 'beat' equal to the difference, facilitating relaxation.");
+    updateUI();
+};
+
+function updateUI() {
+    document.getElementById('baseVal').textContent = document.getElementById('baseSlider').value + " Hz";
+    document.getElementById('beatVal').textContent = document.getElementById('beatSlider').value + " Hz";
+    document.getElementById('volVal').textContent = document.getElementById('volSlider').value + "%";
+    if(playing) updateParams();
+}
+
+function setPreset(freq, label) {
+    document.getElementById('beatSlider').value = freq;
+    currentPreset = label;
+    document.getElementById('status').textContent = "Preset Loaded: " + label;
+    updateUI();
+}
+
+function updateParams() {
+    if(!ctx) return;
+    const base = parseFloat(document.getElementById('baseSlider').value);
+    const beat = parseFloat(document.getElementById('beatSlider').value);
+    const vol = document.getElementById('volSlider').value / 100;
+
+    oscL.frequency.setTargetAtTime(base, ctx.currentTime, 0.1);
+    oscR.frequency.setTargetAtTime(base + beat, ctx.currentTime, 0.1);
+    masterGain.gain.setTargetAtTime(vol, ctx.currentTime, 0.1);
+}
+
+async function toggle() {
+    if (playing) { stop(); return; }
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') await ctx.resume();
+    console.log('AudioContext state after resume:', ctx.state);
+
+    const merger = ctx.createChannelMerger(2);
+    masterGain = ctx.createGain();
+
+    oscL = ctx.createOscillator();
+    oscR = ctx.createOscillator();
+    oscL.type = oscR.type = 'sine';
+
+    oscL.connect(merger, 0, 0);
+    oscR.connect(merger, 0, 1);
+    merger.connect(masterGain).connect(ctx.destination);
+
+    oscL.start(); oscR.start();
+    playing = true;
+    updateParams();
+    document.getElementById('toggleBtn').textContent = "Stop Therapy";
+    document.getElementById('toggleBtn').className = "big-btn stop-btn";
+    document.getElementById('status').textContent = "Binaural Beats Active";
+}
+
+function stop() {
+    if (ctx) { ctx.close(); ctx = null; }
+    playing = false;
+    document.getElementById('toggleBtn').textContent = "Start Binaural Therapy";
+    document.getElementById('toggleBtn').className = "big-btn play-btn";
+    document.getElementById('status').textContent = "Stopped";
+}
+
+function getReportData() {
+    return {
+        "Base Frequency": document.getElementById('baseSlider').value + " Hz",
+        "Beat Frequency": document.getElementById('beatSlider').value + " Hz",
+        "Volume": document.getElementById('volSlider').value + "%",
+        "Last Active Preset": currentPreset
+    };
+}
+
+function exportClinicalSettings() {
+    const report = generateClinicalReport("Binaural Beat Entrainment", getReportData());
+    const blob = new Blob([report], { type: 'text/plain' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `tinnitus_clinical_binaural.txt`; a.click();
+}
+
+function emailToAudiologist() {
+    const email = loadSetting('audiologist_email', '');
+    if (!email) return alert("Please set your audiologist's email on the Home page.");
+    const report = generateClinicalReport("Binaural Beat Entrainment", getReportData());
+    window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+}
+
+document.getElementById('baseSlider').oninput = updateUI;
+document.getElementById('beatSlider').oninput = updateUI;
+document.getElementById('volSlider').oninput = updateUI;
+</script>
+</body>
+</html>

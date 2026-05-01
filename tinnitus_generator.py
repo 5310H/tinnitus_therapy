@@ -63,6 +63,33 @@ def apply_notch(signal, center_freq, width_octaves, sample_rate):
     sos = butter(8, [low, high], btype='bandstop', fs=sample_rate, output='sos')
     return sosfilt(sos, signal)
 
+def generate_cr_sequence(base_freq, duration, sample_rate):
+    """Tass (2012) protocol: 4 tones, 1.5Hz rate, 3 cycles on, 2 off."""
+    freqs = [base_freq * r for r in [0.77, 0.90, 1.10, 1.32]]
+    tone_dur, cycle_per = 0.120, 0.666
+    n_samples = int(sample_rate * duration)
+    signal = np.zeros(n_samples)
+    s_per_cycle = int(sample_rate * cycle_per)
+    s_per_tone = int(sample_rate * tone_dur)
+    fade = int(sample_rate * 0.01)
+    env = np.ones(s_per_tone)
+    env[:fade], env[-fade:] = np.linspace(0,1,fade), np.linspace(1,0,fade)
+    
+    cycle_idx, t_idx = 0, 0
+    while t_idx + s_per_cycle < n_samples:
+        if (cycle_idx % 5) < 3:
+            seq = freqs[:]
+            np.random.shuffle(seq)
+            for i in range(4):
+                f = seq[i]
+                start = t_idx + i * s_per_tone
+                end = start + s_per_tone
+                t = np.linspace(0, tone_dur, s_per_tone, endpoint=False)
+                signal[start:end] = np.sin(2 * np.pi * f * t) * env
+        t_idx += s_per_cycle
+        cycle_idx += 1
+    return signal
+
 def generate_tone(freq, duration, sample_rate):
     t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
     return 0.5 * np.sin(2 * np.pi * freq * t)
@@ -76,7 +103,7 @@ def normalize_and_convert(signal, bit_depth=16):
 
 def main():
     parser = argparse.ArgumentParser(description='Tinnitus Therapy WAV Generator')
-    parser.add_argument('--type', choices=['notch', 'decorrelated', 'tone'],
+    parser.add_argument('--type', choices=['notch', 'decorrelated', 'tone', 'cr'],
                         required=True, help='Therapy type')
     parser.add_argument('--freq', type=float, default=6000,
                         help='Center/tone frequency in Hz (default: 6000)')
@@ -100,6 +127,12 @@ def main():
         stereo = np.column_stack([mono, mono])
         label = f"tone_{int(args.freq)}Hz"
         print(f"Generated {args.duration}s pure tone at {args.freq} Hz")
+
+    elif args.type == 'cr':
+        mono = generate_cr_sequence(args.freq, args.duration, sr)
+        stereo = np.column_stack([mono, mono])
+        label = f"cr_tones_{int(args.freq)}Hz"
+        print(f"Generated {args.duration}s CR neuromodulation sequence")
 
     elif args.type == 'notch':
         noise = generate_noise(args.color, n_samples)

@@ -1,7 +1,7 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "1.2.14";
+const APP_VERSION = "1.2.16";
 
 function saveSetting(key, value) {
     localStorage.setItem('tts_' + key, value);
@@ -100,7 +100,7 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
     report += `Export Date: ${new Date().toLocaleString()}\n`;
     report += `-------------------------------------------\n`;
     
-    report += `THERAPY SETTINGS:\n`;
+    report += `\nTHERAPY SETTINGS:\n`;
     
     for (const [label, value] of Object.entries(settingsObj)) {
         report += `${label}: ${value}\n`;
@@ -119,6 +119,15 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
     report += `\nPSYCHOLOGICAL BASELINE (CBT):\n`;
     report += `Last THI Score: ${lastScore}\n`;
     report += `Last THI Date: ${lastTHI ? lastTHI.toLocaleDateString() : 'N/A'}\n`;
+
+    const therapyRecs = getTherapyRecommendations();
+    if (therapyRecs.status === 'complete' && therapyRecs.recommendations.length > 0) {
+        report += `\nPERSONALIZED THERAPY SUGGESTIONS:\n`;
+        therapyRecs.recommendations.forEach(r => {
+            report += `- ${r.mode}: ${r.reason}\n`;
+        });
+    }
+
     report += `Thought Records Logged: ${thoughtRecordsCount}\n`;
     report += `Most Recent Record:\n${recentThoughtSummary}\n`;
 
@@ -136,7 +145,7 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
 
     report += `\nSYSTEM STATUS:\n`;
     report += `Hardware Phase Status: ${phaseStatus}\n`;
-    report += `AUTOMATED ENGINE VALIDATION:\n${engineResults}\n`;
+    report += `\nAUTOMATED ENGINE VALIDATION:\n${engineResults}\n`;
     
     if (window.lastValidationStatus) {
         report += `\nINTERNAL DSP VALIDATION:\nStatus: ${window.lastValidationStatus}\n`;
@@ -163,8 +172,9 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
         report += `\nACTIONABLE RECOMMENDATIONS:\n${recommendations.join('\n')}\n`;
     }
 
-    report += `-------------------------------------------`;
-    return report;
+    report += `\n-------------------------------------------`;
+    // Normalize all line endings to CRLF for consistent line spacing across OS/Browsers in text exports
+    return report.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n');
 }
 
 /**
