@@ -28,6 +28,9 @@ code{font-family:'Cascadia Code','Fira Code',monospace}
 <pre><code># Generate 30 minutes of notch-filtered pink noise at 6000 Hz
 python tinnitus_generator.py --type notch --freq 6000 --duration 1800
 
+# Generate high-frequency violet noise for high-tone tinnitus (12kHz)
+python tinnitus_generator.py --type notch --color violet --freq 12000 --duration 600
+
 # Generate decorrelated white noise
 python tinnitus_generator.py --type decorrelated --color white --duration 900
 
@@ -37,7 +40,7 @@ python tinnitus_generator.py --type tone --freq 4500 --duration 30</code></pre>
 <ul>
   <li><code>--type</code> - notch, decorrelated, or tone</li>
   <li><code>--freq</code> - Center frequency in Hz (default: 6000)</li>
-  <li><code>--color</code> - Noise color: white, pink, brown (default: pink)</li>
+  <li><code>--color</code> - Noise color: white, pink, brown, violet (default: pink)</li>
   <li><code>--duration</code> - Duration in seconds (default: 600)</li>
   <li><code>--notch-width</code> - Notch width in octaves (default: 1.0)</li>
   <li><code>--sample-rate</code> - Sample rate in Hz (default: 44100)</li>

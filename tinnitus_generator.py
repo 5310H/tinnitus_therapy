@@ -40,14 +40,22 @@ def generate_brown_noise(n_samples):
     brown = brown / (np.max(np.abs(brown)) + 1e-10)
     return brown
 
+def generate_violet_noise(n_samples):
+    """Differentiated white noise (+6dB/octave). Perfect for high-tone tinnitus."""
+    white = np.random.randn(n_samples)
+    violet = np.diff(white, prepend=0)
+    violet = violet / (np.max(np.abs(violet)) + 1e-10)
+    return violet
+
 def generate_noise(color, n_samples):
     generators = {
         'white': generate_white_noise,
         'pink': generate_pink_noise,
         'brown': generate_brown_noise,
+        'violet': generate_violet_noise,
     }
     if color not in generators:
-        raise ValueError(f"Unknown noise color: {color}. Choose: white, pink, brown")
+        raise ValueError(f"Unknown noise color: {color}. Choose: white, pink, brown, violet")
     noise = generators[color](n_samples)
     return noise / (np.max(np.abs(noise)) + 1e-10)
 
@@ -108,7 +116,7 @@ def main():
     parser.add_argument('--freq', type=float, default=6000,
                         help='Center/tone frequency in Hz (default: 6000)')
     parser.add_argument('--color', choices=['white', 'pink', 'brown'], default='pink',
-                        help='Noise color (default: pink)')
+                        help='Noise color (default: pink). Violet is recommended for high-tones.')
     parser.add_argument('--duration', type=float, default=600,
                         help='Duration in seconds (default: 600)')
     parser.add_argument('--notch-width', type=float, default=1.0,

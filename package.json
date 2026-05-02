@@ -1,6 +1,7 @@
 {
   "name": "trahreg-tinnitus-suite",
-  "version": "1.2.1pen-source tinnitus therapy suite",
+  "version": "1.2.16",
+  "version": "1.2.17",
   "scripts": {
     "sync-version": "node sync-version.js",
     "version": "npm run sync-version && git add ."

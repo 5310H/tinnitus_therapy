@@ -17,6 +17,15 @@
         <div id="step1">
             <h3>Step 1: Preparation</h3>
             <p class="info">We will play broadband noise at a level that completely masks your tinnitus for 60 seconds.</p>
+            <div class="ctrl">
+                <label>Noise Color</label>
+                <select id="noiseColor" style="width: 100%; padding: 8px; border-radius: 8px; background: var(--card-bg); color: var(--text); border: 1px solid var(--border);">
+                    <option value="white">White Noise</option>
+                    <option value="pink">Pink Noise</option>
+                    <option value="brown">Brown Noise</option>
+                    <option value="violet">Violet Noise (High-Tone)</option>
+                </select>
+            </div>
             <button class="big-btn play-btn" onclick="startMasking()">Start 60s Masking</button>
         </div>
 
@@ -49,13 +58,17 @@ window.onload = () => {
 };
 
 function startMasking() {
+    const color = document.getElementById('noiseColor').value;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
 
     const bufSize = audioCtx.sampleRate * 2;
     const buffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+    if(color==='white'){for(let i=0;i<bufSize;i++)data[i]=Math.random()*2-1}
+    else if(color==='pink'){let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8687*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;data[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926}}
+    else if(color==='violet'){let last=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;data[i]=w-last;last=w}}
+    else {let last=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;data[i]=(last+0.02*w)/1.02;last=data[i];data[i]*=3.5}}
 
     noise = audioCtx.createBufferSource();
     noise.buffer = buffer;
