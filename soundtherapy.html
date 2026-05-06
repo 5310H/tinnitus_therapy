@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sound Therapy</title>
 <script src="storage.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="nav.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -115,6 +116,7 @@
         </div>
         
         <button class="big-btn" onclick="startTimer()">Start Timer</button>
+        <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
         <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
         <button class="button email-audiologist-btn" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
         <p id="timerDisplay" style="margin-top:10px;color:#ab47bc;font-weight:700"></p>
@@ -414,7 +416,8 @@ function getReportData() {
 }
 
 function exportClinicalSettings() {
-    const report = generateClinicalReport("Broadband Sound Therapy", getReportData());
+    const reportData = getClinicalReportData("Broadband Sound Therapy", getReportData());
+    const report = generateClinicalReportText(reportData);
     const blob = new Blob([report], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -423,10 +426,33 @@ function exportClinicalSettings() {
     alert("Clinical report downloaded. Please check your browser's Downloads folder.");
 }
 
+async function generatePDFReport() {
+    const reportData = getClinicalReportData("Broadband Sound Therapy", getReportData());
+    const htmlContent = generateClinicalReportHtml(reportData);
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    document.body.appendChild(tempDiv);
+
+    const isDark = document.documentElement.classList.contains('light-mode');
+    if (!isDark) document.documentElement.classList.add('light-mode');
+
+    const opt = {
+        margin: [20, 15], filename: 'tinnitus_clinical_sound_therapy.pdf', image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    await html2pdf().set(opt).from(tempDiv).save();
+
+    if (!isDark) document.documentElement.classList.remove('light-mode');
+    document.body.removeChild(tempDiv);
+}
+
 function emailToAudiologist() {
     const email = loadSetting('audiologist_email', '');
     if (!email) return alert("Please set your audiologist's email on the Home page.");
-    const report = generateClinicalReport("Broadband Sound Therapy", getReportData());
+    const reportData = getClinicalReportData("Broadband Sound Therapy", getReportData());
+    const report = generateClinicalReportText(reportData);
     window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
     alert("Email client opened. Please review and send the clinical report draft.");
 }

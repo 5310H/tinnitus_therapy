@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CBT & Wellness - Tinnitus Therapy</title>
 <script src="storage.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="nav.js"></script>
 <link rel="stylesheet" href="style.css">
 <style>
@@ -363,7 +364,8 @@ function getReportData() {
 }
 
 function exportClinicalSettings() {
-    const report = generateClinicalReport("CBT & Wellness", getReportData());
+    const reportData = getClinicalReportData("CBT & Wellness", getReportData());
+    const report = generateClinicalReportText(reportData);
     const blob = new Blob([report], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -371,10 +373,33 @@ function exportClinicalSettings() {
     a.click();
 }
 
+async function generatePDFReport() {
+    const reportData = getClinicalReportData("CBT & Wellness", getReportData());
+    const htmlContent = generateClinicalReportHtml(reportData);
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    document.body.appendChild(tempDiv);
+
+    const isDark = document.documentElement.classList.contains('light-mode');
+    if (!isDark) document.documentElement.classList.add('light-mode');
+
+    const opt = {
+        margin: [20, 15], filename: 'tinnitus_clinical_cbt.pdf', image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    await html2pdf().set(opt).from(tempDiv).save();
+
+    if (!isDark) document.documentElement.classList.remove('light-mode');
+    document.body.removeChild(tempDiv);
+}
+
 function emailToAudiologist() {
     const email = loadSetting('audiologist_email', '');
     if (!email) return alert("Please set your audiologist's email on the Home page.");
-    const report = generateClinicalReport("CBT & Wellness", getReportData());
+    const reportData = getClinicalReportData("CBT & Wellness", getReportData());
+    const report = generateClinicalReportText(reportData);
     window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report (CBT)&body=${encodeURIComponent(report)}`;
 }
 

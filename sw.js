@@ -31,7 +31,6 @@ const ASSETS = [
     './ri.html',
     './validation.html',
     './disclaimer.html',
-    './disclaimer.txt',
     './docs/index.html',
     './tinnitus_generator.py',
     './audio/rain.mp3',

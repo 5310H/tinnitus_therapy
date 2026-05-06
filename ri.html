@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="style.css">
 <script src="storage.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="nav.js"></script>
 </head>
 <body>
@@ -47,6 +48,11 @@
     <div class="card" style="margin-top: 20px;">
         <h3>Results History</h3>
         <div id="riHistory" class="info">No tests recorded yet.</div>
+    </div>
+
+    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <button class="button" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
+        <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
     </div>
 </div>
 
@@ -129,6 +135,42 @@ function renderHistory() {
             `<div><b>${date}:</b> ${times.join('s, ')}s</div>`
         ).join('');
     }
+}
+
+function getReportData() {
+    const log = getRIResults();
+    const entries = Object.entries(log).reverse();
+    let historyStr = "";
+    if (entries.length > 0) {
+        historyStr = entries.map(([date, times]) => 
+            `Date: ${date} | Suppression Results: ${times.join('s, ')}s`
+        ).join('\n');
+    } else {
+        historyStr = "No tests recorded yet.";
+    }
+    return { "RI History": historyStr };
+}
+
+function exportClinicalSettings() {
+    const reportData = getClinicalReportData("Residual Inhibition Test", getReportData());
+    const report = generateClinicalReportText(reportData);
+    const blob = new Blob([report], { type: 'text/plain' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `tinnitus_clinical_ri.txt`; a.click();
+}
+
+async function generatePDFReport() {
+    const reportData = getClinicalReportData("Residual Inhibition Test", getReportData());
+    const htmlContent = generateClinicalReportHtml(reportData);
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    document.body.appendChild(tempDiv);
+    const isDark = document.documentElement.classList.contains('light-mode');
+    if (!isDark) document.documentElement.classList.add('light-mode');
+    const opt = { margin: [20, 15], filename: 'tinnitus_clinical_ri.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+    await html2pdf().set(opt).from(tempDiv).save();
+    if (!isDark) document.documentElement.classList.remove('light-mode');
+    document.body.removeChild(tempDiv);
 }
 </script>
 </body>

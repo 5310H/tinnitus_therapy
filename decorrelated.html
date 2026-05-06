@@ -184,6 +184,7 @@
 <canvas id="volumeViz" class="volume-meter-canvas"></canvas>
 <button class="big-btn play-btn" id="toggleBtn" onclick="handleToggle()">Start Therapy</button>
 <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+<button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
 <button class="button email-audiologist-btn" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
 <div class="status" id="status"></div> 
 <div class="usage-progress">
@@ -708,7 +709,8 @@ function getReportData() {
 }
 
 function exportClinicalSettings() {
-    const report = generateClinicalReport("Decorrelated Noise", getReportData());
+    const reportData = getClinicalReportData("Decorrelated Noise", getReportData());
+    const report = generateClinicalReportText(reportData);
     const blob = new Blob([report], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -717,10 +719,33 @@ function exportClinicalSettings() {
     alert("Clinical report downloaded. Please check your browser's Downloads folder.");
 }
 
+async function generatePDFReport() {
+    const reportData = getClinicalReportData("Decorrelated Noise", getReportData());
+    const htmlContent = generateClinicalReportHtml(reportData);
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    document.body.appendChild(tempDiv); // Append to body to ensure styles are applied
+
+    const isDark = document.documentElement.classList.contains('light-mode');
+    if (!isDark) document.documentElement.classList.add('light-mode'); // Force light mode for PDF
+
+    const opt = {
+        margin: [20, 15], filename: 'tinnitus_clinical_decorrelated.pdf', image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    await html2pdf().set(opt).from(tempDiv).save();
+
+    if (!isDark) document.documentElement.classList.remove('light-mode'); // Revert theme
+    document.body.removeChild(tempDiv); // Clean up
+}
+
 function emailToAudiologist() {
     const email = loadSetting('audiologist_email', '');
     if (!email) return alert("Please set your audiologist's email on the Home page.");
-    const report = generateClinicalReport("Decorrelated Noise", getReportData());
+    const reportData = getClinicalReportData("Decorrelated Noise", getReportData());
+    const report = generateClinicalReportText(reportData);
     window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
     alert("Email client opened. Please review and send the clinical report draft.");
 }

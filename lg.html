@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="style.css">
 <script src="storage.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="nav.js"></script>
 </head>
 <body>
@@ -60,6 +61,7 @@
     </div>
 
     <div style="margin-top: 15px;">
+        <button class="button" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
         <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
     </div>
 </div>
@@ -199,10 +201,38 @@ function exportClinicalSettings() {
     const data = getLoudnessGrowthLog()[today] || [];
     let curveStr = ""; 
     data.forEach(point => { curveStr += `Freq: ${point.freq}Hz | Obj Vol: ${point.obj}% | Subj Rating: ${subjectiveLabels[point.subj]}\n`; });
-    
-    const report = generateClinicalReport("Loudness Growth Test", { "Test Date": today, "Data Points": data.length }, { "Loudness Growth Data": "\n" + curveStr });
+
+    const reportData = getClinicalReportData("Loudness Growth Test", { "Test Date": today, "Data Points": data.length }, { "Loudness Growth Data": "\n" + curveStr });
+    const report = generateClinicalReportText(reportData);
     const blob = new Blob([report], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = `tinnitus_clinical_lg.txt`; a.click();
+}
+
+async function generatePDFReport() {
+    const today = new Date().toISOString().split('T')[0];
+    const data = getLoudnessGrowthLog()[today] || [];
+    let curveStr = ""; 
+    data.forEach(point => { curveStr += `Freq: ${point.freq}Hz | Obj Vol: ${point.obj}% | Subj Rating: ${subjectiveLabels[point.subj]}\n`; });
+
+    const reportData = getClinicalReportData("Loudness Growth Test", { "Test Date": today, "Data Points": data.length }, { "Loudness Growth Data": "\n" + curveStr });
+    const htmlContent = generateClinicalReportHtml(reportData);
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    document.body.appendChild(tempDiv);
+
+    const isDark = document.documentElement.classList.contains('light-mode');
+    if (!isDark) document.documentElement.classList.add('light-mode');
+
+    const opt = {
+        margin: [20, 15], filename: 'tinnitus_clinical_lg.pdf', image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    await html2pdf().set(opt).from(tempDiv).save();
+
+    if (!isDark) document.documentElement.classList.remove('light-mode');
+    document.body.removeChild(tempDiv);
 }
 </script>
 </body>

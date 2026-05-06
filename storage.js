@@ -82,7 +82,7 @@ function getUnifiedValidationStatus() {
     };
 }
 
-function saveSetting(key, value) {
+function saveSetting(key, value, isJson = false) {
     localStorage.setItem('tts_' + key, value);
 }
 
@@ -123,7 +123,7 @@ function importAllData(file) {
     reader.readAsText(file);
 }
 
-function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
+function getClinicalReportData(modeName, settingsObj, techSpecsObj = {}) {
     const validation = getUnifiedValidationStatus();
     const usage = getDailyUsage();
 
@@ -157,71 +157,183 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
         recentThoughtSummary += `  - Automatic Thought: ${latest.automaticThoughts}\n`;
         recentThoughtSummary += `  - Balanced Thought: ${latest.balancedThought}`;
     }
+    const therapyRecs = getTherapyRecommendations();
+
+    return {
+        modeName,
+        appVersion: APP_VERSION,
+        exportDate: new Date().toLocaleString(),
+        settings: settingsObj,
+        techSpecs: techSpecsObj,
+        usage: {
+            todayMinutes: Math.round(usage)
+        },
+        psychological: {
+            lastTHIScore: lastScore,
+            lastTHIDate: lastTHIDateDisplay,
+            thoughtRecordsCount: thoughtRecordsCount,
+            recentThoughtSummary: recentThoughtSummary
+        },
+        recommendations: therapyRecs.status === 'complete' ? therapyRecs.recommendations : [],
+        ri: {
+            latestRIResult: riSummary
+        },
+        mml: {
+            latestMMLResult: mmlSummary
+        },
+        lg: {
+            latestLGTest: latestLGSummary
+        },
+        tmc: {
+            latestQFactor: latestQFactor
+        },
+        systemStatus: {
+            hardwarePhase: validation.phase,
+            engineValidation: validation.engine,
+            dspValidation: validation.dsp,
+            actionableRecommendations: validation.recommendations
+        }
+    };
+}
+
+function generateClinicalReportText(reportData) {
+    let text = `TRAHREG TINNITUS THERAPY SUITE - CLINICAL REPORT\n`;
+    text += `App Version: ${reportData.appVersion}\n`;
+    text += `Therapy Mode: ${reportData.modeName}\n`;
+    text += `Export Date: ${reportData.exportDate}\n`;
+    text += `-------------------------------------------\n`;
     
-    let report = `TRAHREG TINNITUS THERAPY SUITE - CLINICAL REPORT\n`;
-    report += `App Version: ${APP_VERSION}\n`;
-    report += `Therapy Mode: ${modeName}\n`;
-    report += `Export Date: ${new Date().toLocaleString()}\n`;
-    report += `-------------------------------------------\n`;
-    
-    report += `\nTHERAPY SETTINGS:\n`;
-    
-    for (const [label, value] of Object.entries(settingsObj)) {
-        report += `${label}: ${value}\n`;
+    text += `\nTHERAPY SETTINGS:\n`;
+    for (const [label, value] of Object.entries(reportData.settings)) {
+        text += `${label}: ${value}\n`;
     }
 
-    if (Object.keys(techSpecsObj).length > 0) {
-        report += `\nTECHNICAL SPECIFICATIONS:\n`;
-        for (const [label, value] of Object.entries(techSpecsObj)) {
-            report += `${label}: ${value}\n`;
+    if (Object.keys(reportData.techSpecs).length > 0) {
+        text += `\nTECHNICAL SPECIFICATIONS:\n`;
+        for (const [label, value] of Object.entries(reportData.techSpecs)) {
+            text += `${label}: ${value}\n`;
         }
     }
     
-    report += `\nUSAGE & STATUS:\n`;
-    report += `Today's Usage: ${Math.round(usage)} minutes\n`;
+    text += `\nUSAGE & STATUS:\n`;
+    text += `Today's Usage: ${reportData.usage.todayMinutes} minutes\n`;
 
-    report += `\nPSYCHOLOGICAL BASELINE (CBT):\n`;
-    report += `Last THI Score: ${lastScore}\n`;
-    report += `Last THI Date: ${lastTHIDateDisplay}\n`;
+    text += `\nPSYCHOLOGICAL BASELINE (CBT):\n`;
+    text += `Last THI Score: ${reportData.psychological.lastTHIScore}\n`;
+    text += `Last THI Date: ${reportData.psychological.lastTHIDate}\n`;
 
-    const therapyRecs = getTherapyRecommendations();
-    if (therapyRecs.status === 'complete' && therapyRecs.recommendations.length > 0) {
-        report += `\nPERSONALIZED THERAPY SUGGESTIONS:\n`;
-        therapyRecs.recommendations.forEach(r => {
-            report += `- ${r.mode}: ${r.reason}\n`;
+    if (reportData.recommendations.length > 0) {
+        text += `\nPERSONALIZED THERAPY SUGGESTIONS:\n`;
+        reportData.recommendations.forEach(r => {
+            text += `- ${r.mode}: ${r.reason}\n`;
         });
     }
 
-    report += `Thought Records Logged: ${thoughtRecordsCount}\n`;
-    report += `Most Recent Record:\n${recentThoughtSummary}\n`;
+    text += `Thought Records Logged: ${reportData.psychological.thoughtRecordsCount}\n`;
+    text += `Most Recent Record:\n${reportData.psychological.recentThoughtSummary}\n`;
 
-    report += `\nRESIDUAL INHIBITION (RI):\n`;
-    report += `Latest RI Result: ${riSummary}\n`;
+    text += `\nRESIDUAL INHIBITION (RI):\n`;
+    text += `Latest RI Result: ${reportData.ri.latestRIResult}\n`;
 
-    report += `\nMINIMUM MASKING LEVEL (MML):\n`;
-    report += `Latest MML Result: ${mmlSummary}\n`;
+    text += `\nMINIMUM MASKING LEVEL (MML):\n`;
+    text += `Latest MML Result: ${reportData.mml.latestMMLResult}\n`;
 
-    report += `\nLOUDNESS GROWTH (LG):\n`;
-    report += `Latest LG Test: ${latestLGSummary}\n`;
+    text += `\nLOUDNESS GROWTH (LG):\n`;
+    text += `Latest LG Test: ${reportData.lg.latestLGTest}\n`;
 
-    report += `\nTINNITUS MASKING CURVE (TMC):\n`;
-    report += `Latest Q-factor: ${latestQFactor}\n`;
+    text += `\nTINNITUS MASKING CURVE (TMC):\n`;
+    text += `Latest Q-factor: ${reportData.tmc.latestQFactor}\n`;
 
-    report += `\nSYSTEM STATUS:\n`;
-    report += `Hardware Phase Status: ${validation.phase}\n`;
-    report += `\nAUTOMATED ENGINE VALIDATION:\n${validation.engine}\n`;
+    text += `\nSYSTEM STATUS:\n`;
+    text += `Hardware Phase Status: ${reportData.systemStatus.hardwarePhase}\n`;
+    text += `\nAUTOMATED ENGINE VALIDATION:\n${reportData.systemStatus.engineValidation}\n`;
     
-    if (validation.dsp !== 'Not Performed') {
-        report += `\nINTERNAL DSP VALIDATION:\nStatus: ${validation.dsp}\n`;
+    if (reportData.systemStatus.dspValidation !== 'Not Performed') {
+        text += `\nINTERNAL DSP VALIDATION:\nStatus: ${reportData.systemStatus.dspValidation}\n`;
     }
 
-    if (validation.recommendations.length > 0) {
-        report += `\nACTIONABLE RECOMMENDATIONS:\n${validation.recommendations.join('\n')}\n`;
+    if (reportData.systemStatus.actionableRecommendations.length > 0) {
+        text += `\nACTIONABLE RECOMMENDATIONS:\n${reportData.systemStatus.actionableRecommendations.join('\n')}\n`;
     }
 
-    report += `\n-------------------------------------------`;
-    // Normalize all line endings to CRLF for consistent line spacing across OS/Browsers in text exports
-    return report.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n');
+    text += `\n-------------------------------------------`;
+    return text.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n');
+}
+
+function generateClinicalReportHtml(reportData) {
+    let html = `<div style="font-family: 'Segoe UI', sans-serif; color: #333; padding: 20px; max-width: 800px; margin: auto;">`;
+    html += `<h1 style="color: #00bfa5; text-align: center;">TRAHREG TINNITUS THERAPY SUITE - CLINICAL REPORT</h1>`;
+    html += `<p style="text-align: center; font-size: 0.9em; color: #666;">App Version: ${reportData.appVersion} | Therapy Mode: ${reportData.modeName} | Export Date: ${reportData.exportDate}</p>`;
+    html += `<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">`;
+
+    html += `<h2 style="color: #00bfa5;">THERAPY SETTINGS</h2>`;
+    html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">`;
+    for (const [label, value] of Object.entries(reportData.settings)) {
+        html += `<tr><td style="padding: 5px 0; border-bottom: 1px dashed #eee; width: 40%;">${label}</td><td style="padding: 5px 0; border-bottom: 1px dashed #eee;">${value}</td></tr>`;
+    }
+    html += `</table>`;
+
+    if (Object.keys(reportData.techSpecs).length > 0) {
+        html += `<h2 style="color: #00bfa5;">TECHNICAL SPECIFICATIONS</h2>`;
+        html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">`;
+        for (const [label, value] of Object.entries(reportData.techSpecs)) {
+            html += `<tr><td style="padding: 5px 0; border-bottom: 1px dashed #eee; width: 40%;">${label}</td><td style="padding: 5px 0; border-bottom: 1px dashed #eee;">${value}</td></tr>`;
+        }
+        html += `</table>`;
+    }
+
+    html += `<h2 style="color: #00bfa5;">USAGE & STATUS</h2>`;
+    html += `<p><strong>Today's Usage:</strong> ${reportData.usage.todayMinutes} minutes</p>`;
+
+    html += `<h2 style="color: #00bfa5;">PSYCHOLOGICAL BASELINE (CBT)</h2>`;
+    html += `<p><strong>Last THI Score:</strong> ${reportData.psychological.lastTHIScore}</p>`;
+    html += `<p><strong>Last THI Date:</strong> ${reportData.psychological.lastTHIDate}</p>`;
+
+    if (reportData.recommendations.length > 0) {
+        html += `<h3 style="color: #00bfa5;">PERSONALIZED THERAPY SUGGESTIONS</h3>`;
+        html += `<ul style="margin-left: 20px; margin-bottom: 10px;">`;
+        reportData.recommendations.forEach(r => {
+            html += `<li><strong>${r.mode}:</strong> ${r.reason}</li>`;
+        });
+        html += `</ul>`;
+    }
+
+    html += `<p><strong>Thought Records Logged:</strong> ${reportData.psychological.thoughtRecordsCount}</p>`;
+    html += `<p><strong>Most Recent Record:</strong><br><pre style="background: #f9f9f9; padding: 10px; border-radius: 5px; white-space: pre-wrap;">${reportData.psychological.recentThoughtSummary}</pre></p>`;
+
+    html += `<h2 style="color: #00bfa5;">RESIDUAL INHIBITION (RI)</h2>`;
+    html += `<p><strong>Latest RI Result:</strong> ${reportData.ri.latestRIResult}</p>`;
+
+    html += `<h2 style="color: #00bfa5;">MINIMUM MASKING LEVEL (MML)</h2>`;
+    html += `<p><strong>Latest MML Result:</strong> ${reportData.mml.latestMMLResult}</p>`;
+
+    html += `<h2 style="color: #00bfa5;">LOUDNESS GROWTH (LG)</h2>`;
+    html += `<p><strong>Latest LG Test:</strong> ${reportData.lg.latestLGTest}</p>`;
+
+    html += `<h2 style="color: #00bfa5;">TINNITUS MASKING CURVE (TMC)</h2>`;
+    html += `<p><strong>Latest Q-factor:</strong> ${reportData.tmc.latestQFactor}</p>`;
+
+    html += `<h2 style="color: #00bfa5;">SYSTEM STATUS</h2>`;
+    html += `<p><strong>Hardware Phase Status:</strong> ${reportData.systemStatus.hardwarePhase}</p>`;
+    html += `<p><strong>Automated Engine Validation:</strong><br><pre style="background: #f9f9f9; padding: 10px; border-radius: 5px; white-space: pre-wrap;">${reportData.systemStatus.engineValidation}</pre></p>`;
+    
+    if (reportData.systemStatus.dspValidation !== 'Not Performed') {
+        html += `<p><strong>Internal DSP Validation:</strong> ${reportData.systemStatus.dspValidation}</p>`;
+    }
+
+    if (reportData.systemStatus.actionableRecommendations.length > 0) {
+        html += `<h3 style="color: #f44336;">ACTIONABLE RECOMMENDATIONS</h3>`;
+        html += `<ul style="margin-left: 20px; color: #f44336;">`;
+        reportData.systemStatus.actionableRecommendations.forEach(rec => {
+            html += `<li>${rec}</li>`;
+        });
+        html += `</ul>`;
+    }
+
+    html += `<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">`;
+    html += `<p style="text-align: center; font-size: 0.8em; color: #666;">End of Report</p>`;
+    html += `</div>`;
+    return html;
 }
 
 /**
