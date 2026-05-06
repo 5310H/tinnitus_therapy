@@ -64,6 +64,7 @@ async function sendFeedback() {
     const message = document.getElementById('message').value;
     const status = document.getElementById('status');
     const btn = document.getElementById('sendBtn');
+    const validation = getUnifiedValidationStatus();
 
     if (!message.trim()) {
         status.innerText = "Please enter a message.";
@@ -88,7 +89,10 @@ async function sendFeedback() {
             body: JSON.stringify({ 
                 _subject: `[Trahreg Tinnitus Suite] ${subject}`,
                 email: email,
-                message: message 
+                message: message,
+                version: APP_VERSION,
+                system_valid: validation.isValid ? "PASS" : "FAIL/PENDING",
+                system_info: navigator.userAgent
             })
         });
 
@@ -112,7 +116,16 @@ function downloadFeedback() {
     const subj = document.getElementById('subject').value;
     const email = document.getElementById('email').value || 'Not provided';
     const msg = document.getElementById('message').value;
-    const text = `Subject: ${subj}\nFrom: ${email}\nDate: ${new Date().toLocaleString()}\n\nMessage:\n${msg}`;
+    const validation = getUnifiedValidationStatus();
+    
+    let text = `TRAHREG TINNITUS SUITE - FEEDBACK REPORT\n`;
+    text += `Date: ${new Date().toLocaleString()}\n`;
+    text += `App Version: ${APP_VERSION}\n`;
+    text += `System Validation: ${validation.isValid ? 'VALID' : 'INVALID/EXPIRED'}\n`;
+    text += `System Info: ${navigator.userAgent}\n`;
+    text += `Subject: ${subj}\nFrom: ${email}\n`;
+    text += `\nMessage:\n${msg}`;
+
     const blob = new Blob([text], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);

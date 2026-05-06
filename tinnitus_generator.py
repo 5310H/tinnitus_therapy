@@ -47,15 +47,24 @@ def generate_violet_noise(n_samples):
     violet = violet / (np.max(np.abs(violet)) + 1e-10)
     return violet
 
+def generate_blue_noise(n_samples):
+    """Blue noise (+3dB/octave). High-frequency emphasis."""
+    white = np.random.randn(n_samples)
+    spec = np.fft.rfft(white)
+    spec *= np.sqrt(np.arange(len(spec)))
+    blue = np.fft.irfft(spec, n_samples)
+    return blue / (np.max(np.abs(blue)) + 1e-10)
+
 def generate_noise(color, n_samples):
     generators = {
         'white': generate_white_noise,
         'pink': generate_pink_noise,
         'brown': generate_brown_noise,
+        'blue': generate_blue_noise,
         'violet': generate_violet_noise,
     }
     if color not in generators:
-        raise ValueError(f"Unknown noise color: {color}. Choose: white, pink, brown, violet")
+        raise ValueError(f"Unknown noise color: {color}. Choose: white, pink, brown, blue, violet")
     noise = generators[color](n_samples)
     return noise / (np.max(np.abs(noise)) + 1e-10)
 
@@ -115,8 +124,8 @@ def main():
                         required=True, help='Therapy type')
     parser.add_argument('--freq', type=float, default=6000,
                         help='Center/tone frequency in Hz (default: 6000)')
-    parser.add_argument('--color', choices=['white', 'pink', 'brown'], default='pink',
-                        help='Noise color (default: pink). Violet is recommended for high-tones.')
+    parser.add_argument('--color', choices=['white', 'pink', 'brown', 'blue', 'violet'], default='pink',
+                        help='Noise color (default: pink). Blue/Violet are recommended for high-tones.')
     parser.add_argument('--duration', type=float, default=600,
                         help='Duration in seconds (default: 600)')
     parser.add_argument('--notch-width', type=float, default=1.0,

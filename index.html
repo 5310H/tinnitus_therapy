@@ -17,21 +17,45 @@
 </header>
 
 <div class="grid">
-    <div class="card">
+    <div id="card-path" class="card grid-wide" draggable="true" style="border: 2px solid var(--accent); background: rgba(0, 191, 165, 0.05);">
+        <div class="drag-handle">⠿</div>
+        <h2 style="color: var(--accent);"><span style="font-size:1.4rem;">🎯</span> Start Here: The Path to Relief</h2>
+        <p class="info" style="color: var(--text); font-weight: 500; margin-bottom: 15px;">New to the suite? Follow this clinical sequence for the best results:</p>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button class="button" onclick="showQuickStartGuide()" style="text-align: left; padding: 10px; border-style: dashed;">
+                <b style="color:var(--accent)">0. Quick Start Guide:</b> Visual overview of the method.
+            </button>
+            <a class="button" href="cbt.html" id="step-thi" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <span><b style="color:var(--accent)">1. Assessment:</b> Take the THI baseline.</span> <span class="step-status"></span>
+            </a>
+            <a class="button" href="validation.html" id="step-valid" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <span><b style="color:var(--accent)">2. Validation:</b> Verify your hardware.</span> <span class="step-status"></span>
+            </a>
+            <a class="button" href="notchfinder.html" id="step-pitch" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <span><b style="color:var(--accent)">3. Calibration:</b> Pitch-match your tinnitus.</span> <span class="step-status"></span>
+            </a>
+            <a class="button" href="recommended.html" id="step-plan" style="text-align: left; padding: 10px; background: var(--accent); color: white;">
+                <b style="color:white">4. Your Plan:</b> View personalized recommendations.
+            </a>
+        </div>
+    </div>
+    <div id="card-modes" class="card" draggable="true">
+        <div class="drag-handle">⠿</div>
         <h2>Therapy Modes</h2>
         <details>
             <summary>Show</summary>
             <a class="button" href="decorrelated.html">Decorrelated</a>
-            <a class="button" href="notch.html">Notch Therapy</a>
+            <a class="button" href="notch.html">Notch</a>
             <a class="button" href="lenire.html">Lenire‑style</a>
-            <a class="button" href="soundtherapy.html">Sound Therapy</a>
-            <a class="button" href="cr.html">CR Neuromodulation</a>
+            <a class="button" href="soundtherapy.html">Sound</a>
+            <a class="button" href="cr.html">CR (Acoustic Coordinated Reset)</a>
             <a class="button" href="binaural.html">Binaural Beats</a>
             <a class="button" href="cbt.html">CBT & Wellness</a>
         </details>
     </div>
-    <div class="card">
-        <h2>Tools</h2>
+    <div id="card-tests" class="card" draggable="true">
+        <div class="drag-handle">⠿</div>
+        <h2>Support Tools</h2>
         <details>
             <summary>Show</summary>
             <a class="button" href="notchfinder.html">Notch Finder</a>
@@ -40,18 +64,27 @@
             <a class="button" href="tmc.html">Masking Curve (TMC)</a>
             <a class="button" href="lg.html">Loudness Growth</a>
             <a class="button" href="hearingtest.html">Hearing Test</a>
+            <a class="button" href="ri.html">RI Suppression Test</a>
+        </details>
+    </div>
+    <div id="card-utils" class="card" draggable="true">
+        <div class="drag-handle">⠿</div>
+        <h2>Suite Tools</h2>
+        <details>
+            <summary>Show</summary>
             <a class="button" href="spectrogram.html">Spectrogram</a>
             <a class="button" href="meter.html">Audio Meter</a>
-            <a class="button" href="ri.html">RI Suppression Test</a>
             <a class="button" href="validation.html" id="validationBtn">System Validation</a>
             <button class="button btn-accent" id="installPwaBtn" onclick="installPwa()">Install App (Offline)</button>
             <p id="pwaNote" class="hidden" style="font-size:0.75rem; color:var(--text-dim); margin-top:5px; text-align:center;">Follow the browser prompt to install for full offline use.</p>
             <p id="iosInstallNote" class="hidden" style="font-size:0.75rem; color:var(--accent); margin-top:5px; text-align:center;">iOS Users: Tap the Share icon and <b>'Add to Home Screen'</b> for offline use.</p>
             <p id="otherInstallNote" class="hidden" style="font-size:0.75rem; color:var(--text-dim); margin-top:5px; text-align:center;">Manual Install: Open browser menu and look for <b>"Install"</b> or <b>"Add to Home Screen"</b>.</p>
             <button class="button" style="border-color: var(--text-dim); color: var(--text-dim);" onclick="checkForUpdates()">Check for Updates</button>
+            <button class="button" style="border-color: #ff9800; color: #ff9800;" onclick="purgeCacheAndReload()">Force Purge Cache</button>
         </details>
     </div>
-    <div class="card">
+    <div id="card-progress" class="card" draggable="true">
+        <div class="drag-handle">⠿</div>
         <h2>Progress</h2>
         <details>
             <summary>Show</summary>
@@ -76,7 +109,8 @@
             <a class="button" href="stats.html" style="width:100%; margin-top:10px;">View Progress History</a>
         </details>
     </div>
-    <div class="card">
+    <div id="card-settings" class="card" draggable="true">
+        <div class="drag-handle">⠿</div>
         <h2>Project & Settings</h2>
         <details>
             <summary>Show</summary>
@@ -93,9 +127,15 @@
                 <input type="email" id="audioEmail" placeholder="clinician@example.com" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
             </div>
             <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="restartOnboarding()">Restart Onboarding</button>
+            <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="toggleCompactMode()">Toggle Compact Mode</button>
+            <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetLayout()">Reset Layout</button>
+            <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="toggleDashboardLayout()">Toggle 1/2 Column Layout</button>
+            <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetPreferences()">Reset All Warnings</button>
+            <button class="button" style="width:100%; margin-top:10px; border-color: #ef5350; color: #ef5350;" onclick="factoryReset()">Clear All Data (Factory Reset)</button>
         </details>
     </div>
-    <div class="card">
+    <div id="card-support" class="card" draggable="true">
+        <div class="drag-handle">⠿</div>
         <h2>Support Tinnitus Research</h2>
         <p style="font-size: 0.85rem; line-height: 1.4; color: var(--muted);">Support organizations like the ATA or the <a href="https://www.chsc.org/donate" target="_blank" style="color:var(--accent); text-decoration:underline;">Cleveland Hearing and Speech Center</a> to help fund future research initiatives.</p>
     </div>
@@ -118,7 +158,10 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 window.onload = () => {
+    loadCardOrder();
     initNav();
+    initDragAndDrop();
+    updateStartPathStatus();
 
     // Register Service Worker for PWA functionality
     if ('serviceWorker' in navigator) {
@@ -135,6 +178,12 @@ window.onload = () => {
     const step = parseInt(loadSetting('onboarding_step', 0));
     if (step < 6) {
         showOnboardingStep(step);
+    } else {
+        // Version tracking for returning users
+        const lastSeen = loadSetting('last_seen_version', '0.0.0');
+        if (lastSeen !== APP_VERSION) {
+            showWhatsNew();
+        }
     }
 
     document.getElementById('goalInput').value = loadSetting('daily_goal', 20);
@@ -190,6 +239,56 @@ async function installPwa() {
     document.getElementById('installPwaBtn').classList.add('hidden');
 }
 
+function updateStartPathStatus() {
+    const hasThi = getLatestLogData('distress_log') !== null;
+    const hasValid = loadSetting('last_validation_date', null) !== null;
+    const hasPitch = loadSetting('notchL', null) !== null;
+
+    const setStatus = (id, complete) => {
+        const el = document.querySelector(`#${id} .step-status`);
+        if (complete) {
+            el.innerHTML = '✅';
+            document.getElementById(id).style.borderColor = 'var(--accent)';
+        }
+    };
+
+    setStatus('step-thi', hasThi);
+    setStatus('step-valid', hasValid);
+    setStatus('step-pitch', hasPitch);
+}
+
+function showWhatsNew() {
+    document.getElementById('whatsNewModal').style.display = 'block';
+}
+
+window.closeWhatsNew = () => {
+    saveSetting('last_seen_version', APP_VERSION);
+    document.getElementById('whatsNewModal').style.display = 'none';
+    
+    // If validation is needed, highlight it after they close the news
+    if (needsValidation()) {
+        document.getElementById('validationBtn').classList.add('highlight-btn');
+    }
+};
+
+window.purgeCacheAndReload = async () => {
+    if (confirm("This will clear the application cache and force a fresh download of the latest version. Your saved therapy settings will not be affected. Proceed?")) {
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (let registration of registrations) {
+                await registration.unregister();
+            }
+        }
+        if ('caches' in window) {
+            const names = await caches.keys();
+            for (let name of names) {
+                await caches.delete(name);
+            }
+        }
+        window.location.reload(true);
+    }
+};
+
 async function checkForUpdates() {
     if ('serviceWorker' in navigator) {
         try {
@@ -226,6 +325,92 @@ window.restartOnboarding = () => {
         location.reload();
     }
 };
+
+window.resetPreferences = () => {
+    if (confirm("This will re-enable all clinical pre-flight checks and feature highlights. Continue?")) {
+        localStorage.removeItem('tts_skip_preflight');
+        localStorage.removeItem('tts_last_seen_version');
+        alert("Warnings and preferences reset.");
+        location.reload();
+    }
+};
+
+window.factoryReset = () => {
+    if (confirm("DANGER: This will permanently delete ALL data including assessment history, therapy logs, and settings. This action is irreversible. Proceed?")) {
+        if (confirm("Are you absolutely sure? We recommend using 'Backup Data' in the Progress section before doing this.")) {
+            const input = prompt("Final Safety Check: Type 'RESET' (all caps) to confirm factory reset.");
+            if (input === 'RESET') {
+                localStorage.clear();
+                sessionStorage.clear();
+                alert("Data cleared successfully. Reloading...");
+                location.reload();
+            } else {
+                alert("Reset cancelled. No data was changed.");
+            }
+        }
+    }
+};
+
+window.resetLayout = () => {
+    if (confirm("This will reset the dashboard card order to its default layout. Continue?")) {
+        localStorage.removeItem('tts_card_order');
+        alert("Layout reset. Reloading...");
+        location.reload();
+    }
+};
+
+function initDragAndDrop() {
+    const grid = document.querySelector('.grid');
+    const cards = grid.querySelectorAll('.card');
+
+    cards.forEach(card => {
+        card.addEventListener('dragstart', () => card.classList.add('dragging'));
+        card.addEventListener('dragend', () => {
+            card.classList.remove('dragging');
+            saveCardOrder();
+        });
+    });
+
+    grid.addEventListener('dragover', e => {
+        e.preventDefault();
+        const dragging = document.querySelector('.dragging');
+        const afterElement = getDragAfterElement(grid, e.clientX, e.clientY);
+        if (afterElement == null) {
+            grid.appendChild(dragging);
+        } else {
+            grid.insertBefore(dragging, afterElement);
+        }
+    });
+}
+
+function getDragAfterElement(container, x, y) {
+    const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function saveCardOrder() {
+    const order = [...document.querySelectorAll('.grid .card')].map(c => c.id);
+    saveSetting('card_order', JSON.stringify(order));
+}
+
+function loadCardOrder() {
+    const saved = loadSetting('card_order', null);
+    if (!saved) return;
+    const order = JSON.parse(saved);
+    const grid = document.querySelector('.grid');
+    order.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) grid.appendChild(el);
+    });
+}
 
 function showOnboardingStep(step) {
     document.getElementById('onboardingModal').style.display = 'block';
@@ -288,7 +473,10 @@ function renderStats() {
         <div id="onboarding-0">
              <h2>Welcome</h2>
              <p>This open‑source suite provides research‑based tinnitus tools. For your safety, please accept our disclaimer to begin.</p>
-             <a href="disclaimer.html" class="button" target="_blank" style="margin-top: 10px; display: block;">Read Full Disclaimer</a>
+             <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <a href="disclaimer.html" class="button" target="_blank" style="flex: 1;">Legal Policy</a>
+                <button onclick="showQuickStartGuide()" class="button" style="flex: 1; border-color: var(--accent);">Quick Start Guide</button>
+             </div>
              <button onclick="nextOnboardingStep(1)" class="big-btn play-btn">I Accept & Understand</button>
         </div>
         <div id="onboarding-1" style="display:none;">
@@ -337,5 +525,21 @@ function renderStats() {
         <button onclick="finishOnboarding()" class="button" style="width:100%; margin-top:20px; border-color: var(--text-dim); color: var(--text-dim); font-weight: normal;">Exit Wizard</button>
     </div>
 </div>
+
+<div id="whatsNewModal" class="modal-overlay">
+    <div class="modal-card">
+        <h2 style="color: var(--accent); margin-top: 0;">What's New in v<span class="app-version-label"></span></h2>
+        <p class="info">Recent improvements to your therapy experience:</p>
+        <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.95rem;">
+            <li><b>Interactive Tutorials:</b> Annotated walkthroughs for every therapy and tool. Use the <b>Tutorial</b> button to see UI highlights and hear the new <b>Voice Narrator</b> with adjustable speed and volume.</li>
+            <li><b>Guided Onboarding:</b> A visual "Path to Relief" on the home page with progress checkmarks to help you complete your clinical setup.</li>
+            <li><b>Better Organization:</b> Dashboard tools are now split into "Diagnostic Tests" and "System Utilities" to make navigation more intuitive.</li>
+            <li><b>Progressive Muscle Relaxation (PMR):</b> A guided relaxation sequence in <b>CBT & Wellness</b> with auditory cues to help manage tinnitus distress.</li>
+            <li><b>Performance & Safety:</b> Faster loading times, improved DSP validation, and new options for data backup or factory reset within settings.</li>
+        </ul>
+        <button onclick="closeWhatsNew()" class="big-btn play-btn">Let's Go</button>
+    </div>
+</div>
+
 </body>
 </html>

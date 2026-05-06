@@ -31,7 +31,13 @@
         </div>
         <p class="info" style="margin-bottom: 15px;">A clinically validated tool to measure the impact of tinnitus on your life. 0-16: Slight, 18-36: Mild, 38-56: Moderate, 58-76: Severe, 78-100: Catastrophic. <span id="lastThiDate" style="font-weight: bold;"></span></p>
         
-        
+        <div class="ctrl" style="margin-bottom: 20px; border-bottom: 1px dashed var(--border); padding-bottom: 15px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="sleepIssuesToggle" style="width: 20px; height: 20px;">
+                <span style="color: var(--accent); font-weight: bold;">I am experiencing tinnitus-related sleep issues</span>
+            </label>
+            <p class="info" style="margin-top: 5px; margin-left: 30px;">Checking this helps tailor your personalized therapy recommendations.</p>
+        </div>
         
         <div id="quiz"></div>
         
@@ -48,6 +54,7 @@
     <div class="card">
         <h2>Tinnitus Thought Record</h2>
         <p class="info">Systematically analyze and challenge unhelpful thoughts about your tinnitus.</p>
+        <p class="info" style="color: var(--accent); font-style: italic;">Tip: Completing records while playing <b>Brown</b> or <b>Pink</b> noise can help lower the brain's "threat" response.</p>
         <div class="ctrl">
             <label for="trSituation">Situation: When did you notice your tinnitus and what were you doing?</label>
             <textarea id="trSituation" rows="3" maxlength="300" placeholder="e.g., 'Trying to fall asleep,' 'In a quiet room,' 'During a stressful meeting'"></textarea>
@@ -142,6 +149,23 @@
     </div>
 </div>
 
+<div class="panel">
+    <div class="card">
+        <h2>Progressive Muscle Relaxation (PMR)</h2>
+        <p class="info">Release physical tension to lower the "fight or flight" response associated with tinnitus distress.</p>
+        <div id="pmrDisplay" style="text-align: center; padding: 20px; min-height: 100px; display: flex; align-items: center; justify-content: center;">
+            <p id="pmrStepText" style="font-size: 1.1rem; color: var(--accent); font-weight: bold;">Ready to begin?</p>
+        </div>
+        <div class="usage-progress" style="margin-bottom: 15px;">
+            <div id="pmrProgressBar" class="usage-bar" style="width: 0%"></div>
+        </div>
+        <button id="pmrBtn" class="big-btn play-btn" onclick="handlePMR()">Start PMR Sequence</button>
+        <p class="info" style="margin-top: 10px; text-align: center;">
+            *Auditory cues will play at the start of each step.*
+        </p>
+    </div>
+</div>
+
 <script>
 const questions = [
     "Does your tinnitus make it difficult for you to concentrate?",
@@ -173,9 +197,17 @@ const questions = [
 
 window.onload = () => {
     initNav(`
-        <b>Psychoeducation:</b> Tinnitus is often amplified by the brain's "threat detection" system. 
-        CBT helps reclassify the sound as neutral, reducing the emotional response.<br><br>
-        <b>THI:</b> Take this test once a month to track your habituation progress.
+        <h3 style="color:var(--accent); margin-bottom:10px;">Module-Specific Guidance</h3>
+        <p><b>Tinnitus Thought Records:</b> This tool helps break the distress cycle by examining the thoughts that occur during a spike.</p>
+        <ul style="padding-left:15px; margin-top:5px;">
+            <li><b>Capture:</b> Describe the <b>Situation</b> and the initial <b>Automatic Thought</b> (e.g., "This will never end").</li>
+            <li><b>Examine:</b> List objective <b>Evidence</b> for and against that specific thought.</li>
+            <li><b>Reframe:</b> Construct a <b>Balanced Thought</b> that acknowledges the sound without a catastrophic label.</li>
+        </ul><br>
+        
+        <b>Habituation Assessment:</b> Take the <b>THI</b> once a month. Habituation is a slow process; monthly tracking provides a more accurate view of progress than daily check-ins.<br><br>
+        
+        <b>Sound Support:</b> Users often find it easier to complete cognitive exercises while playing low-level <b>Brown</b> or <b>Pink</b> noise to reduce the brain's immediate "threat" response.
     `);
     
     const lastAssessmentDate = getLastTHIAssessmentDate();
@@ -347,25 +379,47 @@ function emailToAudiologist() {
 }
 
 const pmrSteps = [
-    "Take 3 deep breaths. Focus on the air entering and leaving.",
-    "Tense your feet and toes tightly for 5 seconds... Now release completely.",
-    "Tense your calves and thighs... Hold... Now release and feel the heaviness.",
-    "Squeeze your glutes and pelvic muscles... Hold... Now release.",
-    "Tighten your stomach and chest... Hold... Now release.",
-    "Squeeze your hands into fists and tense your arms... Hold... Now release.",
-    "Shrug your shoulders up to your ears... Hold... Now release.",
-    "Clench your jaw and squint your eyes... Hold... Now release.",
-    "Tense your entire body at once... Hold... and let it all go.",
-    "Sit in the stillness for 60 seconds. Observe your tinnitus as just a neutral sound."
+    { text: "Take 3 deep breaths. Focus on the air entering and leaving.", duration: 10000 },
+    { text: "Tense your feet and toes tightly for 5 seconds... Now release completely.", duration: 10000 },
+    { text: "Tense your calves and thighs... Hold... Now release and feel the heaviness.", duration: 10000 },
+    { text: "Squeeze your glutes and pelvic muscles... Hold... Now release.", duration: 10000 },
+    { text: "Tighten your stomach and chest... Hold... Now release.", duration: 10000 },
+    { text: "Squeeze your hands into fists and tense your arms... Hold... Now release.", duration: 10000 },
+    { text: "Shrug your shoulders up to your ears... Hold... Now release.", duration: 10000 },
+    { text: "Clench your jaw and squint your eyes... Hold... Now release.", duration: 10000 },
+    { text: "Tense your entire body at once... Hold... and let it all go.", duration: 10000 },
+    { text: "Sit in the stillness for 60 seconds. Observe your tinnitus as just a neutral sound.", duration: 60000 }
 ];
-let pmrActive = false, pmrIdx = 0, pmrTimer;
+let pmrActive = false, pmrIdx = 0, pmrTimer, pmrAudioCtx = null;
+
+function handlePMR() {
+    if (pmrActive) startPMR();
+    else if (pmrAudioCtx) startPMR();
+    else showPreFlight(() => startPMR());
+}
+
+function playPmrCue(freq = 440) {
+    if (!pmrAudioCtx) pmrAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (pmrAudioCtx.state === 'suspended') pmrAudioCtx.resume();
+    const osc = pmrAudioCtx.createOscillator();
+    const g = pmrAudioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, pmrAudioCtx.currentTime);
+    g.gain.setValueAtTime(0, pmrAudioCtx.currentTime);
+    g.gain.linearRampToValueAtTime(0.1, pmrAudioCtx.currentTime + 0.1);
+    g.gain.exponentialRampToValueAtTime(0.001, pmrAudioCtx.currentTime + 1.5);
+    osc.connect(g).connect(pmrAudioCtx.destination);
+    osc.start();
+    osc.stop(pmrAudioCtx.currentTime + 1.5);
+}
 
 function startPMR() {
     if (pmrActive) {
         clearTimeout(pmrTimer);
         pmrActive = false;
         document.getElementById('pmrBtn').textContent = "Start PMR Sequence";
-        document.getElementById('pmrStepText').textContent = "Sequence stopped.";
+        document.getElementById('pmrStepText').textContent = "Ready to begin?";
+        document.getElementById('pmrProgressBar').style.width = "0%";
         return;
     }
     pmrActive = true; pmrIdx = 0;
@@ -374,15 +428,22 @@ function startPMR() {
 }
 
 function runPmrStep() {
+    if (!pmrActive) return;
     if (pmrIdx >= pmrSteps.length) {
         document.getElementById('pmrStepText').textContent = "Sequence complete. You are relaxed and safe.";
         document.getElementById('pmrBtn').textContent = "Restart PMR Sequence";
+        document.getElementById('pmrProgressBar').style.width = "100%";
+        playPmrCue(523.25); // Completion chime
         pmrActive = false;
         return;
     }
-    document.getElementById('pmrStepText').textContent = pmrSteps[pmrIdx];
+    const step = pmrSteps[pmrIdx];
+    document.getElementById('pmrStepText').textContent = step.text;
+    const progress = (pmrIdx / pmrSteps.length) * 100;
+    document.getElementById('pmrProgressBar').style.width = progress + "%";
+    playPmrCue(pmrIdx === pmrSteps.length - 1 ? 329.63 : 440);
     pmrIdx++;
-    pmrTimer = setTimeout(runPmrStep, 8000); // 8 seconds per step
+    pmrTimer = setTimeout(runPmrStep, step.duration);
 }
 </script>
 </body>

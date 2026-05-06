@@ -1,8 +1,86 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "1.2.16";
-const APP_VERSION = "1.2.17";
+const APP_VERSION = "1.3.1";
+
+/** 
+ * Helpers for consistent localStorage interaction
+ */
+const getTodayKey = () => new Date().toISOString().split('T')[0];
+const getJson = (key, defaultVal = []) => {
+    try {
+        return JSON.parse(localStorage.getItem('tts_' + key)) || defaultVal;
+    } catch (e) { return defaultVal; }
+};
+const setJson = (key, val) => localStorage.setItem('tts_' + key, JSON.stringify(val));
+
+// Pre-fetch system voices to ensure they are indexed by the browser for the narrator
+if (typeof speechSynthesis !== 'undefined') {
+    speechSynthesis.getVoices();
+}
+
+/**
+ * Helper to get the most recent entry from a date-keyed log object.
+ */
+function getLatestLogData(key) {
+    const log = getJson(key, {});
+    const dates = Object.keys(log).sort((a, b) => new Date(b) - new Date(a));
+    if (dates.length === 0) return null;
+    return { date: dates[0], data: log[dates[0]] };
+}
+
+/**
+ * Retrieves a unified validation status object covering engine, phase, and DSP tests.
+ */
+function getUnifiedValidationStatus() {
+    const engineResults = loadSetting('engine_validation_results', 'Not Performed');
+    const phaseStatus = loadSetting('phase_status', 'Not Verified');
+    const dspStatus = window.lastValidationStatus || 'Not Performed';
+    const lastValidationDate = loadSetting('last_validation_date', null);
+
+    const recommendations = [];
+    let isValid = true;
+
+    // Check expiration (30 days)
+    if (lastValidationDate) {
+        const diff = Date.now() - new Date(lastValidationDate).getTime();
+        if (diff > (30 * 24 * 60 * 60 * 1000)) {
+            isValid = false;
+            recommendations.push("- Your system validation has expired (older than 30 days). Please re-run System Validation.");
+        }
+    } else {
+        isValid = false;
+    }
+
+    if (engineResults === 'Not Performed' || engineResults.includes('[FAIL]')) {
+        isValid = false;
+        recommendations.push("- Automated Engine Validation is missing or failed. Please run the 'System Validation' tool on the home page.");
+    }
+    
+    if (phaseStatus === 'Not Verified') {
+        isValid = false;
+        recommendations.push("- Hardware Phase is unverified. Use the 'Phase Test' in System Validation to confirm headphone wiring.");
+    } else if (phaseStatus.includes('Error')) {
+        isValid = false;
+        recommendations.push("- Phase error detected. Check for loose connections or virtual surround sound software.");
+    }
+
+    if (dspStatus.includes('FAIL')) {
+        isValid = false;
+        if (dspStatus.includes('Shallow Notch')) recommendations.push("- Shallow Notch failure: Clinical research targets >40dB attenuation. Disable any audio 'enhancer' or 'booster' browser extensions.");
+        if (dspStatus.includes('Frequency Mismatch')) recommendations.push("- Frequency mismatch failure: Ensure your OS audio settings are set to 44.1kHz or 48kHz and restart your browser.");
+        if (dspStatus.includes('Cross-over')) recommendations.push("- Filter Cross-over failure: The Low-Cut frequency must be lower than the High-Cut frequency. Adjust your filter sliders.");
+    }
+
+    return {
+        engine: engineResults,
+        phase: phaseStatus,
+        dsp: dspStatus,
+        isValid: isValid,
+        lastDate: lastValidationDate,
+        recommendations: recommendations
+    };
+}
 
 function saveSetting(key, value) {
     localStorage.setItem('tts_' + key, value);
@@ -46,43 +124,28 @@ function importAllData(file) {
 }
 
 function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
-    const engineResults = loadSetting('engine_validation_results', 'Not Performed');
-    const phaseStatus = loadSetting('phase_status', 'Not Verified');
+    const validation = getUnifiedValidationStatus();
     const usage = getDailyUsage();
 
-    const mmlLog = getMMLResults();
-    const mmlDates = Object.keys(mmlLog).sort((a, b) => new Date(b) - new Date(a));
-    let mmlSummary = "N/A";
-    if (mmlDates.length > 0) {
-        mmlSummary = `Latest MML: ${mmlLog[mmlDates[0]].slice(-1)[0]}%`;
-    }
+    // Consolidate latest data retrieval using the new helper
+    const latestMML = getLatestLogData('mml_log');
+    const mmlSummary = latestMML ? `Latest MML: ${latestMML.data.slice(-1)[0]}%` : "N/A";
 
-    const lgLog = getLoudnessGrowthLog();
-    const lgDates = Object.keys(lgLog).sort((a, b) => new Date(b) - new Date(a));
-    let latestLGSummary = "N/A";
-    if (lgDates.length > 0) {
-        latestLGSummary = `Points: ${lgLog[lgDates[0]].length}`;
-    }
+    const latestLG = getLatestLogData('lg_log');
+    const latestLGSummary = latestLG ? `Points: ${latestLG.data.length}` : "N/A";
 
-    const qFactors = getQFactors();
-    const qFactorDates = Object.keys(qFactors).sort((a, b) => new Date(b) - new Date(a));
-    let latestQFactor = "N/A";
-    if (qFactorDates.length > 0) {
-        latestQFactor = qFactors[qFactorDates[0]];
-    }
+    const latestQF = getLatestLogData('q_factor_log');
+    const latestQFactor = latestQF ? latestQF.data : "N/A";
 
-    const riLog = getRIResults();
-    const riDates = Object.keys(riLog).sort((a, b) => new Date(b) - new Date(a));
+    const latestRI = getLatestLogData('ri_log');
     let riSummary = "N/A";
-    if (riDates.length > 0) {
-        const latestDate = riDates[0];
-        riSummary = `Date: ${latestDate} | Suppression Results: ${riLog[latestDate].join('s, ')}s`;
+    if (latestRI) {
+        riSummary = `Date: ${latestRI.date} | Suppression Results: ${latestRI.data.join('s, ')}s`;
     }
 
-    const lastTHI = getLastTHIAssessmentDate();
-    const distressScores = getDistressScores();
-    const lastScoreVal = lastTHI ? distressScores[lastTHI.toISOString().split('T')[0]] : null;
-    const lastScore = lastScoreVal !== null ? `${lastScoreVal}/100` : 'Not Performed';
+    const latestTHI = getLatestLogData('distress_log');
+    const lastScore = latestTHI ? `${latestTHI.data}/100` : 'Not Performed';
+    const lastTHIDateDisplay = latestTHI ? new Date(latestTHI.date).toLocaleDateString() : 'N/A';
     
     const thoughtRecords = getThoughtRecords();
     const thoughtRecordsCount = thoughtRecords.length;
@@ -119,7 +182,7 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
 
     report += `\nPSYCHOLOGICAL BASELINE (CBT):\n`;
     report += `Last THI Score: ${lastScore}\n`;
-    report += `Last THI Date: ${lastTHI ? lastTHI.toLocaleDateString() : 'N/A'}\n`;
+    report += `Last THI Date: ${lastTHIDateDisplay}\n`;
 
     const therapyRecs = getTherapyRecommendations();
     if (therapyRecs.status === 'complete' && therapyRecs.recommendations.length > 0) {
@@ -145,32 +208,15 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
     report += `Latest Q-factor: ${latestQFactor}\n`;
 
     report += `\nSYSTEM STATUS:\n`;
-    report += `Hardware Phase Status: ${phaseStatus}\n`;
-    report += `\nAUTOMATED ENGINE VALIDATION:\n${engineResults}\n`;
+    report += `Hardware Phase Status: ${validation.phase}\n`;
+    report += `\nAUTOMATED ENGINE VALIDATION:\n${validation.engine}\n`;
     
-    if (window.lastValidationStatus) {
-        report += `\nINTERNAL DSP VALIDATION:\nStatus: ${window.lastValidationStatus}\n`;
+    if (validation.dsp !== 'Not Performed') {
+        report += `\nINTERNAL DSP VALIDATION:\nStatus: ${validation.dsp}\n`;
     }
 
-    const recommendations = [];
-    if (engineResults === 'Not Performed' || engineResults.includes('[FAIL]')) {
-        recommendations.push("- Automated Engine Validation is missing or failed. Please run the 'System Validation' tool on the home page.");
-    }
-    if (phaseStatus === 'Not Verified') {
-        recommendations.push("- Hardware Phase is unverified. Use the 'Phase Test' in System Validation to confirm headphone wiring.");
-    } else if (phaseStatus.includes('Error')) {
-        recommendations.push("- Phase error detected. Check for loose connections or virtual surround sound software.");
-    }
-    if (window.lastValidationStatus && window.lastValidationStatus.includes('FAIL')) {
-        if (window.lastValidationStatus.includes('Shallow Notch')) {
-            recommendations.push("- Shallow Notch failure: Clinical research targets >40dB attenuation. Disable any audio 'enhancer' or 'booster' browser extensions.");
-        }
-        if (window.lastValidationStatus.includes('Frequency Mismatch')) {
-            recommendations.push("- Frequency mismatch failure: Ensure your OS audio settings are set to 44.1kHz or 48kHz and restart your browser.");
-        }
-    }
-    if (recommendations.length > 0) {
-        report += `\nACTIONABLE RECOMMENDATIONS:\n${recommendations.join('\n')}\n`;
+    if (validation.recommendations.length > 0) {
+        report += `\nACTIONABLE RECOMMENDATIONS:\n${validation.recommendations.join('\n')}\n`;
     }
 
     report += `\n-------------------------------------------`;
@@ -182,13 +228,11 @@ function generateClinicalReport(modeName, settingsObj, techSpecsObj = {}) {
  * Generates personalized therapy recommendations based on THI and MML scores.
  */
 function getTherapyRecommendations() {
-    const lastTHI = getLastTHIAssessmentDate();
-    const distressScores = getDistressScores();
-    const thiScore = lastTHI ? distressScores[lastTHI.toISOString().split('T')[0]] : null;
+    const latestTHI = getLatestLogData('distress_log');
+    const thiScore = latestTHI ? latestTHI.data : null;
 
-    const mmlLog = getMMLResults();
-    const mmlDates = Object.keys(mmlLog).sort((a, b) => new Date(b) - new Date(a));
-    const lastMML = mmlDates.length > 0 ? mmlLog[mmlDates[0]].slice(-1)[0] : null;
+    const latestMML = getLatestLogData('mml_log');
+    const lastMMLValue = latestMML ? latestMML.data.slice(-1)[0] : null;
 
     if (thiScore === null) {
         return { status: 'incomplete', message: 'Please complete the THI Assessment in CBT & Wellness to get personalized recommendations.' };
@@ -239,7 +283,7 @@ function getTherapyRecommendations() {
     }
 
     // MML specific
-    if (lastMML !== null && lastMML > 50) {
+    if (lastMMLValue !== null && lastMMLValue > 50) {
         recs.push({
             mode: "Decorrelated Noise",
             url: "decorrelated.html",
@@ -247,14 +291,14 @@ function getTherapyRecommendations() {
         });
     }
 
-    return { status: 'complete', thi: thiScore, mml: lastMML, recommendations: recs };
+    return { status: 'complete', thi: thiScore, mml: lastMMLValue, recommendations: recs };
 }
 
 function logUsageMinutes(mins) {
-    const today = new Date().toISOString().split('T')[0];
-    const usage = JSON.parse(localStorage.getItem('tts_usage_log') || '{}');
+    const today = getTodayKey();
+    const usage = getJson('usage_log', {});
     usage[today] = (usage[today] || 0) + mins;
-    localStorage.setItem('tts_usage_log', JSON.stringify(usage));
+    setJson('usage_log', usage);
 }
 
 /**
@@ -262,9 +306,9 @@ function logUsageMinutes(mins) {
  * @param {object} entry - The thought record entry object.
  */
 function logThoughtRecordEntry(entry) {
-    const log = JSON.parse(localStorage.getItem('tts_thought_records') || '[]');
+    const log = getJson('thought_records', []);
     log.push({ ...entry, timestamp: new Date().toISOString() }); // Add timestamp
-    localStorage.setItem('tts_thought_records', JSON.stringify(log));
+    setJson('thought_records', log);
 }
 
 /**
@@ -272,102 +316,102 @@ function logThoughtRecordEntry(entry) {
  * @returns {Array} An array of thought record entries.
  */
 function getThoughtRecords() {
-    return JSON.parse(localStorage.getItem('tts_thought_records') || '[]');
+    return getJson('thought_records', []);
 }
 
 /**
  * Logs a Tinnitus Handicap Inventory (THI) or distress score (0-100)
  */
 function logDistressScore(score) {
-    const today = new Date().toISOString().split('T')[0];
-    const log = JSON.parse(localStorage.getItem('tts_distress_log') || '{}');
+    const today = getTodayKey();
+    const log = getJson('distress_log', {});
     log[today] = score;
-    localStorage.setItem('tts_distress_log', JSON.stringify(log));
+    setJson('distress_log', log);
 }
 
 /**
  * Retrieves all stored Tinnitus Handicap Inventory (THI) or distress scores.
  */
 function getDistressScores() {
-    return JSON.parse(localStorage.getItem('tts_distress_log') || '{}');
+    return getJson('distress_log', {});
 }
 
 /**
  * Logs a Residual Inhibition (RI) result (seconds of silence/reduction)
  */
 function logRIResult(seconds) {
-    const today = new Date().toISOString().split('T')[0];
-    const log = JSON.parse(localStorage.getItem('tts_ri_log') || '{}');
+    const today = getTodayKey();
+    const log = getJson('ri_log', {});
     if (!log[today]) log[today] = [];
     log[today].push(seconds);
-    localStorage.setItem('tts_ri_log', JSON.stringify(log));
+    setJson('ri_log', log);
 }
 
 /**
  * Retrieves RI results log.
  */
 function getRIResults() {
-    return JSON.parse(localStorage.getItem('tts_ri_log') || '{}');
+    return getJson('ri_log', {});
 }
 
 /**
  * Logs a Minimum Masking Level (MML) result
  */
 function logMML(percent) {
-    const today = new Date().toISOString().split('T')[0];
-    const log = JSON.parse(localStorage.getItem('tts_mml_log') || '{}');
+    const today = getTodayKey();
+    const log = getJson('mml_log', {});
     if (!log[today]) log[today] = [];
     log[today].push(percent);
-    localStorage.setItem('tts_mml_log', JSON.stringify(log));
+    setJson('mml_log', log);
 }
 
 function getMMLResults() {
-    return JSON.parse(localStorage.getItem('tts_mml_log') || '{}');
+    return getJson('mml_log', {});
 }
 
 /**
  * Logs a Loudness Growth (LG) data point.
  */
 function logLoudnessGrowthPoint(freq, objectiveLevel, subjectiveRating) {
-    const today = new Date().toISOString().split('T')[0];
-    const log = JSON.parse(localStorage.getItem('tts_lg_log') || '{}');
+    const today = getTodayKey();
+    const log = getJson('lg_log', {});
     if (!log[today]) log[today] = [];
     log[today].push({ freq: parseFloat(freq), obj: parseFloat(objectiveLevel), subj: subjectiveRating });
-    localStorage.setItem('tts_lg_log', JSON.stringify(log));
+    setJson('lg_log', log);
 }
 
 function getLoudnessGrowthLog() {
-    return JSON.parse(localStorage.getItem('tts_lg_log') || '{}');
+    return getJson('lg_log', {});
 }
 
 /**
  * Logs a calculated Q-factor for a given date.
  */
 function logQFactor(qFactor) {
-    const today = new Date().toISOString().split('T')[0];
-    const log = JSON.parse(localStorage.getItem('tts_q_factor_log') || '{}');
+    const today = getTodayKey();
+    const log = getJson('q_factor_log', {});
     log[today] = qFactor; // Store the latest Q-factor for the day
-    localStorage.setItem('tts_q_factor_log', JSON.stringify(log));
+    setJson('q_factor_log', log);
 }
 
 /**
  * Retrieves all stored Q-factors.
  */
 function getQFactors() {
-    return JSON.parse(localStorage.getItem('tts_q_factor_log') || '{}');
+    return getJson('q_factor_log', {});
 }
 
 /**
  * Logs a Tinnitus Masking Curve (TMC) point.
  */
 function logTMCPoint(freq, level) {
-    const log = JSON.parse(localStorage.getItem('tts_tmc_log') || '{}');
+    const log = getJson('tmc_log', {});
     log[freq] = level;
-    localStorage.setItem('tts_tmc_log', JSON.stringify(log));
+    setJson('tmc_log', log);
 }
 
 function getTMCLog() {
-    return JSON.parse(localStorage.getItem('tts_tmc_log') || '{}');
+    return getJson('tmc_log', {});
 }
 
 function clearTMCLog() {
@@ -379,23 +423,317 @@ function clearTMCLog() {
  * @returns {Date|null} The Date object of the last assessment, or null if none found.
  */
 function getLastTHIAssessmentDate() {
-    const scores = getDistressScores();
-    const dates = Object.keys(scores);
-    if (dates.length === 0) {
-        return null;
-    }
-    // Convert date strings to Date objects and find the maximum (most recent)
-    const latestDate = dates.reduce((maxDate, currentDateStr) => {
-        const currentDate = new Date(currentDateStr);
-        return (maxDate === null || currentDate > maxDate) ? currentDate : maxDate;
-    }, null);
-    return latestDate;
+    const latest = getLatestLogData('distress_log');
+    return latest ? new Date(latest.date) : null;
 }
 
 function getDailyUsage() {
-    const today = new Date().toISOString().split('T')[0];
-    const usage = JSON.parse(localStorage.getItem('tts_usage_log') || '{}');
-    return usage[today] || 0;
+    return getJson('usage_log', {})[getTodayKey()] || 0;
+}
+
+/**
+ * Generic "Video-Style" Walkthrough System
+ */
+function showWalkthrough(slides) {
+    let currentSlide = 0;
+    let autoPlayTimer = null;
+    let isAutoPlaying = false;
+    let speechSynth = window.speechSynthesis;
+    let speechUtterance = null;
+    let narratorEnabled = loadSetting('narrator_enabled', 'false') === 'true'; // Load preference
+    let narratorSpeed = parseFloat(loadSetting('narrator_speed', '0.9'));
+    let narratorVolume = parseFloat(loadSetting('narrator_volume', '1.0'));
+
+    const clearHighlights = () => {
+        document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
+    };
+
+    const stopSpeaking = () => {
+        if (speechSynth && speechSynth.speaking) {
+            speechSynth.cancel();
+        }
+    };
+
+    const getPlainTextFromHtml = (html) => {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        return tempDiv.textContent || tempDiv.innerText || '';
+    };
+
+    const speakContent = (title, contentHtml) => {
+        stopSpeaking();
+        if (narratorEnabled && speechSynth) {
+            const voices = speechSynth.getVoices();
+            const textToSpeak = title + ". " + getPlainTextFromHtml(contentHtml);
+            speechUtterance = new SpeechSynthesisUtterance(textToSpeak);
+            speechUtterance.rate = narratorSpeed;
+            speechUtterance.pitch = 1;
+            speechUtterance.volume = narratorVolume;
+
+            // Improved search for male voices across various platforms (Windows, Apple, Chrome)
+            // We prioritize specific names and the "male" keyword while ensuring it's an English voice.
+            const maleKeywords = ['daniel', 'david', 'google us english male', 'microsoft david', 'aaron', 'alex', 'james', 'guy', 'male'];
+            const selectedVoice = voices.find(v => 
+                maleKeywords.some(keyword => v.name.toLowerCase().includes(keyword)) && v.lang.startsWith('en')
+            );
+            
+            if (selectedVoice) speechUtterance.voice = selectedVoice;
+
+            // Chained auto-advance: move to next slide after speech ends
+            if (isAutoPlaying) {
+                speechUtterance.onend = () => {
+                    if (isAutoPlaying) {
+                        autoPlayTimer = setTimeout(() => {
+                            if (currentSlide < slides.length - 1) { currentSlide++; update(); }
+                            else stopAuto();
+                        }, 1500); // Brief pause after speaking
+                    }
+                };
+            }
+
+            speechSynth.speak(speechUtterance);
+        }
+    };
+
+    const modalHTML = `
+        <div id="walkthroughModal" class="modal-overlay" style="display:block; background: transparent; backdrop-filter: none; pointer-events: none;">
+            <div id="walkthroughCard" class="modal-card tutorial-mode" style="text-align: center; pointer-events: auto;">
+                <div id="wProgress" style="display:flex; gap:5px; margin-bottom:20px; justify-content:center;"></div>
+                <h2 id="wTitle" style="color:var(--accent); margin-top:0; font-size: 1.4rem;"></h2>
+                <div id="wContent" style="margin: 20px 0; line-height:1.6; min-height:120px; font-size:0.95rem;"></div>
+                <div style="display:flex; gap:10px;">
+                    <button id="wBack" class="button" style="flex:1;">Back</button>
+                    <button id="wNext" class="big-btn play-btn" style="flex:2; margin-top:0;"></button>
+                </div>
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-top: 15px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display:flex; align-items: center; gap: 12px;">
+                        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.8rem; color: var(--text-dim);">
+                            <input type="checkbox" id="narratorToggle" style="width: 16px; height: 16px;">
+                            <span>Narrator</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px; font-size: 0.8rem; color: var(--text-dim);">
+                            <input type="range" id="narratorSpeed" min="0.5" max="2.0" step="0.1" style="width: 50px; height: 4px; accent-color: var(--accent);">
+                            <span id="speedValLabel"></span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px; font-size: 0.8rem; color: var(--text-dim);" title="Narrator Volume">
+                            <span style="font-size: 0.7rem;">🔊</span>
+                            <input type="range" id="narratorVolume" min="0" max="1" step="0.1" style="width: 50px; height: 4px; accent-color: var(--accent);">
+                        </label>
+                    </div>
+                    <div style="display:flex; gap: 5px;">
+                        <button id="wAuto" class="button" style="border:none; color:var(--accent); font-size:0.8rem; padding: 5px;">▶ Auto-Play</button>
+                        <button onclick="closeWalkthrough()" class="button" style="border:none; color:var(--text-dim); font-size:0.8rem; padding: 5px;">Close Guide</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Set initial state of narrator toggle
+    document.getElementById('narratorToggle').checked = narratorEnabled;
+    document.getElementById('narratorToggle').onchange = (e) => {
+        narratorEnabled = e.target.checked;
+        saveSetting('narrator_enabled', narratorEnabled);
+        if (!narratorEnabled) stopSpeaking(); // Stop if disabled
+    };
+
+    // Set initial state of speed slider
+    const speedSlider = document.getElementById('narratorSpeed');
+    const speedLabel = document.getElementById('speedValLabel');
+    speedSlider.value = narratorSpeed;
+    speedLabel.textContent = narratorSpeed.toFixed(1) + 'x';
+    speedSlider.oninput = (e) => {
+        narratorSpeed = parseFloat(e.target.value);
+        speedLabel.textContent = narratorSpeed.toFixed(1) + 'x';
+        saveSetting('narrator_speed', narratorSpeed);
+    };
+
+    // Set initial state of volume slider
+    const volumeSlider = document.getElementById('narratorVolume');
+    volumeSlider.value = narratorVolume;
+    volumeSlider.oninput = (e) => {
+        narratorVolume = parseFloat(e.target.value);
+        saveSetting('narrator_volume', narratorVolume);
+    };
+
+    const stopAuto = () => { // This function also stops speaking
+        if (autoPlayTimer) {
+            clearTimeout(autoPlayTimer);
+            autoPlayTimer = null;
+        }
+        isAutoPlaying = false;
+        document.getElementById('wAuto').textContent = "▶ Auto-Play";
+        stopSpeaking();
+    };
+
+    const update = () => {
+        clearHighlights();
+        const s = slides[currentSlide];
+        document.getElementById('wTitle').textContent = s.title;
+        document.getElementById('wContent').innerHTML = s.content;
+        document.getElementById('wNext').textContent = currentSlide === slides.length - 1 ? "Finish" : "Next";
+        document.getElementById('wBack').style.visibility = currentSlide > 0 ? 'visible' : 'hidden';
+        document.getElementById('wProgress').innerHTML = slides.map((_, i) => `<div style="width:20px; height:4px; border-radius:2px; background:${i <= currentSlide ? 'var(--accent)' : 'var(--surface)'}"></div>`).join('');
+
+        if (s.selector) {
+            const target = document.querySelector(s.selector);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                target.classList.add('tutorial-highlight');
+            }
+        }
+
+        // Speak content if auto-playing and narrator is enabled
+        if (narratorEnabled) {
+            speakContent(s.title, s.content);
+        } else {
+            stopSpeaking(); // Ensure speech stops if not auto-playing or narrator disabled
+            // If auto-playing but narrator is off, we need a standard timer to advance
+            if (isAutoPlaying) {
+                autoPlayTimer = setTimeout(() => {
+                    if (currentSlide < slides.length - 1) { currentSlide++; update(); }
+                    else stopAuto();
+                }, 7000); // Standard slide duration
+            }
+        }
+    };
+
+    document.getElementById('wNext').onclick = () => { 
+        stopAuto();
+        if (currentSlide < slides.length - 1) { currentSlide++; update(); } 
+        else closeWalkthrough(); 
+    };
+    document.getElementById('wBack').onclick = () => { stopAuto(); if (currentSlide > 0) { currentSlide--; update(); } };
+    
+    document.getElementById('wAuto').onclick = () => {
+        if (isAutoPlaying) {
+            stopAuto();
+        } else {
+            isAutoPlaying = true;
+            document.getElementById('wAuto').textContent = "⏸ Paused";
+            update();
+        }
+    };
+
+    window.closeWalkthrough = () => { stopAuto(); clearHighlights(); const el = document.getElementById('walkthroughModal'); if (el) el.remove(); }; // stopAuto also stops speaking
+    update();
+}
+
+function showQuickStartGuide() {
+    showWalkthrough([
+        { title: "Welcome to Relief", content: "Tinnitus management is a journey of training the brain. This suite provides the tools research shows are most effective for 'habituation'." },
+        { title: "The Golden Rule: Mixing", content: "<b>Important:</b> Do not hide your tinnitus completely. Set your therapy volume so the sound and your tinnitus 'mix'. Your brain needs to hear both to learn the tinnitus is neutral." },
+        { title: "Step 1: Calibration", content: "Visit the <b>Notch Finder</b> first. You must find your exact tinnitus pitch so therapies can target the correct neural clusters." },
+        { title: "Step 2: Passive Listening", content: "Use therapy for 30–60 minutes daily. Don't focus on it—let it be background 'wallpaper' while you work or relax." },
+        { title: "Step 3: Track Progress", content: "Take the <b>THI Assessment</b> once a month. Monthly checks show your progress clearly without the stress of daily monitoring." }
+    ]);
+}
+
+/**
+ * Starts a module-specific tutorial walkthrough.
+ */
+function startModuleTutorial(key) {
+    const tutorials = {
+        'decorrelated': [
+            { title: "Hardware Check", content: "Plug in your headphones. This therapy depends on your brain receiving two different, independent signals.", selector: "h1" },
+            { title: "Sound Source", content: "Select your preferred noise color or nature sound. Pink noise is often most comfortable for long sessions.", selector: "#color" },
+            { title: "EQ Setup", content: "Use the EQ sliders to boost frequencies where you have hearing loss. This reduces the 'listening effort' required by your brain.", selector: "#eqSection" },
+            { title: "The Mixing Point", content: "Adjust the volume so the noise and your tinnitus 'mix'. Do not mask the sound completely.", selector: "#volMaster" },
+            { title: "Start Session", content: "Set your timer and begin your daily therapy session.", selector: "#toggleBtn" }
+        ],
+        'notch': [
+            { title: "Pitch Match", content: "Use the test tone to find your exact tinnitus pitch. Precision is critical for effective Notch therapy.", selector: "#step1Section" },
+            { title: "Set the Notch", content: "Input your matched frequency here. This 'silences' the noise in that specific frequency range.", selector: "#step2Section" },
+            { title: "Notch Width", content: "Set the width to 1.0 octaves (clinical standard). This determines the size of the 'hole' in the noise.", selector: "#step2Section" },
+            { title: "Volume Mix", content: "Adjust volume to the mixing point. You should still hear your tinnitus inside the notch.", selector: "#volMaster" },
+            { title: "Start Therapy", content: "Activate the engine to begin the cortical reorganization process.", selector: "#toggleBtn" }
+        ],
+        'cr': [
+            { title: "Precise Bracketing", content: "Use this tone to exactly match your tinnitus pitch. This determines the 4 therapeutic frequencies.", selector: ".card:first-of-type" },
+            { title: "Tone Calculation", content: "Once matched, click here to calculate your personalized therapy sequence.", selector: "#baseFreq" },
+            { title: "Perceived Loudness", content: "Adjust these sliders until all four tones sound equally loud to you. Balance is vital for success.", selector: ".bal-slider-row" },
+            { title: "Volume & Timing", content: "Set your session time (60 mins recommended) and start the coordinated reset sequence.", selector: "#toggleBtn" }
+        ],
+        'lenire': [
+            { title: "Neuromodulation", content: "This engine uses bursts and modulated noise to drive auditory neuroplasticity.", selector: "h1" },
+            { title: "Visual Sync", content: "Enable the visual pulse to add multisensory input, which can enhance the therapeutic effect.", selector: "#visualPulse" },
+            { title: "The Mix", content: "Balance the tones and noise so neither is overwhelming. The sound should shimmer background.", selector: ".ctrl:has(input[type=range])" }
+        ],
+        'soundtherapy': [
+            { title: "Sound Types", content: "Choose between calibrated broadband noise for habituation or nature sounds for relaxation.", selector: ".btn-grid:first-of-type" },
+            { title: "Breathing Pacer", content: "Use the 4-7-8 pacer to lower physiological stress during a tinnitus spike.", selector: "#pacerToggle" },
+            { title: "Volume Calibration", content: "Set to the 'Mixing Point'. If you hide the tinnitus completely, you aren't habituating.", selector: "#volume" },
+            { title: "Sleep Support", content: "Enable Sleep Fade for a soft 60-second shutdown when the timer ends.", selector: "#sleepMode" }
+        ],
+        'notchfinder': [
+            { title: "Frequency Input", content: "Adjust the pitch using the slider or type a value. This identifies your tinnitus 'center frequency'.", selector: ".responsive-grid" },
+            { title: "Auto-Sweep", content: "Use this to slowly climb the frequency range. It's often easier to find the match while the sound is moving.", selector: "#speedSlider" },
+            { title: "Test & Listen", content: "Toggle the tones to compare the external sound against your internal tinnitus.", selector: "#playBtn" },
+            { title: "Save Settings", content: "Once matched, save here. This frequency will be used across all other therapy modules automatically.", selector: "#saveBtn" }
+        ],
+        'tmc': [
+            { title: "Point Calibration", content: "For each frequency, find the 'Minimum Masking Level'—the quietest volume that just hides your tinnitus.", selector: "#freqSlider" },
+            { title: "Mapping the Curve", content: "Save multiple points across the spectrum to visualize your auditory filter shape.", selector: "button[onclick='savePoint()']" },
+            { title: "Tuning Analysis", content: "The Q-factor indicates how 'sharp' your tinnitus signal is. A higher number suggests a more tonal perception.", selector: "#tmcChart" }
+        ],
+        'lg': [
+            { title: "Objective vs Subjective", content: "Play a tone and increase the volume. We are measuring how your brain perceives loudness growth.", selector: "#volSlider" },
+            { title: "Rating Scale", content: "Rate the sound from 'Very Soft' to 'Uncomfortable'. This helps identify hyperacusis (loudness sensitivity).", selector: ".btn-grid" },
+            { title: "The Curve", content: "A steep line on this chart can indicate the presence of recruitment or hyperacusis.", selector: "canvas" }
+        ],
+        'ri': [
+            { title: "Suppression Setup", content: "Choose a noise color. We will play this for 60 seconds at a level that completely hides your tinnitus.", selector: "#noiseColor" },
+            { title: "The Stopwatch", content: "After the noise stops, time how long it takes for your tinnitus to return to its normal level.", selector: "#step3" },
+            { title: "History", content: "Track your RI duration over time. Longer suppression periods are a positive clinical sign.", selector: "#riHistory" }
+        ],
+        'validation': [
+            { title: "Phase Verification", content: "This is critical. Ensure the 'In-Phase' tone sounds centered in your head, not 'wide' or hollow.", selector: ".card" },
+            { title: "Engine Check", content: "Run the automated tests to verify the suite's DSP engine is producing accurate clinical signals.", selector: ".play-btn" },
+            { title: "Results Log", content: "View technical details like filter attenuation and stereo separation here.", selector: "#results" }
+        ],
+        'twotone': [
+            { title: "Bracketing", content: "Compare Tone A and Tone B to 'bracket' your tinnitus. This helps avoid octave-match errors.", selector: ".card:first-of-type" },
+            { title: "Saving", content: "If one tone is a perfect match, save it directly to your global settings.", selector: "button[onclick*='saveToNotch']" }
+        ],
+        'sweep': [
+            { title: "Range Test", content: "This sweep moves from 20Hz to 20kHz. It helps identify 'dead zones' or frequency triggers.", selector: "h2" },
+            { title: "Volume Safety", content: "Always start at a low volume (10% or less) before beginning a high-frequency sweep.", selector: "#volSlider" }
+        ],
+        'hearingtest': [
+            { title: "Exploration", content: "Tap each button to check your audibility thresholds across the spectrum.", selector: ".section-title" },
+            { title: "Clinical Note", content: "Remember: This is an exploration tool, not a replacement for a professional audiogram.", selector: "p" }
+        ]
+    };
+
+    if (tutorials[key]) {
+        showWalkthrough(tutorials[key]);
+    } else {
+        showQuickStartGuide();
+    }
+}
+
+function applyCompactMode() {
+    const isCompact = loadSetting('compact_mode', 'false') === 'true';
+    document.documentElement.classList.toggle('compact-mode', isCompact);
+}
+
+function toggleCompactMode() {
+    const isCompact = loadSetting('compact_mode', 'false') === 'true';
+    saveSetting('compact_mode', isCompact ? 'false' : 'true');
+    applyCompactMode();
+}
+
+function applyDashboardLayout() {
+    const layout = loadSetting('dashboard_layout', '2-column');
+    document.documentElement.classList.toggle('single-column-layout', layout === '1-column');
+}
+
+function toggleDashboardLayout() {
+    const current = loadSetting('dashboard_layout', '2-column');
+    const next = current === '2-column' ? '1-column' : '2-column';
+    saveSetting('dashboard_layout', next);
+    applyDashboardLayout();
 }
 
 function applyTheme() {
@@ -436,6 +774,16 @@ function syncUIVersion() {
         document.documentElement.classList.add('light-mode');
     }
     
+    const compact = localStorage.getItem('tts_compact_mode');
+    if (compact === 'true') {
+        document.documentElement.classList.add('compact-mode');
+    }
+    
+    const layout = localStorage.getItem('tts_dashboard_layout');
+    if (layout === '1-column') {
+        document.documentElement.classList.add('single-column-layout');
+    }
+    
     // --- Trahreg Gatekeeper Logic ---
     (function() {
         const path = window.location.pathname.toLowerCase();
@@ -443,24 +791,21 @@ function syncUIVersion() {
         
         // 1. Identify Home/Root and authorize the session
         const isHome = path.endsWith('index.html') || (path.endsWith('/') && !isDocs);
-        if (isHome) {
-            sessionStorage.setItem('tts_session_active', 'true');
-        }
+        try {
+            if (isHome) sessionStorage.setItem('tts_session_active', 'true');
+        } catch(e) { /* Private mode protection */ }
 
         // 2. Identify Whitelisted (Public) pages
         const publicPages = ['index.html', 'disclaimer.html', 'license.html', 'about.html', 'research.html', 'feedback.html'];
         const isPublicPage = isHome || publicPages.some(p => path.endsWith(p));
 
-        const sessionActive = sessionStorage.getItem('tts_session_active') === 'true';
         const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
 
-        // 3. Enforce Redirection
-        if (!isPublicPage) {
-            if (!sessionActive || onboardingStep < 1) {
-                console.warn("[Gatekeeper] Unauthorized access to " + path + ". Redirecting...");
-                const redirectTarget = isDocs ? '../index.html' : 'index.html';
-                window.location.replace(redirectTarget);
-            }
+        // 3. Enforce Redirection: Only redirect if onboarding hasn't started and it's not a public page
+        if (!isPublicPage && onboardingStep < 1) {
+            console.warn("[Gatekeeper] Disclaimer acceptance required. Redirecting to home...");
+            const redirectTarget = isDocs ? '../index.html' : 'index.html';
+            window.location.replace(redirectTarget);
         }
     })();
 })();
@@ -469,18 +814,19 @@ function syncUIVersion() {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         applyTheme();
+        applyCompactMode();
+        applyDashboardLayout();
         applyEmailVisibility();
         syncUIVersion();
     });
 } else {
     applyTheme();
+    applyCompactMode();
+    applyDashboardLayout();
     applyEmailVisibility();
     syncUIVersion();
 }
 
 function needsValidation() {
-    const last = loadSetting('last_validation_date', null);
-    if (!last) return true;
-    const diff = Date.now() - new Date(last).getTime();
-    return diff > (30 * 24 * 60 * 60 * 1000); // 30 Days
+    return !getUnifiedValidationStatus().isValid;
 }

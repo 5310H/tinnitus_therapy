@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trahreg-tinnitus-suite-v1.2.16';
+const CACHE_NAME = 'trahreg-tinnitus-suite-v1.3.1';
 const ASSETS = [
     './',
     './index.html',
@@ -68,23 +68,70 @@ self.addEventListener('activate', (event) => {
 
 // Fetch: Serve from cache first, fallback to network and dynamic caching
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) return cachedResponse;
+    // Only handle GET requests
+    if (event.request.method !== 'GET') return;
 
-            return fetch(event.request).then((networkResponse) => {
-                // Check if we received a valid response and it's from our origin
-                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-                    return networkResponse;
+    const url = new URL(event.request.url);
+    const isStaticAsset = url.pathname.endsWith('.css') || url.pathname.endsWith('.js');
+    const isHTML = url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname === '';
+
+    if (isHTML) {
+        // Network-first strategy for HTML to ensure version updates are detected immediately
+        event.respondWith(
+            fetch(event.request).then((networkResponse) => {
+                const isValidResponse = networkResponse && networkResponse.status === 200;
+                if (isValidResponse) {
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseToCache);
+                    });
                 }
-
-                const responseToCache = networkResponse.clone();
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, responseToCache);
-                });
-
                 return networkResponse;
-            });
-        })
-    );
+            }).catch(() => {
+                // Fallback to cache if network fails (offline mode)
+                return caches.match(event.request);
+            })
+        );
+    } else if (isStaticAsset) {
+        // Stale-while-revalidate strategy for CSS and JS assets
+        event.respondWith(
+            caches.open(CACHE_NAME).then((cache) => {
+                return cache.match(event.request).then((cachedResponse) => {
+                    const fetchPromise = fetch(event.request).then((networkResponse) => {
+                        const isValidResponse = networkResponse && networkResponse.status === 200;
+                        const isWhiteListedType = networkResponse.type === 'basic' || networkResponse.type === 'cors';
+
+                        if (isValidResponse && isWhiteListedType) {
+                            cache.put(event.request, networkResponse.clone());
+                        }
+                        return networkResponse;
+                    });
+                    return cachedResponse || fetchPromise;
+                });
+            })
+        );
+    } else {
+        // Cache-first strategy for HTML, icons, and audio
+        event.respondWith(
+            caches.match(event.request).then((cachedResponse) => {
+                if (cachedResponse) return cachedResponse;
+
+                return fetch(event.request).then((networkResponse) => {
+                    const isValidResponse = networkResponse && networkResponse.status === 200;
+                    const isWhiteListedType = networkResponse.type === 'basic' || networkResponse.type === 'cors';
+
+                    if (!isValidResponse || !isWhiteListedType) {
+                        return networkResponse;
+                    }
+
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, responseToCache);
+                    });
+
+                    return networkResponse;
+                });
+            })
+        );
+    }
 });

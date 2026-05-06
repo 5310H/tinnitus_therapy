@@ -22,24 +22,44 @@
 
     <div class="responsive-grid">
         <div class="ctrl">
-            <label>Left Ear <span class="val" id="freqValL">1000 Hz</span> <input type="number" id="freqInputL" class="val-input" value="1000" min="100" max="16000"></label>
+            <label>Left Ear <span class="val" id="freqValL">1000 Hz</span>
+                <div class="input-with-buttons">
+                    <input type="number" id="freqInputL" class="val-input" value="1000" min="100" max="16000">
+                    <div class="fine-tune-group" data-target="freqSliderL">
+                        <button class="fine-tune-btn" data-delta="-5">-5</button>
+                        <button class="fine-tune-btn" data-delta="-1">-1</button>
+                        <button class="fine-tune-btn" data-delta="1">+1</button>
+                        <button class="fine-tune-btn" data-delta="5">+5</button>
+                    </div>
+                </div>
+            </label>
             <input id="freqSliderL" type="range" min="100" max="16000" value="1000" step="1">
             <div class="btn-group" data-target="freqSliderL">
-                <button class="button" data-delta="-100">– 100</button>
-                <button class="button" data-delta="-10">– 10</button>
-                <button class="button" data-delta="10">+ 10</button>
-                <button class="button" data-delta="100">+ 100</button>
+                <button class="button-step" data-delta="-100">– 100</button>
+                <button class="button-step" data-delta="-10">– 10</button>
+                <button class="button-step" data-delta="10">+ 10</button>
+                <button class="button-step" data-delta="100">+ 100</button>
             </div>
             <button class="button" id="sweepBtnL" style="width:100%; margin-top:5px">Sweep Left</button>
         </div>
         <div class="ctrl" id="rightFreqGroup">
-            <label>Right Ear <span class="val" id="freqValR">1000 Hz</span> <input type="number" id="freqInputR" class="val-input" value="1000" min="100" max="16000"></label>
+            <label>Right Ear <span class="val" id="freqValR">1000 Hz</span>
+                <div class="input-with-buttons">
+                    <input type="number" id="freqInputR" class="val-input" value="1000" min="100" max="16000">
+                    <div class="fine-tune-group" data-target="freqSliderR">
+                        <button class="fine-tune-btn" data-delta="-5">-5</button>
+                        <button class="fine-tune-btn" data-delta="-1">-1</button>
+                        <button class="fine-tune-btn" data-delta="1">+1</button>
+                        <button class="fine-tune-btn" data-delta="5">+5</button>
+                    </div>
+                </div>
+            </label>
             <input id="freqSliderR" type="range" min="100" max="16000" value="1000" step="1">
             <div class="btn-group" data-target="freqSliderR">
-                <button class="button" data-delta="-100">– 100</button>
-                <button class="button" data-delta="-10">– 10</button>
-                <button class="button" data-delta="10">+ 10</button>
-                <button class="button" data-delta="100">+ 100</button>
+                <button class="button-step" data-delta="-100">– 100</button>
+                <button class="button-step" data-delta="-10">– 10</button>
+                <button class="button-step" data-delta="10">+ 10</button>
+                <button class="button-step" data-delta="100">+ 100</button>
             </div>
             <button class="button" id="sweepBtnR" style="width:100%; margin-top:5px">Sweep Right</button>
         </div>
@@ -60,35 +80,35 @@
 
     <div class="ctrl">
         <label style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Master Volume <span class="val" id="volValMaster" style="float:none; margin-left:10px;">100%</span></span>
+            <span>Master Volume <span class="val" id="volValMaster" style="float:none; margin-left:5px;">100%</span></span>
             <label style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; color: var(--accent);">
                 <input type="checkbox" id="muteToggle" style="width: 16px; height: 16px; margin: 0;"> Mute
             </label>
         </label>
         <input id="volMaster" type="range" min="0" max="100" value="100">
         <div class="btn-group" data-target="volMaster">
-            <button class="button" data-delta="-5">-5</button>
-            <button class="button" data-delta="5">+5</button>
+            <button class="button-step" data-delta="-5">-5</button>
+            <button class="button-step" data-delta="5">+5</button>
         </div>
     </div>
 
     <button class="big-btn" id="playBtn">Play Tones</button>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="responsive-grid">
         <div class="ctrl">
             <label>Volume L <span class="val" id="volValL">20%</span></label>
             <input id="volSliderL" type="range" min="0" max="100" value="20">
             <div class="btn-group" data-target="volSliderL">
-                <button class="button" data-delta="-5">-5</button>
-                <button class="button" data-delta="5">+5</button>
+                <button class="button-step" data-delta="-5">-5</button>
+                <button class="button-step" data-delta="5">+5</button>
             </div>
         </div>
         <div class="ctrl" id="rightVolGroup">
             <label>Volume R <span class="val" id="volValR">20%</span></label>
             <input id="volSliderR" type="range" min="0" max="100" value="20">
             <div class="btn-group" data-target="volSliderR">
-                <button class="button" data-delta="-5">-5</button>
-                <button class="button" data-delta="5">+5</button>
+                <button class="button-step" data-delta="-5">-5</button>
+                <button class="button-step" data-delta="5">+5</button>
             </div>
         </div>
     </div>
@@ -358,7 +378,7 @@ function stopRepeat() {
 }
 
 let repeatTarget = "";
-document.querySelectorAll('.btn-group .button[data-delta]').forEach(btn => {
+document.querySelectorAll('.btn-group .button-step[data-delta], .fine-tune-btn[data-delta]').forEach(btn => {
     const delta = parseInt(btn.dataset.delta);
     btn.onmousedown = btn.ontouchstart = (e) => { 
         e.preventDefault(); 

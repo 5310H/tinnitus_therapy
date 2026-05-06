@@ -32,10 +32,11 @@
     <div class="ctrl">
         <h3>Noise Types</h3>
         <div class="btn-grid">
-            <button class="sm-btn" onclick="playNoise('white', this)">White</button>
-            <button class="sm-btn" onclick="playNoise('pink', this)">Pink</button>
-            <button class="sm-btn" onclick="playNoise('brown', this)">Brown</button>
-            <button class="sm-btn" onclick="playNoise('violet', this)">Violet</button>
+            <button class="sm-btn" onclick="handlePlayNoise('white', this)" title="Flat spectrum; effective for broadband masking.">White</button>
+            <button class="sm-btn" onclick="handlePlayNoise('pink', this)" title="Balanced power; research standard for comfort.">Pink</button>
+            <button class="sm-btn" onclick="handlePlayNoise('brown', this)" title="Low-frequency focus; best for low-pitched tinnitus.">Brown</button>
+            <button class="sm-btn" onclick="handlePlayNoise('blue', this)" title="High-frequency focus; useful for high-pitched tinnitus.">Blue</button>
+            <button class="sm-btn" onclick="handlePlayNoise('violet', this)" title="Strong high-frequency focus; best for piercing tones.">Violet</button>
             <button class="sm-btn stop-btn" onclick="stopAll()">Stop</button>
         </div>
     </div>
@@ -44,7 +45,7 @@
         <h3>Relaxation Pacer (4-7-8)</h3>
         <div class="pacer-circle" id="pacerCircle"><span id="pacerLabel">In</span></div>
         <div class="btn-grid">
-            <button class="sm-btn" id="pacerToggle" onclick="togglePacer()">Start Breathing Pacer</button>
+            <button class="sm-btn" id="pacerToggle" onclick="handlePacer()">Start Breathing Pacer</button>
         </div>
     </div>
 
@@ -60,22 +61,40 @@
     <div class="ctrl">
         <h3>Nature Sounds</h3>
         <div class="btn-grid">
-            <button class="sm-btn" onclick="playSample('rain', this)">Rain</button>
-            <button class="sm-btn" onclick="playSample('ocean', this)">Ocean</button>
-            <button class="sm-btn" onclick="playSample('stream', this)">Stream</button>
-            <button class="sm-btn" onclick="playSample('wind', this)">Wind</button>
+            <button class="sm-btn" onclick="handlePlaySample('rain', this)">Rain</button>
+            <button class="sm-btn" onclick="handlePlaySample('ocean', this)">Ocean</button>
+            <button class="sm-btn" onclick="handlePlaySample('stream', this)">Stream</button>
+            <button class="sm-btn" onclick="handlePlaySample('wind', this)">Wind</button>
         </div>
     </div>
 
     <div class="ctrl">
-        <label>Volume (%) <input type="number" id="volInput" class="val-input" min="0" max="100" value="30"></label>
+        <label>Volume (%) 
+            <div class="input-with-buttons">
+                <input type="number" id="volInput" class="val-input" min="0" max="100" value="30">
+                <div class="fine-tune-group" data-target="volume">
+                    <button class="fine-tune-btn" data-delta="-5">-5</button>
+                    <button class="fine-tune-btn" data-delta="-1">-1</button>
+                    <button class="fine-tune-btn" data-delta="1">+1</button>
+                    <button class="fine-tune-btn" data-delta="5">+5</button>
+                </div>
+            </div>
+        </label>
         <input id="volume" type="range" min="0" max="100" value="30">
         <div class="btn-group" data-target="volume">
             <button class="button-step" data-delta="-5">-5</button>
             <button class="button-step" data-delta="5">+5</button>
         </div>
 
-        <label style="display:block;margin-top:10px">L/R Balance <input type="number" id="balInput" class="val-input" min="-1" max="1" step="0.1" value="0"></label>
+        <label style="display:block;margin-top:10px">L/R Balance 
+            <div class="input-with-buttons">
+                <input type="number" id="balInput" class="val-input" min="-1" max="1" step="0.1" value="0">
+                <div class="fine-tune-group" data-target="balance">
+                    <button class="fine-tune-btn" data-delta="-0.1">-0.1</button>
+                    <button class="fine-tune-btn" data-delta="0.1">+0.1</button>
+                </div>
+            </div>
+        </label>
         <input id="balance" type="range" min="-1" max="1" step="0.02" value="0">
         <div class="btn-group" data-target="balance">
             <button class="button-step" data-delta="-0.1">-0.1</button>
@@ -113,9 +132,19 @@ const eqBands = [2000, 4000, 8000, 12000];
 
 window.onload = () => {
     initNav(`
-        <b>Purpose:</b> Reduces contrast between tinnitus and silence, helping the brain ignore the phantom signal.<br><br>
-        <b>Mixing Point Method:</b> Per Eric Mounts (<i>Finally Quiet</i>), adjust volume until the noise and tinnitus "mix." Do not fully mask the sound; your brain must hear both to learn to ignore the tinnitus.<br><br>
-        <b>Nature Sounds:</b> Useful for long sessions to reduce "listener fatigue."
+        <h3 style="color:var(--accent); margin-bottom:10px;">Sound Therapy Protocol</h3>
+        <ul style="padding-left:20px; margin-bottom:15px;">
+            <li><b>The Mixing Point:</b> This is the most important step. Adjust volume until the noise and your tinnitus "mix" like two colors of paint. If you mask it completely, you aren't habituating.</li>
+            <li><b>24/7 Enrichment:</b> Many clinicians recommend never being in total silence. Use these sounds at a very low level throughout the day.</li>
+            <li><b>Fatigue Management:</b> If noise becomes annoying, switch to <b>Nature Sounds</b> (Rain/Ocean). The therapeutic effect remains the same.</li>
+            <li><b>Sleep Fade:</b> Use the "Sleep Fade" option if using this to fall asleep; a sudden stop in sound can cause a "rebound" spike.</li>
+        </ul>
+
+        <b>Noise Selection Guide:</b><br>
+        • <b>Pink:</b> Research standard; most comfortable for long-term use.<br>
+        • <b>White:</b> Effective for general broadband masking.<br>
+        • <b>Brown:</b> Deep focus; best for low-pitched tinnitus or sensitive hearing.<br>
+        • <b>Blue/Violet:</b> High-frequency focus; best for high-pitched tinnitus.
     `);
 
     const v = loadSetting('st_vol', 30);
@@ -165,9 +194,9 @@ function refreshUsageUI() {
 
 let repeatTimeout, repeatInterval;
 function setupStepButtons() {
-    document.querySelectorAll('.btn-group .button-step').forEach(btn => {
+    document.querySelectorAll('.btn-group .button-step, .fine-tune-btn').forEach(btn => {
         const delta = parseFloat(btn.dataset.delta);
-        const target = document.getElementById(btn.parentElement.dataset.target);
+        const target = document.getElementById(btn.parentElement.dataset.target || btn.closest('.ctrl').querySelector('input[type=range]')?.id);
         const step = () => {
             let val = (parseFloat(target.value) + delta);
             if (target.step.includes('.')) val = parseFloat(val.toFixed(1));
@@ -234,16 +263,27 @@ function initAudio() {
 }
 function syncAudioNodes() { setVolume(document.getElementById('volume').value); setBalance(document.getElementById('balance').value); }
 
+function handlePlayNoise(type, btn) {
+    if (audioCtx) playNoise(type, btn);
+    else showPreFlight(() => playNoise(type, btn));
+}
+
 function playNoise(type, btn) {
     initAudio(); stopAll();
     setActiveBtn(btn);
     const bufSize = 2 * audioCtx.sampleRate, buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate), d = buf.getChannelData(0);
     if(type==='white'){for(let i=0;i<bufSize;i++)d[i]=Math.random()*2-1}
     else if(type==='pink'){let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8687*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926}}
+    else if(type==='blue'){let last=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;d[i]=(w-0.5*last)*0.7;last=w}}
     else if(type==='violet'){let last=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;d[i]=w-last;last=w}}
     else if(type==='brown'){let last=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;d[i]=(last+0.02*w)/1.02;last=d[i];d[i]*=3.5}}
     currentSource = audioCtx.createBufferSource(); currentSource.buffer = buf; currentSource.loop = true;
     currentSource.connect(gainNode); currentSource.start();
+}
+
+function handlePlaySample(type, btn) {
+    if (audioCtx) playSample(type, btn);
+    else showPreFlight(() => playSample(type, btn));
 }
 
 function playSample(type, btn) {
@@ -253,6 +293,12 @@ function playSample(type, btn) {
     const audio = new Audio(fileMap[type]); audio.loop = true;
     const track = audioCtx.createMediaElementSource(audio); track.connect(gainNode);
     audio.play(); currentSource = audio;
+}
+
+function handlePacer() {
+    if (pacerActive) stopPacer();
+    else if (audioCtx) togglePacer();
+    else showPreFlight(() => togglePacer());
 }
 
 function togglePacer() {

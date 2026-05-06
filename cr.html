@@ -65,7 +65,17 @@
         <h3>Step 1: Calibration</h3>
         <p class="info">Enter your matched tinnitus frequency to calculate the four therapeutic CR tones.</p>
         <div class="ctrl">
-            <label>Tinnitus Frequency (Hz) <input type="number" id="baseFreq" class="val-input" value="6000" min="500" max="12000"></label>
+            <label>Tinnitus Frequency (Hz)
+                <div class="input-with-buttons">
+                    <input type="number" id="baseFreq" class="val-input" value="6000" min="500" max="12000">
+                    <div class="fine-tune-group" data-target="baseFreq">
+                        <button class="fine-tune-btn" data-delta="-10">-10</button>
+                        <button class="fine-tune-btn" data-delta="-1">-1</button>
+                        <button class="fine-tune-btn" data-delta="1">+1</button>
+                        <button class="fine-tune-btn" data-delta="10">+10</button>
+                    </div>
+                </div>
+            </label>
             <button class="button" style="width:100%; margin-top:10px;" onclick="calculateTones()">Calculate CR Frequencies</button>
         </div>
     </div>
@@ -101,8 +111,36 @@
     </div>
 
     <div class="ctrl">
-        <label>Master Volume <span class="val" id="volVal">20%</span></label>
+        <label>Master Volume <span class="val" id="volVal">20%</span>
+            <div class="input-with-buttons">
+                <div class="fine-tune-group" data-target="volSlider">
+                    <button class="fine-tune-btn" data-delta="-5">-5</button>
+                    <button class="fine-tune-btn" data-delta="-1">-1</button>
+                    <button class="fine-tune-btn" data-delta="1">+1</button>
+                    <button class="fine-tune-btn" data-delta="5">+5</button>
+                </div>
+            </div>
+        </label>
         <input id="volSlider" type="range" min="0" max="100" value="20">
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <h3>Background Masking</h3>
+        <div class="ctrl">
+            <label>Noise Color</label>
+            <select id="noiseColor">
+                <option value="none">None</option>
+                <option value="white" title="Flat spectrum; effective for broadband masking.">White Noise</option>
+                <option value="pink" title="Balanced power; research standard for comfort.">Pink Noise</option>
+                <option value="brown" title="Low-frequency focus; best for low-pitched tinnitus.">Brown Noise</option>
+                <option value="blue" title="High-frequency focus; useful for high-pitched tinnitus.">Blue Noise (+3dB/oct)</option>
+                <option value="violet" title="Strong high-frequency focus; best for piercing tones.">Violet Noise (High-Tone)</option>
+            </select>
+        </div>
+        <div class="ctrl">
+            <label>Noise Volume <span class="val" id="noiseVolVal">0%</span></label>
+            <input id="noiseVolSlider" type="range" min="0" max="100" value="0">
+        </div>
     </div>
 
     <div class="timer-block">
@@ -122,7 +160,7 @@
 </div>
 
 <script>
-let audioCtx, playing = false, timerInterval, frequencies = [], masterGain, toneBalFactors = [1,1,1,1];
+let audioCtx, playing = false, timerInterval, frequencies = [], masterGain, noiseSource, noiseGain, toneBalFactors = [1,1,1,1];
 let nextToneTime = 0, currentSequence = [], sequenceIdx = 0, cycleCount = 0;
 const TONE_DURATION = 0.120; // 120ms per tone
 const CYCLE_PERIOD = 0.666; // 1.5 Hz clinical cycle rate (666ms per cycle)
@@ -132,11 +170,11 @@ let bracketAudioCtx = null, bracketOsc = null, bracketGain = null, bracketPlayin
 
 window.onload = () => {
     initNav(`
-        <b>Pitch Bracketing:</b> Use the test tone to precisely match your tinnitus pitch. This frequency will then be used to calculate the four CR tones.<br><br>
-        <b>Coordinated Reset (CR):</b> Plays a pseudo-random sequence of four tones calculated relative to your tinnitus pitch.<br><br>
-        <b>The Protocol:</b> Based on Tass (2012), sequences are played in a "3-on/2-off" cycle pattern to disrupt pathological neural synchrony.<br><br>
-        <b>Calibration:</b> Adjust the balance sliders until all four tones sound equally loud. This ensures balanced neural stimulation.<br><br>
-        <b>Indicators:</b> The dots represent the 5-cycle loop. Solid dots are playback cycles; dashed dots are pause cycles.
+        <b>Purpose:</b> Disrupts pathological neural synchrony using pseudo-random sequences of four tones (Tass, 2012).<br><br>
+        <b>Pitch Bracketing:</b> Precisely match your tinnitus pitch first. This determines the four therapeutic frequencies.<br><br>
+        <b>Calibration:</b> Adjust the balance sliders until all four tones sound equally loud. Balanced stimulation is critical for efficacy.<br><br>
+        <b>Protocol:</b> The sequence follows a "3-on/2-off" pattern (1.5 Hz rate). Solid dots indicate active cycles; dashed dots indicate pause cycles.<br><br>
+        <b>Background Masking:</b> Keep noise at the lowest possible level to ensure the brain can clearly distinguish the therapeutic tones.
     `);
     document.getElementById('baseFreq').value = loadSetting('notchL', 6000);
 
@@ -167,6 +205,11 @@ window.onload = () => {
             saveSetting(`cr_bal_${i}`, e.target.value);
         };
     }
+
+    document.getElementById('noiseColor').value = loadSetting('cr_noiseColor', 'none');
+    document.getElementById('noiseVolSlider').value = loadSetting('cr_noiseVol', 0);
+    document.getElementById('noiseVolVal').textContent = document.getElementById('noiseVolSlider').value + "%";
+
     setupStepButtons(); // Apply step button logic to new bracketing controls
     calculateTones();
     refreshUsageUI();
@@ -285,15 +328,10 @@ let repeatTimeout, repeatInterval;
 function setupStepButtons() {
     document.querySelectorAll('.btn-group .button-step, .fine-tune-group .fine-tune-btn').forEach(btn => {
         const delta = parseFloat(btn.dataset.delta);
-        let targetElement;
+        let targetElement = document.getElementById(btn.parentElement.dataset.target);
 
-        // Determine the target input element for the button
-        if (btn.classList.contains('fine-tune-btn')) {
-            // For fine-tune buttons, the target is the input[type="number"] in the same parent .ctrl
-            targetElement = btn.closest('.ctrl').querySelector('input[type="number"]');
-        } else {
-            // For button-step, the target is the input specified by data-target on its parent .btn-group
-            targetElement = document.getElementById(btn.parentElement.dataset.target);
+        if (!targetElement) {
+             targetElement = btn.closest('.ctrl').querySelector('input');
         }
 
         if (!targetElement) {
@@ -372,7 +410,18 @@ document.getElementById('volSlider').oninput = e => {
     document.getElementById('volVal').textContent = e.target.value + "%";
 };
 
+document.getElementById('noiseColor').onchange = (e) => {
+    saveSetting('cr_noiseColor', e.target.value);
+};
+
+document.getElementById('noiseVolSlider').oninput = (e) => {
+    saveSetting('cr_noiseVol', e.target.value);
+    document.getElementById('noiseVolVal').textContent = e.target.value + "%";
+    if (playing && noiseGain) noiseGain.gain.setTargetAtTime(e.target.value / 100, audioCtx.currentTime, 0.05);
+};
+
 function exportClinicalSettings() {
+    const colorSelect = document.getElementById('noiseColor');
     const data = {
         "Base Tinnitus Frequency": document.getElementById('baseFreq').value + " Hz",
         "Bracketed Tinnitus Frequency": document.getElementById('freqBracketSlider').value + " Hz", // New field
@@ -385,7 +434,9 @@ function exportClinicalSettings() {
         "Tone 3 Balance": document.getElementById('bal2').value + "%",
         "Tone 4 Balance": document.getElementById('bal3').value + "%",
         "Tone Duration": "120ms",
-        "Sequence": "3-on/2-off (1.5 Hz)"
+        "Sequence": "3-on/2-off (1.5 Hz)",
+        "Background Noise": colorSelect.options[colorSelect.selectedIndex].text,
+        "Background Noise Volume": document.getElementById('noiseVolSlider').value + "%"
     };
     const report = generateClinicalReport("Acoustic CR Neuromodulation", data);
     const blob = new Blob([report], { type: 'text/plain' });

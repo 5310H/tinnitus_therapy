@@ -24,14 +24,40 @@
     </div>
 
     <div class="ctrl">
-        <label>Base Frequency (Hz) <span class="val" id="baseVal">200 Hz</span></label>
+        <label>Base Frequency (Hz) <span class="val" id="baseVal">200 Hz</span>
+            <div class="input-with-buttons">
+                <input type="number" id="baseInput" class="val-input" min="100" max="1000" value="200">
+                <div class="fine-tune-group" data-target="baseSlider">
+                    <button class="fine-tune-btn" data-delta="-5">-5</button>
+                    <button class="fine-tune-btn" data-delta="1">+1</button>
+                    <button class="fine-tune-btn" data-delta="5">+5</button>
+                </div>
+            </div>
+        </label>
         <input id="baseSlider" type="range" min="100" max="1000" value="200">
-        <label style="margin-top:10px;">Beat Frequency (Hz) <span class="val" id="beatVal">10 Hz</span></label>
+        <label style="margin-top:10px;">Beat Frequency (Hz) <span class="val" id="beatVal">10 Hz</span>
+            <div class="input-with-buttons">
+                <input type="number" id="beatInput" class="val-input" min="0.5" max="50" step="0.5" value="10">
+                <div class="fine-tune-group" data-target="beatSlider">
+                    <button class="fine-tune-btn" data-delta="-1">-1</button>
+                    <button class="fine-tune-btn" data-delta="-0.5">-0.5</button>
+                    <button class="fine-tune-btn" data-delta="0.5">+0.5</button>
+                    <button class="fine-tune-btn" data-delta="1">+1</button>
+                </div>
+            </div>
+        </label>
         <input id="beatSlider" type="range" min="0.5" max="50" step="0.5" value="10">
     </div>
 
     <div class="ctrl">
-        <label>Master Volume <span class="val" id="volVal">20%</span></label>
+        <label>Master Volume <span class="val" id="volVal">20%</span>
+            <div class="input-with-buttons">
+                <div class="fine-tune-group" data-target="volSlider">
+                    <button class="fine-tune-btn" data-delta="-5">-5</button>
+                    <button class="fine-tune-btn" data-delta="5">+5</button>
+                </div>
+            </div>
+        </label>
         <input id="volSlider" type="range" min="0" max="100" value="20">
     </div>
 
@@ -45,10 +71,18 @@
 </div>
 
 <script>
-let ctx, oscL, oscR, masterGain, playing = false, currentPreset = "Manual";
+let ctx, oscL, oscR, masterGain, playing = false;
 
 window.onload = () => {
-    initNav("Binaural beats occur when two tones of slightly different frequencies are played in each ear. The brain perceives a 'beat' equal to the difference, facilitating relaxation.");
+    initNav(`
+        <b>Purpose:</b> Binaural beats occur when two tones of slightly different frequencies are played in each ear. The brain perceives a "beat" equal to the difference, facilitating relaxation or focus.<br><br>
+        <b>Requirements:</b> Stereophonic headphones are mandatory for the effect to occur.<br><br>
+        <b>Noise Selection:</b> This mode is tone-based. Adding background noise is generally not recommended as it may interfere with the "frequency following response" (FFR).<br><br>
+        <b>Presets:</b> Use Delta for sleep, Theta for meditation, and Alpha for general relaxation.
+    `);
+    document.getElementById('baseSlider').value = loadSetting('bin_base', 200);
+    document.getElementById('beatSlider').value = loadSetting('bin_beat', 10);
+    document.getElementById('volSlider').value = loadSetting('bin_vol', 20);
     updateUI();
 };
 
@@ -56,13 +90,25 @@ function updateUI() {
     document.getElementById('baseVal').textContent = document.getElementById('baseSlider').value + " Hz";
     document.getElementById('beatVal').textContent = document.getElementById('beatSlider').value + " Hz";
     document.getElementById('volVal').textContent = document.getElementById('volSlider').value + "%";
+    saveSetting('bin_base', document.getElementById('baseSlider').value);
+    saveSetting('bin_beat', document.getElementById('beatSlider').value);
+    saveSetting('bin_vol', document.getElementById('volSlider').value);
+
+    if (playing) {
+        const beat = parseFloat(document.getElementById('beatSlider').value);
+        let label = "Manual Adjustment";
+        if (beat === 2.5) label = "Delta (Sleep)";
+        else if (beat === 6) label = "Theta (Meditation)";
+        else if (beat === 10) label = "Alpha (Relaxation)";
+        else if (beat === 40) label = "Gamma (Focus/Health)";
+        document.getElementById('status').textContent = "Binaural Beats Active (" + label + ")";
+    }
     if(playing) updateParams();
 }
 
 function setPreset(freq, label) {
     document.getElementById('beatSlider').value = freq;
-    currentPreset = label;
-    document.getElementById('status').textContent = "Preset Loaded: " + label;
+    if (!playing) document.getElementById('status').textContent = "Preset Loaded: " + label;
     updateUI();
 }
 
@@ -96,10 +142,9 @@ async function toggle() {
 
     oscL.start(); oscR.start();
     playing = true;
-    updateParams();
+    updateUI();
     document.getElementById('toggleBtn').textContent = "Stop Therapy";
     document.getElementById('toggleBtn').className = "big-btn stop-btn";
-    document.getElementById('status').textContent = "Binaural Beats Active";
 }
 
 function stop() {
@@ -111,11 +156,18 @@ function stop() {
 }
 
 function getReportData() {
+    const beatFreq = parseFloat(document.getElementById('beatSlider').value);
+    let reportedPreset = "Manual";
+    if (beatFreq === 2.5) reportedPreset = "Delta (Sleep)";
+    else if (beatFreq === 6) reportedPreset = "Theta (Meditation)";
+    else if (beatFreq === 10) reportedPreset = "Alpha (Relaxation)";
+    else if (beatFreq === 40) reportedPreset = "Gamma (Focus/Health)";
+
     return {
         "Base Frequency": document.getElementById('baseSlider').value + " Hz",
         "Beat Frequency": document.getElementById('beatSlider').value + " Hz",
         "Volume": document.getElementById('volSlider').value + "%",
-        "Last Active Preset": currentPreset
+        "Last Active Preset": reportedPreset
     };
 }
 

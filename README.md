@@ -25,8 +25,7 @@ Includes:
 This is an experimental sound‑only tool based on publicly available research.
 
 ### **4. Broadband Sound Therapy**
-White, pink, brown, violet noise and nature‑style soundscapes for masking and habituation.
-White, pink, brown, violet, and blue noise and nature‑style soundscapes for masking and habituation.
+White, pink, brown, blue, and violet noise and nature‑style soundscapes for masking and habituation.
 
 ### **5. Acoustic Coordinated Reset (CR)**
 Pseudo-random sequences of four tones relative to tinnitus pitch (Tass, 2012) designed to desynchronize neural clusters.

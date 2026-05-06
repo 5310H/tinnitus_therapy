@@ -209,6 +209,17 @@
     </div>
 
     <div class="ctrl">
+        <label>Noise Carrier Color</label>
+        <select id="noiseColor">
+            <option value="white" title="Flat spectrum; effective for broadband masking.">White Noise</option>
+            <option value="pink" selected title="Balanced power; research standard for comfort.">Pink Noise</option>
+            <option value="brown" title="Low-frequency focus; best for low-pitched tinnitus.">Brown Noise</option>
+            <option value="blue" title="High-frequency focus; useful for high-pitched tinnitus.">Blue Noise (+3dB/oct)</option>
+            <option value="violet" title="Strong high-frequency focus; best for piercing tones.">Violet Noise (High-Tone)</option>
+        </select>
+    </div>
+
+    <div class="ctrl">
         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 10px;">
             <input type="checkbox" id="useLiveAudio" style="width: 20px; height: 20px;">
             <span style="color: var(--accent); font-weight: bold;">Use Live System Audio (Spotify/YouTube)</span>
@@ -229,16 +240,22 @@
     <canvas id="viz"></canvas>
 </div>
 <script>
-let audioCtx,merger,analyserL,analyserR,rafViz,rafPulse,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[];
+let audioCtx,merger,analyserL,analyserR,rafViz,rafPulse,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[],noiseBuf;
 let running=false,remaining=0,timerId=null,sessionSeconds=1200;
 const eqBands = [2000, 4000, 8000, 12000];
 
 window.onload = () => {
     initNav(`
+        <b>Hearing Compensation (EQ):</b> Allows you to boost specific frequency bands to compensate for hearing loss. Researchers suggest that correcting for hearing loss can help lower tinnitus perception by reducing the brain's "internal gain."<br><br>
         <b>Purpose:</b> Simulates the sound‑only component of Lenire therapy using tone bursts and modulated noise.<br><br>
         <b>Technical Accuracy:</b> The module utilizes independent oscillators for tone bursting and noise modulation, ensuring precise delivery of rhythmic auditory stimuli used in neuromodulation research.<br><br>
         <b>Usage:</b> Set carrier frequency near your tinnitus pitch. Adjust tone/noise mix for comfort.<br><br>
-        <b>Plan:</b> 20 minutes per session is recommended.
+        <b>Plan:</b> 20 minutes per session is recommended.<br><br>
+        <b>Noise Selection Guide:</b><br>
+        • <b>Pink:</b> Research standard; most comfortable for long-term use.<br>
+        • <b>White:</b> Effective for general broadband masking.<br>
+        • <b>Brown:</b> Deep focus; best for low-pitched tinnitus or sensitive hearing.<br>
+        • <b>Blue/Violet:</b> High-frequency focus; best for high-pitched tinnitus.
     `);
 
     document.getElementById('freqL').value = loadSetting('len_freqL', loadSetting('len_freq', 8000));
@@ -253,6 +270,7 @@ window.onload = () => {
     document.getElementById('modRateR').value = loadSetting('len_modR', loadSetting('len_mod', 2.0));
     document.getElementById('burstRateL').value = loadSetting('len_burstL', loadSetting('len_burst', 1.5));
     document.getElementById('burstRateR').value = loadSetting('len_burstR', loadSetting('len_burst', 1.5));
+    document.getElementById('noiseColor').value = loadSetting('len_noiseColor', 'pink');
     
     document.getElementById('lockLR').checked = loadSetting('len_lock_lr', 'false') === 'true';
     document.getElementById('visualPulse').checked = loadSetting('len_visual_pulse', 'false') === 'true';
@@ -460,15 +478,26 @@ function stopSession(){
   updateTimerDisplay();
 }
 
+function createNoise(color){
+  const bufSize=audioCtx.sampleRate*2;
+  const buf=audioCtx.createBuffer(1,bufSize,audioCtx.sampleRate);
+  const d=buf.getChannelData(0);
+  if(color==='white'){for(let i=0;i<bufSize;i++)d[i]=Math.random()*2-1}
+  else if(color==='pink'){let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8687*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926}}
+  else if(color==='blue'){let last=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;d[i]=(w-0.5*last)*0.7;last=w}}
+  else if(color==='violet'){let last=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;d[i]=w-last;last=w}}
+  else if(color==='brown'){let last=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;d[i]=(last+0.02*w)/1.02;last=d[i];d[i]*=3.5}}
+  return buf;
+}
+
 async function setupAudio(){
   audioCtx=new(window.AudioContext||window.webkitAudioContext)();
   merger = audioCtx.createChannelMerger(2);
   globalMasterGain = audioCtx.createGain();
   merger.connect(globalMasterGain).connect(audioCtx.destination);
 
-  // Shared Noise Buffer
-  const buf=audioCtx.createBuffer(1,audioCtx.sampleRate*2,audioCtx.sampleRate),d=buf.getChannelData(0);
-  for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  const color = document.getElementById('noiseColor').value;
+  noiseBuf = createNoise(color);
 
   let customSourceNode = null, splitter = null;
   if (document.getElementById('useLiveAudio').checked) {
@@ -497,7 +526,7 @@ async function setupAudio(){
       let noiseSource = null;
       if (!customSourceNode) {
           noiseSource = audioCtx.createBufferSource();
-          noiseSource.buffer = buf; noiseSource.loop = true;
+          noiseSource.buffer = noiseBuf; noiseSource.loop = true;
       }
       const noiseFilter = audioCtx.createBiquadFilter(); noiseFilter.type='bandpass'; noiseFilter.Q.value=1.5;
       const noiseGain = audioCtx.createGain();
@@ -672,7 +701,8 @@ document.getElementById('muteToggle').onchange = (e) => {
 }});
 
 function getReportData() {
-    let bgSource = "Internal White Noise";
+    const colorSelect = document.getElementById('noiseColor');
+    let bgSource = "Internal " + colorSelect.options[colorSelect.selectedIndex].text;
     if (document.getElementById('useLiveAudio').checked) {
         bgSource = "Live System Audio (Browser/App Capture)"; // Live audio takes precedence
     } else {
