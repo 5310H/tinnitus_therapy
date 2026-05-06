@@ -45,6 +45,11 @@ Algorithmically generated therapy suggestions based on current THI (distress) an
 ### **9. Noise Generator (Python‑style)**
 Simple broadband noise generator with adjustable parameters.
 
+### **10. Interactive Walkthroughs & Professional Narrator**
+Every therapy module features a dedicated, step-by-step interactive tutorial to ensure clinical accuracy. 
+- **Professional Male Narrator:** High-quality neural voice synthesis provides audio guidance for all tutorial steps.
+- **Visual Guidance:** Real-time highlighting of UI elements during the setup process.
+
 ---
 
 ## 🎵 Flexible Audio Sources
@@ -56,9 +61,20 @@ All therapy modules now support three primary input methods:
 ## 📊 Clinical Validation & Reporting
 The suite includes an automated validation engine to ensure therapy integrity:
 - **Real-time DSP Checks:** Verifies notch depth (target >40dB) and frequency alignment.
-- **Clinical Export:** Generates detailed reports including therapy parameters, the specific audio source used, and hardware calibration status.
+- **Detailed Clinical Export:** Generates reports including THI/Distress history, Minimum Masking Levels (MML), Loudness Growth (LG) data, and Residual Inhibition (RI) results.
 - **Actionable Recommendations:** Provides automated troubleshooting for common system issues (e.g., detecting "Shallow Notch" errors caused by browser audio enhancers).
  
+## 🎨 User Experience & Accessibility
+- **Professional Aesthetic:** Refined UI with a medical-grade visual style and subtle depth.
+- **Customization:** Support for Dark/Light themes and a high-density "Compact Mode."
+- **Narrator Controls:** Integrated speed and volume adjustments for the tutorial voice.
+
+## 👂 Hearing Health & Monitoring
+Regular monitoring of your hearing thresholds is a vital part of long-term tinnitus management:
+- **The Connection:** Tinnitus is often a response to auditory deprivation. Identifying shifts in your hearing can help you adjust therapy parameters for maximum efficacy.
+- **Audibility Exploration:** Use the built-in **Hearing Test** tool to check your thresholds across the spectrum (20Hz to 20kHz).
+- **Safety Protocol:** These tools are for self-tracking and exploration only. They do not replace a clinical audiogram from a licensed professional.
+
 ---
 
 ## 🛠 Tools

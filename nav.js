@@ -15,6 +15,17 @@ const TINNITUS_MANAGEMENT_GUIDE = `
         <li><b>Phase 4: Passive Use.</b> Do not focus on the therapy sound. Read, work, or relax. The goal is for the sound to become "wallpaper."</li>
         <li><b>Phase 5: Consistency.</b> Aim for 30–60 minutes daily. Clinical changes in the auditory cortex typically take 3–6 months of steady use.</li>
     </ol>
+    <h3 style="color:var(--accent); margin-bottom:10px;">Using the Help Systems</h3>
+    <ul style="padding-left:20px; margin-bottom:15px; font-size:0.9rem; line-height:1.4;">
+        <li><b>The Guide:</b> Opens this panel for clinical protocols, the "Golden Rules," and general advice.</li>
+        <li><b>Interactive Tutorials:</b> Click the "Tutorial" button on any therapy page for a narrated, step-by-step walkthrough of that specific tool's setup.</li>
+    </ul>
+    <h3 style="color:var(--accent); margin-bottom:10px;">Hearing Health Monitoring</h3>
+    <p style="font-size:0.9rem; margin-bottom:10px;">Changes in your hearing sensitivity can directly impact tinnitus perception. We recommend:</p>
+    <ul style="padding-left:20px; margin-bottom:15px; font-size:0.9rem; line-height:1.4;">
+        <li><b>Regular Checks:</b> Use the <b>Hearing Test</b> bi-weekly to verify your audibility thresholds.</li>
+        <li><b>Recalibration:</b> If your hearing shifts, revisit the <b>Notch Finder</b> to ensure your therapy remains precisely calibrated.</li>
+    </ul>
     <h3 style="color:var(--accent); margin-bottom:10px;">Important Setup Tips</h3>
     <ul style="padding-left:20px; margin-bottom:15px; font-size:0.9rem; line-height:1.4;">
         <li><b>Disable Enhancements:</b> Turn off Windows "Sonic," Dolby Atmos, or any "Bass Boost" settings in your OS or browser.</li>
@@ -58,7 +69,10 @@ function initNav(helpHtml) {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
     // Combine page-specific help with the universal guide
-    document.getElementById('helpContent').innerHTML = (helpHtml || '') + TINNITUS_MANAGEMENT_GUIDE;
+    let guide = TINNITUS_MANAGEMENT_GUIDE;
+    const hearingTestPath = isDocs ? '../hearingtest.html' : 'hearingtest.html';
+    guide = guide.replace('<b>Hearing Test</b>', `<a href="${hearingTestPath}" style="color:var(--accent); text-decoration:underline;">Hearing Test</a>`);
+    document.getElementById('helpContent').innerHTML = (helpHtml || '') + guide;
 }
 window.openHelp = () => document.getElementById("helpModal").style.display = "block";
 window.closeHelp = () => document.getElementById("helpModal").style.display = "none";

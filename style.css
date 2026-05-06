@@ -264,7 +264,7 @@ summary:hover { background: rgba(0, 191, 165, 0.1); }
     right: 20px;
     max-width: 360px; 
     margin: 0;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.08); /* More professional/medical, subtle lift */
     border: 2px solid var(--accent);
     z-index: 10002;
     background: var(--card-bg);

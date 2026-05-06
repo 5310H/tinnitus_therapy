@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trahreg-tinnitus-suite-v1.3.1';
+const CACHE_NAME = 'trahreg-tinnitus-suite-v1.4.0';
 const ASSETS = [
     './',
     './index.html',

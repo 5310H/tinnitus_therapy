@@ -97,7 +97,10 @@
         <div class="bal-slider-row">
             <div class="bal-label">Bal 1</div><div class="bal-label">Bal 2</div><div class="bal-label">Bal 3</div><div class="bal-label">Bal 4</div>
         </div>
-        <p class="info" style="text-align: center; font-size: 0.7rem; margin-top: 10px;">Adjust sliders to balance the perceived loudness of each tone.</p>
+        <p class="info" style="text-align: center; font-size: 0.7rem; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+            <span style="flex: 1; text-align: right;">Adjust sliders to balance the perceived loudness of each tone.</span>
+            <button class="button" style="font-size: 0.75rem; padding: 5px 10px; margin: 0; white-space: nowrap; flex: 0 1 auto;" onclick="startModuleTutorial('cr', 2)">Help with Calibration</button>
+        </p>
         <div id="cycleIndicators" class="cycle-grid">
             <div class="cycle-dot" title="Cycle 1 (Play)"></div>
             <div class="cycle-dot" title="Cycle 2 (Play)"></div>

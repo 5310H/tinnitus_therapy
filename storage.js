@@ -1,7 +1,7 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "1.3.1";
+const APP_VERSION = "1.4.0";
 
 /** 
  * Helpers for consistent localStorage interaction
@@ -434,8 +434,8 @@ function getDailyUsage() {
 /**
  * Generic "Video-Style" Walkthrough System
  */
-function showWalkthrough(slides) {
-    let currentSlide = 0;
+function showWalkthrough(slides, startIndex = 0) {
+    let currentSlide = startIndex;
     let autoPlayTimer = null;
     let isAutoPlaying = false;
     let speechSynth = window.speechSynthesis;
@@ -470,12 +470,18 @@ function showWalkthrough(slides) {
             speechUtterance.pitch = 1;
             speechUtterance.volume = narratorVolume;
 
-            // Improved search for male voices across various platforms (Windows, Apple, Chrome)
-            // We prioritize specific names and the "male" keyword while ensuring it's an English voice.
-            const maleKeywords = ['daniel', 'david', 'google us english male', 'microsoft david', 'aaron', 'alex', 'james', 'guy', 'male'];
-            const selectedVoice = voices.find(v => 
-                maleKeywords.some(keyword => v.name.toLowerCase().includes(keyword)) && v.lang.startsWith('en')
-            );
+            // Prioritize professional male voices (Neural/Natural/specific professional names)
+            const maleKeywords = ['natural', 'neural', 'google us english male', 'microsoft david', 'daniel', 'david', 'alex', 'james', 'male'];
+            const selectedVoice = voices
+                .filter(v => v.lang.startsWith('en') && maleKeywords.some(k => v.name.toLowerCase().includes(k)))
+                .sort((a, b) => {
+                    // Prioritize high-quality "Natural" or "Neural" voices for a professional sound
+                    const aName = a.name.toLowerCase();
+                    const bName = b.name.toLowerCase();
+                    const aQuality = aName.includes('natural') || aName.includes('neural');
+                    const bQuality = bName.includes('natural') || bName.includes('neural');
+                    return bQuality - aQuality;
+                })[0];
             
             if (selectedVoice) speechUtterance.voice = selectedVoice;
 
@@ -633,7 +639,7 @@ function showQuickStartGuide() {
 /**
  * Starts a module-specific tutorial walkthrough.
  */
-function startModuleTutorial(key) {
+function startModuleTutorial(key, startIndex = 0) {
     const tutorials = {
         'decorrelated': [
             { title: "Hardware Check", content: "Plug in your headphones. This therapy depends on your brain receiving two different, independent signals.", selector: "h1" },
@@ -670,7 +676,8 @@ function startModuleTutorial(key) {
             { title: "Frequency Input", content: "Adjust the pitch using the slider or type a value. This identifies your tinnitus 'center frequency'.", selector: ".responsive-grid" },
             { title: "Auto-Sweep", content: "Use this to slowly climb the frequency range. It's often easier to find the match while the sound is moving.", selector: "#speedSlider" },
             { title: "Test & Listen", content: "Toggle the tones to compare the external sound against your internal tinnitus.", selector: "#playBtn" },
-            { title: "Save Settings", content: "Once matched, save here. This frequency will be used across all other therapy modules automatically.", selector: "#saveBtn" }
+            { title: "Save Settings", content: "Once matched, save here. This frequency will be used across all other therapy modules automatically.", selector: "#saveBtn" },
+            { title: "Matching Difficulty?", content: "If you cannot find a match, you may have hearing loss in that frequency region. Use the <b>Hearing Test</b> tool to check your audibility levels.", selector: "h1" }
         ],
         'tmc': [
             { title: "Point Calibration", content: "For each frequency, find the 'Minimum Masking Level'—the quietest volume that just hides your tinnitus.", selector: "#freqSlider" },
@@ -707,7 +714,7 @@ function startModuleTutorial(key) {
     };
 
     if (tutorials[key]) {
-        showWalkthrough(tutorials[key]);
+        showWalkthrough(tutorials[key], startIndex);
     } else {
         showQuickStartGuide();
     }
