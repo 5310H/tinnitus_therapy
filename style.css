@@ -259,15 +259,42 @@ summary:hover { background: rgba(0, 191, 165, 0.1); }
     transition: all 0.3s ease;
 }
 .modal-card.tutorial-mode {
+    /* When App is Dark (default), Tutorial is Light */
+    --bg: #f0f2f5;
+    --card-bg: #ffffff;
+    --surface: #e4e6eb;
+    --text: #1c1e21;
+    --text-dim: #606770;
+    --muted: #8d949e;
+    --accent: #00897b;
+    --border: #ccd0d5;
+
+    background: var(--card-bg) !important;
+    color: var(--text) !important;
+    border: 2px solid var(--accent) !important;
+
     position: fixed; 
     bottom: 20px; 
     right: 20px;
     max-width: 360px; 
     margin: 0;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.08); /* More professional/medical, subtle lift */
-    border: 2px solid var(--accent);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     z-index: 10002;
-    background: var(--card-bg);
+}
+.light-mode .modal-card.tutorial-mode {
+    /* When App is Light, Tutorial is Dark */
+    --bg: #000b18;
+    --card-bg: #00162d;
+    --surface: #002b54;
+    --text: #e0e0e0;
+    --text-dim: #888;
+    --muted: #aaa;
+    --accent: #00bfa5;
+    --border: #003b73;
+}
+.modal-card.tutorial-mode .play-btn {
+    background: linear-gradient(135deg, var(--accent), var(--surface)) !important;
+    color: #fff !important;
 }
 .modal-close-btn {
     width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: 8px; cursor: pointer;
@@ -280,18 +307,138 @@ summary:hover { background: rgba(0, 191, 165, 0.1); }
 
 /* Tutorial Annotation Highlights */
 .tutorial-highlight {
-    outline: 4px solid var(--accent) !important;
+    /* Default (Dark App): Use the Light Tutorial's accent color for inversion */
+    --h-accent: #00897b;
+    outline: 4px solid var(--h-accent) !important;
     outline-offset: 4px;
-    box-shadow: 0 0 30px var(--accent) !important;
+    box-shadow: 0 0 30px var(--h-accent) !important;
     animation: tutorial-pulse 1.5s infinite;
     position: relative;
     z-index: 10001; 
-    background: rgba(0, 191, 165, 0.08) !important;
+    background: rgba(0, 137, 123, 0.15) !important;
+}
+.light-mode .tutorial-highlight {
+    /* Light App: Use the Dark Tutorial's accent color for inversion */
+    --h-accent: #00bfa5;
+    background: rgba(0, 191, 165, 0.15) !important;
 }
 @keyframes tutorial-pulse {
-    0% { outline-width: 4px; box-shadow: 0 0 10px var(--accent); }
-    50% { outline-width: 6px; box-shadow: 0 0 35px var(--accent); }
-    100% { outline-width: 4px; box-shadow: 0 0 10px var(--accent); }
+    0% { outline-width: 4px; box-shadow: 0 0 10px var(--h-accent); }
+    50% { outline-width: 6px; box-shadow: 0 0 35px var(--h-accent); }
+    100% { outline-width: 4px; box-shadow: 0 0 10px var(--h-accent); }
+}
+
+/* Zen Mode for therapeutic focus */
+body.zen-mode .panel > *:not(.zen-keep) {
+    display: none !important;
+}
+body.zen-mode .back, 
+body.zen-mode .help-btn, 
+body.zen-mode #audioStatusIndicator,
+body.zen-mode .main-header {
+    display: none !important;
+}
+body.zen-mode .panel {
+    margin-top: 12vh;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* Ensure therapeutic visual elements (like Lenire pulses) stay above the dimming layer */
+.visual-pulse, .pulse-active, .therapeutic-viz {
+    position: relative;
+    z-index: 10001;
+    animation-duration: var(--pulse-duration, 4s);
+    /* This prevents the dimming overlay from obscuring active therapy visuals 
+       even when they aren't the primary focus of the current tutorial step. */
+}
+
+/* Prevent background scrolling when tutorial is active */
+body.tutorial-active {
+    overflow: hidden;
+}
+
+/* Dimming effect when tutorial is active */
+body.tutorial-active::after {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 10000;
+    pointer-events: none;
+    animation: tutorial-fade-in 0.4s ease;
+}
+@keyframes tutorial-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Breathing Wave Pacer */
+.breathing-pacer-wrap {
+    width: 100%;
+    margin: 25px 0;
+    display: none;
+}
+body.session-running .breathing-pacer-wrap {
+    display: block;
+}
+.breathing-wave-label-container {
+    position: relative;
+    height: 1.2rem;
+    margin-bottom: 8px;
+}
+.breathing-label {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: 0;
+}
+body.session-running .breathing-label.inhale {
+    animation: inhale-fade var(--pulse-duration, 10s) infinite ease-in-out;
+}
+body.session-running .breathing-label.exhale {
+    animation: exhale-fade var(--pulse-duration, 10s) infinite ease-in-out;
+}
+@keyframes inhale-fade {
+    0%, 50%, 100% { opacity: 0; transform: translateY(3px); }
+    25% { opacity: 1; transform: translateY(0); }
+}
+@keyframes exhale-fade {
+    0%, 50%, 100% { opacity: 0; transform: translateY(3px); }
+    75% { opacity: 1; transform: translateY(0); }
+}
+.breathing-wave-container {
+    width: 100%;
+    height: 6px;
+    background: var(--surface);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--border);
+}
+.breathing-wave-bar {
+    position: absolute;
+    left: 50%;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    transform: translateX(-50%);
+    box-shadow: 0 0 15px var(--accent);
+}
+body.session-running .breathing-wave-bar {
+    animation: breathing-expand var(--pulse-duration, 10s) infinite ease-in-out;
+}
+@keyframes breathing-expand {
+    0%, 100% { width: 0%; opacity: 0.3; }
+    50% { width: 100%; opacity: 1; }
 }
 
 .responsive-grid {
@@ -330,4 +477,14 @@ summary:hover { background: rgba(0, 191, 165, 0.1); }
     --radius-input: 6px;
     --panel-width: 95%;
     --viz-height: 100px;
+}
+
+/* 3D Hardware Previewer */
+#haptic-preview-container {
+    width: 100%;
+    height: 300px;
+    background: #000810;
+    border-radius: var(--radius-input);
+    margin-top: 10px;
+    border: 1px solid var(--border);
 }

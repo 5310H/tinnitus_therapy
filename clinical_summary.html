@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Clinical Summary - Trahreg Tinnitus Therapy Suite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+    body { padding: 20px; line-height: 1.6; text-align: left; background: var(--bg); }
+    .summary-container { background: white; color: #333; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }
+    h1 { color: #00897b; border-bottom: 2px solid #00897b; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
+    h2 { color: #00897b; margin-top: 25px; margin-bottom: 10px; font-size: 1.3rem; border-left: 4px solid #00897b; padding-left: 10px; }
+    h3 { font-size: 1.1rem; margin-top: 15px; color: #444; }
+    .meta { text-align: center; font-size: 0.9rem; color: #666; margin-bottom: 30px; }
+    .highlight-box { background: #f0f7f4; border: 1px solid #c8e6c9; padding: 15px; border-radius: 8px; margin: 15px 0; font-size: 0.95rem; }
+    ul { margin-left: 25px; margin-bottom: 15px; }
+    li { margin-bottom: 5px; }
+    .disclaimer-box { border: 2px solid #ef5350; padding: 15px; border-radius: 8px; margin-top: 30px; font-size: 0.9rem; }
+    .disclaimer-box b { color: #ef5350; }
+    @media print {
+        .no-print { display: none; }
+        body { padding: 0; background: white; }
+        .summary-container { box-shadow: none; width: 100%; max-width: none; padding: 0; }
+    }
+</style>
+</head>
+<body>
+
+<div class="no-print" style="text-align: center; margin-bottom: 20px; display: flex; gap: 10px; justify-content: center;">
+    <button onclick="generatePDF()" class="button" style="background: var(--accent); color: white;">📄 Download Summary PDF</button>
+    <a href="index.html" class="button">Back to Dashboard</a>
+</div>
+
+<div class="summary-container" id="pdfContent">
+    <h1>Clinical Summary for Healthcare Professionals</h1>
+    <p class="meta">Trahreg Tinnitus Therapy Suite | Open‑Source Auditory Research Platform | <span class="app-version-label" data-version-prefix="v"></span></p>
+
+    <p>This document provides a technical overview of the Trahreg Tinnitus Therapy Suite, an experimental tool used by your patient to explore research-led sound therapy protocols. The suite is designed for educational and personal exploration of auditory neuroplasticity and habituation models.</p>
+
+    <h2>1. Core Therapeutic Protocols</h2>
+    <p>The suite implements three primary evidence-based sound therapy modalities:</p>
+    
+    <h3>Tailored Notched Music Training (TMNMT)</h3>
+    <ul>
+        <li><b>Mechanism:</b> Lateral inhibition. Removing energy from the tinnitus frequency band to reorganize the auditory cortex.</li>
+        <li><b>Parameters:</b> 1.0 octave notch width centered on the patient's matched tinnitus pitch.</li>
+        <li><b>Research Citation:</b> Okamoto et al. (2010), <i>PNAS</i>.</li>
+    </ul>
+
+    <h3>Acoustic Coordinated Reset (CR) Neuromodulation</h3>
+    <ul>
+        <li><b>Mechanism:</b> Disrupting pathological neural synchrony via randomized sequences of four tones bracketing the tinnitus pitch.</li>
+        <li><b>Parameters:</b> Logarithmic frequency distribution (0.77, 0.90, 1.10, 1.32 ratios) at a 1.5 Hz clinical cycle rate.</li>
+        <li><b>Research Citation:</b> Tass et al. (2012), <i>Restorative Neurology and Neuroscience</i>.</li>
+    </ul>
+
+    <h3>Dual‑Stimulus (Bimodal) Neuromodulation</h3>
+    <ul>
+        <li><b>Mechanism:</b> Multisensory integration. Pairing auditory bursts with synchronous tactile haptic pulses.</li>
+        <li><b>Implementation:</b> Tactile stimulation via LRA motor hardware (fingertip-based somatosensory cortex activation).</li>
+        <li><b>Research Citation:</b> Conlon et al. (2020), <i>Science Translational Medicine</i> (TENT-A).</li>
+    </ul>
+
+    <h2>2. Clinical Assessment & Adherence Tracking</h2>
+    <ul>
+        <li><b>THI Baseline:</b> Integrated Tinnitus Handicap Inventory scores to monitor impact over time.</li>
+        <li><b>Psychoacoustic Mapping:</b> Support for Minimum Masking Levels (MML) and Loudness Growth (LG) testing.</li>
+        <li><b>Usage Transparency:</b> Usage logs track patient adherence to the recommended 30–60 minute daily protocol.</li>
+    </ul>
+
+    <h2>3. The Habituation & Mixing Point Model</h2>
+    <div class="highlight-box">
+        The suite strictly encourages the <b>Habituation Model</b> (e.g., Mounts, Jastreboff). Users are instructed to calibrate volumes to the <b>"Mixing Point"</b>—where the therapy sound blends with the tinnitus rather than masking it. This ensures the brain continues to receive the tinnitus signal while learning to classify it as neutral background noise.
+    </div>
+
+    <h2>4. Technical Validation & DSP Integrity</h2>
+    <ul>
+        <li><b>Filter Precision:</b> Notch filters are validated to provide >40dB attenuation with ±1% frequency accuracy.</li>
+        <li><b>Stereo Separation:</b> Built-in phase and decorrelation tests ensure true independent L/R channel processing.</li>
+    </ul>
+
+    <h2>5. Community & Peer Feedback</h2>
+    <p>This initiative maintains transparency through an open-source development model. Healthcare providers are encouraged to review ongoing technical discussions, peer feedback, and user-reported outcomes via our public community portal.</p>
+    <ul>
+        <li><b>Project Repository:</b> <a href="https://github.com/kjgerhart/tinnitus_therapy" target="_blank" style="color:#00897b; text-decoration: underline;">https://github.com/kjgerhart/tinnitus_therapy</a></li>
+        <li><b>Peer Review & Feedback:</b> Documentation of community interactions and researcher feedback can be found in the repository's public history and discussions.</li>
+    </ul>
+
+    <div class="disclaimer-box">
+        <b>IMPORTANT CLINICAL NOTICE:</b><br>
+        This is an informational tool, <b>not a medical device</b>. It does not diagnose or treat disease. All therapy parameters used by the patient are for research exploration only. Clinical evaluation is recommended for all tinnitus cases.
+    </div>
+</div>
+
+<script>
+window.onload = () => {
+    initNav("This summary provides clinicians with a scientific overview of the protocols implemented in the suite.");
+};
+async function generatePDF() {
+    const element = document.getElementById('pdfContent');
+    const isDark = !document.body.classList.contains('light-mode');
+    if (isDark) document.body.classList.add('light-mode');
+    const opt = {
+        margin: [15, 15], filename: 'Tinnitus_Therapy_Clinical_Summary.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    try { await html2pdf().set(opt).from(element).save(); } 
+    finally { if (isDark) document.body.classList.remove('light-mode'); }
+}
+</script>
+</body>
+</html>

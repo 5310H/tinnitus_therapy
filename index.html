@@ -122,6 +122,8 @@
                 <a class="button" style="margin:0;" href="research.html">Research</a>
                 <a class="button" style="margin:0;" href="license.html">License</a>
             </div>
+            <a class="button" style="width:100%; margin-top:10px; border-color: #2196f3; color: #2196f3; font-weight:bold;" href="presentation.html">📊 Presentation Materials (CHSC)</a>
+            <a class="button" style="width:100%; margin-top:10px; border-color:var(--accent); color:var(--accent); font-weight:bold;" href="clinical_summary.html">🩺 Clinical Summary for Doctors</a>
             <div class="ctrl" style="margin-top:15px; border-top:1px dashed var(--border); padding-top:10px;">
                 <label>Audiologist Email</label>
                 <input type="email" id="audioEmail" placeholder="clinician@example.com" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
@@ -530,13 +532,29 @@ function renderStats() {
     <div class="modal-card">
         <h2 style="color: var(--accent); margin-top: 0;">What's New in v<span class="app-version-label"></span></h2>
         <p class="info">Recent improvements to your therapy experience:</p>
-        <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.95rem;">
-            <li><b>Interactive Tutorials:</b> Annotated walkthroughs for every therapy and tool. Use the <b>Tutorial</b> button to see UI highlights and hear the new <b>Voice Narrator</b> with adjustable speed and volume.</li>
-            <li><b>Guided Onboarding:</b> A visual "Path to Relief" on the home page with progress checkmarks to help you complete your clinical setup.</li>
-            <li><b>Better Organization:</b> Dashboard tools are now split into "Diagnostic Tests" and "System Utilities" to make navigation more intuitive.</li>
-            <li><b>Progressive Muscle Relaxation (PMR):</b> A guided relaxation sequence in <b>CBT & Wellness</b> with auditory cues to help manage tinnitus distress.</li>
-            <li><b>Performance & Safety:</b> Faster loading times, improved DSP validation, and new options for data backup or factory reset within settings.</li>
-        </ul>
+        <div style="max-height: 400px; overflow-y: auto; text-align: left; padding-right: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
+            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px;">Latest (v1.5.4) - May 2026</h3>
+            <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem;">
+                <li><b>Clinical Pilot Program:</b> New inquiry system for professional partners to apply for collaborative outcome tracking.</li>
+            </ul>
+
+            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v1.5.0: Professional Integration - May 2026</h3>
+            <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
+                <li><b>Dual-Stimulus (Bimodal) Support:</b> Synchronize auditory bursts with wireless tactile pulses using the new <b>Finger Pacer</b> hardware or mobile haptics.</li>
+                <li><b>Clinical Summary for Doctors:</b> Generate professional technical PDFs and handouts summarizing protocols and citations to share with audiologists.</li>
+                <li><b>Community Sharing:</b> Use the "Share Setup" tool to copy settings formatted for forums like Tinnitus Talk and Reddit.</li>
+                <li><b>Breathing Wave Pacer:</b> Integrated visual and auditory pacing for resonance breathing during therapeutic sessions.</li>
+            </ul>
+
+            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v1.4.0: Interface & Guidance - April 2026</h3>
+            <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 10px; font-size: 0.9rem; color: var(--text-dim);">
+                <li><b>Interactive Tutorials:</b> Voice-narrated UI walkthroughs and visual highlights for every therapy and tool.</li>
+                <li><b>Guided Onboarding:</b> A visual "Path to Relief" sequence on the dashboard to help you complete your clinical setup.</li>
+                <li><b>PMR Support:</b> Guided relaxation sequence in <b>CBT & Wellness</b> with auditory cues to help manage distress.</li>
+                <li><b>Better Organization:</b> Dashboard tools are now split into "Support Tools" and "System Utilities" for more intuitive navigation.</li>
+                <li><b>Performance & Safety:</b> Improved DSP validation and new options for data backup or factory reset.</li>
+            </ul>
+        </div>
         <button onclick="closeWhatsNew()" class="big-btn play-btn">Let's Go</button>
     </div>
 </div>

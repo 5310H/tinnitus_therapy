@@ -13,16 +13,17 @@ Left/right decorrelated broadband noise designed to reduce auditory synchrony. S
 ### **2. Notch Therapy**
 Broadband noise with a narrow frequency band removed around the user’s tinnitus pitch. Users can process built-in noise, local files, or live streams from other applications.
 
-### **3. Lenire‑Style Sound Therapy (Sound‑Only)**
-A sound‑only implementation inspired by the auditory component of Lenire’s bimodal neuromodulation research.  
+### **3. Dual‑Stimulus Neuromodulation (Sound & Haptics)**
+An experimental implementation of bimodal sensory pairing, similar to the method used by the **Lenire** device. Based on publicly available research (e.g., TENT-A, 2020).
 Includes:
 - Carrier tones  
 - Frequency‑shaped noise  
 - Amplitude‑modulated noise  
 - Tone‑burst patterns  
+ - Tactile Haptic Pairing (Finger Pacer support)
 
 ⚠️ No electrical stimulation is included.  
-This is an experimental sound‑only tool based on publicly available research.
+This is an experimental tool for educational exploration of bimodal sensory integration.
 
 ### **4. Broadband Sound Therapy**
 White, pink, brown, blue, and violet noise and nature‑style soundscapes for masking and habituation.

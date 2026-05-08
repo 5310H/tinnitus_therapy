@@ -1,0 +1,140 @@
+esphome:
+  name: atom-finger-pacer
+  friendly_name: Atom Finger Pacer
+
+  on_boot:
+    priority: -10
+    then:
+      - light.turn_on:
+          id: status_led
+          red: 0%
+          green: 0%
+          blue: 100%
+          brightness: 30%
+
+esp32:
+  board: m5stack-atom
+  framework:
+    type: arduino
+
+# The Atom Lite has a built-in RGB LED (NeoPixel) on GPIO 27.
+# We use it to provide visual feedback synchronized with the haptic pulse.
+light:
+  - platform: neopixelbus
+    type: GRB
+    pin: GPIO27
+    num_leds: 1
+    name: "Status LED"
+    id: status_led
+
+# Battery Sensing (Requires hardware divider on GPIO33)
+sensor:
+  - platform: adc
+    pin: GPIO33
+    id: battery_voltage
+    internal: true
+    update_interval: 60s
+  - platform: template
+    id: battery_level
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    lambda: |-
+      if (isnan(id(battery_voltage).state)) return 100.0;
+      // Map voltage (assuming 1:1 divider) from 3.2V (0%) to 4.2V (100%)
+      float level = (id(battery_voltage).state * 2.0 - 3.2) / (4.2 - 3.2) * 100.0;
+      return clamp(level, 0.0f, 100.0f);
+    update_interval: 60s
+
+# The Grove port (Port A) on Atom Lite uses GPIO 26 for the signal.
+output:
+  - platform: ledc
+    pin: GPIO26
+    id: motor_pwm
+    frequency: "1000Hz"
+
+esp32_ble_server:
+  id: ble_server
+  manufacturer: "Trahreg"
+  model: "AtomPacer-V1"
+  on_connect:
+    then:
+      - light.turn_on:
+          id: status_led
+          red: 0%
+          green: 100%
+          blue: 0%
+          brightness: 30%
+  on_disconnect:
+    then:
+      - script.execute: ble_disconnect_alert
+      # The script handles returning to Blue after the alert
+
+# BLE Interface matching the UUIDs in lenire.html
+ble_interface:
+  - service_uuid: "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+    characteristics:
+      - uuid: "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+        permissions: [WRITE]
+        on_write:
+          then:
+            - script.execute:
+                id: trigger_pulse
+                intensity: !lambda "return (float)x[0];"
+
+  - service_uuid: "180F" # Standard Battery Service
+    characteristics:
+      - uuid: "2A19" # Standard Battery Level Characteristic
+        permissions: [READ, NOTIFY]
+        lambda: |-
+          return {(uint8_t)id(battery_level).state};
+
+script:
+  - id: trigger_pulse
+    parameters:
+      intensity: float
+    mode: restart # Ensures new pulses override old ones instantly
+    then:
+      # Safety: Force stop any existing PWM before starting
+      - output.set_level:
+          id: motor_pwm
+          level: 0
+      # Flash the LED Teal (matching the app's --accent color)
+      - light.turn_on:
+          id: status_led
+          brightness: 100%
+          red: 0%
+          green: 75%
+          blue: 65%
+      - output.set_level:
+          id: motor_pwm
+          level: !lambda "return intensity / 255.0;"
+      - delay: 60ms # Slightly longer for better tactile "thump" perception
+      - output.set_level:
+          id: motor_pwm
+          level: 0
+      # Restore Green status color after the pulse
+      - light.turn_on:
+          id: status_led
+          red: 0%
+          green: 100%
+          blue: 0%
+          brightness: 30%
+
+  - id: ble_disconnect_alert
+    mode: restart
+    then:
+      # Immediate safety shutoff of motor on disconnect
+      - output.set_level:
+          id: motor_pwm
+          level: 0
+      - repeat:
+          count: 3
+          then:
+            - light.turn_on: {id: status_led, red: 100%, green: 0%, blue: 0%, brightness: 100%}
+            - output.set_level: {id: motor_pwm, level: 0.8}
+            - delay: 100ms
+            - light.turn_off: status_led
+            - output.set_level: {id: motor_pwm, level: 0}
+            - delay: 100ms
+      # Return to Blue (Advertising) after alert
+      - light.turn_on: {id: status_led, red: 0%, green: 0%, blue: 100%, brightness: 30%}

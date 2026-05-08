@@ -3,26 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lenire‑Style Sound Module</title>
+<title>Dual‑Stimulus Neuromodulation</title>
 <script src="storage.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="nav.js"></script>
+<!-- Three.js for 3D Hardware Preview -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/controls/OrbitControls.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="panel">
-    <h1>Lenire‑Style Sound</h1>
-    <p class="info">Experimental sound‑only bimodal-style therapy.</p>
+    <h1>Dual‑Stimulus</h1>
+    <p class="info">Experimental auditory and tactile sensory pairing (inspired by technology like the Lenire).</p>
     <div class="match-section" style="margin-bottom: 20px;">
         <h3>Clinical Significance</h3>
         <p>Inspired by the <b>TENT-A Clinical Trial (2020)</b>, these structured auditory patterns (tone bursts and modulated noise) are designed to engage neuroplasticity and disrupt tinnitus-related brain activity.</p>
     </div>
 
-    <div class="ctrl" style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
-        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-            <input type="checkbox" id="visualPulse" style="width: 20px; height: 20px; margin-top: 0;">
-            <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Enable Visual Bimodal Pulse</span>
-        </label>
+    <div class="card" style="margin-bottom: 20px; border-color: var(--accent);">
+        <div class="ctrl">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="visualPulse" style="width: 20px; height: 20px; margin-top: 0;">
+                <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Enable Visual Bimodal Pulse</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px;">
+                <input type="checkbox" id="pacerAudio" style="width: 20px; height: 20px; margin-top: 0;">
+                <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Enable Auditory Pacer Cues</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px;">
+                <input type="checkbox" id="hapticPulse" style="width: 20px; height: 20px; margin-top: 0;">
+                <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Enable Tactile Haptic Pulse (Mobile)</span>
+            </label>
+            <div class="ctrl" id="hapticStrengthCtrl" style="margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
+                <label>Vibration Intensity <span class="val" id="hapticStrengthVal">128</span></label>
+                <input id="hapticStrength" type="range" min="50" max="255" value="128" step="1">
+            </div>
+            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+                <button id="connectBleBtn" class="button" style="padding: 5px 10px; font-size: 0.75rem; border-color: #2196f3; color: #2196f3;" onclick="connectHapticBLE()">📡 Connect Wireless (Bluetooth)</button>
+                <button id="toggle3DBtn" class="button" style="padding: 5px 10px; font-size: 0.75rem; border-color: var(--muted); color: var(--muted);" onclick="toggle3DPreview()">🔍 Toggle 3D Mount Preview</button>
+                <div id="haptic-preview-wrapper" style="display:none;">
+                    <div id="haptic-preview-container"></div>
+                    <p class="info" style="font-size: 0.7rem; margin-top: 5px; text-align: center;">Interactive 3D Preview (haptic_mount.stl)</p>
+                </div>
+                <span id="serialStatus" style="font-size: 0.7rem; color: var(--text-dim);">Not Connected</span>
+                <span id="batteryStatus" style="font-size: 0.7rem; color: var(--text-dim); margin-left: 10px; display: none;">🔋 --%</span>
+            </div>
+        </div>
+        <div class="ctrl">
+            <label>Pulse Rate (Breaths Per Min) <span class="val" id="pulseRateVal">6</span></label>
+            <input id="pulseRate" type="range" min="3" max="15" value="6" step="0.5">
+        </div>
     </div>
 
     <div class="ctrl" style="border-bottom: 1px dashed var(--border); padding-bottom: 15px; margin-bottom: 20px;">
@@ -88,7 +119,7 @@
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div class="zen-keep" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
         <div class="ctrl">
             <label>Volume L <span class="val" id="volValL">30%</span></label>
             <input id="volL" type="range" min="0" max="100" step="1" value="30">
@@ -229,22 +260,162 @@
         <input type="file" id="customFile" accept="audio/*">
     </div>
 
-    <button id="startBtn" class="big-btn play-btn" onclick="startSession()">Start Session</button>
-    <button id="stopBtn" class="big-btn stop-btn" style="display:none" onclick="stopSession()">Stop Session</button>
+    <button id="startBtn" class="big-btn play-btn zen-keep" onclick="startSession()">Start Session</button>
+    <button id="stopBtn" class="big-btn stop-btn zen-keep" style="display:none" onclick="stopSession()">Stop Session</button>
     <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
     <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+    <button class="button" style="width:100%; margin-top:10px; border-color: #ff9800; color: #ff9800;" onclick="shareToCommunity()">💬 Share Setup to Community (BBCode/MD)</button>
     <button class="button email-audiologist-btn" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
-    <div class="timer" id="timer">Session: 00:00 / 20:00</div>
-    <div class="usage-progress">
+    <div class="timer zen-keep" id="timer">Session: 00:00 / 20:00</div>
+    <div id="usageText" class="usage-text zen-keep">Today's Progress: 0 / 20 mins</div>
+    <div class="breathing-pacer-wrap zen-keep">
+        <div class="breathing-wave-label-container">
+            <div class="breathing-label inhale">Inhale</div>
+            <div class="breathing-label exhale">Exhale</div>
+        </div>
+        <div class="breathing-wave-container">
+            <div class="breathing-wave-bar"></div>
+        </div>
+    </div>
+    <div class="usage-progress zen-keep">
         <div id="usageBar" class="usage-bar" style="width: 0%"></div>
     </div>
-    <div id="usageText" class="usage-text">Today's Progress: 0 / 20 mins</div>
-    <canvas id="viz"></canvas>
+    <button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
+    <canvas id="viz" class="zen-keep"></canvas>
 </div>
 <script>
-let audioCtx,merger,analyserL,analyserR,rafViz,rafPulse,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[],noiseBuf;
+let audioCtx,merger,analyserL,analyserR,rafViz,rafPulse,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[],noiseBuf,nextChimeTime=0,lastVibrateTime=0,bleCharacteristic,threeScene,batteryChar;
 let running=false,remaining=0,timerId=null,sessionSeconds=1200;
 const eqBands = [2000, 4000, 8000, 12000];
+
+async function connectHapticBLE() {
+    const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+    const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+    const statusEl = document.getElementById('serialStatus');
+    statusEl.textContent = "Connecting...";
+    try {
+        const device = await navigator.bluetooth.requestDevice({
+            filters: [{ name: 'TTS-FingerPacer' }],
+            optionalServices: [SERVICE_UUID, 'battery_service']
+        });
+
+        device.addEventListener('gattserverdisconnected', onDisconnected);
+
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+        document.getElementById('serialStatus').textContent = "Bluetooth Connected";
+        document.getElementById('serialStatus').style.color = "#2196f3";
+        document.getElementById('connectBleBtn').textContent = "📡 Device Linked";
+
+        // Battery level monitoring via standard service
+        try {
+            const batteryService = await server.getPrimaryService('battery_service');
+            batteryChar = await batteryService.getCharacteristic('battery_level');
+
+            const updateBatteryUI = (event) => {
+                const level = event.target.value.getUint8(0);
+                const el = document.getElementById('batteryStatus');
+                el.textContent = `🔋 ${level}%`;
+                el.style.display = 'inline';
+                // Turn red if battery is low (below 20%)
+                el.style.color = level < 20 ? '#ef5350' : 'var(--accent)';
+            };
+
+            batteryChar.addEventListener('characteristicvaluechanged', updateBatteryUI);
+            await batteryChar.startNotifications();
+            
+            // Initial read
+            const val = await batteryChar.readValue();
+            updateBatteryUI({ target: { value: val } });
+        } catch (battErr) {
+            console.log("Battery service not available on device.");
+        }
+    } catch (e) {
+        console.error("Connection error:", e);
+        let msg = "Bluetooth connection failed: " + e.message;
+        if (e.name === 'NotFoundError') msg = "Connection cancelled or device not found.";
+        if (e.name === 'SecurityError') msg = "Security Error: Web Bluetooth requires an HTTPS connection or localhost.";
+        if (location.protocol === 'file:') msg += "\n\nNote: Bluetooth will not work when opening the HTML file directly. Please use a local server or HTTPS.";
+        alert(msg);
+    }
+}
+
+function toggle3DPreview() {
+    const wrapper = document.getElementById('haptic-preview-wrapper');
+    if (wrapper.style.display === 'none') {
+        wrapper.style.display = 'block';
+        if (!threeScene) init3DPreview();
+    } else {
+        wrapper.style.display = 'none';
+    }
+}
+
+function init3DPreview() {
+    const container = document.getElementById('haptic-preview-container');
+    const scene = new THREE.Scene();
+    threeScene = scene;
+    const camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.offsetWidth, container.offsetHeight);
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; // Smooth motion
+    controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = false;
+    controls.minDistance = 10;
+    controls.maxDistance = 200;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const spotLight = new THREE.PointLight(0x00bfa5, 1);
+    spotLight.position.set(50, 50, 50);
+    scene.add(spotLight);
+
+    camera.position.set(40, 40, 40);
+    camera.lookAt(0, 0, 0);
+
+    // Load STLLoader dynamically
+    const loaderScript = document.createElement('script');
+    loaderScript.src = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/loaders/STLLoader.js';
+    loaderScript.onload = () => {
+        const loader = new THREE.STLLoader();
+        loader.load('haptic_mount.stl', (geometry) => {
+            const material = new THREE.MeshPhongMaterial({ 
+                color: 0x00bfa5, 
+                specular: 0x111111, 
+                shininess: 200,
+                transparent: true,
+                opacity: 0.9
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            
+            // Center the model
+            geometry.computeBoundingBox();
+            const center = new THREE.Vector3();
+            geometry.boundingBox.getCenter(center);
+            mesh.position.sub(center);
+            
+            scene.add(mesh);
+
+            const animate = () => {
+                requestAnimationFrame(animate);
+                controls.update(); // Required for damping
+                mesh.rotation.z += 0.01; // Slow rotation
+                renderer.render(scene, camera);
+            };
+            animate();
+        }, undefined, (error) => {
+            console.error("STL Load Error: Ensure haptic_mount.stl is in the project root.", error);
+            container.innerHTML = `<div style="padding:20px; color:var(--text-dim); font-size:0.8rem;">
+                haptic_mount.stl not found.<br>Export your SCAD to STL and place it in the root folder.
+            </div>`;
+        });
+    };
+    document.head.appendChild(loaderScript);
+}
 
 window.onload = () => {
     initNav(`
@@ -257,7 +428,9 @@ window.onload = () => {
         • <b>Pink:</b> Research standard; most comfortable for long-term use.<br>
         • <b>White:</b> Effective for general broadband masking.<br>
         • <b>Brown:</b> Deep focus; best for low-pitched tinnitus or sensitive hearing.<br>
-        • <b>Blue/Violet:</b> High-frequency focus; best for high-pitched tinnitus.
+        • <b>Blue/Violet:</b> High-frequency focus; best for high-pitched tinnitus.<br><br>
+        <b>Research Citation:</b><br>
+        Conlon B, et al. "Bimodal neuromodulation combining sound and tongue stimulation reduces tinnitus symptoms in a large randomized clinical study." <i>Science Translational Medicine</i>. 2020 Oct 7;12(564):eabb2830. doi: 10.1126/scitranslmed.abb2830.
     `);
 
     document.getElementById('freqL').value = loadSetting('len_freqL', loadSetting('len_freq', 8000));
@@ -272,16 +445,53 @@ window.onload = () => {
     document.getElementById('modRateR').value = loadSetting('len_modR', loadSetting('len_mod', 2.0));
     document.getElementById('burstRateL').value = loadSetting('len_burstL', loadSetting('len_burst', 1.5));
     document.getElementById('burstRateR').value = loadSetting('len_burstR', loadSetting('len_burst', 1.5));
+
+    const updatePulseDuration = () => {
+        const bpm = parseFloat(document.getElementById('pulseRate').value);
+        const duration = 60 / bpm;
+        document.documentElement.style.setProperty('--pulse-duration', `${duration}s`);
+    };
+
+    document.getElementById('pulseRate').value = loadSetting('len_pulse_bpm', 6);
+    document.getElementById('pulseRateVal').textContent = document.getElementById('pulseRate').value;
+    document.getElementById('pulseRate').oninput = e => {
+        document.getElementById('pulseRateVal').textContent = e.target.value;
+        saveSetting('len_pulse_bpm', e.target.value);
+        updatePulseDuration();
+    };
     document.getElementById('noiseColor').value = loadSetting('len_noiseColor', 'pink');
     
     document.getElementById('lockLR').checked = loadSetting('len_lock_lr', 'false') === 'true';
     document.getElementById('visualPulse').checked = loadSetting('len_visual_pulse', 'false') === 'true';
+    document.getElementById('pacerAudio').checked = loadSetting('len_pacer_audio', 'false') === 'true';
+    document.getElementById('hapticPulse').checked = loadSetting('len_haptic_pulse', 'false') === 'true';
+
+    const hStrength = document.getElementById('hapticStrength');
+    hStrength.value = loadSetting('len_haptic_strength', 128);
+    document.getElementById('hapticStrengthVal').textContent = hStrength.value;
+    hStrength.oninput = (e) => {
+        document.getElementById('hapticStrengthVal').textContent = e.target.value;
+        saveSetting('len_haptic_strength', e.target.value);
+    };
+
+    const hSens = document.getElementById('hapticSens');
+    hSens.value = loadSetting('len_haptic_sens', 0.08);
+    document.getElementById('hapticSensVal').textContent = hSens.value;
+    hSens.oninput = (e) => {
+        document.getElementById('hapticSensVal').textContent = e.target.value;
+        saveSetting('len_haptic_sens', e.target.value);
+    };
 
     createEqUI();
     updateLockVisuals();
     updateLabels();
     setupStepButtons();
     refreshUsageUI();
+    updatePulseDuration();
+
+    if (loadSetting('lenire_zen_mode', 'false') === 'true') {
+        toggleZenMode(true);
+    }
 };
 
 function createEqUI() {
@@ -424,16 +634,67 @@ function runVisualPulse() {
     const rms = Math.sqrt(sum/data.length);
     
     // High-contrast flicker synchronized to the auditory bursts
-    if (rms > 0.08) {
+    const hapticEnabled = document.getElementById('hapticPulse').checked;
+    const threshold = parseFloat(document.getElementById('hapticSens').value);
+
+    if (rms > threshold && Date.now() - lastVibrateTime > 200) {
         document.body.style.background = 'rgba(0, 191, 165, 0.15)';
-    } else {
+        lastVibrateTime = Date.now();
+        const strength = parseInt(document.getElementById('hapticStrength').value);
+        
+        if (hapticEnabled && "vibrate" in navigator) navigator.vibrate(40);
+        if (bleCharacteristic) {
+            const data = new Uint8Array([strength]);
+            bleCharacteristic.writeValueWithoutResponse(data);
+        }
+    } else if (rms <= threshold) {
         document.body.style.background = '';
     }
     rafPulse = requestAnimationFrame(runVisualPulse);
 }
 
+function playPacerChime(time, freq) {
+    if (!document.getElementById('pacerAudio').checked) return;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, time);
+    
+    g.gain.setValueAtTime(0, time);
+    g.gain.linearRampToValueAtTime(0.04, time + 0.02); // Very soft
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
+    
+    osc.connect(g).connect(audioCtx.destination);
+    osc.start(time);
+    osc.stop(time + 1.0);
+}
+
+function schedulePacerAudio() {
+    if (!running) return;
+    const bpm = parseFloat(document.getElementById('pulseRate').value);
+    const duration = 60 / bpm;
+    
+    // Schedule slightly ahead of current time to avoid jitter
+    while (nextChimeTime < audioCtx.currentTime + 0.1) {
+        // Inhale: High chime (880Hz)
+        playPacerChime(nextChimeTime, 880);
+        // Exhale: Lower chime (440Hz) scheduled at the midpoint of the cycle
+        playPacerChime(nextChimeTime + (duration / 2), 440);
+        nextChimeTime += duration;
+    }
+    setTimeout(schedulePacerAudio, 50);
+}
+
 document.getElementById('visualPulse').onchange = (e) => {
     saveSetting('len_visual_pulse', e.target.checked);
+};
+
+document.getElementById('pacerAudio').onchange = (e) => {
+    saveSetting('len_pacer_audio', e.target.checked);
+};
+
+document.getElementById('hapticPulse').onchange = (e) => {
+    saveSetting('len_haptic_pulse', e.target.checked);
 };
 
 function formatTime(s){return Math.floor(s/60).toString().padStart(2,'0')+':'+(s%60).toString().padStart(2,'0')}
@@ -448,6 +709,9 @@ async function startSession(){
   if(!audioCtx) await setupAudio();
   validateLenireParams();
   updateParams(); running=true;
+  nextChimeTime = audioCtx.currentTime;
+  document.body.classList.add('session-running');
+  schedulePacerAudio();
   drawViz();
   runVisualPulse();
   document.getElementById('startBtn').style.display='none';
@@ -464,6 +728,7 @@ async function startSession(){
 }
 function stopSession(){
   running=false;
+  document.body.classList.remove('session-running');
   eqNodesL = []; eqNodesR = [];
   document.getElementById('startBtn').style.display='block';
   document.getElementById('stopBtn').style.display='none';
@@ -773,6 +1038,10 @@ function emailToAudiologist() {
     const report = generateClinicalReportText(reportData);
     window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
     alert("Email client opened. Please review and send the clinical report draft.");
+}
+
+function shareToCommunity() {
+    shareSetup("Dual-Stimulus Neuromodulation", getReportData());
 }
 </script>
 </body>

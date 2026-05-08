@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Clinical Handout - Trahreg Tinnitus Suite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+    body { background: #f0f2f5; color: #333; padding: 0; line-height: 1.5; font-size: 11pt; }
+    .page { 
+        background: white; width: 210mm; min-height: 297mm; padding: 20mm; 
+        margin: 20px auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); 
+        position: relative; overflow: hidden; page-break-after: always;
+    }
+    .header-box { border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+    h1 { color: #004d40; font-size: 22pt; margin: 0; }
+    h2 { color: var(--accent); font-size: 16pt; margin-top: 20px; border-left: 5px solid var(--accent); padding-left: 10px; }
+    h3 { font-size: 12pt; color: #555; margin-top: 15px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+    .col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 15px; }
+    .stat-list { list-style: none; padding: 0; }
+    .stat-list li { margin-bottom: 8px; padding-left: 15px; position: relative; }
+    .stat-list li::before { content: "•"; color: var(--accent); position: absolute; left: 0; font-weight: bold; }
+    .footer { position: absolute; bottom: 20mm; left: 20mm; right: 20mm; font-size: 9pt; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
+    .no-print { position: fixed; top: 20px; right: 20px; z-index: 1000; }
+    @media print {
+        .no-print { display: none; }
+        body { background: white; padding: 0; }
+        .page { margin: 0; box-shadow: none; width: 100%; }
+    }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+    <button onclick="window.print()" class="button" style="background: var(--accent); color: white;">🖨️ Print Handout</button>
+    <a href="presentation.html" class="button">Back to Presentation</a>
+</div>
+
+<!-- PAGE 1: EXECUTIVE ABSTRACT -->
+<div class="page">
+    <div class="header-box">
+        <div>
+            <h1>Executive Abstract</h1>
+            <p style="color:var(--accent); font-weight: bold;">Trahreg Tinnitus Therapy Suite (v1.5.4)</p>
+        </div>
+        <div style="text-align: right; font-size: 9pt;">Clinical Review Copy</div>
+    </div>
+
+    <h2>Project Vision</h2>
+    <p>The Trahreg Suite is an open-source Research Platform designed to bridge the gap between clinical neuromodulation research and home-based patient habituation. It provides high-precision implementation of established sound therapy protocols in a privacy-first, browser-based environment.</p>
+
+    <div class="col-grid">
+        <div>
+            <h3>Scientific Pillars</h3>
+            <ul class="stat-list">
+                <li><b>Lateral Inhibition:</b> Notched Noise (Okamoto, 2010).</li>
+                <li><b>Neural Desynchronization:</b> Acoustic CR (Tass, 2012).</li>
+                <li><b>Bimodal Integration:</b> Dual-Stimulus Haptics (Conlon, 2020).</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Core Philosophies</h3>
+            <ul class="stat-list">
+                <li><b>The Mixing Point:</b> Enforces habituation over masking.</li>
+                <li><b>System Validation:</b> Weekly hardware auditing.</li>
+                <li><b>Transparency:</b> Auditable, open-source DSP code.</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>Clinical Utility for Audiologists</h2>
+    <p>This suite is intended to complement, not replace, professional care. It provides clinicians with a standardized way to monitor patient adherence and setting calibration through:</p>
+    <ul class="stat-list">
+        <li><b>Adherence Tracking:</b> Detailed daily usage logs stored locally.</li>
+        <li><b>Symptom Mapping:</b> Serial THI scoring and Minimum Masking Level (MML) trends.</li>
+        <li><b>Standardized Export:</b> PDF and TXT clinical reports for professional review.</li>
+    </ul>
+
+    <div class="footer">Developed by K. Gerhart | trahreg-tinnitus.github.io | Open-Source Auditory Research</div>
+</div>
+
+<!-- PAGE 2: TECHNICAL SPECIFICATIONS & HARDWARE -->
+<div class="page">
+    <div class="header-box">
+        <h1>Technical Specifications</h1>
+        <div style="text-align: right; font-size: 9pt;">DSP & Hardware Verification</div>
+    </div>
+
+    <h2>Digital Signal Processing (DSP) Integrity</h2>
+    <p>All signal generation utilized the Web Audio API with a focus on clinical-grade precision:</p>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 10px; font-weight: bold; width: 40%;">Filter Attenuation</td><td style="padding: 10px;">> 40dB at target center frequency.</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 10px; font-weight: bold;">Frequency Precision</td><td style="padding: 10px;">± 1.0% (calibrated against 44.1/48kHz sample rates).</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 10px; font-weight: bold;">Stereo Separation</td><td style="padding: 10px;">Discrete L/R routing with hardware phase audit.</td></tr>
+        <tr style="border-bottom: 1px solid #eee;"><td style="padding: 10px; font-weight: bold;">CR Modulation</td><td style="padding: 10px;">1.5 Hz clinical cycle rate (120ms tone duration).</td></tr>
+    </table>
+
+    <h2>Wireless Bimodal Haptics (The Finger Pacer)</h2>
+    <p>The "Finger Pacer" is a hardware prototype developed to explore the bimodal sensory pairing concept popularized by devices like Lenire, but utilizing the somatosensory cortex via the index fingertip.</p>
+    <ul class="stat-list">
+        <li><b>Mechanism:</b> Linear Resonant Actuator (LRA) providing suprathreshold mechanical pulses.</li>
+        <li><b>Latency:</b> ~20-40ms BLE transport latency, well within the 100ms bimodal integration window.</li>
+        <li><b>Safety:</b> Non-invasive tactile stimulation (Zero risk of electrical mucosal burns).</li>
+        <li><b>Synchrony:</b> Real-time peak detection in the browser triggers haptic vibration in perfect sync with auditory tone bursts.</li>
+    </ul>
+
+    <h2>Clinical Pilot & Outcome Tracking</h2>
+    <p>We are currently seeking clinical partners to transition this suite from a research prototype to a validated therapy tool. We are prepared to support a pilot program to document:</p>
+    <ul class="stat-list">
+        <li><b>Adherence Rates:</b> Correlating daily usage logs with long-term THI score reduction.</li>
+        <li><b>Bimodal Efficacy:</b> Measuring RI suppression duration comparing sound-only vs. haptic-paired sessions.</li>
+        <li><b>Notch Precision:</b> Analyzing the impact of ±1% frequency matching accuracy on habituation timelines.</li>
+    </ul>
+    <p style="margin-top: 10px; font-weight: bold; color: var(--accent);">To apply for a clinical pilot, visit the suite dashboard or contact the project team via the Feedback tool.</p>
+    <p style="font-size: 10pt; font-style: italic; color: #666; margin-top: 5px;">Note: As an open-source initiative, we prioritize institutional feedback over commercial testimonials to ensure the highest level of scientific integrity.</p>
+
+    <h2>Cleveland Hearing & Speech Partnership Goals</h2>
+    <div style="background: #f9f9f9; padding: 20px; border: 1px dashed var(--accent); border-radius: 8px;">
+        <p>We are seeking a dialogue with the CHSC clinical staff regarding:</p>
+        <ol style="margin-left: 20px; line-height: 1.8;">
+            <li><b>Algorithm Validation:</b> Comparing our open-source DSP results against clinical audiometer outputs.</li>
+            <li><b>User Experience:</b> Optimizing UI for patients with asymmetric hearing loss or age-related dexterity challenges.</li>
+            <li><b>Data Standards:</b> Refining clinical reports to provide the most actionable data for TRT workflows.</li>
+        </ol>
+    </div>
+
+    <div class="footer">Developed by K. Gerhart | trahreg-tinnitus.github.io | Open-Source Auditory Research</div>
+</div>
+
+<script>
+    window.onload = () => {
+        initNav("Printable Handout: This document is formatted for physical leave-behinds for clinical staff.");
+    };
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "1.4.0";
+const APP_VERSION = "1.5.4";
 
 /** 
  * Helpers for consistent localStorage interaction
@@ -370,9 +370,9 @@ function getTherapyRecommendations() {
             reason: "Acoustic Coordinated Reset is designed for moderate-to-severe cases to disrupt synchronized neural firing in the auditory cortex."
         });
         recs.push({
-            mode: "Lenire-Style Sound",
+            mode: "Dual-Stimulus",
             url: "lenire.html",
-            reason: "Structured burst patterns can help drive neuroplasticity when simple broadband masking is insufficient."
+            reason: "Dual-Stimulus pairing (like the Lenire method) can help drive neuroplasticity when simple broadband masking is insufficient."
         });
     } else {
         // Mild cases
@@ -411,6 +411,34 @@ function logUsageMinutes(mins) {
     const usage = getJson('usage_log', {});
     usage[today] = (usage[today] || 0) + mins;
     setJson('usage_log', usage);
+}
+
+/**
+ * Generates a BBCode/Markdown summary of the current setup for community sharing.
+ */
+function shareSetup(modeName, reportData) {
+    const validation = getUnifiedValidationStatus();
+    const thi = getLatestLogData('distress_log');
+    
+    let text = `[b]Trahreg Tinnitus Suite - ${modeName} Setup[/b]\n`;
+    text += `[i]Mode: ${modeName}[/i]\n\n`;
+    
+    for (const [key, val] of Object.entries(reportData)) {
+        text += `* ${key}: ${val}\n`;
+    }
+    
+    if (thi) text += `\n[b]Latest THI Score:[/b] ${thi.data}/100 (${new Date(thi.date).toLocaleDateString()})\n`;
+    text += `[b]System Validation:[/b] ${validation.isValid ? "Verified" : "Pending"}\n\n`;
+    text += `Generated via Trahreg Tinnitus Therapy Suite (v${APP_VERSION})\n`;
+    text += `[url]https://github.com/kjgerhart/tinnitus_therapy[/url]`;
+
+    navigator.clipboard.writeText(text).then(() => {
+        alert("Setup summary copied to clipboard in BBCode (Tinnitus Talk) and Markdown (Reddit) format. You can now paste it into a forum post!");
+    }).catch(err => {
+        console.error("Clipboard error:", err);
+        alert("Could not copy automatically. Please check the browser console for your share text.");
+        console.log(text);
+    });
 }
 
 /**
@@ -555,6 +583,8 @@ function showWalkthrough(slides, startIndex = 0) {
     let narratorEnabled = loadSetting('narrator_enabled', 'false') === 'true'; // Load preference
     let narratorSpeed = parseFloat(loadSetting('narrator_speed', '0.9'));
     let narratorVolume = parseFloat(loadSetting('narrator_volume', '1.0'));
+
+    document.body.classList.add('tutorial-active');
 
     const clearHighlights = () => {
         document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
@@ -734,7 +764,13 @@ function showWalkthrough(slides, startIndex = 0) {
         }
     };
 
-    window.closeWalkthrough = () => { stopAuto(); clearHighlights(); const el = document.getElementById('walkthroughModal'); if (el) el.remove(); }; // stopAuto also stops speaking
+    window.closeWalkthrough = () => { 
+        document.body.classList.remove('tutorial-active');
+        stopAuto(); 
+        clearHighlights(); 
+        const el = document.getElementById('walkthroughModal'); 
+        if (el) el.remove(); 
+    }; 
     update();
 }
 
@@ -758,31 +794,44 @@ function startModuleTutorial(key, startIndex = 0) {
             { title: "Sound Source", content: "Select your preferred noise color or nature sound. Pink noise is often most comfortable for long sessions.", selector: "#color" },
             { title: "EQ Setup", content: "Use the EQ sliders to boost frequencies where you have hearing loss. This reduces the 'listening effort' required by your brain.", selector: "#eqSection" },
             { title: "The Mixing Point", content: "Adjust the volume so the noise and your tinnitus 'mix'. Do not mask the sound completely.", selector: "#volMaster" },
-            { title: "Start Session", content: "Set your timer and begin your daily therapy session.", selector: "#toggleBtn" }
+            { title: "Start Session", content: "Set your timer and begin your daily therapy session.", selector: "#toggleBtn" },
+            { title: "Share Your Setup", content: "Found a configuration that provides relief? Share it with the community to help others find their mixing point.", selector: "button[onclick='shareToCommunity()']" }
         ],
         'notch': [
             { title: "Pitch Match", content: "Use the test tone to find your exact tinnitus pitch. Precision is critical for effective Notch therapy.", selector: "#step1Section" },
             { title: "Set the Notch", content: "Input your matched frequency here. This 'silences' the noise in that specific frequency range.", selector: "#step2Section" },
             { title: "Notch Width", content: "Set the width to 1.0 octaves (clinical standard). This determines the size of the 'hole' in the noise.", selector: "#step2Section" },
             { title: "Volume Mix", content: "Adjust volume to the mixing point. You should still hear your tinnitus inside the notch.", selector: "#volMaster" },
-            { title: "Start Therapy", content: "Activate the engine to begin the cortical reorganization process.", selector: "#toggleBtn" }
+            { title: "Start Therapy", content: "Activate the engine to begin the cortical reorganization process.", selector: "#toggleBtn" },
+            { title: "Share Your Setup", content: "Sharing your matched frequency and volume levels helps others understand how to calibrate their own notch therapy.", selector: "button[onclick='shareToCommunity()']" }
         ],
         'cr': [
             { title: "Precise Bracketing", content: "Use this tone to exactly match your tinnitus pitch. This determines the 4 therapeutic frequencies.", selector: ".card:first-of-type" },
             { title: "Tone Calculation", content: "Once matched, click here to calculate your personalized therapy sequence.", selector: "#baseFreq" },
             { title: "Perceived Loudness", content: "Adjust these sliders until all four tones sound equally loud to you. Balance is vital for success.", selector: ".bal-slider-row" },
-            { title: "Volume & Timing", content: "Set your session time (60 mins recommended) and start the coordinated reset sequence.", selector: "#toggleBtn" }
+            { title: "Volume & Timing", content: "Set your session time (60 mins recommended) and start the coordinated reset sequence.", selector: "#toggleBtn" },
+            { title: "Share Your Setup", content: "Acoustic CR is complex; sharing your bracketing results can help the community refine their own sequences.", selector: "button[onclick='shareToCommunity()']" }
         ],
         'lenire': [
             { title: "Neuromodulation", content: "This engine uses bursts and modulated noise to drive auditory neuroplasticity.", selector: "h1" },
             { title: "Visual Sync", content: "Enable the visual pulse to add multisensory input, which can enhance the therapeutic effect.", selector: "#visualPulse" },
-            { title: "The Mix", content: "Balance the tones and noise so neither is overwhelming. The sound should shimmer background.", selector: ".ctrl:has(input[type=range])" }
+            { title: "Tactile Bimodal Setup", content: "If using a smartphone, enable Haptic Pulse. The phone will vibrate in sync with the sound bursts, providing a safe, tactile 'second sense' to help your brain re-focus away from tinnitus.", selector: "#hapticPulse" },
+            { title: "Intensity Control", content: "Adjust the Vibration Intensity to find a level that is noticeable but not distracting. A gentle tap synchronized with the sound is usually most effective.", selector: "#hapticStrengthCtrl" },
+            { title: "Trigger Calibration", content: "Adjust Trigger Sensitivity until the device pulses only when you hear a tone burst. If it vibrates constantly, increase the value. If it misses bursts, decrease it.", selector: "#hapticSensitivityCtrl" },
+            { title: "Wireless Finger Hardware", content: "If you have the Wireless Finger Pacer, click 'Connect Wireless' to pair it via Bluetooth. This provides tactile pairing with the auditory bursts for a bimodal effect.", selector: "#connectBleBtn" },
+            { title: "Auditory Pacer", content: "Enable Auditory Cues to hear a subtle chime at the start of each breath. This allows you to maintain synchronization even with your eyes closed.", selector: "#pacerAudio" },
+            { title: "Pulse Rate", content: "Adjust the pulse speed to match your natural resting breath. A slow, steady rhythm (around 5-6 breaths per minute) is usually best for relaxation.", selector: "#pulseRate" },
+            { title: "Breathing Sync", content: "Try to match your breathing to the visual pulse. Inhaling as the light expands and exhaling as it fades helps activate the body's relaxation response, further aiding habituation.", selector: "#visualPulse" },
+            { title: "The Mix", content: "Balance the tones and noise so neither is overwhelming. The sound should shimmer background.", selector: ".ctrl:has(input[type=range])" },
+            { title: "Zen Mode", content: "Once your settings are dialed in, use Zen Mode to hide technical controls. This encourages 'Passive Listening'—allowing the sound to become background wallpaper while you focus on other tasks.", selector: "#zenBtn" },
+            { title: "Help the Community", content: "Found a setup that works for you? Use the 'Share Setup' button to generate a summary you can post on forums like Tinnitus Talk or Reddit. Helping others find relief is the best way to grow this project!", selector: "button[onclick='shareToCommunity()']" }
         ],
         'soundtherapy': [
             { title: "Sound Types", content: "Choose between calibrated broadband noise for habituation or nature sounds for relaxation.", selector: ".btn-grid:first-of-type" },
             { title: "Breathing Pacer", content: "Use the 4-7-8 pacer to lower physiological stress during a tinnitus spike.", selector: "#pacerToggle" },
             { title: "Volume Calibration", content: "Set to the 'Mixing Point'. If you hide the tinnitus completely, you aren't habituating.", selector: "#volume" },
-            { title: "Sleep Support", content: "Enable Sleep Fade for a soft 60-second shutdown when the timer ends.", selector: "#sleepMode" }
+            { title: "Sleep Support", content: "Enable Sleep Fade for a soft 60-second shutdown when the timer ends.", selector: "#sleepMode" },
+            { title: "Share Your Setup", content: "Share your favorite soundscapes and masking levels with the community.", selector: "button[onclick='shareToCommunity()']" }
         ],
         'notchfinder': [
             { title: "Frequency Input", content: "Adjust the pitch using the slider or type a value. This identifies your tinnitus 'center frequency'.", selector: ".responsive-grid" },

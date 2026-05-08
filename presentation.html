@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Clinical Presentation - Trahreg Tinnitus Therapy Suite</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<script src="storage.js"></script>
+<script src="nav.js"></script>
+<style>
+    body { background: #f4f7f6; color: #333; padding: 20px; line-height: 1.6; text-align: left; }
+    .pres-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 900px; margin: auto; border-top: 6px solid var(--accent); }
+    h1 { color: #004d40; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 25px; }
+    h2 { color: var(--accent); margin-top: 30px; font-size: 1.4rem; display: flex; align-items: center; gap: 10px; }
+    .grid-pres { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
+    .stat-box { background: #f0f7f4; padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent); }
+    .stat-box b { display: block; color: #004d40; font-size: 1.1rem; }
+    .hardware-showcase { background: #000b18; color: white; padding: 25px; border-radius: 12px; margin-top: 30px; }
+    .ask-box { background: rgba(0, 137, 123, 0.1); padding: 25px; border-radius: 12px; border: 2px dashed var(--accent); margin-top: 40px; }
+    @media (max-width: 700px) { .grid-pres { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="pres-card">
+    <h1>Project Overview & Clinical Utility</h1>
+    <p class="info" style="font-size: 1.1rem;">An Open-Source Platform for Evidence-Based Auditory Neuromodulation</p>
+
+    <h2>📂 The Vision</h2>
+    <p>The Trahreg Suite is a browser-based research tool designed to democratize access to advanced sound therapy protocols. By removing the financial barrier of proprietary devices, we enable patients to explore clinically-validated concepts like lateral inhibition and bimodal integration under the guidance of their audiologist.</p>
+
+    <div class="grid-pres">
+        <div class="stat-box">
+            <b>Scientific Foundations</b>
+            Notch Therapy (Okamoto, 2010)<br>
+            Acoustic CR (Tass, 2012)<br>
+            Dual-Stimulus (Conlon, 2020)
+        </div>
+        <div class="stat-box">
+            <b>Technical Rigor</b>
+            >40dB Filter Attenuation<br>
+            ±1% Frequency Precision<br>
+            Offline PWA Architecture
+        </div>
+    </div>
+
+    <h2>🔬 Technical Validation</h2>
+    <p>Unlike standard "white noise apps," this suite includes a <b>System Validation Engine</b>. It audits the user's hardware for phase alignment and verifies that the browser's audio engine is delivering clinically accurate signals without OS-level distortions.</p>
+
+    <div class="hardware-showcase">
+        <h3 style="color: var(--accent); margin-top: 0;">Hardware Innovation: The Finger Pacer</h3>
+        <p>A wireless wearable that provides <b>Tactile Bimodal Stimulation</b>. It synchronizes mechanical pulses to the index fingertip (Somatosensory Cortex) with auditory tone bursts, mimicking the pairing window used in tongue-based devices but in a safe, non-invasive form factor.</p>
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <a href="lenire.html" class="button" style="border-color:white; color:white;">Demo Module</a>
+            <a href="clinical_summary.html" class="button" style="border-color:var(--accent); color:var(--accent);">View Tech Specs</a>
+            <a href="handout.html" class="button" style="border-color:#ff9800; color:#ff9800;">📄 Print Handout for Staff</a>
+        </div>
+    </div>
+
+    <h2>🛡️ Safety & Patient Privacy</h2>
+    <ul>
+        <li><b>Zero-Data Model:</b> No PHI (Protected Health Information) ever leaves the device. All logs and assessment scores are stored in browser localStorage.</li>
+        <li><b>Non-Invasive:</b> No electrical stimulation. Tactile feedback only.</li>
+        <li><b>Habituation Focus:</b> UI strictly enforces "The Mixing Point" model to prevent over-masking.</li>
+    </ul>
+
+    <div class="ask-box">
+        <h3 style="margin-top:0;">Cleveland Hearing & Speech Partnership</h3>
+        <p>We are seeking professional feedback to further refine our DSP algorithms and clinical reporting tools. Specifically, we would value input on:</p>
+        <ul style="margin-bottom:0;">
+            <li>Integration of these tools into existing TRT/Habituation workflows.</li>
+            <li>Validation of the "Finger Pacer" tactile integration window.</li>
+            <li>Development of standardized clinical export formats for audiologists.</li>
+        </ul>
+        <div style="margin-top: 25px; text-align: center; border-top: 1px solid rgba(0, 137, 123, 0.2); padding-top: 20px;">
+            <p style="font-weight: bold; color: #004d40; margin-bottom: 15px;">Interested in launching a Pilot Program?</p>
+            <a href="feedback.html?subject=Pilot" class="big-btn play-btn" style="margin-top: 0; display: inline-block; width: auto; padding: 12px 40px; text-decoration: none;">Apply for Clinical Pilot</a>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px;">
+        <a href="index.html" class="button">Return to Dashboard</a>
+    </div>
+</div>
+
+<script>
+    window.onload = () => initNav("Presentation mode: Use this layout to showcase the project's technical and scientific integrity to clinical partners.");
+</script>
+</body>
+</html>

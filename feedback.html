@@ -20,6 +20,7 @@
                 <option value="Feedback">General Feedback</option>
                 <option value="Issue">Issue / Bug Report</option>
                 <option value="Feature Request">Feature Request</option>
+                <option value="Pilot">Pilot Program Inquiry</option>
                 <option value="Other">Other</option>
             </select>
         </div>
@@ -43,7 +44,21 @@
 </div>
 
 <script>
-window.onload = () => initNav();
+window.onload = () => {
+    initNav();
+    // Handle URL parameters for pre-filling subjects
+    const params = new URLSearchParams(window.location.search);
+    const subjectParam = params.get('subject');
+    if (subjectParam) {
+        const select = document.getElementById('subject');
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === subjectParam) {
+                select.selectedIndex = i;
+                break;
+            }
+        }
+    }
+};
 
 // Replace 'YOUR_FORMSPREE_ID' with the unique ID provided by Formspree
 const FEEDBACK_ENDPOINT = 'https://formspree.io/f/xqewyzeb';

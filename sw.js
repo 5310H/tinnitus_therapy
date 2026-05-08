@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trahreg-tinnitus-suite-v1.4.0';
+const CACHE_NAME = 'trahreg-tinnitus-suite-v1.5.4';
 const ASSETS = [
     './',
     './index.html',
@@ -31,6 +31,8 @@ const ASSETS = [
     './ri.html',
     './validation.html',
     './disclaimer.html',
+    './presentation.html',
+    './handout.html',
     './docs/index.html',
     './tinnitus_generator.py',
     './audio/rain.mp3',
