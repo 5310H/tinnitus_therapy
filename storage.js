@@ -27,7 +27,7 @@ requestPersistentStorage();
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
 const { GoogleGenerativeAI } = window; // Access from global scope
 
-const APP_VERSION = "2.1.0";
+const APP_VERSION = "2.2.1";
 
 // ⚠️ CRITICAL SECURITY WARNING ⚠️
 // DIRECTLY INCLUDING YOUR GEMINI API KEY IN CLIENT-SIDE CODE IS UNSAFE FOR PRODUCTION.
@@ -1117,13 +1117,26 @@ function showWalkthrough(slides, startIndex = 0) {
     update();
 }
 
+/**
+ * Displays a summary of updates for the current version.
+ */
+function showWhatsNew() {
+    showWalkthrough([
+        { title: "Version 2.2.1 - What's New", content: "Welcome to the latest update! We've overhauled the suite's internal architecture for better performance and security." },
+        { title: "Modular Architecture", content: "Data and AI management have been refactored into dedicated modules, improving reliability and stability across the entire suite." },
+        { title: "Performance Profiling", content: "A new Performance Monitor has been added to track audio engine health, ensuring your therapeutic signals are always accurate." },
+        { title: "Security Hardening", content: "Your API keys are now protected with high-grade AES-GCM encryption. We've also added security sanitization to our Python tools." },
+        { title: "Enhanced Reports", content: "Clinical reports now feature deeper data integration and AI-generated progress summaries, making it easier to share results with your clinician." }
+    ]);
+}
+
 function showQuickStartGuide() {
     showWalkthrough([
         { title: "Welcome to Relief", content: "Tinnitus management is a journey of training the brain. This suite provides the tools research shows are most effective for 'habituation'." },
         { title: "The Golden Rule: Mixing", content: "<b>Important:</b> Do not hide your tinnitus completely. Set your therapy volume so the sound and your tinnitus 'mix'. Your brain needs to hear both to learn the tinnitus is neutral." },
         { title: "Step 1: Calibration", content: "Visit the <b>Notch Finder</b> first. You must find your exact tinnitus pitch so therapies can target the correct neural clusters." },
         { title: "Step 2: Passive Listening", content: "Use therapy for 30–60 minutes daily. Don't focus on it—let it be background 'wallpaper' while you work or relax." },
-        { title: "Step 3: Track Progress", content: "Take the <b>THI Assessment</b> once a month. Monthly checks show your progress clearly without the stress of daily monitoring." }
+        { title: "Step 3: Reports & AI", content: "Review your progress monthly using the <b>Clinical Report</b>. If you feel stuck, use the <b>AI Insights</b> tool to identify patterns and triggers." }
     ]);
 }
 
@@ -1330,6 +1343,13 @@ if (document.readyState === 'loading') {
         applyDashboardLayout();
         applyEmailVisibility();
         syncUIVersion();
+
+        // Version Update Notification
+        const lastSeenVersion = localStorage.getItem('tts_last_seen_version');
+        if (lastSeenVersion && lastSeenVersion !== APP_VERSION) {
+            setTimeout(showWhatsNew, 1500);
+        }
+        localStorage.setItem('tts_last_seen_version', APP_VERSION);
     });
 } else {
     applyTheme();
@@ -1337,6 +1357,13 @@ if (document.readyState === 'loading') {
     applyDashboardLayout();
     applyEmailVisibility();
     syncUIVersion();
+
+    // Version Update Notification
+    const lastSeenVersion = localStorage.getItem('tts_last_seen_version');
+    if (lastSeenVersion && lastSeenVersion !== APP_VERSION) {
+        setTimeout(showWhatsNew, 1500);
+    }
+    localStorage.setItem('tts_last_seen_version', APP_VERSION);
 }
 
 function needsValidation() {

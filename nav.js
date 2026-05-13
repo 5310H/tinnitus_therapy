@@ -1,9 +1,11 @@
 const TINNITUS_MANAGEMENT_GUIDE = `
-    <h2 style="color:var(--accent); margin-bottom:10px;">The Three Golden Rules</h2>
+    <h2 style="color:var(--accent); margin-bottom:10px;">The Five Golden Rules</h2>
     <ul style="padding-left:20px; margin-bottom:20px; line-height:1.6;">
         <li><b>Rule 1: The Mixing Point.</b> Set volume so therapy sound and tinnitus "mix." Do NOT mask the sound completely.</li>
         <li><b>Rule 2: Passive Listening.</b> Treat therapy like background music. Don't focus on it; go about your day.</li>
         <li><b>Rule 3: Consistency.</b> Neural changes take time. Aim for 30–60 minutes daily for 3 months.</li>
+        <li><b>Rule 4: AI Support.</b> During high-stress "spikes," use the AI-powered CBT assistance for immediate reframing and coping strategies.</li>
+        <li><b>Rule 5: Clinical Visibility.</b> Regularly export clinical reports to share objective progress and trends with your audiologist.</li>
     </ul>
 
     <h3 style="color:var(--accent); margin-bottom:10px;">Protocol for Success</h3>
@@ -13,11 +15,13 @@ const TINNITUS_MANAGEMENT_GUIDE = `
         <li><b>Phase 2: Pitch Matching.</b> Spend time in the <b>Notch Finder</b>. Accuracy is critical; if your pitch match is off by more than 5%, Notch and CR therapies lose effectiveness.</li>
         <li><b>Phase 3: The Mixing Point.</b> Set therapy volume so it is slightly <i>lower</i> than your tinnitus. Total masking (hiding the sound) prevents habituation. Your brain must hear both to learn the tinnitus is "neutral."</li>
         <li><b>Phase 4: Passive Use.</b> Do not focus on the therapy sound. Read, work, or relax. The goal is for the sound to become "wallpaper."</li>
-        <li><b>Phase 5: Consistency.</b> Aim for 30–60 minutes daily. Clinical changes in the auditory cortex typically take 3–6 months of steady use.</li>
+        <li><b>Phase 5: Insights & AI.</b> Review your "Personalized Insights" weekly. If you experience a spike, the AI de-escalator is your first line of defense.</li>
+        <li><b>Phase 6: Clinical Review.</b> Every 30 days, generate a Clinical PDF and review your long-term THI trends.</li>
     </ol>
     <h3 style="color:var(--accent); margin-bottom:10px;">Using the Help Systems</h3>
     <ul style="padding-left:20px; margin-bottom:15px; font-size:0.9rem; line-height:1.4;">
         <li><b>The Guide:</b> Opens this panel for clinical protocols, the "Golden Rules," and general advice.</li>
+        <li><b>AI Assistant:</b> Integrated into the CBT & Wellness module, providing real-time support, sound recipes, and pattern analysis.</li>
         <li><b>Interactive Tutorials:</b> Click the "Tutorial" button on any therapy page for a narrated, step-by-step walkthrough of that specific tool's setup.</li>
     </ul>
     <h3 style="color:var(--accent); margin-bottom:10px;">Hearing Health Monitoring</h3>

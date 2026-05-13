@@ -52,10 +52,10 @@ Leveraging Google Gemini for enhanced therapeutic support and insights. All AI p
 - **TRT Educator:** Explains complex audiology concepts in simple, supportive language.
 - **Clinical Report "Translator":** Generates professional summaries of your progress for audiologists.
 
-### **9. Noise Generator (Python‑style)**
+### **10. Noise Generator (Python‑style)**
 Simple broadband noise generator with adjustable parameters.
 
-### **10. Interactive Walkthroughs & Professional Narrator**
+### **11. Interactive Walkthroughs & Professional Narrator**
 Every therapy module features a dedicated, step-by-step interactive tutorial to ensure clinical accuracy. 
 - **Professional Male Narrator:** High-quality neural voice synthesis provides audio guidance for all tutorial steps.
 - **Visual Guidance:** Real-time highlighting of UI elements during the setup process.
