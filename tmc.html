@@ -308,9 +308,13 @@ function exportClinicalSettings() {
     const qFactor = document.getElementById('qFactorDisplay').textContent;
     reportData.techSpecs["Calculated Q-factor"] = qFactor;
 
-    const report = generateClinicalReportText(reportData);
-    const blob = new Blob([report], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = `tinnitus_clinical_tmc.txt`; a.click();
+    // Fetch AI summary and add to reportData
+    getClinicalSummary().then(aiSummaryText => {
+        reportData.aiSummary = aiSummaryText;
+        const report = generateClinicalReportText(reportData);
+        const blob = new Blob([report], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `tinnitus_clinical_tmc.txt`; a.click();
+    });
 }
 
 async function generatePDFReport() {
@@ -319,6 +323,9 @@ async function generatePDFReport() {
     const reportData = getClinicalReportData("Tinnitus Masking Curve", { "Data Points": entries.length }, { "Curve Data": "\n" + curveStr });
     
     // Add Q-factor to report
+    // Fetch AI summary and add to reportData
+    const aiSummaryText = await getClinicalSummary();
+    reportData.aiSummary = aiSummaryText;
     const qFactor = document.getElementById('qFactorDisplay').textContent;
     reportData.techSpecs["Calculated Q-factor"] = qFactor;
 

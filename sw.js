@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trahreg-tinnitus-suite-v1.5.4';
+const CACHE_NAME = 'trahreg-tinnitus-suite-v2.0.0';
 const ASSETS = [
     './',
     './index.html',
@@ -16,6 +16,7 @@ const ASSETS = [
     './hearingtest.html',
     './lenire.html',
     './license.html',
+    './hardware.html',
     './meter.html',
     './notch.html',
     './notchfinder.html',
@@ -41,7 +42,10 @@ const ASSETS = [
     './audio/wind.mp3',
     './icon-192.png',
     './icon-512.png',
-    'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
+    './hardware/haptic_mount.glb', // Updated to professional GLB format
+    'https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js', // Model Viewer for 3D hardware preview
+    'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js', // For clinical report PDF generation
+    'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.10.0/dist/index.min.js' // Google Generative AI SDK (for direct client-side calls)
 ];
 
 // Install: Cache all essential assets

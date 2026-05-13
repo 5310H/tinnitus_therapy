@@ -1,6 +1,6 @@
-# Bill of Materials (BOM) - Finger Pacer Hardware (Option A)
+# Bill of Materials (BOM) - Finger Pacer Hardware
 
-This document lists the components required to build the M5Stack-based Finger Pacer for bimodal tinnitus therapy. This setup requires **no soldering** and is designed for reliability and safety.
+This document lists the components required to build the professional-grade Finger Pacer for bimodal tinnitus therapy. This device supports **Dual-Connectivity**: Bluetooth Low Energy (BLE) for wireless convenience and USB-C for maximum reliability on desktops or Android phones.
 
 ## 1. Core Components
 
@@ -14,15 +14,15 @@ This document lists the components required to build the M5Stack-based Finger Pa
 
 | Item | Description | Est. Cost (USD) | Source |
 | :--- | :--- | :---: | :--- |
-| **USB-C Cable** | Standard cable for wired use/charging | $3.00 | Common |
-| **Atom TailBat** | Clip-on 190mAh battery for wireless (BLE) use | $4.50 | [M5Stack Store](https://shop.m5stack.com/products/atom-tailbat) |
+| **USB-C OTG Cable** | Required for **Wired Phone Mode** (Android) or charging | $5.00 | Common |
+| **Atom TailBat** | Clip-on 190mAh battery for **Wireless Mode** (BLE) | $4.50 | [M5Stack Store](https://shop.m5stack.com/products/atom-tailbat) |
 
 ## 3. Ergonomics & Enclosure
 
 | Item | Description | Source |
 | :--- | :--- | :--- |
 | **10mm Velcro Strap** | Adjustable strap to hold the pacer to your finger | [Amazon/Hardware Store](https://www.amazon.com/dp/B001E1Y5O6) |
-| **3D Printed Mount** | Custom finger saddle and connector hood | Use `haptic_mount.scad` in root folder |
+| **3D Printed Mount** | Professional-grade matte finish finger saddle | See 3D Preview in the **Dual-Stimulus** module |
 
 ## 4. Software Requirements
 

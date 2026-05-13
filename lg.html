@@ -201,11 +201,14 @@ function exportClinicalSettings() {
     const data = getLoudnessGrowthLog()[today] || [];
     let curveStr = ""; 
     data.forEach(point => { curveStr += `Freq: ${point.freq}Hz | Obj Vol: ${point.obj}% | Subj Rating: ${subjectiveLabels[point.subj]}\n`; });
-
-    const reportData = getClinicalReportData("Loudness Growth Test", { "Test Date": today, "Data Points": data.length }, { "Loudness Growth Data": "\n" + curveStr });
-    const report = generateClinicalReportText(reportData);
-    const blob = new Blob([report], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = `tinnitus_clinical_lg.txt`; a.click();
+    // Fetch AI summary and add to reportData
+    getClinicalSummary().then(aiSummaryText => {
+        const reportData = getClinicalReportData("Loudness Growth Test", { "Test Date": today, "Data Points": data.length }, { "Loudness Growth Data": "\n" + curveStr });
+        reportData.aiSummary = aiSummaryText;
+        const report = generateClinicalReportText(reportData);
+        const blob = new Blob([report], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `tinnitus_clinical_lg.txt`; a.click();
+    });
 }
 
 async function generatePDFReport() {
@@ -213,6 +216,9 @@ async function generatePDFReport() {
     const data = getLoudnessGrowthLog()[today] || [];
     let curveStr = ""; 
     data.forEach(point => { curveStr += `Freq: ${point.freq}Hz | Obj Vol: ${point.obj}% | Subj Rating: ${subjectiveLabels[point.subj]}\n`; });
+    // Fetch AI summary and add to reportData
+    const aiSummaryText = await getClinicalSummary();
+    reportData.aiSummary = aiSummaryText;
 
     const reportData = getClinicalReportData("Loudness Growth Test", { "Test Date": today, "Data Points": data.length }, { "Loudness Growth Data": "\n" + curveStr });
     const htmlContent = generateClinicalReportHtml(reportData);

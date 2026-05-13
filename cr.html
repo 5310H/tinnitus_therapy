@@ -447,17 +447,21 @@ function exportClinicalSettings() {
 }
 
 function exportClinicalSettings() {
-    const reportData = getClinicalReportData("Acoustic CR Neuromodulation", getReportData());
-    const report = generateClinicalReportText(reportData);
-    const blob = new Blob([report], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `clinical_cr_tones.txt`;
-    a.click();
+    // Fetch AI summary and add to reportData
+    getClinicalSummary().then(aiSummaryText => {
+        const reportData = getClinicalReportData("Acoustic CR Neuromodulation", getReportData());
+        reportData.aiSummary = aiSummaryText;
+        const report = generateClinicalReportText(reportData);
+        const blob = new Blob([report], { type: 'text/plain' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `clinical_cr_tones.txt`; a.click();
+    });
 }
 
 async function generatePDFReport() {
     const reportData = getClinicalReportData("Acoustic CR Neuromodulation", getReportData());
+    const aiSummaryText = await getClinicalSummary();
+    reportData.aiSummary = aiSummaryText;
     const htmlContent = generateClinicalReportHtml(reportData);
 
     const tempDiv = document.createElement('div');
@@ -476,12 +480,6 @@ async function generatePDFReport() {
 
     if (!isDark) document.documentElement.classList.remove('light-mode');
     document.body.removeChild(tempDiv);
-}
-    const blob = new Blob([report], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `clinical_cr_tones.txt`;
-    a.click();
 }
 </script>
 </body>

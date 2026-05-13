@@ -7,9 +7,8 @@
 <script src="storage.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="nav.js"></script>
-<!-- Three.js for 3D Hardware Preview -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/controls/OrbitControls.js"></script>
+<!-- Google Model Viewer for Professional 3D Preview -->
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -39,15 +38,27 @@
                 <label>Vibration Intensity <span class="val" id="hapticStrengthVal">128</span></label>
                 <input id="hapticStrength" type="range" min="50" max="255" value="128" step="1">
             </div>
-            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
-                <button id="connectBleBtn" class="button" style="padding: 5px 10px; font-size: 0.75rem; border-color: #2196f3; color: #2196f3;" onclick="connectHapticBLE()">📡 Connect Wireless (Bluetooth)</button>
-                <button id="toggle3DBtn" class="button" style="padding: 5px 10px; font-size: 0.75rem; border-color: var(--muted); color: var(--muted);" onclick="toggle3DPreview()">🔍 Toggle 3D Mount Preview</button>
-                <div id="haptic-preview-wrapper" style="display:none;">
-                    <div id="haptic-preview-container"></div>
-                    <p class="info" style="font-size: 0.7rem; margin-top: 5px; text-align: center;">Interactive 3D Preview (haptic_mount.stl)</p>
-                </div>
+            <div class="ctrl" id="hapticSensCtrl" style="margin-top: 5px; border-bottom: 1px dashed var(--border); padding-bottom: 10px;">
+                <label>Trigger Sensitivity <span class="val" id="hapticSensVal">0.08</span></label>
+                <input id="hapticSens" type="range" min="0.01" max="0.3" value="0.08" step="0.01">
+            </div>
+            <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button id="connectBleBtn" class="button" style="padding: 8px; font-size: 0.75rem; border-color: #2196f3; color: #2196f3;" onclick="connectHapticBLE()">📡 Wireless (BLE)</button>
+                <button id="connectUsbBtn" class="button" style="padding: 8px; font-size: 0.75rem; border-color: #ff9800; color: #ff9800;" onclick="connectHapticUSB()">🔌 Wired (USB/Phone)</button>
+            </div>
+            <div style="margin-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
                 <span id="serialStatus" style="font-size: 0.7rem; color: var(--text-dim);">Not Connected</span>
-                <span id="batteryStatus" style="font-size: 0.7rem; color: var(--text-dim); margin-left: 10px; display: none;">🔋 --%</span>
+                <span id="batteryStatus" style="font-size: 0.7rem; color: var(--text-dim); display: none;">🔋 --%</span>
+                <button class="button" style="font-size: 0.65rem; padding: 4px 8px; border-color: var(--border); color: var(--muted); margin-top: 5px;" onclick="toggle3DPreview()">🔍 Toggle Hardware Preview</button>
+            </div>
+            
+            <div id="haptic-preview-wrapper" style="display:none; height: 300px; margin-top: 15px;">
+                <model-viewer 
+                    src="./hardware/haptic_mount.glb" 
+                    alt="3D Professional Finger Mount" 
+                    auto-rotate camera-controls shadow-intensity="1" 
+                    style="width: 100%; height: 100%; background-color: #000810; border-radius: 8px;">
+                </model-viewer>
             </div>
         </div>
         <div class="ctrl">
@@ -284,9 +295,15 @@
     <canvas id="viz" class="zen-keep"></canvas>
 </div>
 <script>
-let audioCtx,merger,analyserL,analyserR,rafViz,rafPulse,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[],noiseBuf,nextChimeTime=0,lastVibrateTime=0,bleCharacteristic,threeScene,batteryChar;
+let audioCtx,merger,analyserL,analyserR,rafViz,rafPulse,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[],noiseBuf,nextChimeTime=0,lastVibrateTime=0,bleCharacteristic,batteryChar;
+let serialPort, serialWriter, lastUsbHeartbeat = 0;
 let running=false,remaining=0,timerId=null,sessionSeconds=1200;
 const eqBands = [2000, 4000, 8000, 12000];
+
+function toggle3DPreview() {
+    const wrapper = document.getElementById('haptic-preview-wrapper');
+    wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none';
+}
 
 async function connectHapticBLE() {
     const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
@@ -342,79 +359,70 @@ async function connectHapticBLE() {
     }
 }
 
-function toggle3DPreview() {
-    const wrapper = document.getElementById('haptic-preview-wrapper');
-    if (wrapper.style.display === 'none') {
-        wrapper.style.display = 'block';
-        if (!threeScene) init3DPreview();
-    } else {
-        wrapper.style.display = 'none';
+async function connectHapticUSB() {
+    const statusEl = document.getElementById('serialStatus');
+    if (!("serial" in navigator)) {
+        alert("Web Serial is not supported on this browser. Use Android Chrome or a Desktop browser.");
+        return;
+    }
+    statusEl.textContent = "Connecting (USB)...";
+    try {
+        serialPort = await navigator.serial.requestPort();
+        await serialPort.open({ baudRate: 921600 });
+        serialWriter = serialPort.writable.getWriter();
+        
+        document.getElementById('serialStatus').textContent = "USB Connected";
+        document.getElementById('serialStatus').style.color = "#ff9800";
+        document.getElementById('connectUsbBtn').textContent = "🔌 USB Linked";
+        
+        // Start monitoring for device heartbeats
+        monitorUsbHeartbeat();
+
+        serialPort.addEventListener('disconnect', () => {
+            document.getElementById('serialStatus').textContent = "USB Disconnected";
+            document.getElementById('connectUsbBtn').textContent = "🔌 Connect Wired (USB)";
+            serialWriter = null;
+            lastUsbHeartbeat = 0;
+        });
+    } catch (e) {
+        console.error("USB error:", e);
+        statusEl.textContent = "USB failed: " + e.message;
     }
 }
 
-function init3DPreview() {
-    const container = document.getElementById('haptic-preview-container');
-    const scene = new THREE.Scene();
-    threeScene = scene;
-    const camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(container.offsetWidth, container.offsetHeight);
-    container.appendChild(renderer.domElement);
+async function monitorUsbHeartbeat() {
+    if (!serialPort.readable) return;
+    const reader = serialPort.readable.getReader();
+    lastUsbHeartbeat = Date.now();
+    
+    const staleCheck = setInterval(() => {
+        if (!serialWriter) { clearInterval(staleCheck); return; }
+        // If no heartbeat for 3 seconds, mark as stale
+        if (Date.now() - lastUsbHeartbeat > 3000) {
+            const statusEl = document.getElementById('serialStatus');
+            statusEl.textContent = "USB Link Stale (Check Device)";
+            statusEl.style.color = "#f44336"; // Warning Red
+        }
+    }, 2000);
 
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true; // Smooth motion
-    controls.dampingFactor = 0.05;
-    controls.screenSpacePanning = false;
-    controls.minDistance = 10;
-    controls.maxDistance = 200;
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-    const spotLight = new THREE.PointLight(0x00bfa5, 1);
-    spotLight.position.set(50, 50, 50);
-    scene.add(spotLight);
-
-    camera.position.set(40, 40, 40);
-    camera.lookAt(0, 0, 0);
-
-    // Load STLLoader dynamically
-    const loaderScript = document.createElement('script');
-    loaderScript.src = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/loaders/STLLoader.js';
-    loaderScript.onload = () => {
-        const loader = new THREE.STLLoader();
-        loader.load('haptic_mount.stl', (geometry) => {
-            const material = new THREE.MeshPhongMaterial({ 
-                color: 0x00bfa5, 
-                specular: 0x111111, 
-                shininess: 200,
-                transparent: true,
-                opacity: 0.9
-            });
-            const mesh = new THREE.Mesh(geometry, material);
-            
-            // Center the model
-            geometry.computeBoundingBox();
-            const center = new THREE.Vector3();
-            geometry.boundingBox.getCenter(center);
-            mesh.position.sub(center);
-            
-            scene.add(mesh);
-
-            const animate = () => {
-                requestAnimationFrame(animate);
-                controls.update(); // Required for damping
-                mesh.rotation.z += 0.01; // Slow rotation
-                renderer.render(scene, camera);
-            };
-            animate();
-        }, undefined, (error) => {
-            console.error("STL Load Error: Ensure haptic_mount.stl is in the project root.", error);
-            container.innerHTML = `<div style="padding:20px; color:var(--text-dim); font-size:0.8rem;">
-                haptic_mount.stl not found.<br>Export your SCAD to STL and place it in the root folder.
-            </div>`;
-        });
-    };
-    document.head.appendChild(loaderScript);
+    try {
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            // Device sends 0x01 every second
+            if (value.includes(1)) {
+                lastUsbHeartbeat = Date.now();
+                const statusEl = document.getElementById('serialStatus');
+                statusEl.textContent = "USB Connected (Active)";
+                statusEl.style.color = "#4caf50"; // Active Green
+            }
+        }
+    } catch (err) {
+        console.error("USB Monitor Error:", err);
+    } finally {
+        reader.releaseLock();
+        clearInterval(staleCheck);
+    }
 }
 
 window.onload = () => {
@@ -640,12 +648,17 @@ function runVisualPulse() {
     if (rms > threshold && Date.now() - lastVibrateTime > 200) {
         document.body.style.background = 'rgba(0, 191, 165, 0.15)';
         lastVibrateTime = Date.now();
-        const strength = parseInt(document.getElementById('hapticStrength').value);
+        const strength = new Uint8Array([parseInt(document.getElementById('hapticStrength').value)]);
         
         if (hapticEnabled && "vibrate" in navigator) navigator.vibrate(40);
         if (bleCharacteristic) {
-            const data = new Uint8Array([strength]);
-            bleCharacteristic.writeValueWithoutResponse(data);
+            bleCharacteristic.writeValueWithoutResponse(strength);
+        }
+        if (serialWriter) {
+            serialWriter.write(strength).catch(err => {
+                console.error("Serial write failed", err);
+                serialWriter = null;
+            });
         }
     } else if (rms <= threshold) {
         document.body.style.background = '';
@@ -1000,17 +1013,22 @@ function getReportData() {
 
 function exportClinicalSettings() {
     const reportData = getClinicalReportData("Lenire-Style Sound (Experimental)", getReportData());
-    const report = generateClinicalReportText(reportData);
-    const blob = new Blob([report], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `tinnitus_clinical_lenire_style.txt`;
-    a.click();
-    alert("Clinical report downloaded. Please check your browser's Downloads folder.");
+    // Fetch AI summary and add to reportData
+    getClinicalSummary().then(aiSummaryText => {
+        reportData.aiSummary = aiSummaryText;
+        const report = generateClinicalReportText(reportData);
+        const blob = new Blob([report], { type: 'text/plain' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `tinnitus_clinical_lenire_style.txt`; a.click();
+        alert("Clinical report downloaded. Please check your browser's Downloads folder.");
+    });
 }
 
 async function generatePDFReport() {
     const reportData = getClinicalReportData("Lenire-Style Sound (Experimental)", getReportData());
+    // Fetch AI summary and add to reportData
+    const aiSummaryText = await getClinicalSummary();
+    reportData.aiSummary = aiSummaryText;
     const htmlContent = generateClinicalReportHtml(reportData);
 
     const tempDiv = document.createElement('div');
@@ -1034,10 +1052,14 @@ async function generatePDFReport() {
 function emailToAudiologist() {
     const email = loadSetting('audiologist_email', '');
     if (!email) return alert("Please set your audiologist's email on the Home page.");
-    const reportData = getClinicalReportData("Lenire-Style Sound (Experimental)", getReportData());
-    const report = generateClinicalReportText(reportData);
-    window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
-    alert("Email client opened. Please review and send the clinical report draft.");
+    // Fetch AI summary and add to reportData
+    getClinicalSummary().then(async aiSummaryText => {
+        const reportData = getClinicalReportData("Lenire-Style Sound (Experimental)", getReportData());
+        reportData.aiSummary = aiSummaryText;
+        const report = generateClinicalReportText(reportData);
+        window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+        alert("Email client opened. Please review and send the clinical report draft.");
+    });
 }
 
 function shareToCommunity() {

@@ -816,17 +816,22 @@ function getReportData() {
 
 function exportClinicalSettings() {
     const reportData = getClinicalReportData("Notch Therapy", getReportData());
-    const report = generateClinicalReportText(reportData);
-    const blob = new Blob([report], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `tinnitus_clinical_notch.txt`;
-    a.click();
-    alert("Clinical report downloaded. Please check your browser's Downloads folder.");
+    // Fetch AI summary and add to reportData
+    getClinicalSummary().then(aiSummaryText => {
+        reportData.aiSummary = aiSummaryText;
+        const report = generateClinicalReportText(reportData);
+        const blob = new Blob([report], { type: 'text/plain' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `tinnitus_clinical_notch.txt`; a.click();
+        alert("Clinical report downloaded. Please check your browser's Downloads folder.");
+    });
 }
 
 async function generatePDFReport() {
     const reportData = getClinicalReportData("Notch Therapy", getReportData());
+    // Fetch AI summary and add to reportData
+    const aiSummaryText = await getClinicalSummary();
+    reportData.aiSummary = aiSummaryText;
     const htmlContent = generateClinicalReportHtml(reportData);
 
     const tempDiv = document.createElement('div');
@@ -850,10 +855,14 @@ async function generatePDFReport() {
 function emailToAudiologist() {
     const email = loadSetting('audiologist_email', '');
     if (!email) return alert("Please set your audiologist's email on the Home page.");
-    const reportData = getClinicalReportData("Notch Therapy", getReportData());
-    const report = generateClinicalReportText(reportData);
-    window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
-    alert("Email client opened. Please review and send the clinical report draft.");
+    // Fetch AI summary and add to reportData
+    getClinicalSummary().then(async aiSummaryText => {
+        const reportData = getClinicalReportData("Notch Therapy", getReportData());
+        reportData.aiSummary = aiSummaryText;
+        const report = generateClinicalReportText(reportData);
+        window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+        alert("Email client opened. Please review and send the clinical report draft.");
+    });
 }
 </script>
 </body>

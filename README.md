@@ -1,7 +1,7 @@
 # Trahreg Tinnitus Therapy Suite  
 Open‑source, browser‑based sound therapy tools for tinnitus research and experimentation.
 
-This project provides research‑based sound therapy tools implemented entirely in the browser. It features a high-precision DSP engine that supports internal noise generators, custom media uploads, and live system audio capture.
+This project provides research‑based sound therapy tools implemented entirely in the browser. It features a high-precision DSP engine that supports internal noise generators, custom media uploads, live system audio capture, and advanced AI-powered features.
 
 ---
 
@@ -39,9 +39,18 @@ Psychological tools for tinnitus habituation, including:
 - **Tinnitus Handicap Inventory (THI):** Clinically validated impact tracking.
 - **Cognitive Restructuring:** Interactive thought records to reframe negative reactions.
 - **Relaxation Training:** Guided Progressive Muscle Relaxation (PMR) and breathing pacers.
+- **Cognitive Restructuring:** Interactive thought records to reframe negative reactions, now enhanced with AI-powered "Balanced Thought" suggestions.
 
 ### **8. Personalized Recommendations**
 Algorithmically generated therapy suggestions based on current THI (distress) and MML (loudness) assessments.
+
+### **9. AI-Powered Features (Google Gemini)**
+Leveraging Google Gemini for enhanced therapeutic support and insights. All AI processing is performed client-side, with anonymized data, ensuring your privacy:
+- **"Spike" De-escalator:** Immediate CBT reframing and coping strategies during tinnitus spikes.
+- **Adaptive Soundscape Designer:** AI-suggested "Sound Recipes" based on your tinnitus description (e.g., "high-pitched hiss" -> "Brown Noise with Crickets").
+- **Intelligent Log Correlation:** Identifies non-obvious patterns and triggers from your local usage data (e.g., "distress higher with less sleep").
+- **TRT Educator:** Explains complex audiology concepts in simple, supportive language.
+- **Clinical Report "Translator":** Generates professional summaries of your progress for audiologists.
 
 ### **9. Noise Generator (Python‑style)**
 Simple broadband noise generator with adjustable parameters.

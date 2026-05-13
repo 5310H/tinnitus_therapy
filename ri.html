@@ -153,14 +153,21 @@ function getReportData() {
 
 function exportClinicalSettings() {
     const reportData = getClinicalReportData("Residual Inhibition Test", getReportData());
-    const report = generateClinicalReportText(reportData);
-    const blob = new Blob([report], { type: 'text/plain' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = `tinnitus_clinical_ri.txt`; a.click();
+    // Fetch AI summary and add to reportData
+    getClinicalSummary().then(aiSummaryText => {
+        reportData.aiSummary = aiSummaryText;
+        const report = generateClinicalReportText(reportData);
+        const blob = new Blob([report], { type: 'text/plain' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `tinnitus_clinical_ri.txt`; a.click();
+    });
 }
 
 async function generatePDFReport() {
     const reportData = getClinicalReportData("Residual Inhibition Test", getReportData());
+    // Fetch AI summary and add to reportData
+    const aiSummaryText = await getClinicalSummary();
+    reportData.aiSummary = aiSummaryText;
     const htmlContent = generateClinicalReportHtml(reportData);
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;

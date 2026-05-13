@@ -156,16 +156,21 @@
 
         function exportClinicalSettings() {
             const reportData = getClinicalReportData("Two-Tone Comparison", getReportData());
-            const report = generateClinicalReportText(reportData);
-            const blob = new Blob([report], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `tinnitus_clinical_twotone.txt`;
-            a.click();
+            // Fetch AI summary and add to reportData
+            getClinicalSummary().then(aiSummaryText => {
+                reportData.aiSummary = aiSummaryText;
+                const report = generateClinicalReportText(reportData);
+                const blob = new Blob([report], { type: 'text/plain' });
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                a.download = `tinnitus_clinical_twotone.txt`; a.click();
+            });
         }
 
         async function generatePDFReport() {
             const reportData = getClinicalReportData("Two-Tone Comparison", getReportData());
+            // Fetch AI summary and add to reportData
+            const aiSummaryText = await getClinicalSummary();
+            reportData.aiSummary = aiSummaryText;
             const htmlContent = generateClinicalReportHtml(reportData);
 
             const tempDiv = document.createElement('div');
@@ -189,9 +194,13 @@
         function emailToAudiologist() {
             const email = loadSetting('audiologist_email', '');
             if (!email) return alert("Please set your audiologist's email on the Home page.");
-            const reportData = getClinicalReportData("Two-Tone Comparison", getReportData());
-            const report = generateClinicalReportText(reportData);
-            window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+            // Fetch AI summary and add to reportData
+            getClinicalSummary().then(async aiSummaryText => {
+                const reportData = getClinicalReportData("Two-Tone Comparison", getReportData());
+                reportData.aiSummary = aiSummaryText;
+                const report = generateClinicalReportText(reportData);
+                window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+            });
         }
 
         document.getElementById('freqASlider').oninput = updateUI;

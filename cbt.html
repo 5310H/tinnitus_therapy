@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CBT & Wellness - Tinnitus Therapy</title>
 <script src="storage.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@google/generative-ai@0.10.0/dist/index.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="nav.js"></script>
 <link rel="stylesheet" href="style.css">
@@ -64,7 +65,10 @@
         <div class="ctrl">
             <label for="trAutomaticThoughts">Automatic Thought(s): What thoughts or images went through your mind?</label>
             <textarea id="trAutomaticThoughts" rows="3" maxlength="300" placeholder="e.g., 'This ringing will never stop,' 'I can't stand this anymore,' 'I'll never get a good night's sleep'"></textarea>
-            <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span id="count_trAutomaticThoughts">0</span> / 300</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                <button class="button" style="font-size: 0.75rem; padding: 5px 10px; border-color: var(--accent); color: var(--accent);" onclick="suggestBalancedThought()">✨ Suggest Balanced Thought (AI)</button>
+                <div style="font-size: 0.8em; color: var(--text-dim);"><span id="count_trAutomaticThoughts">0</span> / 300</div>
+            </div>
         </div>
         <div class="ctrl">
             <label for="trEmotions">Emotion(s): What emotions did you feel? How intense were they (0-100)?</label>
@@ -469,6 +473,66 @@ function runPmrStep() {
     playPmrCue(pmrIdx === pmrSteps.length - 1 ? 329.63 : 440);
     pmrIdx++;
     pmrTimer = setTimeout(runPmrStep, step.duration);
+}
+
+async function triggerSOS() {
+    const box = document.getElementById('aiHubResponse');
+    box.style.display = 'block';
+    box.innerHTML = "Connecting to support counselor...";
+    
+    const response = await getSOSSupport();
+    box.innerHTML = response.replace(/\n/g, '<br>');
+}
+
+async function askTRT() {
+    const q = document.getElementById('trtQuestion').value;
+    if (!q) return;
+    
+    const box = document.getElementById('aiHubResponse');
+    box.style.display = 'block';
+    box.innerHTML = "Thinking...";
+    
+    const response = await getTRTExplanation(q);
+    box.innerHTML = response.replace(/\n/g, '<br>');
+}
+
+async function triggerPatternAnalysis() {
+    const box = document.getElementById('aiHubResponse');
+    box.style.display = 'block';
+    box.innerHTML = "Reviewing logs and situational context for patterns...";
+    
+    const q = document.getElementById('trtQuestion').value;
+    const response = await getPatternAnalysis(q);
+    box.innerHTML = response.replace(/\n/g, '<br>');
+}
+
+/**
+ * Uses Gemini to suggest a balanced thought based on the user's automatic thought.
+ */
+async function suggestBalancedThought() {
+    const autoField = document.getElementById('trAutomaticThoughts');
+    const balancedField = document.getElementById('trBalancedThought');
+    const thought = autoField.value.trim();
+
+    if (!thought) return alert("Please enter an automatic thought first so Gemini can reframe it.");
+
+    balancedField.value = "Consulting AI assistant...";
+
+    try {
+        const response = await getBalancedThoughtSuggestion(thought);
+        // Strip HTML tags (like <i> for disclaimers) since this is a textarea
+        balancedField.value = response.replace(/<[^>]*>/g, '');
+        // Manually trigger the input event to update the character counter
+        balancedField.dispatchEvent(new Event('input'));
+    } catch (e) {
+        balancedField.value = "Error: Could not reach AI. Please try again.";
+    }
+}
+
+async function generateAISummaryForReport() {
+    // This function is not directly used for PDF/TXT reports, but for a potential UI element.
+    // If you add a button to generate and display the summary in the UI, this function would be used.
+    // For PDF/TXT reports, the summary is generated within the export functions.
 }
 </script>
 </body>

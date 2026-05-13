@@ -17,6 +17,11 @@ esp32:
   framework:
     type: arduino
 
+# Optimized for low-latency serial communication
+logger:
+  baud_rate: 921600
+  level: WARN # Reduce bus contention and CPU overhead
+
 # The Atom Lite has a built-in RGB LED (NeoPixel) on GPIO 27.
 # We use it to provide visual feedback synchronized with the haptic pulse.
 light:
@@ -51,6 +56,21 @@ output:
     pin: GPIO26
     id: motor_pwm
     frequency: "1000Hz"
+
+# Low-latency USB Serial listener for wired phone/desktop use
+interval:
+  - interval: 1s
+    then:
+      - lambda: |-
+          Serial.write(0x01); // Send periodic heartbeat to host
+  - interval: 5ms
+    then:
+      - lambda: |-
+          while (Serial.available()) {
+            int intensity = Serial.read();
+            // Trigger pulse if byte is within valid range (50-255)
+            if (intensity >= 50) id(trigger_pulse).execute((float)intensity);
+          }
 
 esp32_ble_server:
   id: ble_server
@@ -94,20 +114,17 @@ script:
       intensity: float
     mode: restart # Ensures new pulses override old ones instantly
     then:
-      # Safety: Force stop any existing PWM before starting
+      # Immediate action: Trigger motor first for lowest possible latency
       - output.set_level:
           id: motor_pwm
-          level: 0
-      # Flash the LED Teal (matching the app's --accent color)
+          level: !lambda "return intensity / 255.0;"
+      # Flash the LED Teal (parallel to haptic burst)
       - light.turn_on:
           id: status_led
           brightness: 100%
           red: 0%
           green: 75%
           blue: 65%
-      - output.set_level:
-          id: motor_pwm
-          level: !lambda "return intensity / 255.0;"
       - delay: 60ms # Slightly longer for better tactile "thump" perception
       - output.set_level:
           id: motor_pwm

@@ -8,6 +8,14 @@ No medical claims are made or implied. The sound tools provided here are based o
 general concepts found in tinnitus research, but they are not a substitute for 
 professional evaluation or treatment by a licensed clinician, audiologist, or 
 healthcare provider.
+ 
+AI-GENERATED CONTENT:
+Certain features (CBT Reframing, SOS Spike Support, Sound Recipes, 
+Pattern Identification, and Clinical Summaries) utilize 
+Artificial Intelligence (Google Gemini). AI can "hallucinate" or provide 
+inaccurate information. All AI-generated content is for educational 
+exploration only. Do not make medical decisions based on AI suggestions 
+without consulting a professional.
 
 Use of this software is voluntary and at your own risk. Always keep listening volume 
 at a safe and comfortable level. Stop using the tool immediately if you experience 

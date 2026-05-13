@@ -39,7 +39,7 @@ function initNav(helpHtml) {
     const homePath = isDocs ? '../index.html' : 'index.html';
     
     // Auto-detect tutorial key from filename
-    const filename = window.location.pathname.split('/').pop().replace('.html', '').toLowerCase();
+    const filename = window.location.pathname.split('/').pop().replace('.html', '').toLowerCase() || 'index';
     const supportedTutorials = [
         'decorrelated', 'notch', 'cr', 'lenire', 'soundtherapy', 
         'notchfinder', 'twotone', 'sweep', 'tmc', 'lg', 'hearingtest', 'ri', 'validation'
@@ -51,7 +51,9 @@ function initNav(helpHtml) {
         <div style="position:fixed; top:1rem; right:1rem; display:flex; gap:10px; z-index:100; align-items: center;">
             <div id="audioStatusIndicator" style="font-size: 0.65rem; font-weight: bold; color: var(--text-dim); background: var(--card-bg); padding: 4px 10px; border-radius: 15px; border: 1px solid var(--border); display: none; white-space: nowrap;">○ Audio Off</div>
             <button class="help-btn" style="position:static; padding: 8px 10px; border-color:var(--accent); color:var(--accent);" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌓</button>
-            ${tutorialKey ? `<button class="help-btn" style="position:static; border-color:var(--accent); color:var(--accent);" onclick="startModuleTutorial('${tutorialKey}')">Tutorial</button>` : ''}
+            <button class="help-btn" style="position:static; border-color:var(--accent); color:var(--accent);" onclick="startModuleTutorial(${tutorialKey ? `'${tutorialKey}'` : 'null'})">
+                ${tutorialKey ? 'Tutorial' : 'Quick Start'}
+            </button>
             <button class="help-btn" style="position:static; border-color:var(--accent); color:var(--accent);" onclick="openHelp()">Guide</button>
         </div>
     `;

@@ -128,17 +128,22 @@ function getReportData() {
 
 function exportClinicalSettings() {
     const reportData = getClinicalReportData("Audio Level Analysis", getReportData());
-    const report = generateClinicalReportText(reportData);
-    const blob = new Blob([report], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `tinnitus_level_report.txt`;
-    a.click();
-    alert("Audio level report downloaded. Please check your browser's Downloads folder.");
+    // Fetch AI summary and add to reportData
+    getClinicalSummary().then(aiSummaryText => {
+        reportData.aiSummary = aiSummaryText;
+        const report = generateClinicalReportText(reportData);
+        const blob = new Blob([report], { type: 'text/plain' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `tinnitus_level_report.txt`; a.click();
+        alert("Audio level report downloaded. Please check your browser's Downloads folder.");
+    });
 }
 
 async function generatePDFReport() {
     const reportData = getClinicalReportData("Audio Level Analysis", getReportData());
+    // Fetch AI summary and add to reportData
+    const aiSummaryText = await getClinicalSummary();
+    reportData.aiSummary = aiSummaryText;
     const htmlContent = generateClinicalReportHtml(reportData);
 
     const tempDiv = document.createElement('div');
@@ -162,10 +167,14 @@ async function generatePDFReport() {
 function emailToAudiologist() {
     const email = loadSetting('audiologist_email', '');
     if (!email) return alert("Please set your audiologist's email on the Home page.");
-    const reportData = getClinicalReportData("Audio Level Analysis", getReportData());
-    const report = generateClinicalReportText(reportData);
-    window.location.href = `mailto:${email}?subject=Audio Level Report&body=${encodeURIComponent(report)}`;
-    alert("Email client opened. Please review and send the audio level report draft.");
+    // Fetch AI summary and add to reportData
+    getClinicalSummary().then(async aiSummaryText => {
+        const reportData = getClinicalReportData("Audio Level Analysis", getReportData());
+        reportData.aiSummary = aiSummaryText;
+        const report = generateClinicalReportText(reportData);
+        window.location.href = `mailto:${email}?subject=Audio Level Report&body=${encodeURIComponent(report)}`;
+        alert("Email client opened. Please review and send the audio level report draft.");
+    });
 }
 </script>
 

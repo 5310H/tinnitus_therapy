@@ -1,0 +1,42 @@
+esphome:
+  name: tinnitus-haptic-pacer
+  friendly_name: Tinnitus Haptic Pacer
+
+esp32:
+  board: esp32dev
+
+# 1. Enable the I2C Bus for the Haptic Driver
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+  id: bus_a
+
+# 2. Add the DRV2605L Component
+# Note: This requires the 'drv2605' custom component or external_components
+external_components:
+  - source: github://RAR/esphome-drv2605
+    components: [ drv2605 ]
+
+drv2605:
+  id: haptic_driver
+  motor_type: LRA
+  library: 6  # Library 6 is specifically for LRA motors
+
+# 3. Create a "Trigger" for your Web Suite
+# This creates a button in Home Assistant/Web UI to test the pulse
+button:
+  - platform: template
+    name: "Manual Habituation Pulse"
+    on_press:
+      - drv2605.play_effect:
+          id: haptic_driver
+          effect: 1  # "Strong Click" - The gold standard for habituation
+
+# 4. Serial Command Interface (921600 Baud)
+# This allows your Browser Suite to trigger the motor via USB
+uart:
+  id: uart_bus
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+  baud_rate: 921600
