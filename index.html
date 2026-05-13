@@ -173,14 +173,26 @@ async function loadDailyMotivation() {
     const displayEl = document.getElementById('dailyMotivationDisplay');
     if (!displayEl) return;
 
-    const key = loadSetting('gemini_api_key', '');
-    const isPlaceholder = !key || key === "YOUR_ACTUAL_API_KEY_HERE";
+    const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
+    const currentKey = decryptedGeminiKey || loadSetting('gemini_api_key', '');
+    const isConfigured = currentKey && currentKey !== "YOUR_ACTUAL_API_KEY_HERE";
 
-    if (isPlaceholder) {
+    if (encryptedKeyExists && !decryptedGeminiKey) {
+        displayEl.innerHTML = `
+            <div style="color: #ff9800; font-weight: bold;">🔒 AI Features Locked</div>
+            <p style="font-size: 0.8rem; margin: 8px 0; color: var(--text-dim); font-style: normal;">Your Gemini API key is encrypted. Enter your PIN or Recovery Code in Settings to unlock AI features.</p>
+            <button class="button" style="font-size: 0.75rem; padding: 5px 12px;" onclick="const s = document.getElementById('card-settings'); s.querySelector('details').open = true; document.getElementById('geminiPin').scrollIntoView({behavior:'smooth'}); document.getElementById('geminiPin').focus();">Unlock AI</button>
+            <div style="margin-top: 8px;">
+                <a href="#" style="font-size: 0.7rem; color: var(--text-dim);" onclick="forgotPin()">Forgot PIN?</a>
+            </div>
+        `;
+        displayEl.style.flexDirection = 'column';
+        displayEl.style.fontStyle = 'normal';
+    } else if (!isConfigured) {
         displayEl.innerHTML = `
             <div style="color: #ef5350; font-weight: bold;">⚠️ AI Features Unconfigured</div>
             <p style="font-size: 0.8rem; margin: 8px 0; color: var(--text-dim); font-style: normal;">Add your Gemini API key in Settings to enable personalized insights, crisis support, and pattern analysis.</p>
-            <button class="button" style="font-size: 0.75rem; padding: 5px 12px;" onclick="const s = document.getElementById('card-settings'); s.querySelector('details').open = true; document.getElementById('geminiKey').scrollIntoView({behavior:'smooth'}); document.getElementById('geminiKey').focus();">Setup Gemini Key</button>
+            <button class="button" style="font-size: 0.75rem; padding: 5px 12px;" onclick="openAISetup()">Setup Gemini Key</button>
         `;
         displayEl.style.flexDirection = 'column';
         displayEl.style.fontStyle = 'normal';
@@ -189,18 +201,20 @@ async function loadDailyMotivation() {
 
     displayEl.innerHTML = 'Consulting your AI coach...';
     displayEl.style.flexDirection = 'row';
-    displayEl.style.fontStyle = 'italic';
+    displayEl.style.fontStyle = 'italic'; // Reset style
 
     try {
         const motivation = await getDailyMotivation();
-        if (motivation.includes("Could not connect") || motivation.includes("unconfigured")) {
-            throw new Error("Connection failed");
+        // Validate response content
+        if (!motivation || motivation.includes("Could not connect") || motivation.includes("unconfigured")) {
+            throw new Error("API_UNREACHABLE");
         }
         displayEl.innerHTML = motivation.replace(/\n/g, '<br>');
     } catch (error) {
+        console.error("AI Dashboard Error:", error);
         displayEl.innerHTML = `
             <div style="color: #ef5350; font-weight: bold;">⚠️ AI Connection Error</div>
-            <p style="font-size: 0.8rem; margin: 5px 0; color: var(--text-dim); font-style: normal;">The API key may be invalid or there is a network issue. Please check your Settings.</p>
+            <p style="font-size: 0.8rem; margin: 5px 0; color: var(--text-dim); font-style: normal;">The system could not reach Gemini. Verify your API key in settings and ensure your internet connection is active.</p>
         `;
         displayEl.style.flexDirection = 'column';
         displayEl.style.fontStyle = 'normal';
@@ -226,7 +240,7 @@ window.onload = () => {
 
     // Onboarding Wizard Initialization
     const step = parseInt(loadSetting('onboarding_step', 0));
-    if (step < 6) {
+    if (step < 7) {
         showOnboardingStep(step);
     } else {
         // Version tracking for returning users
@@ -360,6 +374,114 @@ async function checkForUpdates() {
     }
 }
 
+async function setGeminiKeyWithPIN() {
+    const keyInput = document.getElementById('geminiKey');
+    const pinInput = document.getElementById('geminiPin');
+    const statusEl = document.getElementById('geminiTestStatus');
+
+    const apiKey = keyInput.value.trim();
+    const pin = pinInput.value.trim();
+
+    if (!apiKey) {
+        statusEl.textContent = 'Please enter your Gemini API key first.';
+        statusEl.style.color = '#ff9800';
+        return;
+    }
+    if (!pin) {
+        statusEl.textContent = 'Please enter a PIN to encrypt your key.';
+        statusEl.style.color = '#ff9800';
+        return;
+    }
+    if (pin.length < 4) {
+        statusEl.textContent = 'PIN should be at least 4 characters long.';
+        statusEl.style.color = '#ff9800';
+        return;
+    }
+
+    statusEl.textContent = 'Encrypting key...';
+    statusEl.style.color = 'var(--text-dim)';
+
+    try {
+        const { pinPath, rcPath, recoveryCode } = await encryptGeminiKey(apiKey, pin);
+        
+        // Save standard PIN metadata
+        saveSetting('gemini_api_key_encrypted', pinPath.encryptedKey);
+        saveSetting('gemini_api_key_salt', pinPath.salt);
+        saveSetting('gemini_api_key_iv', pinPath.iv);
+
+        // Save Recovery Code metadata
+        saveSetting('gemini_api_key_rc_encrypted', rcPath.encryptedKey);
+        saveSetting('gemini_api_key_rc_salt', rcPath.salt);
+        saveSetting('gemini_api_key_rc_iv', rcPath.iv);
+        
+        // Clear plain text key and PIN from UI and localStorage
+        localStorage.removeItem('tts_gemini_api_key'); // Remove plain text key
+        keyInput.value = '';
+        pinInput.value = '';
+        decryptedGeminiKey = null; // Clear in-memory key
+        initAI(); // Re-initialize AI to reflect locked state
+
+        statusEl.textContent = '✅ Key encrypted! AI features are now locked.';
+        statusEl.style.color = '#4CAF50';
+
+        alert("🔑 SECURITY SETUP COMPLETE\n\nYour API key is now encrypted locally.\n\nYOUR RECOVERY CODE: " + recoveryCode + "\n\nStore this code safely! If you forget your PIN, you can enter this code in the PIN field to regain access.");
+
+        loadDailyMotivation(); // Update dashboard card
+    } catch (error) {
+        console.error("Encryption failed:", error);
+        statusEl.textContent = '❌ Encryption failed. Check console for details.';
+        statusEl.style.color = '#f44336';
+    }
+}
+
+async function unlockGeminiKeyWithPIN() {
+    const pinInput = document.getElementById('geminiPin');
+    const statusEl = document.getElementById('geminiTestStatus');
+    const pin = pinInput.value.trim();
+
+    if (!pin) {
+        statusEl.textContent = 'Please enter your PIN to unlock AI features.';
+        statusEl.style.color = '#ff9800';
+        return;
+    }
+
+    statusEl.textContent = 'Attempting to unlock AI...';
+    statusEl.style.color = 'var(--text-dim)';
+
+    try {
+        const key = await decryptGeminiKey(pin);
+        if (key) {
+            statusEl.textContent = '✅ AI features unlocked for this session!';
+            statusEl.style.color = '#4CAF50';
+            document.getElementById('geminiKey').value = key; // Show decrypted key in field
+            loadDailyMotivation(); // Update dashboard card
+        } else {
+            statusEl.textContent = '❌ Incorrect PIN or decryption failed.';
+            statusEl.style.color = '#f44336';
+            decryptedGeminiKey = null; // Ensure key is cleared if decryption fails
+            initAI();
+        }
+    } catch (error) {
+        console.error("Unlock failed:", error);
+        statusEl.textContent = '❌ An error occurred during unlock. Check console.';
+        statusEl.style.color = '#f44336';
+        decryptedGeminiKey = null;
+        initAI();
+    }
+}
+
+window.forgotPin = () => {
+    const msg = "FORGOT PIN RECOVERY\n\n" +
+                "Without your PIN, you can only unlock AI features using your hexadecimal Recovery Code.\n\n" +
+                "If you also lost your Recovery Code, the encrypted API key is permanently lost. " +
+                "You will need to clear your AI settings and re-enter your key from Google AI Studio.\n\n" +
+                "Would you like to reset your AI settings now?";
+    
+    if (confirm(msg)) {
+        resetAISettings();
+    }
+};
+
 document.getElementById('goalInput').oninput = (e) => {
     saveSetting('daily_goal', e.target.value);
     renderStats();
@@ -371,9 +493,43 @@ document.getElementById('audioEmail').oninput = (e) => {
 };
 
 document.getElementById('geminiKey').oninput = (e) => {
-    saveSetting('gemini_api_key', e.target.value);
-    if (typeof initAI === 'function') initAI();
-    loadDailyMotivation(); // Refresh insight card immediately
+    // If a key is typed into the plain text field, clear any encrypted state
+    localStorage.removeItem('tts_gemini_api_key_encrypted');
+    localStorage.removeItem('tts_gemini_api_key_salt');
+    localStorage.removeItem('tts_gemini_api_key_iv');
+    localStorage.removeItem('tts_gemini_api_key_rc_encrypted');
+    localStorage.removeItem('tts_gemini_api_key_rc_salt');
+    localStorage.removeItem('tts_gemini_api_key_rc_iv');
+    saveSetting('gemini_api_key', e.target.value); // Save plain text key
+    decryptedGeminiKey = e.target.value; // Update in-memory key
+    initAI();
+    loadDailyMotivation();
+};
+
+window.resetAISettings = () => {
+    if (confirm("Clear your Gemini API key? This will disable AI features until a new key is provided.")) {
+        localStorage.removeItem('tts_gemini_api_key');
+        localStorage.removeItem('tts_gemini_api_key_encrypted');
+        localStorage.removeItem('tts_gemini_api_key_salt');
+        localStorage.removeItem('tts_gemini_api_key_iv');
+        localStorage.removeItem('tts_gemini_api_key_rc_encrypted');
+        localStorage.removeItem('tts_gemini_api_key_rc_salt');
+        localStorage.removeItem('tts_gemini_api_key_rc_iv');
+        const keyInput = document.getElementById('geminiKey');
+        if (keyInput) keyInput.value = '';
+        const pinInput = document.getElementById('geminiPin');
+        if (pinInput) pinInput.value = '';
+        
+        decryptedGeminiKey = null; // Clear in-memory key
+        initAI();
+        loadDailyMotivation();
+        
+        const statusEl = document.getElementById('geminiTestStatus');
+        if (statusEl) {
+            statusEl.textContent = 'API Key cleared.';
+            statusEl.style.color = 'var(--text-dim)';
+        }
+    }
 };
 
 async function testGeminiConnectionUI() {
@@ -385,7 +541,7 @@ async function testGeminiConnectionUI() {
     testBtn.disabled = true;
 
     // Ensure AI is initialized with the latest key from the input field
-    initAI(); 
+    // initAI() is called by decryptGeminiKey or geminiKey.oninput
 
     const result = await performGeminiTest(); // Call the function from storage.js
 
@@ -492,11 +648,11 @@ function showOnboardingStep(step) {
     document.getElementById('onboardingModal').style.display = 'block';
 
     // Update progress bar
-    const progress = ((step + 1) / 6) * 100;
+    const progress = ((step + 1) / 7) * 100;
     const progressBar = document.getElementById('onboardingProgressBar');
     if (progressBar) progressBar.style.width = progress + '%';
 
-    for (let i = 0; i <= 5; i++) {
+    for (let i = 0; i <= 6; i++) {
         const el = document.getElementById(`onboarding-${i}`);
         if (el) el.style.display = (i === step) ? 'block' : 'none';
     }
@@ -508,7 +664,7 @@ window.nextOnboardingStep = (step) => {
 };
 
 window.finishOnboarding = () => {
-    saveSetting('onboarding_step', 6);
+    saveSetting('onboarding_step', 7);
     document.getElementById('onboardingModal').style.display = 'none';
 };
 
@@ -592,13 +748,48 @@ function renderStats() {
              </div>
         </div>
         <div id="onboarding-5" style="display:none;">
+             <h2>Step 5: Enable AI Assistant</h2>
+             <p>Enable personalized progress analysis and crisis support by adding a Gemini API Key.</p>
+             <div style="background: var(--surface); padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; text-align: left;">
+                1. <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--accent);">Get Key from Google</a><br>
+                2. Copy the key and paste it below.
+             </div>
+             <input type="password" id="onboardGeminiKey" placeholder="Paste Key Here" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);">
+             <button onclick="saveAIKeyFromModal('onboardGeminiKey', 'onboardAIStatus').then(success => { if(success) nextOnboardingStep(6); })" class="big-btn play-btn">Test & Continue</button>
+             <div id="onboardAIStatus" style="margin-top:10px; font-size:0.8rem;"></div>
+             <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button onclick="nextOnboardingStep(4)" class="button" style="flex: 1;">Back</button>
+                <button onclick="nextOnboardingStep(6)" class="button" style="flex: 1;">Skip AI for now</button>
+             </div>
+        </div>
+        <div id="onboarding-6" style="display:none;">
              <h2>Setup Complete!</h2>
              <p>You're ready to start your journey. You can access all tools from the main dashboard.</p>
              <button onclick="finishOnboarding()" class="big-btn play-btn">Start Exploring</button>
-             <button onclick="nextOnboardingStep(4)" class="button" style="width:100%; margin-top:10px;">Back</button>
+             <button onclick="nextOnboardingStep(5)" class="button" style="width:100%; margin-top:10px;">Back</button>
         </div>
 
         <button onclick="finishOnboarding()" class="button" style="width:100%; margin-top:20px; border-color: var(--text-dim); color: var(--text-dim); font-weight: normal;">Exit Wizard</button>
+    </div>
+</div>
+
+<div id="aiSetupModal" class="modal-overlay">
+    <div class="modal-card">
+        <h2 style="color: var(--accent); margin-top: 0;">✨ AI Assistant Setup</h2>
+        <p class="info" style="color: var(--text);">Enable personalized motivation and crisis support in 3 easy steps:</p>
+        
+        <div style="background: var(--surface); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.6;">
+            <div><b style="color: var(--accent);">1. Get Key:</b> <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #2196f3; text-decoration: underline;">Open Google AI Studio</a></div>
+            <div><b style="color: var(--accent);">2. Create:</b> Click <b>"Create API key in new project"</b></div>
+            <div><b style="color: var(--accent);">3. Copy:</b> Copy the string and paste it below</div>
+        </div>
+
+        <input type="password" id="modalGeminiKey" placeholder="Paste API Key here..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text);">
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="big-btn play-btn" style="margin-top: 0; flex: 2;" onclick="saveAIKeyFromModal()">Activate AI</button>
+            <button class="button" style="margin-top: 0; flex: 1;" onclick="closeAISetup()">Cancel</button>
+        </div>
+        <div id="modalTestStatus" style="text-align: center; margin-top: 15px; font-size: 0.85rem; min-height: 1.2rem;"></div>
     </div>
 </div>
 

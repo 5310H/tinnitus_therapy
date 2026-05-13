@@ -165,7 +165,7 @@
 </div>
 
 <script>
-let audioCtx, playing = false, timerInterval, frequencies = [], masterGain, noiseSource, noiseGain, toneBalFactors = [1,1,1,1];
+let audioCtx, playing = false, timerInterval, frequencies = [], masterGain, noiseSource, noiseGain, toneBalFactors = [1,1,1,1], workletLoaded = false;
 let nextToneTime = 0, currentSequence = [], sequenceIdx = 0, cycleCount = 0;
 const TONE_DURATION = 0.120; // 120ms per tone
 const CYCLE_PERIOD = 0.666; // 1.5 Hz clinical cycle rate (666ms per cycle)
@@ -242,6 +242,28 @@ async function toggle() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
     stopBracketTone(); // Stop bracketing tone if playing
+
+    if (audioCtx.audioWorklet && !workletLoaded) {
+        try { await audioCtx.audioWorklet.addModule('noise-processor.js'); workletLoaded = true; } catch (e) {}
+    }
+
+    // Background Noise Setup
+    const noiseColor = document.getElementById('noiseColor').value;
+    const noiseVol = document.getElementById('noiseVolSlider').value / 100;
+    if (noiseColor !== 'none') {
+        noiseGain = audioCtx.createGain();
+        noiseGain.gain.value = noiseVol;
+        const typeMap = { 'white': 0, 'pink': 1, 'brown': 2, 'blue': 3, 'violet': 4 };
+        if (workletLoaded) {
+            noiseSource = new AudioWorkletNode(audioCtx, 'noise-processor', { parameterData: { type: typeMap[noiseColor] } });
+        } else {
+            const buf = createNoise(noiseColor);
+            noiseSource = audioCtx.createBufferSource();
+            noiseSource.buffer = buf; noiseSource.loop = true;
+            noiseSource.start();
+        }
+        noiseSource.connect(noiseGain).connect(audioCtx.destination);
+    }
     
     masterGain = audioCtx.createGain();
     masterGain.gain.value = document.getElementById('volSlider').value / 100;
@@ -260,6 +282,7 @@ async function toggle() {
 
 function stop() {
     playing = false;
+    if (noiseSource && noiseSource.disconnect) noiseSource.disconnect();
     clearInterval(timerInterval);
     if (audioCtx) { audioCtx.close(); audioCtx = null; }
     stopBracketTone(); // Ensure bracket tone is stopped when main therapy stops

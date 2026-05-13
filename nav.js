@@ -119,6 +119,23 @@ window.showPreFlight = (onConfirm) => {
 };
 window.closePreFlight = () => { const el = document.getElementById('preFlightModal'); if(el) el.remove(); };
 
+/**
+ * UI Utility: Locks or unlocks therapy controls.
+ * Used during audio transition states (starting/stopping).
+ */
+window.toggleUIInteraction = (locked) => {
+    const controls = document.querySelectorAll('.card input, .card select, .card .button, .card .sm-btn, .card .big-btn:not(#toggleBtn):not(#stopBtn)');
+    controls.forEach(el => {
+        if (locked) {
+            el.style.pointerEvents = 'none';
+            el.style.opacity = '0.5';
+        } else {
+            el.style.pointerEvents = 'auto';
+            el.style.opacity = '1';
+        }
+    });
+};
+
 // --- Global AudioContext State Observer ---
 // This interceptor monitors the Web Audio engine status across all therapy modules.
 (function() {
@@ -128,7 +145,18 @@ window.closePreFlight = () => { const el = document.getElementById('preFlightMod
     // Wrap the constructor to capture every context created in the suite
     const ProxyContext = function(...args) {
         const ctx = new OriginalAudioContext(...args);
-        
+        let watchdogInterval = null;
+
+        // Apply preferred output device (Sink ID) if supported
+        const applyOutputSink = async () => {
+            if (ctx.setSinkId) {
+                const sinkId = localStorage.getItem('tts_preferred_output_device') || '';
+                if (sinkId) {
+                    ctx.setSinkId(sinkId).catch(e => console.warn("[Routing] Sink error:", e));
+                }
+            }
+        };
+
         const updateUI = () => {
             const el = document.getElementById('audioStatusIndicator');
             if (!el) return;
@@ -140,19 +168,40 @@ window.closePreFlight = () => { const el = document.getElementById('preFlightMod
                 el.innerHTML = '<span style="color: var(--accent)">●</span> Audio Active';
                 el.style.borderColor = 'var(--accent)';
                 el.title = "The audio engine is processing sound normally.";
+                applyOutputSink();
+                startWatchdog();
             } else if (state === 'suspended') {
                 el.innerHTML = '<span style="color: #ff9800">●</span> Audio Suspended';
                 el.style.borderColor = '#ff9800';
                 el.title = "Audio is suspended by the browser. Interaction (like clicking Start) is required.";
+                stopWatchdog();
             } else if (state === 'closed') {
                 el.innerHTML = '○ Audio Closed';
                 el.style.borderColor = 'var(--border)';
                 el.title = "The audio engine has been shut down.";
+                stopWatchdog();
             }
         };
 
+        const startWatchdog = () => {
+            if (watchdogInterval) return;
+            let lastTime = ctx.currentTime;
+            watchdogInterval = setInterval(() => {
+                // If context is running but the clock isn't moving, the thread has stalled
+                if (ctx.state === 'running' && ctx.currentTime === lastTime && lastTime > 0) {
+                    console.warn("[Watchdog] Audio clock stall detected. Attempting recovery...");
+                    ctx.resume().catch(e => { if(typeof logTherapyError === 'function') logTherapyError("Watchdog", e); });
+                }
+                lastTime = ctx.currentTime;
+            }, 3000);
+        };
+
+        const stopWatchdog = () => {
+            if (watchdogInterval) clearInterval(watchdogInterval);
+            watchdogInterval = null;
+        };
+
         ctx.addEventListener('statechange', updateUI);
-        // Initial check after the script that created it finishes
         setTimeout(updateUI, 100);
         
         return ctx;

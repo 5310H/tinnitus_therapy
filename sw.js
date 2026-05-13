@@ -19,6 +19,7 @@ const ASSETS = [
     './hardware.html',
     './meter.html',
     './notch.html',
+    './noise-processor.js',
     './notchfinder.html',
     './recommended.html',
     './research.html',

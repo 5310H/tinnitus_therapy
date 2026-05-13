@@ -55,6 +55,22 @@
     .grade-moderate { background-color: #FFC107; } /* Amber */
     .grade-severe { background-color: #FF9800; } /* Orange */
     .grade-catastrophic { background-color: #F44336; } /* Red */
+
+    #forecastResponse {
+        margin-top: 15px; padding: 15px; background: var(--surface); 
+        border-radius: 8px; border: 1px solid var(--border); 
+        min-height: 60px; display: none; text-align: left; 
+        font-size: 0.9rem; line-height: 1.5; color: var(--text);
+    }
+    #forecastResponse.active {
+        display: block;
+        animation: forecastFadeIn 0.6s ease-out forwards;
+    }
+    @keyframes forecastFadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .forecast-icon { color: var(--accent); margin-right: 10px; font-size: 1.1rem; vertical-align: middle; }
 </style>
 </head>
 <body>
@@ -95,6 +111,13 @@
     </div>
 
     <div class="chart-container">
+        <h2>Habituation Forecast (AI)</h2>
+        <p class="info">AI-powered projection of your progress based on THI trends.</p>
+        <button class="button" style="width:100%; border-color: var(--accent); color: var(--accent);" onclick="triggerHabituationForecast()">✨ Generate Habituation Forecast</button>
+        <div id="forecastResponse"></div>
+    </div>
+
+    <div class="chart-container">
         <h2>THI Score Trend</h2>
         <p class="info">Lower scores indicate less tinnitus-related distress.</p>
         <div style="position: relative; height: 300px;">
@@ -127,6 +150,22 @@ window.onload = () => {
     drawQFactorChart();
     drawRiChart();
 };
+
+async function triggerHabituationForecast() {
+    const box = document.getElementById('forecastResponse');
+    if (!box) return;
+    box.classList.remove('active'); // Reset animation
+    void box.offsetWidth; // Trigger reflow to restart animation
+    box.classList.add('active');
+    box.innerHTML = '<span class="forecast-icon">⏳</span> Analyzing THI trends and projecting progress...';
+    
+    try {
+        const response = await getHabituationForecast();
+        box.innerHTML = `<span class="forecast-icon">📉</span> ${response.replace(/\n/g, '<br>')}`;
+    } catch (error) {
+        box.innerHTML = '<span class="forecast-icon">⚠️</span> Could not generate forecast. Ensure you have logged at least 3 THI scores and your Gemini key is active.';
+    }
+}
 
 function drawRiChart() {
     const rawData = getRIResults();

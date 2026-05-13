@@ -12,6 +12,7 @@ Requires: numpy, scipy
 """
 
 import argparse
+import os
 import numpy as np
 from scipy.io import wavfile
 from scipy.signal import butter, sosfilt
@@ -168,6 +169,13 @@ def main():
 
     stereo_16 = normalize_and_convert(stereo)
     filename = args.output or f"therapy_{label}_{int(args.duration)}s.wav"
+    
+    # Security check: Ensure the output filename is safe and restricted to current directory
+    safe_filename = os.path.basename(filename)
+    if args.output and filename != safe_filename:
+        print(f"Security Warning: Output path sanitized to {safe_filename}")
+        filename = safe_filename
+
     wavfile.write(filename, sr, stereo_16)
     print(f"Saved: {filename} ({sr} Hz, 16-bit stereo)")
 

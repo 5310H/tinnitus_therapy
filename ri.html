@@ -57,7 +57,7 @@
 </div>
 
 <script>
-let audioCtx, noise, gain, startTime, measureInterval, maskingTimeout;
+let audioCtx, noise, gain, startTime, measureInterval, maskingTimeout, workletLoaded = false;
 
 window.onload = () => {
     initNav(`
@@ -70,10 +70,15 @@ window.onload = () => {
     renderHistory();
 };
 
-function startMasking() {
+async function startMasking() {
     const color = document.getElementById('noiseColor').value;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    if (audioCtx.audioWorklet && !workletLoaded) {
+        try { await audioCtx.audioWorklet.addModule('noise-processor.js'); workletLoaded = true; }
+        catch (e) { console.error("Worklet failed", e); }
+    }
 
     const bufSize = audioCtx.sampleRate * 2;
     const buffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
@@ -84,16 +89,22 @@ function startMasking() {
     else if(color==='violet'){let last=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;data[i]=w-last;last=w}}
     else if(color==='brown'){let last=0;for(let i=0;i<bufSize;i++){const w=Math.random()*2-1;data[i]=(last+0.02*w)/1.02;last=data[i];data[i]*=3.5}}
 
-    noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
-    noise.loop = true;
+    const typeMap = { 'white': 0, 'pink': 1, 'brown': 2, 'blue': 3, 'violet': 4 };
+    if (workletLoaded) {
+        noise = new AudioWorkletNode(audioCtx, 'noise-processor', { parameterData: { type: typeMap[color] } });
+    } else {
+        noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        noise.loop = true;
+        noise.start();
+    }
+
     gain = audioCtx.createGain();
     gain.gain.value = 0.3; // Calibrated comfort level
     noise.connect(gain).connect(audioCtx.destination);
     
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
-    noise.start();
 
     let timeLeft = 60;
     maskingTimeout = setInterval(() => {
@@ -108,7 +119,7 @@ function startMasking() {
 }
 
 function startMeasurement() {
-    noise.stop();
+    if (noise.stop) noise.stop(); else noise.disconnect();
     document.getElementById('step2').style.display = 'none';
     document.getElementById('step3').style.display = 'block';
     startTime = performance.now();

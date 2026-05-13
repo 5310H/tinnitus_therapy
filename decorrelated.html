@@ -185,6 +185,7 @@
 <button class="big-btn play-btn" id="toggleBtn" onclick="handleToggle()">Start Therapy</button>
 <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
 <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
+<button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetToDefaults()">Reset to Defaults</button>
 <button class="button email-audiologist-btn" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
 <div class="status" id="status"></div> 
 <div class="usage-progress">
@@ -194,7 +195,7 @@
 <canvas id="decorrelationViz" class="decorrelation-canvas"></canvas>
 </div>
 <script>
-let ctx,playing=false,nodesL,nodesR,audioL,audioR,timerInterval=null,analyserL,analyserR,rafViz,rafVolViz,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[];
+let ctx,playing=false,nodesL,nodesR,audioL,audioR,timerInterval=null,analyserL,analyserR,rafViz,rafVolViz,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[],workletLoaded=false;
 const BUF_SIZE=2*44100;
 const eqBands = [2000, 4000, 8000, 12000];
 window.lastValidationStatus = "Not Validated";
@@ -205,11 +206,16 @@ function validateFilterSettings() {
     const lcR = +document.getElementById('lcR').value;
     const hcR = +document.getElementById('hcR').value;
 
+    let failed = false;
+    if (lcL >= hcL) failed = true;
+    if (lcR >= hcR) failed = true;
+
     const statusL = lcL >= hcL ? "L: FAIL (Cross-over)" : "L: PASS";
     const statusR = lcR >= hcR ? "R: FAIL (Cross-over)" : "R: PASS";
 
     window.lastValidationStatus = `${statusL} | ${statusR}`;
     document.getElementById('status').textContent = 'Playing ' + document.getElementById('color').value + ' (' + window.lastValidationStatus + ')';
+    return !failed;
 }
 
 window.onload = () => {
@@ -364,9 +370,16 @@ function createFilterChain(sourceNode, side, vol, lc, hc, analyser) {
 
 function handleToggle(){ if(playing) stop(); else showPreFlight(() => start()); }
 async function toggle(){if(!playing) await start();else stop()}
+async function initAudio() {
+    if(!ctx) ctx=new(window.AudioContext||window.webkitAudioContext)();
+    if (ctx.audioWorklet && !workletLoaded) {
+        try { await ctx.audioWorklet.addModule('noise-processor.js'); workletLoaded = true; }
+        catch (e) { console.error("Worklet failed", e); }
+    }
+    if (ctx.state === 'suspended') await ctx.resume();
+}
 async function start(){
-  ctx=new(window.AudioContext||window.webkitAudioContext)();
-  if (ctx.state === 'suspended') await ctx.resume();
+  await initAudio();
 
   const color=document.getElementById('color').value;
   const volL=document.getElementById('volL').value/100;
@@ -413,24 +426,28 @@ async function start(){
     }
     document.getElementById('status').textContent='Playing '+color+' sound';
   } else {
-    const bufL=createNoise(color), bufR=dec>0?createNoise(color):bufL;
-    
-    const srcL = ctx.createBufferSource(); srcL.buffer = bufL; srcL.loop = true;
-    const srcR = ctx.createBufferSource(); srcR.buffer = bufR; srcR.loop = true;
+    let srcL, srcR;
+    const typeMap = { 'white': 0, 'pink': 1, 'brown': 2, 'blue': 3, 'violet': 4 };
+
+    if (workletLoaded) {
+        srcL = new AudioWorkletNode(ctx, 'noise-processor', { parameterData: { type: typeMap[color] } });
+        srcR = dec > 0 ? new AudioWorkletNode(ctx, 'noise-processor', { parameterData: { type: typeMap[color] } }) : srcL;
+    } else {
+        const bufL=createNoise(color), bufR=dec>0?createNoise(color):bufL;
+        srcL = ctx.createBufferSource(); srcL.buffer = bufL; srcL.loop = true;
+        srcR = ctx.createBufferSource(); srcR.buffer = bufR; srcR.loop = true;
+        srcL.start(); srcR.start();
+        validateDecorrelation(bufL, bufR, lcL, hcL, lcR, hcR);
+    }
 
     nodesL = createFilterChain(srcL, 'L', volL, lcL, hcL, analyserL);
     nodesL.gain.connect(merger, 0, 0);
-
     nodesR = createFilterChain(srcR, 'R', volR, lcR, hcR, analyserR);
     nodesR.gain.connect(merger, 0, 1);
 
-    nodesL.src = srcL; // Store source for stopping
-    nodesR.src = srcR; // Store source for stopping
-
-    srcL.start();
-    srcR.start();
-    validateDecorrelation(bufL, bufR, lcL, hcL, lcR, hcR);
-  validateFilterSettings();
+    nodesL.src = srcL;
+    nodesR.src = srcR;
+    validateFilterSettings();
   }
 
   playing=true;
@@ -679,6 +696,11 @@ document.getElementById('color').onchange=e=>{
     saveSetting('dec_color',e.target.value);
     document.getElementById('customFile').style.display = (e.target.value === 'custom') ? 'block' : 'none';
 };
+
+
+function resetToDefaults() {
+    resetModuleSettings(['dec_', 'eq_dec_']);
+}
 
 function getReportData() {
     const colorSelect = document.getElementById('color');

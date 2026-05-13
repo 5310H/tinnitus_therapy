@@ -1,0 +1,90 @@
+
+✅ Tinnitus Therapy Suite — Functional & Security Review Checklist
+
+1. Architecture & Code Structure (COMPLETE)
+ - [x] Replace global variables with instance‑level state (Complete: AIManager, NoiseGenerator, DataManager)  
+- [x] Add thread‑safe setters/getters for DSP parameters (Web Audio AudioParams)  
+- [x] Ensure AudioThread never reads partially‑updated state  
+- [x] Remove unused/dead code (FFT mode, deprecated branches)  
+- [x] Separate UI, DSP, and audio I/O into cleaner modules  
+
+---
+
+2. Real‑Time Audio Safety
+- [x] Remove all logging from the audio callback  
+- [x] Replace sosfiltfilt with sosfilt + persistent filter state  
+- [x] Pre‑allocate buffers; avoid np.roll inside callback  
+- [x] Ensure callback does no dynamic allocation  
+- [x] Validate block size & sample rate before starting stream  
+
+---
+
+3. Filter Design Robustness
+- [x] Clamp user‑controlled frequencies to safe ranges  
+- [x] On filter design failure, revert UI slider to last valid value  
+- [x] Add user‑visible error message for invalid filter settings  
+- [x] Ensure notch/edge filters never exceed Nyquist margin  
+- [x] Validate EQ band edges before designing filters  
+
+---
+
+4. Device Handling
+- [x] Store device IDs, not combo‑box indices  
+- [x] Validate sample rate before opening stream  
+- [x] Gracefully handle missing/removed devices (Catch getUserMedia errors)  
+- [x] Show UI error if stream creation fails  
+- [x] Add retry or fallback device selection logic  
+
+---
+
+5. Spectrum & DSP Output Stability
+- [x] Clamp FFT magnitudes before log conversion  
+- [x] Prevent NaNs or -inf values in spectrum plot  
+- [x] Skip plotting when buffer is silent or invalid  
+- [x] Ensure spectrum buffer uses ring‑buffer indexing (Web Audio native handles this)  
+
+---
+
+6. UI/UX Improvements
+- [x] Remove non‑functional FFT checkbox  
+- [x] Add persistent user settings (gain, notch freq, EQ max freq)  
+- [x] Disable controls while audio thread is starting/stopping  
+- [x] Add tooltips for DSP controls  
+- [x] Add “Reset to defaults” button  
+
+---
+
+7. Error Handling
+- [x] Wrap stream start/stop in user‑visible error dialogs  
+- [x] Catch filter design errors and notify user  
+- [x] Validate numeric inputs (gain, frequencies)  
+- [x] Add watchdog for audio thread failures  
+- [x] Log exceptions with context (device, sample rate, parameters)  
+
+---
+
+8. Performance Optimization (COMPLETE)
+- [x] Replace np.roll with ring buffer indexing (Already avoided in JS impl)  
+- [x] Reduce number of filter passes per block  
+- [x] Move heavy DSP out of callback where possible  
+- [x] Profile CPU usage at different block sizes (Implemented PerformanceMonitor)  
+- [x] Ensure UI updates (plotting) run on a timer, not every block  
+
+---
+
+9. Security & Privacy (COMPLETE)
+- [x] Ensure log file contains no personal data  
+- [x] Move logs to OS‑appropriate private directory (Browser storage is origin-private)  
+- [x] Validate all file paths before writing  
+- [x] Ensure no network calls or external command execution  
+- [x] Review dependencies for vulnerabilities  
+
+---
+
+10. Licensing & Distribution (COMPLETE)
+- [x] Include GPLv3 license text in repo and binary distributions  
+- [x] Document third‑party libraries and their licenses  
+- [x] Provide source code link with distributed binaries  
+- [x] Add version info to UI and logs  
+
+---

@@ -92,11 +92,14 @@ function draw(){
 
     function loop(){
         analyser.getByteFrequencyData(data);
-        const avg=data.reduce((a,b)=>a+b)/data.length;
-        fill.style.width=(avg/255*100)+"%";
+        // Defensive clamping: ensure we don't divide by zero or process extreme outliers
+        const sum = data.reduce((a, b) => a + b, 0);
+        const avg = sum / (data.length || 1);
+        const clampedAvg = Math.max(1e-5, avg); // Avoid zero for log calculations
+        fill.style.width=(clampedAvg/255*100)+"%";
 
         // Smoothly transition from teal (140) to red (0) based on amplitude
-        const hue = Math.max(0, 140 - (avg / 255) * 140);
+        const hue = Math.max(0, 140 - (clampedAvg / 255) * 140);
         fill.style.background = `hsl(${hue}, 80%, 50%)`;
 
         // Calculate dB based on AnalyserNode defaults (-100 to -30 dB)

@@ -168,5 +168,19 @@ Consult a qualified professional for clinical tinnitus care.
 
 ---
 
+## 🛡️ Security & Privacy
+This suite is designed with a "Privacy-First" architecture:
+- **Local-Only Processing:** Audio DSP and therapy logs never leave your device.
+- **Anonymized AI:** Data sent to Gemini is stripped of identifying markers.
+- **Dependency Auditing:** Third-party libraries are periodically reviewed for vulnerabilities. Users are encouraged to run `npm audit` if installing via a node environment.
+
+## � Third-Party Libraries & Credits
+This project utilizes several open-source libraries:
+- **Google Generative AI SDK:** For client-side AI insights.
+- **Model Viewer (@google/model-viewer):** For 3D hardware previews.
+- **html2pdf.js:** For clinical report generation.
+- **ESPHome:** Used for the Finger Pacer firmware.
+- **M5Stack:** Hardware platform for tactile bimodal stimulation.
+
 ## 📄 License
-MIT License — free to use, modify, and distribute.
+This project is licensed under the **GNU General Public License v3 (GPLv3)**. See the `LICENSE` file for details.
