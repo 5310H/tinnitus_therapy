@@ -1,7 +1,7 @@
 {
   "name": "Trahreg Tinnitus Therapy Suite",
   "short_name": "Trahreg",
-  "version": "1.3.1",
+  "version": "2.1.0",
   "description": "Open-source auditory research & therapy tools.",
   "start_url": "index.html",
   "display": "standalone",

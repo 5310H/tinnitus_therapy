@@ -39,6 +39,15 @@
             </a>
         </div>
     </div>
+    <div id="card-ai-insights" class="card grid-wide" draggable="true">
+        <div class="drag-handle">⠿</div>
+        <h2>✨ AI Insights (Gemini)</h2>
+        <p class="info">Your daily dose of motivation and personalized tips from your AI coach.</p>
+        <div id="dailyMotivationDisplay" style="margin-top: 15px; padding: 15px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); min-height: 80px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic; color: var(--text-dim);">
+            Loading your daily motivation...
+        </div>
+    </div>
+
     <div id="card-modes" class="card" draggable="true">
         <div class="drag-handle">⠿</div>
         <h2>Therapy Modes</h2>
@@ -160,6 +169,44 @@ window.addEventListener('beforeinstallprompt', (e) => {
     }
 });
 
+async function loadDailyMotivation() {
+    const displayEl = document.getElementById('dailyMotivationDisplay');
+    if (!displayEl) return;
+
+    const key = loadSetting('gemini_api_key', '');
+    const isPlaceholder = !key || key === "YOUR_ACTUAL_API_KEY_HERE";
+
+    if (isPlaceholder) {
+        displayEl.innerHTML = `
+            <div style="color: #ef5350; font-weight: bold;">⚠️ AI Features Unconfigured</div>
+            <p style="font-size: 0.8rem; margin: 8px 0; color: var(--text-dim); font-style: normal;">Add your Gemini API key in Settings to enable personalized insights, crisis support, and pattern analysis.</p>
+            <button class="button" style="font-size: 0.75rem; padding: 5px 12px;" onclick="const s = document.getElementById('card-settings'); s.querySelector('details').open = true; document.getElementById('geminiKey').scrollIntoView({behavior:'smooth'}); document.getElementById('geminiKey').focus();">Setup Gemini Key</button>
+        `;
+        displayEl.style.flexDirection = 'column';
+        displayEl.style.fontStyle = 'normal';
+        return;
+    }
+
+    displayEl.innerHTML = 'Consulting your AI coach...';
+    displayEl.style.flexDirection = 'row';
+    displayEl.style.fontStyle = 'italic';
+
+    try {
+        const motivation = await getDailyMotivation();
+        if (motivation.includes("Could not connect") || motivation.includes("unconfigured")) {
+            throw new Error("Connection failed");
+        }
+        displayEl.innerHTML = motivation.replace(/\n/g, '<br>');
+    } catch (error) {
+        displayEl.innerHTML = `
+            <div style="color: #ef5350; font-weight: bold;">⚠️ AI Connection Error</div>
+            <p style="font-size: 0.8rem; margin: 5px 0; color: var(--text-dim); font-style: normal;">The API key may be invalid or there is a network issue. Please check your Settings.</p>
+        `;
+        displayEl.style.flexDirection = 'column';
+        displayEl.style.fontStyle = 'normal';
+    }
+}
+
 window.onload = () => {
     loadCardOrder();
     initNav();
@@ -189,6 +236,7 @@ window.onload = () => {
         }
     }
 
+    loadDailyMotivation(); // Load daily motivation on page load
     document.getElementById('goalInput').value = loadSetting('daily_goal', 20);
     document.getElementById('audioEmail').value = loadSetting('audiologist_email', '');
 
@@ -321,6 +369,31 @@ document.getElementById('audioEmail').oninput = (e) => {
     saveSetting('audiologist_email', e.target.value);
     applyEmailVisibility(); // Immediate feedback for button visibility
 };
+
+document.getElementById('geminiKey').oninput = (e) => {
+    saveSetting('gemini_api_key', e.target.value);
+    if (typeof initAI === 'function') initAI();
+    loadDailyMotivation(); // Refresh insight card immediately
+};
+
+async function testGeminiConnectionUI() {
+    const statusEl = document.getElementById('geminiTestStatus');
+    const testBtn = document.querySelector('#card-settings button[onclick="testGeminiConnectionUI()"]');
+    
+    statusEl.textContent = 'Testing connection...';
+    statusEl.style.color = 'var(--text-dim)';
+    testBtn.disabled = true;
+
+    // Ensure AI is initialized with the latest key from the input field
+    initAI(); 
+
+    const result = await performGeminiTest(); // Call the function from storage.js
+
+    statusEl.textContent = (result.success ? '✅ ' : '❌ ') + result.message;
+    statusEl.style.color = result.success ? '#4CAF50' : '#f44336'; // Green for success, Red for failure
+    
+    testBtn.disabled = false;
+}
 
 window.restartOnboarding = () => {
     if (confirm("Are you sure you want to restart the onboarding wizard? This will reset your setup progress back to the beginning.")) {
@@ -534,9 +607,16 @@ function renderStats() {
         <h2 style="color: var(--accent); margin-top: 0;">What's New in v<span class="app-version-label"></span></h2>
         <p class="info">Recent improvements to your therapy experience:</p>
         <div style="max-height: 400px; overflow-y: auto; text-align: left; padding-right: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
-            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px;">Latest (v2.0.0) - May 2026</h3>
+            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px;">Latest (v2.1.0) - May 2026</h3>
             <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem;">
-                <li><b>Clinical Pilot Program:</b> New inquiry system for professional partners to apply for collaborative outcome tracking.</li>
+                <li><b>AI Refinements:</b> Enhanced chat interface with typing indicators and improved context for Pattern Finder analysis.</li>
+                <li><b>Wellness Tools:</b> Integrated AI-generated mindfulness scripts into the Thought Record workflow to assist in grounding.</li>
+                <li><b>Dashboard Performance:</b> Optimized loading of AI insights and improved real-time connectivity validation for Gemini keys.</li>
+            </ul>
+
+            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2.0.0: Major AI Integration - May 2026</h3>
+            <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
+                <li><b>Clinical Pilot Program:</b> New inquiry system for professional partners.</li>
                 <li><b>AI-Powered Features (Google Gemini):</b> Integrated 5 new AI-driven tools for crisis support, personalized soundscapes, pattern analysis, TRT education, and clinical report summaries.</li>
             </ul>
 

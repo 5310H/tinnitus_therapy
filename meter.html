@@ -21,6 +21,7 @@
     <h3>Clinical Calibration Check</h3>
     <p id="clipWarning" style="color:#ef5350; font-weight:bold; display:none;">⚠️ SIGNAL CLIPPING DETECTED: Reduce system volume.</p>
     <p id="floorCheck">Noise Floor: Measuring...</p>
+    <button class="button" style="font-size: 0.75rem; margin-top:10px;" onclick="getAIEnvAdvice()">✨ Get AI Room Advice</button>
 </div>
 
 <div class="card">
@@ -120,6 +121,19 @@ function draw(){
         raf=requestAnimationFrame(loop);
     }
     loop();
+}
+
+async function getAIEnvAdvice() {
+    const db = document.getElementById('dbVal').textContent;
+    const floor = document.getElementById('floorCheck').textContent;
+    
+    // Create a temporary status display
+    const floorMsg = document.getElementById('floorCheck');
+    const originalText = floorMsg.textContent;
+    floorMsg.textContent = "Consulting AI...";
+    const advice = await getEnvironmentalAdvice(db, floor);
+    alert(advice.replace(/<i>.*<\/i>/g, '')); // Show advice without the disclaimer for alert
+    floorMsg.textContent = originalText;
 }
 
 function getReportData() {

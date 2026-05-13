@@ -6,21 +6,64 @@
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
 const { GoogleGenerativeAI } = window; // Access from global scope
 
-const APP_VERSION = "2.0.0";
+const APP_VERSION = "2.1.0";
 
 // ⚠️ CRITICAL SECURITY WARNING ⚠️
 // DIRECTLY INCLUDING YOUR GEMINI API KEY IN CLIENT-SIDE CODE IS UNSAFE FOR PRODUCTION.
 // THIS KEY WILL BE PUBLICLY VISIBLE TO ANYONE INSPECTING YOUR BROWSER'S SOURCE CODE.
 // USE A SECURE SERVER-SIDE PROXY FOR PRODUCTION DEPLOYMENTS.
-const GEMINI_API_KEY = "YOUR_ACTUAL_API_KEY_HERE"; // <<< Obtain from Google AI Studio
+const HARDCODED_KEY = "YOUR_ACTUAL_API_KEY_HERE"; 
 
 let genAI = null;
-try {
-    if (GEMINI_API_KEY && GEMINI_API_KEY !== "YOUR_GEMINI_API_KEY") {
-        genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+function initAI() {
+    const key = loadSetting('gemini_api_key', HARDCODED_KEY);
+    try {
+        if (key && key !== "YOUR_ACTUAL_API_KEY_HERE") {
+            genAI = new GoogleGenerativeAI(key);
+        } else {
+            genAI = null;
+        }
+    } catch (e) {
+        console.warn("AI Initialization failed: Check API Key or SDK availability.");
+        genAI = null;
     }
-} catch (e) {
-    console.warn("AI Initialization failed: Check API Key or SDK availability.");
+}
+initAI();
+
+/**
+ * Performs a simple test call to the Gemini API to verify the API key.
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+async function performGeminiTest() {
+    if (!genAI) {
+        return { success: false, message: "Gemini API key is not configured or invalid." };
+    }
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        // Make a very simple, low-cost call
+        const result = await model.generateContent("Test connection: hello");
+        const response = await result.response;
+        const text = response.text();
+        if (text) {
+            return { success: true, message: "Connection successful! Gemini responded." };
+        } else {
+            return { success: false, message: "Connection successful, but Gemini gave an empty response." };
+        }
+    } catch (error) {
+        console.error("Gemini test connection error:", error);
+        let errorMessage = "Connection failed. ";
+        if (error.message.includes("API key not valid")) {
+            errorMessage += "Invalid API key. Please check your key.";
+        } else if (error.message.includes("blocked due to SAFETY")) {
+            errorMessage += "Gemini blocked the test prompt due to safety concerns. Try a different test.";
+        } else if (error.message.includes("rate limit")) {
+            errorMessage += "Rate limit exceeded. Try again later.";
+        } else {
+            errorMessage += `Error: ${error.message}`;
+        }
+        return { success: false, message: errorMessage };
+    }
 }
 
 /** 
@@ -614,6 +657,43 @@ async function getClinicalSummary() {
         input: condensedData
     };
     return await fetchAIAssistance("clinical_summary", prompt);
+}
+
+/**
+ * Function 6: Daily Habituation Coach
+ */
+async function getDailyMotivation() {
+    const usage = getJson('usage_log', {});
+    const distress = getJson('distress_log', {});
+    const data = { usage, distress };
+
+    const prompt = {
+        system_instruction: "You are a supportive habituation coach. Review the user's usage and distress trends. Find one 'win' (e.g., consistent usage) and provide a short, 2-sentence motivational boost for today.",
+        input: data
+    };
+    return await fetchAIAssistance("daily_coach", prompt);
+}
+
+/**
+ * Function 7: Environmental Advice (for Audio Meter)
+ */
+async function getEnvironmentalAdvice(dbLevel, floorStatus) {
+    const prompt = {
+        system_instruction: "You are an audiology assistant. Based on the current ambient decibel level and noise floor status, provide one tip on whether this environment is ideal for tinnitus habituation (not too quiet, not too loud).",
+        input: { db_level: dbLevel, status: floorStatus }
+    };
+    return await fetchAIAssistance("environmental_advice", prompt);
+}
+
+/**
+ * Function 8: Mindfulness Script Generator
+ */
+async function getMindfulnessScript(thought) {
+    const prompt = {
+        system_instruction: "Generate a custom 1-minute mindfulness or grounding script (approx 100 words) specifically designed to help a user detach from this specific automatic thought about their tinnitus. Keep it soothing and focused on the present moment.",
+        input: thought
+    };
+    return await fetchAIAssistance("mindfulness_script", prompt);
 }
 
 /**
