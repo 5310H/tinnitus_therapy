@@ -212,10 +212,10 @@ async function loadDailyMotivation() {
     if (!displayEl) return;
 
     const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
-    const currentKey = decryptedGeminiKey || loadSetting('gemini_api_key', '');
+    const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
     const isConfigured = currentKey && currentKey !== "YOUR_ACTUAL_API_KEY_HERE";
 
-    if (encryptedKeyExists && !decryptedGeminiKey) {
+    if (encryptedKeyExists && !activeSessionKey) {
         displayEl.innerHTML = `
             <div style="color: #ff9800; font-weight: bold;">🔒 AI Features Locked</div>
             <p style="font-size: 0.8rem; margin: 8px 0; color: var(--text-dim); font-style: normal;">Your Gemini API key is encrypted. Enter your PIN or Recovery Code in Settings to unlock AI features.</p>
@@ -607,14 +607,14 @@ async function unlockGeminiKeyWithPIN() {
         } else {
             statusEl.textContent = '❌ Incorrect PIN or decryption failed.';
             statusEl.style.color = '#f44336';
-            decryptedGeminiKey = null; // Ensure key is cleared if decryption fails
+            activeSessionKey = null; // Ensure key is cleared if decryption fails
             initAI();
         }
     } catch (error) {
         console.error("Unlock failed:", error);
         statusEl.textContent = '❌ An error occurred during unlock. Check console.';
         statusEl.style.color = '#f44336';
-        decryptedGeminiKey = null;
+        activeSessionKey = null;
         initAI();
     }
 }
@@ -650,7 +650,7 @@ document.getElementById('geminiKey').oninput = (e) => {
     localStorage.removeItem('tts_gemini_api_key_rc_salt');
     localStorage.removeItem('tts_gemini_api_key_rc_iv');
     saveSetting('gemini_api_key', e.target.value); // Save plain text key
-    decryptedGeminiKey = e.target.value; // Update in-memory key
+    activeSessionKey = e.target.value; // Update in-memory key
     initAI();
     loadDailyMotivation();
 };
@@ -669,7 +669,7 @@ window.resetAISettings = () => {
         const pinInput = document.getElementById('geminiPin');
         if (pinInput) pinInput.value = '';
         
-        decryptedGeminiKey = null; // Clear in-memory key
+        activeSessionKey = null; // Clear in-memory key
         initAI();
         loadDailyMotivation();
         
@@ -869,7 +869,7 @@ async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalT
     localStorage.removeItem('tts_gemini_api_key_rc_iv');
 
     saveSetting('gemini_api_key', key);
-    decryptedGeminiKey = key; // Update session memory immediately
+    activeSessionKey = key; // Update session memory immediately
     initAI();
     
     const result = await performGeminiTest();
@@ -886,7 +886,7 @@ async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalT
             status.style.color = "#ef5350";
         }
         localStorage.removeItem('tts_gemini_api_key');
-        decryptedGeminiKey = null; // Clear from memory session variable
+        activeSessionKey = null; // Clear from memory session variable
         initAI(); // Re-sync manager to empty/locked state
         return false;
     }
@@ -998,10 +998,10 @@ async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalT
         <h2 style="color: var(--accent); margin-top: 0;">What's New in v<span class="app-version-label"></span></h2>
         <p class="info">Recent improvements to your therapy experience:</p>
         <div style="max-height: 400px; overflow-y: auto; text-align: left; padding-right: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
-            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px;">Latest (v2.2.7) - May 2026</h3>
+            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px;">Latest (v2.2.8) - May 2026</h3>
             <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem;">
+                <li><b>AI Reliability:</b> Improved resolution logic for the Gemini SDK to resolve race conditions and blockages.</li>
                 <li><b>Critical Bug Fix:</b> Resolved a syntax error in the persistence engine that prevented the version number from displaying and blocked AI initialization.</li>
-                <li><b>AI Reliability:</b> Improved robustness for loading the Gemini SDK in restricted network environments or with strict ad-blockers.</li>
                 <li><b>AI Refinements:</b> Enhanced chat interface with typing indicators and improved context for Pattern Finder analysis.</li>
                 <li><b>Wellness Tools:</b> Integrated AI-generated mindfulness scripts into the Thought Record workflow to assist in grounding.</li>
                 <li><b>Dashboard Performance:</b> Optimized loading of AI insights and improved real-time connectivity validation for Gemini keys.</li>

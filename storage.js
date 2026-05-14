@@ -86,11 +86,11 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2.2.7";
+const APP_VERSION = "2.2.8";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
-let decryptedGeminiKey = null; // Tracks the unlocked key for the current session
+let activeSessionKey = null; // Tracks the unlocked key for the current session
 
 // ⚠️ CRITICAL SECURITY WARNING ⚠️
 // DIRECTLY INCLUDING YOUR GEMINI API KEY IN CLIENT-SIDE CODE IS UNSAFE FOR PRODUCTION.
@@ -116,20 +116,20 @@ class TinnitusAIManager {
     init(key = null) {
         if (key) {
             this.decryptedKey = key;
-            // Sync back to session memory variable for session-wide availability
-            decryptedGeminiKey = key;
+            // Sync back to session variable for cross-module availability
+            activeSessionKey = key;
             try { sessionStorage.setItem('tts_gemini_key_session', key); } catch(e) {}
         } else {
             // Attempt to load from session memory (variable or sessionStorage) or plain-text storage
-            this.decryptedKey = decryptedGeminiKey || 
+            this.decryptedKey = activeSessionKey || 
                                 (function() { try { return sessionStorage.getItem('tts_gemini_key_session'); } catch(e) { return null; } })() || 
                                 loadSetting('gemini_api_key', null);
             
-            if (this.decryptedKey) decryptedGeminiKey = this.decryptedKey;
+            if (this.decryptedKey) activeSessionKey = this.decryptedKey;
         }
 
         const activeKey = this.decryptedKey || HARDCODED_KEY;
-        let SDK = window.GoogleGenerativeAI;
+        let SDK = window.GoogleGenerativeAI || (window.google && window.google.generativeAi && window.google.generativeAi.GoogleGenerativeAI);
 
         // Handle structural variations in some CDN/UMD distributions
         if (SDK && typeof SDK !== 'function' && SDK.GoogleGenerativeAI) {
@@ -155,10 +155,14 @@ class TinnitusAIManager {
         // Self-heal: Attempt to re-prime the engine in case the SDK loaded late
         if (!this.genAI) this.init();
 
-        const SDK = window.GoogleGenerativeAI;
+        // Robust Resolution: Check both standard and UMD paths
+        const SDK = window.GoogleGenerativeAI || (window.google && window.google.generativeAi && window.google.generativeAi.GoogleGenerativeAI);
+        
         if (!SDK) return { success: false, message: "AI SDK failed to load. Check your connection or disable ad-blockers (ensure cdn.jsdelivr.net is allowed)." };
         
-        if (!this.genAI || !this.decryptedKey) return { success: false, message: "AI Engine not initialized. Ensure your API key is valid." };
+        if (!this.genAI || !this.decryptedKey || this.decryptedKey === "YOUR_ACTUAL_API_KEY_HERE") {
+            return { success: false, message: "AI Engine not initialized. Please provide a valid API key from Google AI Studio." };
+        }
         
         try {
             const model = this.genAI.getGenerativeModel({ model: this.modelName });
@@ -411,7 +415,7 @@ async function decryptGeminiKey(input) {
     // Attempt path 1: The Standard PIN
     let key = await _attemptDecrypt(input, 'gemini_api_key_encrypted', 'gemini_api_key_salt', 'gemini_api_key_iv');
     if (key) {
-        decryptedGeminiKey = key;
+        activeSessionKey = key;
         tinnitusAI.init(key);
         return key;
     }
@@ -419,7 +423,7 @@ async function decryptGeminiKey(input) {
     // Attempt path 2: The Recovery Code
     key = await _attemptDecrypt(input, 'gemini_api_key_rc_encrypted', 'gemini_api_key_rc_salt', 'gemini_api_key_rc_iv');
     if (key) {
-        decryptedGeminiKey = key;
+        activeSessionKey = key;
         tinnitusAI.init(key);
         return key;
     }
@@ -1459,7 +1463,7 @@ function showWalkthrough(slides, startIndex = 0) {
  */
 function showWhatsNew() {
     showWalkthrough([
-        { title: "Version 2.2.6 - What's New", content: "This update improves the reliability of our AI Assistant, especially in environments where third-party scripts might be restricted." },
+        { title: "Version 2.2.8 - What's New", content: "This update resolves a race condition in AI SDK initialization and improves cross-module key persistence." },
         { title: "Modular Architecture", content: "Data and AI management have been refactored into dedicated modules, improving reliability and stability across the entire suite." },
         { title: "Performance Profiling", content: "A new Performance Monitor has been added to track audio engine health, ensuring your therapeutic signals are always accurate." },
         { title: "Security Hardening", content: "Your API keys are now protected with high-grade AES-GCM encryption. We've also added security sanitization to our Python tools." },
