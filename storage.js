@@ -86,7 +86,7 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2.2.5";
+const APP_VERSION = "2.2.6";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
@@ -129,10 +129,15 @@ class TinnitusAIManager {
         }
 
         const activeKey = this.decryptedKey || HARDCODED_KEY;
-        const SDK = window.GoogleGenerativeAI;
+        let SDK = window.GoogleGenerativeAI;
+
+        // Handle structural variations in some CDN/UMD distributions
+        if (SDK && typeof SDK !== 'function' && SDK.GoogleGenerativeAI) {
+            SDK = SDK.GoogleGenerativeAI;
+        }
 
         try {
-            if (SDK && activeKey && activeKey !== HARDCODED_KEY && activeKey !== "ENCRYPTED_KEY_LOCKED") {
+            if (typeof SDK === 'function' && activeKey && activeKey !== HARDCODED_KEY && activeKey !== "ENCRYPTED_KEY_LOCKED") {
                 this.genAI = new SDK(activeKey);
             } else {
                 this.genAI = null;
@@ -147,9 +152,13 @@ class TinnitusAIManager {
      * Performs a connectivity test to verify the API key is working.
      */
     async performTest() {
+        // Self-heal: Attempt to re-prime the engine in case the SDK loaded late
+        if (!this.genAI) this.init();
+
         const SDK = window.GoogleGenerativeAI;
-        if (!SDK) return { success: false, message: "AI SDK failed to load. Check your internet connection." };
-        if (!this.genAI || !this.decryptedKey) return { success: false, message: "Gemini API key is not configured or invalid." };
+        if (!SDK) return { success: false, message: "AI SDK failed to load. Check your connection or disable ad-blockers (ensure cdn.jsdelivr.net is allowed)." };
+        
+        if (!this.genAI || !this.decryptedKey) return { success: false, message: "AI Engine not initialized. Ensure your API key is valid." };
         
         try {
             const model = this.genAI.getGenerativeModel({ model: this.modelName });
@@ -659,6 +668,18 @@ class NoiseGenerator {
         }
         
         const d = buffer.getChannelData(0);
+        const sr = this.ctx.sampleRate;
+        const ratio = 44100 / sr;
+
+        // Scaled Paul Kellet Filter Bank
+        const poles = [0.99886, 0.99332, 0.96900, 0.86870, 0.55000, -0.76160];
+        const gains = [0.0555179, 0.0750759, 0.1538520, 0.3104856, 0.5329522, -0.0168980];
+        const p = poles.map(val => Math.pow(Math.abs(val), ratio) * Math.sign(val));
+        const g = gains.map((val, i) => val * (1 - Math.abs(p[i])) / (1 - Math.abs(poles[i])));
+
+        // Scaled Brown Lossy Integrator
+        const brP = Math.pow(1 / 1.02, ratio);
+        const brG = (1 - brP) * 50;
 
         switch (targetColor) {
             case 'white': {
@@ -669,8 +690,8 @@ class NoiseGenerator {
                 let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
                 for (let i = 0; i < size; i++) {
                     const w = Math.random() * 2 - 1;
-                    b0 = .99886 * b0 + w * .0555179; b1 = .99332 * b1 + w * .0750759; b2 = .969 * b2 + w * .153852;
-                    b3 = .8687 * b3 + w * .3104856; b4 = .55 * b4 + w * .5329522; b5 = -.7616 * b5 - w * .016898;
+                    b0 = p[0] * b0 + w * g[0]; b1 = p[1] * b1 + w * g[1]; b2 = p[2] * b2 + w * g[2];
+                    b3 = p[3] * b3 + w * g[3]; b4 = p[4] * b4 + w * g[4]; b5 = p[5] * b5 + w * g[5];
                     d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * .11; b6 = w * .115926;
                 }
                 break;
@@ -687,7 +708,7 @@ class NoiseGenerator {
             }
             case 'brown': {
                 let lastBr = 0;
-                for (let i = 0; i < size; i++) { const w = Math.random() * 2 - 1; d[i] = (lastBr + 0.02 * w) / 1.02; lastBr = d[i]; }
+                for (let i = 0; i < size; i++) { const w = Math.random() * 2 - 1; d[i] = (lastBr * brP) + (w * brG); lastBr = d[i]; }
                 break;
             }
             default: {
@@ -725,6 +746,20 @@ class NoiseGenerator {
                 const node = new AudioWorkletNode(this.ctx, 'noise-processor', {
                     processorOptions: { color: color || 'white' }
                 });
+
+                // Listen for internal DSP health reports from the audio thread
+                node.port.onmessage = (event) => {
+                    if (event.data.type === 'DSP_WARNING') {
+                        logTherapyError('AudioWorklet', event.data.message, { color, sampleRate: this.ctx.sampleRate });
+                    } else if (event.data.type === 'DSP_METRIC') {
+                        // Audit high load events (>80% budget) for clinical review
+                        if (!event.data.isStable) {
+                            console.warn(`[AudioEngine] High CPU Load: ${event.data.load}% at ${event.data.sampleRate}Hz`);
+                            logTherapyError('Performance', `High DSP Load: ${event.data.load}%`, { color, sampleRate: event.data.sampleRate });
+                        }
+                    }
+                    }
+                };
 
                 // Compatibility shim: AudioWorkletNodes don't have .start()/.stop().
                 // We add no-ops so therapy modules can call them without checking node types.
@@ -1425,7 +1460,7 @@ function showWalkthrough(slides, startIndex = 0) {
  */
 function showWhatsNew() {
     showWalkthrough([
-        { title: "Version 2.2.5 - What's New", content: "Welcome to the latest update! We've overhauled the suite's internal architecture for better performance and security." },
+        { title: "Version 2.2.6 - What's New", content: "This update improves the reliability of our AI Assistant, especially in environments where third-party scripts might be restricted." },
         { title: "Modular Architecture", content: "Data and AI management have been refactored into dedicated modules, improving reliability and stability across the entire suite." },
         { title: "Performance Profiling", content: "A new Performance Monitor has been added to track audio engine health, ensuring your therapeutic signals are always accurate." },
         { title: "Security Hardening", content: "Your API keys are now protected with high-grade AES-GCM encryption. We've also added security sanitization to our Python tools." },

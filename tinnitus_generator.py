@@ -17,29 +17,47 @@ import numpy as np
 from scipy.io import wavfile
 from scipy.signal import butter, sosfilt
 
-def generate_white_noise(n_samples):
+def generate_white_noise(n_samples, sample_rate=44100):
     return np.random.randn(n_samples)
 
-def generate_pink_noise(n_samples):
-    """Voss-McCartney algorithm for pink noise."""
+def generate_pink_noise(n_samples, sample_rate=44100):
+    """Sample-rate adjusted Kellet filter for pink noise."""
     white = np.random.randn(n_samples)
-    b = [0.99886, 0.99332, 0.96900, 0.86870, 0.55000, -0.76160]
-    a = [0.0555179, 0.0750759, 0.153852, 0.3104856, 0.5329522, -0.016898]
-    state = np.zeros(len(b))
+    ratio = 44100 / sample_rate
+    
+    poles = [0.99886, 0.99332, 0.96900, 0.86870, 0.55000, -0.76160]
+    gains = [0.0555179, 0.0750759, 0.153852, 0.3104856, 0.5329522, -0.016898]
+    
+    # Scale coefficients
+    p = [np.power(np.abs(val), ratio) * np.sign(val) for val in poles]
+    g = [gains[i] * (1 - np.abs(p[i])) / (1 - np.abs(poles[i])) for i in range(len(poles))]
+    
+    state = np.zeros(len(p))
     pink = np.zeros(n_samples)
+    last_w = 0
     for i in range(n_samples):
         w = white[i]
-        for j in range(len(b)):
-            state[j] = b[j] * state[j] + w * a[j]
-        pink[i] = np.sum(state) + w * 0.5362
+        for j in range(len(p)):
+            state[j] = p[j] * state[j] + w * g[j]
+        pink[i] = np.sum(state) + w * 0.5362 + last_w * 0.115926
+        last_w = w
+        
     return pink / (np.max(np.abs(pink)) + 1e-10)
 
-def generate_brown_noise(n_samples):
-    """Integrated white noise (Brownian motion)."""
+def generate_brown_noise(n_samples, sample_rate=44100):
+    """Sample-rate adjusted leaky integrator for brown noise."""
     white = np.random.randn(n_samples)
-    brown = np.cumsum(white)
-    brown = brown / (np.max(np.abs(brown)) + 1e-10)
-    return brown
+    ratio = 44100 / sample_rate
+    pole = np.power(1/1.02, ratio)
+    gain = 1 - pole
+    
+    brown = np.zeros(n_samples)
+    last_out = 0
+    for i in range(n_samples):
+        brown[i] = (last_out * pole) + (white[i] * gain)
+        last_out = brown[i]
+        
+    return (brown * 10) / (np.max(np.abs(brown)) + 1e-10)
 
 def generate_violet_noise(n_samples):
     """Differentiated white noise (+6dB/octave). Perfect for high-tone tinnitus."""

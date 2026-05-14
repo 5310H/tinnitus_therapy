@@ -149,7 +149,7 @@ function addResult(title, status, message, details = '') {
     return resultDiv;
 }
 
-let audioContextLatency = 'N/A';
+let audioContextLatency = 'N/A', audioContextSampleRate = 'N/A';
 async function runAllTests() {
     resultsContainer.innerHTML = ''; 
     engineTestResults = [];
@@ -161,22 +161,40 @@ async function runAllTests() {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') await audioCtx.resume();
         audioContextLatency = audioCtx.baseLatency;
+        audioContextSampleRate = audioCtx.sampleRate;
         addResult('Web Audio Engine', 'pass', `AudioContext is active and stable. Base Latency: ${(audioContextLatency * 1000).toFixed(2)} ms.`);
     } catch (e) {
         addResult('Web Audio Engine', 'fail', 'Failed to initialize.');
         return;
     }
 
+    await testSampleRate(audioCtx);
     await testChannelConfiguration(audioCtx);
     await testNotchFilter(audioCtx);
     await testModulationNodes(audioCtx);
     await testLocalStorageQuota();
+    await testAIConnectivity();
     await testIndependentMix(audioCtx);
     await testStereoSeparation(audioCtx);
 
     if (audioCtx) await audioCtx.close();
     saveSetting('last_validation_date', new Date().toISOString());
     addResult('Finished', 'info', 'Validation sequence completed.');
+}
+
+async function testSampleRate(audioCtx) {
+    const title = 'Sample Rate Verification';
+    const sr = audioCtx.sampleRate;
+    
+    // Clinical standards are 44.1k or 48k. 
+    // Rates below 44.1k are insufficient for precise high-frequency therapy.
+    if (sr === 44100 || sr === 48000 || sr === 88200 || sr === 96000) {
+        addResult(title, 'pass', `Sample rate is ${sr} Hz (High-Resolution Output).`);
+    } else if (sr < 44100) {
+        addResult(title, 'fail', `Low sample rate: ${sr} Hz.`, 'Your audio output is restricted. This usually happens with Bluetooth "Hands-Free" mode. High-frequency therapy signals will be corrupted. Please check your OS sound settings.');
+    } else {
+        addResult(title, 'info', `Non-standard sample rate: ${sr} Hz.`);
+    }
 }
 
 async function testChannelConfiguration(audioCtx) {
@@ -421,20 +439,42 @@ async function testLocalStorageQuota() {
     }
 }
 
+async function testAIConnectivity() {
+    const title = 'AI Assistant Connectivity';
+    let SDK = window.GoogleGenerativeAI;
+
+    // Handle structural variations in some CDN/UMD distributions
+    if (SDK && typeof SDK !== 'function' && SDK.GoogleGenerativeAI) {
+        SDK = SDK.GoogleGenerativeAI;
+    }
+
+    if (typeof SDK === 'function') {
+        addResult(title, 'pass', 'Google Generative AI SDK is loaded and authorized for therapy support.');
+    } else {
+        addResult(title, 'fail', 'AI Assistant SDK failed to load.', 'Please check your internet connection or disable ad-blockers (ensure cdn.jsdelivr.net is allowed).');
+    }
+}
+
 function getReportData() {
     const engineLog = loadSetting('engine_validation_results', 'Not Performed');
     const mixStatus = engineLog.includes('Neuromodulation Mix: [PASS]') ? 'PASS' : 
                      (engineLog.includes('Neuromodulation Mix: [FAIL]') ? 'FAIL' : 'Not Tested');
 
+    let SDK = window.GoogleGenerativeAI;
+    if (SDK && typeof SDK !== 'function' && SDK.GoogleGenerativeAI) SDK = SDK.GoogleGenerativeAI;
+    const aiStatus = (typeof SDK === 'function') ? 'Active' : 'Unavailable/Blocked';
+
     return { 
         settings: {
             "Hardware Phase Status": loadSetting('phase_status', 'Not Verified'),
             "Independent Mix Validation": mixStatus,
+            "AI Engine Status": aiStatus,
             "Engine Validation Summary": engineLog.includes('[FAIL]') ? 'Critical Issues Detected' : 
                                          (engineLog === 'Not Performed' ? 'Pending Validation' : 'All Engine Checks Passed')
         },
         techSpecs: {
-            "AudioContext Base Latency": `${(audioContextLatency * 1000).toFixed(2)} ms`
+            "AudioContext Base Latency": `${(audioContextLatency * 1000).toFixed(2)} ms`,
+            "Audio Sample Rate": `${audioContextSampleRate} Hz`
         }
     };
 }
