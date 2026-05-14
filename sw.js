@@ -1,8 +1,10 @@
-const CACHE_NAME = 'trahreg-tinnitus-suite-v2.2.1';
+const CACHE_NAME = 'trahreg-tinnitus-suite-v2.2.4';
 const ASSETS = [
     './',
     './index.html',
     './style.css',
+    './maintenance.html',
+    './maintenance.json',
     './storage.js',
     './nav.js',
     './manifest.json',
@@ -80,6 +82,12 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
     const isStaticAsset = url.pathname.endsWith('.css') || url.pathname.endsWith('.js');
     const isHTML = url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname === '';
+
+    // Bypass cache for maintenance config to allow immediate remote toggling
+    if (url.pathname.endsWith('maintenance.json')) {
+        event.respondWith(fetch(event.request, { cache: 'no-store' }).catch(() => caches.match(event.request)));
+        return;
+    }
 
     if (isHTML) {
         // Network-first strategy for HTML to ensure version updates are detected immediately

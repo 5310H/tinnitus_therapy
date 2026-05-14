@@ -463,7 +463,9 @@ async function start(){
     if (workletLoaded) {
         src = new AudioWorkletNode(ctx, 'noise-processor', { parameterData: { type: typeMap[color] } });
     } else {
-        src = ctx.createBufferSource(); src.buffer = createTrahregNoise(ctx, color); src.loop = true;
+        const buf = createTrahregNoise(ctx, color);
+        if (!buf) { stop(); return; }
+        src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
         src.start();
     }
     src.connect(nodeNotchL);
@@ -603,9 +605,10 @@ function drawVolumeViz() {
 
     let sumL = 0;
     let sumR = 0;
-    for (let i = 0; i < bufferLength; i++) {
-        const sampleL = (dataArrayL[i] - 128) / 128; 
-        const sampleR = (dataArrayR[i] - 128) / 128; 
+    const len = dataArrayL.length;
+    for (let i = 0; i < len; i++) {
+        const sampleL = (dataArrayL[i] - 128) / 128;
+        const sampleR = (dataArrayR[i] - 128) / 128;
         sumL += sampleL * sampleL;
         sumR += sampleR * sampleR;
     }

@@ -222,6 +222,8 @@ window.onload = () => {
 
 function calculateTones() {
     const f = parseFloat(document.getElementById('baseFreq').value);
+    if (isNaN(f) || f < 100) return;
+    
     // Logarithmic ratios based on Tass et al. (2012)
     frequencies = [f * 0.77, f * 0.90, f * 1.10, f * 1.32];
     frequencies.forEach((freq, i) => {
@@ -257,12 +259,14 @@ async function toggle() {
         if (workletLoaded) {
             noiseSource = new AudioWorkletNode(audioCtx, 'noise-processor', { parameterData: { type: typeMap[noiseColor] } });
         } else {
-            const buf = createNoise(noiseColor);
-            noiseSource = audioCtx.createBufferSource();
-            noiseSource.buffer = buf; noiseSource.loop = true;
-            noiseSource.start();
+            const buf = createTrahregNoise(audioCtx, noiseColor);
+            if (buf) {
+                noiseSource = audioCtx.createBufferSource();
+                noiseSource.buffer = buf; noiseSource.loop = true;
+                noiseSource.start();
+            }
         }
-        noiseSource.connect(noiseGain).connect(audioCtx.destination);
+        if (noiseSource) noiseSource.connect(noiseGain).connect(audioCtx.destination);
     }
     
     masterGain = audioCtx.createGain();
@@ -448,7 +452,7 @@ document.getElementById('noiseVolSlider').oninput = (e) => {
     if (playing && noiseGain) noiseGain.gain.setTargetAtTime(e.target.value / 100, audioCtx.currentTime, 0.05);
 };
 
-function exportClinicalSettings() {
+function getReportData() {
     const colorSelect = document.getElementById('noiseColor');
     const data = {
         "Base Tinnitus Frequency": document.getElementById('baseFreq').value + " Hz",

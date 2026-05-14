@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
+<script src="https://cdn.jsdelivr.net/npm/@google/generative-ai@0.10.0/dist/index.min.js"></script>
 <script src="storage.js"></script>
 <script src="nav.js"></script>
 </head>
@@ -220,6 +221,52 @@ async function loadDailyMotivation() {
         displayEl.style.fontStyle = 'normal';
     }
 }
+
+/** Global UI Actions - Moved outside onload for immediate availability **/
+window.restartOnboarding = () => {
+    if (confirm("This will reset your setup progress and all therapy calibrations. Continue?")) {
+        resetOnboarding();
+    }
+};
+
+window.finishOnboarding = () => {
+    console.log("TTS: Finalizing setup...");
+    try {
+        saveSetting('onboarding_step', 7);
+        saveSetting('last_seen_version', APP_VERSION); 
+        try { sessionStorage.setItem('tts_session_active', 'true'); } catch(e) {}
+        
+        const modal = document.getElementById('onboardingModal');
+        if (modal) {
+            modal.style.display = 'none';
+            modal.remove(); 
+        }
+        
+        window.location.href = 'index.html?setup=complete'; // Definitive redirection to bypass stuck state
+    } catch (e) { 
+        console.error("TTS: Error finishing onboarding:", e);
+        // Fallback: just hide the modal if reload fails
+        document.getElementById('onboardingModal').style.display = 'none';
+    }
+};
+
+window.purgeCacheAndReload = async () => {
+    if (confirm("This will clear the application cache and force a fresh download of the latest version. Your saved therapy settings will not be affected. Proceed?")) {
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (let registration of registrations) {
+                await registration.unregister();
+            }
+        }
+        if ('caches' in window) {
+            const names = await caches.keys();
+            for (let name of names) {
+                await caches.delete(name);
+            }
+        }
+        window.location.reload(true);
+    }
+};
 
 window.onload = () => {
     loadCardOrder();
@@ -551,13 +598,6 @@ async function testGeminiConnectionUI() {
     testBtn.disabled = false;
 }
 
-window.restartOnboarding = () => {
-    if (confirm("Are you sure you want to restart the onboarding wizard? This will reset your setup progress back to the beginning.")) {
-        saveSetting('onboarding_step', 0);
-        location.reload();
-    }
-};
-
 window.resetPreferences = () => {
     if (confirm("This will re-enable all clinical pre-flight checks and feature highlights. Continue?")) {
         localStorage.removeItem('tts_skip_preflight');
@@ -663,11 +703,6 @@ window.nextOnboardingStep = (step) => {
     showOnboardingStep(step);
 };
 
-window.finishOnboarding = () => {
-    saveSetting('onboarding_step', 7);
-    document.getElementById('onboardingModal').style.display = 'none';
-};
-
 function renderStats() {
     const container = document.getElementById('statsContainer');
     container.innerHTML = '';
@@ -693,6 +728,62 @@ function renderStats() {
     }
     document.getElementById('weeklyTotal').textContent = `Total: ${Math.round(total)} mins this week`;
 }
+
+function checkTHIReminder() {
+    const lastDate = getLastTHIAssessmentDate();
+    if (!lastDate) return;
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    if (Date.now() - lastDate.getTime() > thirtyDays) {
+        const card = document.getElementById('thiReminderCard');
+        if (card) card.style.display = 'block';
+    }
+}
+
+window.openAISetup = () => document.getElementById('aiSetupModal').style.display = 'block';
+window.closeAISetup = () => {
+    document.getElementById('aiSetupModal').style.display = 'none';
+    const status = document.getElementById('modalTestStatus');
+    if (status) status.textContent = '';
+};
+
+async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalTestStatus') {
+    const keyInput = document.getElementById(inputId);
+    const key = keyInput ? keyInput.value.trim() : '';
+    const status = document.getElementById(statusId);
+    
+    if (!key) {
+        if (status) {
+            status.textContent = "Please paste a key.";
+            status.style.color = "#ef5350";
+        }
+        return false;
+    }
+
+    if (status) {
+        status.textContent = "Testing connection...";
+        status.style.color = "var(--text-dim)";
+    }
+    
+    saveSetting('gemini_api_key', key);
+    initAI();
+    
+    const result = await performGeminiTest();
+    if (result.success) {
+        if (status) {
+            status.textContent = "✅ Success! AI features enabled.";
+            status.style.color = "#4CAF50";
+        }
+        setTimeout(() => { closeAISetup(); loadDailyMotivation(); }, 1500);
+        return true;
+    } else {
+        if (status) {
+            status.textContent = "❌ " + result.message;
+            status.style.color = "#ef5350";
+        }
+        localStorage.removeItem('tts_gemini_api_key');
+        return false;
+    }
+}
 </script>
 
 <div id="onboardingModal" class="modal-overlay">
@@ -709,7 +800,9 @@ function renderStats() {
                 <a href="disclaimer.html" class="button" target="_blank" style="flex: 1;">Legal Policy</a>
                 <button onclick="showQuickStartGuide()" class="button" style="flex: 1; border-color: var(--accent);">Quick Start Guide</button>
              </div>
-             <button onclick="nextOnboardingStep(1)" class="big-btn play-btn">I Accept & Understand</button>
+             <button onclick="completeOnboarding(); nextOnboardingStep(1)" class="big-btn play-btn">I Accept & Understand</button>
+             <a href="#" onclick="completeOnboarding(); finishOnboarding()" style="display: block; margin-top: 15px; font-size: 0.85rem; color: var(--text-dim); text-decoration: none;">Skip Setup & Go to Dashboard</a>
+             <a href="#" onclick="purgeCacheAndReload()" style="display: block; margin-top: 15px; font-size: 0.75rem; color: #ef5350; text-decoration: underline;">Stuck? Click here to Force Update & Clear Cache</a>
         </div>
         <div id="onboarding-1" style="display:none;">
              <h2>Step 1: Initial Assessment</h2>

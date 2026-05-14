@@ -25,9 +25,11 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const { GoogleGenerativeAI } = window; // Access from global scope
+const APP_VERSION = "2.2.4";
 
-const APP_VERSION = "2.2.1";
+let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
+
+let decryptedGeminiKey = null; // Tracks the unlocked key for the current session
 
 // ⚠️ CRITICAL SECURITY WARNING ⚠️
 // DIRECTLY INCLUDING YOUR GEMINI API KEY IN CLIENT-SIDE CODE IS UNSAFE FOR PRODUCTION.
@@ -53,9 +55,11 @@ class TinnitusAIManager {
     init(key = null) {
         if (key) this.decryptedKey = key;
         const activeKey = this.decryptedKey || HARDCODED_KEY;
+        const SDK = window.GoogleGenerativeAI;
+
         try {
-            if (activeKey && activeKey !== HARDCODED_KEY && activeKey !== "ENCRYPTED_KEY_LOCKED") {
-                this.genAI = new GoogleGenerativeAI(activeKey);
+            if (SDK && activeKey && activeKey !== HARDCODED_KEY && activeKey !== "ENCRYPTED_KEY_LOCKED") {
+                this.genAI = new SDK(activeKey);
             } else {
                 this.genAI = null;
             }
@@ -302,6 +306,7 @@ async function decryptGeminiKey(input) {
     // Attempt path 1: The Standard PIN
     let key = await _attemptDecrypt(input, 'gemini_api_key_encrypted', 'gemini_api_key_salt', 'gemini_api_key_iv');
     if (key) {
+        decryptedGeminiKey = key;
         tinnitusAI.init(key);
         return key;
     }
@@ -309,6 +314,7 @@ async function decryptGeminiKey(input) {
     // Attempt path 2: The Recovery Code
     key = await _attemptDecrypt(input, 'gemini_api_key_rc_encrypted', 'gemini_api_key_rc_salt', 'gemini_api_key_rc_iv');
     if (key) {
+        decryptedGeminiKey = key;
         tinnitusAI.init(key);
         return key;
     }
@@ -334,16 +340,158 @@ async function _attemptDecrypt(secret, keySet, saltSet, ivSet) {
     }
 }
 
+/**
+ * Session Authorization Fallback
+ * Used if SessionStorage is blocked by the browser environment.
+ */
+let _memSessionActive = false;
+
+/**
+ * Marks the onboarding as complete and authorizes the current session.
+ * Call this when the user accepts the medical disclaimer.
+ */
+function completeOnboarding() {
+    try {
+        saveSetting('onboarding_step', '1');
+        saveSetting('last_seen_version', APP_VERSION);
+        try { sessionStorage.setItem('tts_session_active', 'true'); } catch(e) {}
+        _memSessionActive = true;
+    } catch (e) { console.error("TTS: Failed to save onboarding state.", e); }
+    console.log("TTS: Onboarding completed.");
+}
+
+/**
+ * Resets the application onboarding status and session.
+ */
+function resetOnboarding() {
+    // Clear all keys prefixed with tts_ to ensure a true clean slate
+    try {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('tts_')) keysToRemove.push(key);
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+    } catch(e) {}
+    
+    _memStorage = {};
+    _memSessionActive = false;
+    
+    // Clear session storage as well to reset session-bound gatekeeper states
+    sessionStorage.clear();
+
+    alert("Onboarding status reset. The application will now reload to the welcome screen.");
+    window.location.reload();
+}
+
 /** 
  * Helpers for consistent localStorage interaction
  */
 const getTodayKey = () => new Date().toISOString().split('T')[0];
-const getJson = (key, defaultVal = []) => {
-    try {
-        return JSON.parse(localStorage.getItem('tts_' + key)) || defaultVal;
-    } catch (e) { return defaultVal; }
+
+let _memStorage = {};
+const isStorageAvailable = () => {
+    try { localStorage.setItem('tts_t', '1'); localStorage.removeItem('tts_t'); return true; } 
+    catch (e) { return false; }
 };
-const setJson = (key, val) => localStorage.setItem('tts_' + key, JSON.stringify(val));
+
+const _safeGet = (k) => { try { return localStorage.getItem(k); } catch(e) { return _memStorage[k]; } };
+const _safeSet = (k, v) => { try { localStorage.setItem(k, v); } catch(e) { _memStorage[k] = v; } };
+
+const getJson = (key, defaultVal = []) => {
+    const val = _safeGet('tts_' + key);
+    try { return val ? JSON.parse(val) : defaultVal; } catch (e) { return defaultVal; }
+};
+const setJson = (key, val) => _safeSet('tts_' + key, JSON.stringify(val));
+
+/**
+ * Helpers for simple string-based settings
+ */
+const loadSetting = (key, defaultVal) => _safeGet('tts_' + key) || defaultVal;
+const saveSetting = (key, val) => _safeSet('tts_' + key, val);
+
+/**
+ * Retrieves the most recent entry from a JSON-based log.
+ * @param {string} logKey - The key (without tts_ prefix) for the log.
+ * @returns {object|null} The latest entry or null.
+ */
+function getLatestLogData(logKey) {
+    const log = getJson(logKey, {});
+    const dates = Object.keys(log).sort();
+    if (dates.length === 0) return null;
+    const latestDate = dates[dates.length - 1];
+    return { date: latestDate, data: log[latestDate] };
+}
+
+function getThoughtRecords() { return getJson('thought_records', []); }
+function getDistressScores() { return getJson('distress_log', {}); }
+function getDailyUsage() {
+    const log = getJson('usage_log', {});
+    return log[getTodayKey()] || 0;
+}
+
+function logDistressScore(score) {
+    const log = getJson('distress_log', {});
+    log[getTodayKey()] = score;
+    setJson('distress_log', log);
+}
+
+function logUsageMinutes(mins) {
+    const log = getJson('usage_log', {});
+    const today = getTodayKey();
+    log[today] = (log[today] || 0) + mins;
+    setJson('usage_log', log);
+}
+
+function logRIResult(seconds) {
+    const log = getJson('ri_log', {});
+    const today = getTodayKey();
+    if (!log[today]) log[today] = [];
+    log[today].push(seconds);
+    setJson('ri_log', log);
+}
+
+function logTMCPoint(freq, level) {
+    const log = getJson('tmc_log', {});
+    log[freq] = level;
+    setJson('tmc_log', log);
+}
+
+function logQFactor(qFactor) {
+    const log = getJson('q_factor_log', {});
+    log[getTodayKey()] = qFactor;
+    setJson('q_factor_log', log);
+}
+
+function logLoudnessGrowthPoint(freq, obj, subj) {
+    const log = getJson('lg_log', {});
+    const today = getTodayKey();
+    if (!log[today]) log[today] = [];
+    log[today].push({ freq, obj, subj });
+    setJson('lg_log', log);
+}
+
+function logThoughtRecordEntry(entry) {
+    const records = getThoughtRecords();
+    records.push({ ...entry, timestamp: new Date().toISOString() });
+    setJson('thought_records', records);
+}
+
+function resetModuleSettings(prefixArray) {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('tts_')) {
+            const settingKey = key.replace('tts_', '');
+            if (prefixArray.some(p => settingKey.startsWith(p))) {
+                keysToRemove.push(key);
+            }
+        }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    alert("Settings reset. Reloading module...");
+    window.location.reload();
+}
 
 // Pre-fetch system voices to ensure they are indexed by the browser for the narrator
 if (typeof speechSynthesis !== 'undefined') {
@@ -409,7 +557,9 @@ function getUnifiedValidationStatus() {
  */
 class NoiseGenerator {
     constructor(ctx) {
-        this.ctx = ctx;
+        // Robust verification of the AudioContext before initialization
+        const isValidCtx = ctx && typeof ctx.createBuffer === 'function' && typeof ctx.sampleRate === 'number';
+        this.ctx = isValidCtx ? ctx : null;
     }
 
     /**
@@ -417,6 +567,7 @@ class NoiseGenerator {
      * This prevents digital clipping while maintaining a high signal-to-noise ratio.
      */
     _normalize(data, targetPeak = 0.9) {
+        if (!data || data.length === 0) return;
         let max = 0;
         for (let i = 0; i < data.length; i++) {
             const abs = Math.abs(data[i]);
@@ -435,11 +586,28 @@ class NoiseGenerator {
      * Consolidates generation logic to ensure consistent spectra across modules.
      */
     generate(color, bufferSize = null) {
-        const size = bufferSize || this.ctx.sampleRate * 2;
-        const buffer = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
+        if (!this.ctx) {
+            console.warn("NoiseGenerator: Invalid or missing AudioContext. Audio generation aborted.");
+            return null;
+        }
+
+        const targetColor = (color || 'white').toLowerCase().trim().replace(/(_noise| noise)/g, '');
+        const sampleRate = this.ctx.sampleRate;
+        
+        // Ensure bufferSize is valid; fallback to 2 seconds of audio
+        const size = (typeof bufferSize === 'number' && bufferSize > 0) ? bufferSize : sampleRate * 2;
+        
+        let buffer;
+        try {
+            buffer = this.ctx.createBuffer(1, size, sampleRate);
+        } catch (e) {
+            console.error("NoiseGenerator: Failed to create AudioBuffer. Check memory or sample rate.", e);
+            return null;
+        }
+        
         const d = buffer.getChannelData(0);
 
-        switch (color.toLowerCase()) {
+        switch (targetColor) {
             case 'white':
                 for (let i = 0; i < size; i++) d[i] = Math.random() * 2 - 1;
                 break;
@@ -566,18 +734,29 @@ function getClinicalReportData(modeName, settingsObj, techSpecsObj = {}) {
 
     // Consolidate latest data retrieval using the new helper
     const latestMML = getLatestLogData('mml_log');
-    const mmlSummary = latestMML ? `Latest MML: ${latestMML.data.slice(-1)[0]}%` : "N/A";
+    let mmlSummary = "N/A";
+    if (latestMML) {
+        const mmlVal = Array.isArray(latestMML.data) ? latestMML.data.slice(-1)[0] : latestMML.data;
+        mmlSummary = `Latest MML: ${mmlVal}%`;
+    }
 
     const latestLG = getLatestLogData('lg_log');
-    const latestLGSummary = latestLG ? `Points: ${latestLG.data.length}` : "N/A";
+    let latestLGSummary = "N/A";
+    if (latestLG && latestLG.data) {
+        const points = Array.isArray(latestLG.data) ? latestLG.data.length : 1;
+        latestLGSummary = `Points: ${points}`;
+    }
 
     const latestQF = getLatestLogData('q_factor_log');
-    const latestQFactor = latestQF ? latestQF.data : "N/A";
+    const latestQFactor = (latestQF && latestQF.data) ? latestQF.data : "N/A";
 
     const latestRI = getLatestLogData('ri_log');
     let riSummary = "N/A";
     if (latestRI) {
-        riSummary = `Date: ${latestRI.date} | Suppression Results: ${latestRI.data.join('s, ')}s`;
+        const riVal = Array.isArray(latestRI.data) 
+            ? latestRI.data.join('s, ') + 's' 
+            : latestRI.data + 's';
+        riSummary = `Date: ${latestRI.date} | Suppression Results: ${riVal}`;
     }
 
     const latestTHI = getLatestLogData('distress_log');
@@ -792,7 +971,9 @@ function getTherapyRecommendations() {
     const thiScore = latestTHI ? latestTHI.data : null;
 
     const latestMML = getLatestLogData('mml_log');
-    const lastMMLValue = latestMML ? latestMML.data.slice(-1)[0] : null;
+    const lastMMLValue = (latestMML && Array.isArray(latestMML.data)) 
+        ? latestMML.data.slice(-1)[0] 
+        : (latestMML ? latestMML.data : null);
 
     if (thiScore === null) {
         return { status: 'incomplete', message: 'Please complete the THI Assessment in CBT & Wellness to get personalized recommendations.' };
@@ -927,7 +1108,20 @@ function showWalkthrough(slides, startIndex = 0) {
     let narratorSpeed = parseFloat(loadSetting('narrator_speed', '0.9'));
     let narratorVolume = parseFloat(loadSetting('narrator_volume', '1.0'));
 
+    // Ensure only one walkthrough is active at a time
+    const existing = document.getElementById('walkthroughModal');
+    if (existing) existing.remove();
+
     document.body.classList.add('tutorial-active');
+
+    const closeWalkthrough = () => { 
+        document.body.classList.remove('tutorial-active');
+        stopAuto(); 
+        clearHighlights(); 
+        const el = document.getElementById('walkthroughModal'); 
+        if (el) el.remove(); 
+    };
+    window.closeWalkthrough = closeWalkthrough;
 
     const clearHighlights = () => {
         document.querySelectorAll('.tutorial-highlight').forEach(el => el.classList.remove('tutorial-highlight'));
@@ -987,7 +1181,7 @@ function showWalkthrough(slides, startIndex = 0) {
     };
 
     const modalHTML = `
-        <div id="walkthroughModal" class="modal-overlay" style="display:block; background: transparent; backdrop-filter: none; pointer-events: none; z-index: 10001;">
+        <div id="walkthroughModal" class="modal-overlay" style="display:block; background: transparent; backdrop-filter: none; pointer-events: none; z-index: 10200;">
             <div id="walkthroughCard" class="modal-card tutorial-mode" style="text-align: center; pointer-events: auto;">
                 <div id="wProgress" style="display:flex; gap:5px; margin-bottom:20px; justify-content:center;"></div>
                 <h2 id="wTitle" style="color:var(--accent); margin-top:0; font-size: 1.4rem;"></h2>
@@ -1021,32 +1215,38 @@ function showWalkthrough(slides, startIndex = 0) {
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-    // Set initial state of narrator toggle
-    document.getElementById('narratorToggle').checked = narratorEnabled;
-    document.getElementById('narratorToggle').onchange = (e) => {
-        narratorEnabled = e.target.checked;
-        saveSetting('narrator_enabled', narratorEnabled);
-        if (!narratorEnabled) stopSpeaking(); // Stop if disabled
-    };
+    try {
+        // Set initial state of narrator toggle
+        document.getElementById('narratorToggle').checked = narratorEnabled;
+        document.getElementById('narratorToggle').onchange = (e) => {
+            narratorEnabled = e.target.checked;
+            saveSetting('narrator_enabled', narratorEnabled);
+            if (!narratorEnabled) stopSpeaking(); 
+        };
 
-    // Set initial state of speed slider
-    const speedSlider = document.getElementById('narratorSpeed');
-    const speedLabel = document.getElementById('speedValLabel');
-    speedSlider.value = narratorSpeed;
-    speedLabel.textContent = narratorSpeed.toFixed(1) + 'x';
-    speedSlider.oninput = (e) => {
-        narratorSpeed = parseFloat(e.target.value);
+        // Set initial state of speed slider
+        const speedSlider = document.getElementById('narratorSpeed');
+        const speedLabel = document.getElementById('speedValLabel');
+        speedSlider.value = narratorSpeed;
         speedLabel.textContent = narratorSpeed.toFixed(1) + 'x';
-        saveSetting('narrator_speed', narratorSpeed);
-    };
+        speedSlider.oninput = (e) => {
+            narratorSpeed = parseFloat(e.target.value);
+            speedLabel.textContent = narratorSpeed.toFixed(1) + 'x';
+            saveSetting('narrator_speed', narratorSpeed);
+        };
 
-    // Set initial state of volume slider
-    const volumeSlider = document.getElementById('narratorVolume');
-    volumeSlider.value = narratorVolume;
-    volumeSlider.oninput = (e) => {
-        narratorVolume = parseFloat(e.target.value);
-        saveSetting('narrator_volume', narratorVolume);
-    };
+        // Set initial state of volume slider
+        const volumeSlider = document.getElementById('narratorVolume');
+        volumeSlider.value = narratorVolume;
+        volumeSlider.oninput = (e) => {
+            narratorVolume = parseFloat(e.target.value);
+            saveSetting('narrator_volume', narratorVolume);
+        };
+    } catch (err) {
+        console.warn("Tutorial UI failed to initialize:", err);
+        closeWalkthrough();
+        return;
+    }
 
     const stopAuto = () => { // This function also stops speaking
         if (autoPlayTimer) {
@@ -1059,9 +1259,11 @@ function showWalkthrough(slides, startIndex = 0) {
     };
 
     const update = () => {
+        if (!slides || !slides[currentSlide]) return closeWalkthrough();
+        
         clearHighlights();
         const s = slides[currentSlide];
-        document.getElementById('wTitle').textContent = s.title;
+        if (document.getElementById('wTitle')) document.getElementById('wTitle').textContent = s.title;
         document.getElementById('wContent').innerHTML = s.content;
         document.getElementById('wNext').textContent = currentSlide === slides.length - 1 ? "Finish" : "Next";
         document.getElementById('wBack').style.visibility = currentSlide > 0 ? 'visible' : 'hidden';
@@ -1107,13 +1309,6 @@ function showWalkthrough(slides, startIndex = 0) {
         }
     };
 
-    window.closeWalkthrough = () => { 
-        document.body.classList.remove('tutorial-active');
-        stopAuto(); 
-        clearHighlights(); 
-        const el = document.getElementById('walkthroughModal'); 
-        if (el) el.remove(); 
-    }; 
     update();
 }
 
@@ -1179,7 +1374,7 @@ function startModuleTutorial(key, startIndex = 0) {
             { title: "Auditory Pacer", content: "Enable Auditory Cues to hear a subtle chime at the start of each breath. This allows you to maintain synchronization even with your eyes closed.", selector: "#pacerAudio" },
             { title: "Pulse Rate", content: "Adjust the pulse speed to match your natural resting breath. A slow, steady rhythm (around 5-6 breaths per minute) is usually best for relaxation.", selector: "#pulseRate" },
             { title: "Breathing Sync", content: "Try to match your breathing to the visual pulse. Inhaling as the light expands and exhaling as it fades helps activate the body's relaxation response, further aiding habituation.", selector: "#visualPulse" },
-            { title: "The Mix", content: "Balance the tones and noise so neither is overwhelming. The sound should shimmer background.", selector: ".ctrl:has(input[type=range])" },
+            { title: "The Mix", content: "Balance the tones and noise so neither is overwhelming. The sound should shimmer background.", selector: "#mixL" },
             { title: "Zen Mode", content: "Once your settings are dialed in, use Zen Mode to hide technical controls. This encourages 'Passive Listening'—allowing the sound to become background wallpaper while you focus on other tasks.", selector: "#zenBtn" },
             { title: "Help the Community", content: "Found a setup that works for you? Use the 'Share Setup' button to generate a summary you can post on forums like Tinnitus Talk or Reddit. Helping others find relief is the best way to grow this project!", selector: "button[onclick='shareToCommunity()']" }
         ],
@@ -1310,24 +1505,57 @@ function syncUIVersion() {
     }
     
     // --- Trahreg Gatekeeper Logic ---
-    (function() {
-        const path = window.location.pathname.toLowerCase();
-        const isDocs = path.includes('/docs/');
-        
-        // 1. Identify Home/Root and authorize the session
-        const isHome = path.endsWith('index.html') || (path.endsWith('/') && !isDocs);
+    (async function() {
+        const fullPath = decodeURIComponent(window.location.pathname).toLowerCase();
+        const pageName = fullPath.split('/').pop();
+        const isDocs = fullPath.includes('/docs/');
+
+        // Remote Maintenance Toggle: Check for a maintenance.json file to allow remote control
         try {
-            if (isHome) sessionStorage.setItem('tts_session_active', 'true');
+            const configPath = isDocs ? '../maintenance.json' : 'maintenance.json';
+            const response = await fetch(configPath, { cache: 'no-store' });
+            if (response.ok) {
+                const config = await response.json();
+                if (config && typeof config.enabled === 'boolean') {
+                    MAINTENANCE_MODE = config.enabled;
+                }
+            }
+        } catch (e) { /* Fallback to hardcoded MAINTENANCE_MODE on network error */ }
+
+        // Maintenance Mode Redirect
+        if (MAINTENANCE_MODE && pageName !== 'maintenance.html') {
+            console.warn("[Gatekeeper] Suite is down for maintenance.");
+            window.location.replace(isDocs ? '../maintenance.html' : 'maintenance.html');
+            return;
+        }
+
+        // 1. Identify Home/Root and authorize the session (more robust detection)
+        // Check if the path ends with common root patterns or project directory name
+        const homePatterns = ['index.html', '', 'tinnitus_therapy', 'tinnitus_therapy/'];
+        const isHome = homePatterns.some(p => pageName === p || fullPath.endsWith(p));
+
+        try {
+            // Set session active if we are on the home page or a public page to avoid immediate redirect
+            if (isHome || isDocs) _memSessionActive = true;
         } catch(e) { /* Private mode protection */ }
 
         // 2. Identify Whitelisted (Public) pages
-        const publicPages = ['index.html', 'disclaimer.html', 'license.html', 'about.html', 'research.html', 'feedback.html'];
-        const isPublicPage = isHome || publicPages.some(p => path.endsWith(p));
+        const publicPages = ['index.html', 'disclaimer.html', 'license.html', 'about.html', 'research.html', 'feedback.html', 'presentation.html', 'handout.html', 'clinical_summary.html', 'stats.html'];
+        const isPublicPage = isHome || publicPages.some(p => pageName === p);
 
-        const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
+        const onboardingStep = parseInt(loadSetting('onboarding_step', '0'));
+        const sessionActive = _memSessionActive || (function() {
+            try { return sessionStorage.getItem('tts_session_active') === 'true'; } 
+            catch(e) { return false; }
+        })();
 
-        // 3. Enforce Redirection: Only redirect if onboarding hasn't started and it's not a public page
-        if (!isPublicPage && onboardingStep < 1) {
+        if (!isStorageAvailable()) {
+            console.error("[Gatekeeper] LocalStorage is blocked. The suite cannot save your progress.");
+            alert("Warning: Your browser is blocking LocalStorage. Therapy settings and progress will not be saved.");
+        }
+
+        // 3. Enforce Redirection: Bypass if already onboarded OR session is active
+        if (!isPublicPage && onboardingStep < 1 && !sessionActive) {
             console.warn("[Gatekeeper] Disclaimer acceptance required. Redirecting to home...");
             const redirectTarget = isDocs ? '../index.html' : 'index.html';
             window.location.replace(redirectTarget);
@@ -1345,11 +1573,13 @@ if (document.readyState === 'loading') {
         syncUIVersion();
 
         // Version Update Notification
+        const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
         const lastSeenVersion = localStorage.getItem('tts_last_seen_version');
-        if (lastSeenVersion && lastSeenVersion !== APP_VERSION) {
+        // Only trigger "What's New" if user has completed onboarding to avoid UI conflicts
+        if (onboardingStep >= 7 && lastSeenVersion && lastSeenVersion !== APP_VERSION) {
             setTimeout(showWhatsNew, 1500);
         }
-        localStorage.setItem('tts_last_seen_version', APP_VERSION);
+        if (onboardingStep >= 7) localStorage.setItem('tts_last_seen_version', APP_VERSION);
     });
 } else {
     applyTheme();
@@ -1359,11 +1589,12 @@ if (document.readyState === 'loading') {
     syncUIVersion();
 
     // Version Update Notification
+    const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
     const lastSeenVersion = localStorage.getItem('tts_last_seen_version');
-    if (lastSeenVersion && lastSeenVersion !== APP_VERSION) {
+    if (onboardingStep >= 7 && lastSeenVersion && lastSeenVersion !== APP_VERSION) {
         setTimeout(showWhatsNew, 1500);
     }
-    localStorage.setItem('tts_last_seen_version', APP_VERSION);
+    if (onboardingStep >= 7) localStorage.setItem('tts_last_seen_version', APP_VERSION);
 }
 
 function needsValidation() {

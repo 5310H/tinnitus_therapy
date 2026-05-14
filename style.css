@@ -250,7 +250,7 @@ summary:hover { background: rgba(0, 191, 165, 0.1); }
 /* Global Modal System */
 .modal-overlay {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 9999; padding: 20px;
+    background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 10000; padding: 20px;
 }
 .modal-card {
     max-width: 540px; margin: 40px auto; background: var(--card-bg); color: var(--text);
@@ -279,7 +279,7 @@ summary:hover { background: rgba(0, 191, 165, 0.1); }
     max-width: 360px; 
     margin: 0;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    z-index: 10002;
+    z-index: 10201;
 }
 .light-mode .modal-card.tutorial-mode {
     /* When App is Light, Tutorial is Dark */
@@ -314,7 +314,7 @@ summary:hover { background: rgba(0, 191, 165, 0.1); }
     box-shadow: 0 0 30px var(--h-accent) !important;
     animation: tutorial-pulse 1.5s infinite;
     position: relative;
-    z-index: 10001; 
+    z-index: 10150; 
     background: rgba(0, 137, 123, 0.15) !important;
 }
 .light-mode .tutorial-highlight {
@@ -352,6 +352,14 @@ body.zen-mode .panel {
     animation-duration: var(--pulse-duration, 4s);
     /* This prevents the dimming overlay from obscuring active therapy visuals 
        even when they aren't the primary focus of the current tutorial step. */
+}
+
+/* Onboarding Modal override to ensure it is always top priority */
+#onboardingModal {
+    z-index: 10100 !important;
+}
+#onboardingModal .modal-card {
+    z-index: 10101 !important;
 }
 
 /* Prevent background scrolling when tutorial is active */
