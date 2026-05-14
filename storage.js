@@ -42,6 +42,22 @@ function completeOnboarding() {
 }
 
 /**
+ * Estimates the current usage of localStorage for the origin.
+ * Returns usage in KB.
+ */
+function getLocalStorageUsage() {
+    let total = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const value = localStorage.getItem(key);
+        // Estimate size: key length + value length (each char is 2 bytes in JS strings)
+        total += key.length + value.length;
+    }
+    return (total / 1024).toFixed(2); // Convert bytes to KB
+}
+window.getLocalStorageUsage = getLocalStorageUsage;
+
+/**
  * Core Settings Actions
  * Attached to window for global access from UI buttons.
  */
@@ -202,9 +218,12 @@ class TinnitusAIManager {
     }
 
     async getSOSSupport(userInput = "I am having a spike right now.") {
+        const latestDistress = getLatestLogData('distress_log');
+        const context = latestDistress ? `[Context: User's latest distress score is ${latestDistress.data}/100 recorded on ${latestDistress.date}] ` : "";
+
         const prompt = {
             system_instruction: "You are a specialized tinnitus crisis counselor. The user is experiencing a 'spike'. Provide immediate CBT reframing, reassure them that spikes are temporary, and suggest a 2-minute breathing focus.",
-            input: userInput
+            input: context + userInput
         };
         return await this.fetchAIAssistance("sos_support", prompt);
     }
@@ -221,6 +240,7 @@ class TinnitusAIManager {
         const anonymizedHistory = {
             usage_patterns: getJson('usage_log', {}),
             distress_history: getJson('distress_log', {}),
+            reports_sleep_issues: loadSetting('reports_sleep_issues', 'false') === 'true',
             recent_situational_contexts: getThoughtRecords().slice(-5).map(tr => ({
                 date: new Date(tr.timestamp).toLocaleDateString(),
                 situation: tr.situation,
@@ -228,7 +248,7 @@ class TinnitusAIManager {
             }))
         };
         const prompt = {
-            system_instruction: "Identify potential correlations in therapy logs and situational data. State clearly that these are correlations and suggest one focus area for next week.",
+            system_instruction: "Identify potential correlations in therapy logs, reported sleep issues, and situational data. State clearly that these are correlations and suggest one focus area for next week.",
             input: { user_question: userQuery, anonymized_data: anonymizedHistory }
         };
         return await this.fetchAIAssistance("pattern_finder", prompt);
@@ -245,8 +265,12 @@ class TinnitusAIManager {
     async getClinicalSummary() {
         const reportData = getClinicalReportData("AI Summary Generation", {}, {});
         const prompt = {
-            system_instruction: "Summarize the user's progress for an audiologist focus on trends in distress and adherence. Write one professional paragraph.",
-            input: { distress: reportData.psychological.lastTHIScore, usage: reportData.usage.todayMinutes }
+            system_instruction: "Summarize the user's progress for an audiologist focus on trends in distress, adherence, and reported sleep issues. Write one professional paragraph.",
+            input: { 
+                distress: reportData.psychological.lastTHIScore, 
+                usage: reportData.usage.todayMinutes,
+                reports_sleep_issues: loadSetting('reports_sleep_issues', 'false') === 'true'
+            }
         };
         return await this.fetchAIAssistance("clinical_summary", prompt);
     }
@@ -279,8 +303,11 @@ class TinnitusAIManager {
         const data = Object.entries(getDistressScores()).map(([date, score]) => ({ date, score }));
         if (data.length < 3) return "Insufficient data for a forecast.";
         const prompt = {
-            system_instruction: "Predict future habituation progress and provide one tip. State this is an AI projection.",
-            input: { thi_history: data }
+            system_instruction: "Predict future habituation progress and provide one tip based on distress trends and reported sleep issues. State this is an AI projection.",
+            input: { 
+                thi_history: data, 
+                reports_sleep_issues: loadSetting('reports_sleep_issues', 'false') === 'true'
+            }
         };
         return await this.fetchAIAssistance("habituation_forecast", prompt);
     }
@@ -288,8 +315,13 @@ class TinnitusAIManager {
     async getPersonalizedInsights() {
         const report = getClinicalReportData("Insight Generation", {}, {});
         const prompt = {
-            system_instruction: "Analyze the data for positive trends. Provide one paragraph of encouragement and one actionable tip.",
-            input: { thi: report.psychological.lastTHIScore, usage: report.usage, ri: report.ri.latestRIResult }
+            system_instruction: "Analyze the data for positive trends and consider reported sleep issues. Provide one paragraph of encouragement and one actionable tip.",
+            input: { 
+                thi: report.psychological.lastTHIScore, 
+                usage: report.usage, 
+                ri: report.ri.latestRIResult,
+                reports_sleep_issues: loadSetting('reports_sleep_issues', 'false') === 'true'
+            }
         };
         return await this.fetchAIAssistance("progress_insights", prompt);
     }
@@ -878,6 +910,7 @@ function getClinicalReportData(modeName, settingsObj, techSpecsObj = {}) {
         tmc: {
             latestQFactor: latestQFactor
         },
+        storage: { usageKB: getLocalStorageUsage() },
         systemStatus: {
             hardwarePhase: validation.phase,
             engineValidation: validation.engine,

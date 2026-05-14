@@ -170,6 +170,7 @@ async function runAllTests() {
     await testChannelConfiguration(audioCtx);
     await testNotchFilter(audioCtx);
     await testModulationNodes(audioCtx);
+    await testLocalStorageQuota();
     await testIndependentMix(audioCtx);
     await testStereoSeparation(audioCtx);
 
@@ -394,6 +395,30 @@ async function testIndependentMix(audioCtx) {
             addResult(title, 'fail', 'Mix test failed: L/R channels are identical or missing signals.');
         }
     } catch (e) { addResult(title, 'fail', 'Mix Engine Error: ' + e.message); }
+}
+
+async function testLocalStorageQuota() {
+    const title = 'LocalStorage Quota Check';
+    const testKey = 'tts_quota_test';
+    const testDataSizeKB = 1024; // Try to write 1MB of data (approx)
+    const testData = 'a'.repeat(testDataSizeKB * 1024); // 1MB string
+
+    try {
+        // Attempt to write a large string to test quota
+        localStorage.setItem(testKey, testData);
+        localStorage.removeItem(testKey); // Clean up
+
+        const currentUsage = getLocalStorageUsage(); // Function from storage.js
+        addResult(title, 'pass', `LocalStorage is available and has sufficient quota. Current usage: ${currentUsage} KB.`);
+    } catch (e) {
+        if (e.name === 'QuotaExceededError') {
+            addResult(title, 'fail', `LocalStorage quota exceeded. Current usage: ${getLocalStorageUsage()} KB.`, 'Your browser has limited the storage available to this application. Please clear browser data or free up space.');
+        } else {
+            addResult(title, 'fail', `LocalStorage test failed: ${e.message}. Current usage: ${getLocalStorageUsage()} KB.`);
+        }
+    } finally {
+        localStorage.removeItem(testKey); // Ensure cleanup even if other errors occur
+    }
 }
 
 function getReportData() {

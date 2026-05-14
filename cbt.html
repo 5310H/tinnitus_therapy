@@ -262,12 +262,17 @@ window.onload = () => {
     // Initialize character counters for Thought Record textareas
     document.querySelectorAll('.card textarea[id^="tr"]').forEach(textarea => {
         const countSpan = document.getElementById('count_' + textarea.id);
+        const max = parseInt(textarea.getAttribute('maxlength'));
         if (countSpan) {
             const update = () => {
-                countSpan.textContent = textarea.value.length;
-                countSpan.style.color = (textarea.value.length >= parseInt(textarea.getAttribute('maxlength'))) ? '#ef5350' : 'var(--text-dim)';
+                const len = textarea.value.length;
+                countSpan.textContent = len;
+                // Visual Warning: Red for over-limit, Accent for reaching limit
+                countSpan.style.color = (len > max) ? '#ef5350' : (len === max ? 'var(--accent)' : 'var(--text-dim)');
+                countSpan.style.fontWeight = (len >= max) ? 'bold' : 'normal';
             };
             textarea.addEventListener('input', update);
+            update(); // Sync on load
         }
     });
 
@@ -364,11 +369,24 @@ function saveThoughtRecord() {
     // Basic validation
     if (Object.values(entry).some(val => val.trim() === '')) {
         document.getElementById('thoughtRecordStatus').textContent = "Please fill in all fields.";
+        document.getElementById('thoughtRecordStatus').style.color = '#ef5350';
         return;
+    }
+
+    // Strict limit validation (prevents saving data that could corrupt reports or exceed storage)
+    const textareas = document.querySelectorAll('.card textarea[id^="tr"]');
+    for (let ta of textareas) {
+        const max = parseInt(ta.getAttribute('maxlength'));
+        if (ta.value.length > max) {
+            document.getElementById('thoughtRecordStatus').textContent = "One or more fields exceed character limits. Please shorten your entry.";
+            document.getElementById('thoughtRecordStatus').style.color = '#ef5350';
+            return;
+        }
     }
 
     logThoughtRecordEntry(entry);
     document.getElementById('thoughtRecordStatus').textContent = "Thought record saved!";
+    document.getElementById('thoughtRecordStatus').style.color = 'var(--accent)';
     // Clear form
     document.querySelectorAll('.card textarea').forEach(textarea => {
         if (textarea.id.startsWith('tr')) {
