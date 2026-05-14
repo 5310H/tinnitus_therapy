@@ -38,27 +38,37 @@
     </div>
 
     <div class="ctrl">
-        <h3>Noise Types</h3>
+        <h3>Preset Profiles</h3>
         <div class="btn-grid">
-            <button class="sm-btn" onclick="handlePlayNoise('white', this)" title="Flat spectrum; effective for broadband masking.">White</button>
-            <button class="sm-btn" onclick="handlePlayNoise('pink', this)" title="Balanced power; research standard for comfort.">Pink</button>
-            <button class="sm-btn" onclick="handlePlayNoise('brown', this)" title="Low-frequency focus; best for low-pitched tinnitus.">Brown</button>
-            <button class="sm-btn" onclick="handlePlayNoise('blue', this)" title="High-frequency focus; useful for high-pitched tinnitus.">Blue</button>
-            <button class="sm-btn" onclick="handlePlayNoise('violet', this)" title="Strong high-frequency focus; best for piercing tones.">Violet</button>
-            <button class="sm-btn stop-btn" onclick="stopAll()">Stop</button>
+            <button class="sm-btn" onclick="applyPreset('hiss')" title="High-frequency focus (Violet noise)">Hiss</button>
+            <button class="sm-btn" onclick="applyPreset('tonal')" title="Balanced masking (Pink noise)">Tonal</button>
+            <button class="sm-btn" onclick="applyPreset('reactive')" title="Low-frequency focus (Brown noise)">Reactive</button>
+            <button class="sm-btn" onclick="applyPreset('sleep')" title="Sleep preparation (Rain + 60m + Fade)">Sleep</button>
         </div>
     </div>
 
-    <div class="ctrl">
-        <h3>Relaxation Pacer (4-7-8)</h3>
+    <div class="ctrl" title="Calibrated broadband noise reduces the contrast between tinnitus and silence, making the tinnitus less noticeable.">
+        <h3>Noise Types <span class="info-icon">?</span></h3>
+        <div class="btn-grid">
+            <button class="sm-btn noise-btn" onclick="handlePlayNoise('white', this)" title="Flat spectrum; effective for broadband masking.">White</button>
+            <button class="sm-btn noise-btn" onclick="handlePlayNoise('pink', this)" title="Balanced power; research standard for comfort.">Pink</button>
+            <button class="sm-btn noise-btn" onclick="handlePlayNoise('brown', this)" title="Low-frequency focus; best for low-pitched tinnitus.">Brown</button>
+            <button class="sm-btn noise-btn" onclick="handlePlayNoise('blue', this)" title="High-frequency focus; useful for high-pitched tinnitus.">Blue</button>
+            <button class="sm-btn noise-btn" onclick="handlePlayNoise('violet', this)" title="Strong high-frequency focus; best for piercing tones.">Violet</button>
+            <button class="sm-btn stop-btn" onclick="stopNoise()">Stop Noise</button>
+        </div>
+    </div>
+
+    <div class="ctrl" title="The 4-7-8 breathing technique helps lower physiological stress and reduce the intensity of tinnitus spikes.">
+        <h3>Relaxation Pacer (4-7-8) <span class="info-icon">?</span></h3>
         <div class="pacer-circle" id="pacerCircle"><span id="pacerLabel">In</span></div>
         <div class="btn-grid">
             <button class="sm-btn" id="pacerToggle" onclick="handlePacer()">Start Breathing Pacer</button>
         </div>
     </div>
 
-    <div class="match-section">
-        <h3>Hearing Compensation (EQ)</h3>
+    <div class="match-section" title="Boosting frequencies where you have hearing loss reduces 'neural gain' and listening effort.">
+        <h3>Hearing Compensation (EQ) <span class="info-icon">?</span></h3>
         <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div id="eqControlsL"></div>
@@ -69,15 +79,16 @@
     <div class="ctrl">
         <h3>Nature Sounds</h3>
         <div class="btn-grid">
-            <button class="sm-btn" onclick="handlePlaySample('rain', this)">Rain</button>
-            <button class="sm-btn" onclick="handlePlaySample('ocean', this)">Ocean</button>
-            <button class="sm-btn" onclick="handlePlaySample('stream', this)">Stream</button>
-            <button class="sm-btn" onclick="handlePlaySample('wind', this)">Wind</button>
+            <button class="sm-btn ambient-btn" onclick="handlePlaySample('rain', this)">Rain</button>
+            <button class="sm-btn ambient-btn" onclick="handlePlaySample('ocean', this)">Ocean</button>
+            <button class="sm-btn ambient-btn" onclick="handlePlaySample('stream', this)">Stream</button>
+            <button class="sm-btn ambient-btn" onclick="handlePlaySample('wind', this)">Wind</button>
+            <button class="sm-btn stop-btn" onclick="stopAmbient()" style="grid-column: span 2;">Stop Nature</button>
         </div>
     </div>
 
-    <div class="ctrl">
-        <label>Volume (%) 
+    <div class="ctrl" title="Set the volume to the 'Mixing Point'—where the noise and your tinnitus blend together without one hiding the other.">
+        <label>Volume (%) <span class="info-icon">?</span>
             <div class="input-with-buttons">
                 <input type="number" id="volInput" class="val-input" min="0" max="100" value="30">
                 <div class="fine-tune-group" data-target="volume">
@@ -94,7 +105,7 @@
             <button class="button-step" data-delta="5">+5</button>
         </div>
 
-        <label style="display:block;margin-top:10px">L/R Balance 
+        <label style="display:block;margin-top:10px" title="Adjust the sound level between ears to match the perceived location of your tinnitus.">L/R Balance <span class="info-icon">?</span>
             <div class="input-with-buttons">
                 <input type="number" id="balInput" class="val-input" min="-1" max="1" step="0.1" value="0">
                 <div class="fine-tune-group" data-target="balance">
@@ -114,29 +125,30 @@
         </div>
     </div>
 
-    <div class="ctrl" style="text-align:center">
+    <div class="ctrl zen-keep" style="text-align:center">
         <h3>Session Timer</h3>
         <input id="timer" type="number" min="1" max="120" value="10" style="width:60px;padding:5px;border-radius:4px;border:1px solid #333;background:#0a0a1a;color:#fff"> min
-        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;" class="zen-keep">
             <input type="checkbox" id="sleepMode" style="width: 18px; height: 18px;">
             <label for="sleepMode" style="margin: 0; color: var(--accent); font-size: 0.85rem;">Sleep Fade (60s gradual fade)</label>
         </div>
         
-        <button class="big-btn" onclick="startTimer()">Start Timer</button>
-        <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-        <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
-        <button class="button email-audiologist-btn" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
-        <p id="timerDisplay" style="margin-top:10px;color:#ab47bc;font-weight:700"></p>
-        <div class="usage-progress">
+        <button class="big-btn zen-keep" onclick="startTimer()">Start Timer</button>
+        <button class="button zen-keep" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
+        <button class="button zen-keep" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+        <button class="button email-audiologist-btn zen-keep" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
+        <p id="timerDisplay" style="margin-top:10px;color:#ab47bc;font-weight:700" class="zen-keep"></p>
+        <div class="usage-progress zen-keep">
             <div id="usageBar" class="usage-bar" style="width: 0%"></div>
         </div>
-        <div id="usageText" class="usage-text">Today's Progress: 0 / 20 mins</div>
+        <div id="usageText" class="usage-text zen-keep">Today's Progress: 0 / 20 mins</div>
+        <button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
     </div>
 </div>
 
 <script>
-let audioCtx, currentSource, gainNode, pannerNode, eqNodesL = [], eqNodesR = [], pacerActive = false, 
-    pacerOsc = null, pacerGain = null, pacerTimeout = null, timerInterval = null, workletLoaded = false;
+let audioCtx, noiseSource, ambientSource, gainNode, pannerNode, eqNodesL = [], eqNodesR = [], pacerActive = false, zenActive = false,
+    pacerOsc = null, pacerGain = null, pacerTimeout = null, timerInterval = null;
 
 const eqBands = [2000, 4000, 8000, 12000];
 
@@ -164,6 +176,9 @@ window.onload = () => {
     createEqUI();
     updateLabels();
     setupStepButtons();
+    if (loadSetting('st_zen_mode', 'false') === 'true') {
+        toggleZenMode();
+    }
     refreshUsageUI();
 };
 
@@ -241,13 +256,6 @@ document.getElementById('balInput').oninput = e => {
 async function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.audioWorklet) {
-            try {
-                await audioCtx.audioWorklet.addModule('noise-processor.js');
-                workletLoaded = true;
-            } catch (e) { console.error("AudioWorklet failed to load", e); }
-        }
-
         gainNode = audioCtx.createGain();
         gainNode.channelCount = 2;
         gainNode.channelCountMode = 'explicit';
@@ -285,21 +293,13 @@ function handlePlayNoise(type, btn) {
 }
 
 async function playNoise(type, btn) {
-    await initAudio(); stopAll();
-    setActiveBtn(btn);
-    if (workletLoaded) {
-        const typeMap = { 'white': 0, 'pink': 1, 'brown': 2, 'blue': 3, 'violet': 4 };
-        currentSource = new AudioWorkletNode(audioCtx, 'noise-processor', {
-            parameterData: { type: typeMap[type] },
-            outputChannelCount: [1]
-        });
-        currentSource.connect(gainNode);
-    } else {
-        const buf = createTrahregNoise(audioCtx, type);
-        if (!buf) return;
-        currentSource = audioCtx.createBufferSource();
-        currentSource.buffer = buf; currentSource.loop = true;
-        currentSource.connect(gainNode); currentSource.start();
+    await initAudio(); stopNoise();
+    setActiveBtn(btn, '.noise-btn');
+
+    noiseSource = await audioCtx.generator.createSafeNoiseNode(type);
+    if (noiseSource) {
+        noiseSource.connect(gainNode);
+        noiseSource.start();
     }
 }
 
@@ -309,12 +309,12 @@ function handlePlaySample(type, btn) {
 }
 
 async function playSample(type, btn) {
-    await initAudio(); stopAll();
-    setActiveBtn(btn);
+    await initAudio(); stopAmbient();
+    setActiveBtn(btn, '.ambient-btn');
     const fileMap = { rain:'audio/rain.mp3', ocean:'audio/ocean.mp3', stream:'audio/stream.mp3', wind:'audio/wind.mp3' };
     const audio = new Audio(fileMap[type]); audio.loop = true;
     const track = audioCtx.createMediaElementSource(audio); track.connect(gainNode);
-    audio.play(); currentSource = audio;
+    audio.play(); ambientSource = audio;
 }
 
 function handlePacer() {
@@ -388,18 +388,67 @@ function setBalance(v) {
 document.getElementById('volume').oninput = e => { setVolume(e.target.value); };
 document.getElementById('balance').oninput = e => { setBalance(e.target.value); };
 
-function stopAll() {
-    if(currentSource) { 
-        try { if(currentSource.stop) currentSource.stop(); } catch(e){}
-        try { if(currentSource.pause) currentSource.pause(); } catch(e){}
-        try { if(currentSource.disconnect) currentSource.disconnect(); } catch(e){}
-        currentSource=null; 
+function stopNoise() {
+    if(noiseSource) { 
+        try { if(noiseSource.stop) noiseSource.stop(); } catch(e){}
+        try { if(noiseSource.disconnect) noiseSource.disconnect(); } catch(e){}
+        noiseSource=null; 
     }
-    document.querySelectorAll('.sm-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.noise-btn').forEach(b=>b.classList.remove('active'));
 }
 
-function setActiveBtn(btn) {
-    document.querySelectorAll('.sm-btn').forEach(b=>b.classList.remove('active'));
+function stopAmbient() {
+    if(ambientSource) { 
+        try { ambientSource.pause(); } catch(e){}
+        ambientSource=null; 
+    }
+    document.querySelectorAll('.ambient-btn').forEach(b=>b.classList.remove('active'));
+}
+
+function stopAll() {
+    stopNoise();
+    stopAmbient();
+}
+
+async function applyPreset(name) {
+    const presets = {
+        hiss: { type: 'noise', val: 'violet', vol: 25, fade: false, time: 20 },
+        tonal: { type: 'noise', val: 'pink', vol: 30, fade: false, time: 20 },
+        reactive: { type: 'noise', val: 'brown', vol: 35, fade: false, time: 20 },
+        sleep: { type: 'sample', val: 'rain', vol: 20, fade: true, time: 60 }
+    };
+    const p = presets[name];
+    if (!p) return;
+
+    // Set UI states
+    setVolume(p.vol);
+    document.getElementById('volume').value = p.vol;
+    document.getElementById('timer').value = p.time;
+    document.getElementById('sleepMode').checked = p.fade;
+
+    // Trigger Play via handlers
+    const btn = document.querySelector(`.sm-btn[onclick*="'${p.val}'"]`);
+    if (p.type === 'noise') {
+        handlePlayNoise(p.val, btn);
+    } else {
+        handlePlaySample(p.val, btn);
+    }
+}
+
+function toggleZenMode() {
+    document.body.classList.toggle('zen-mode');
+    const isZen = document.body.classList.contains('zen-mode');
+    saveSetting('st_zen_mode', isZen);
+    const btn = document.getElementById('zenBtn');
+    if (btn) btn.textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
+}
+
+function setActiveBtn(btn, selector) {
+    if (selector) {
+        document.querySelectorAll(selector).forEach(b=>b.classList.remove('active'));
+    } else {
+        document.querySelectorAll('.sm-btn').forEach(b=>b.classList.remove('active'));
+    }
     if(btn) btn.classList.add('active');
 }
 

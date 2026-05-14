@@ -561,6 +561,7 @@ class NoiseGenerator {
         // Robust verification of the AudioContext before initialization
         const isValidCtx = ctx && typeof ctx.createBuffer === 'function' && typeof ctx.sampleRate === 'number';
         this.ctx = isValidCtx ? ctx : null;
+        this._workletLoading = null; // Singleton tracker for addModule
     }
 
     /**
@@ -609,10 +610,11 @@ class NoiseGenerator {
         const d = buffer.getChannelData(0);
 
         switch (targetColor) {
-            case 'white':
+            case 'white': {
                 for (let i = 0; i < size; i++) d[i] = Math.random() * 2 - 1;
                 break;
-            case 'pink':
+            }
+            case 'pink': {
                 let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
                 for (let i = 0; i < size; i++) {
                     const w = Math.random() * 2 - 1;
@@ -621,25 +623,78 @@ class NoiseGenerator {
                     d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * .11; b6 = w * .115926;
                 }
                 break;
-            case 'blue':
+            }
+            case 'blue': {
                 let lastB = 0;
                 for (let i = 0; i < size; i++) { const w = Math.random() * 2 - 1; d[i] = (w - 0.5 * lastB) * 0.7; lastB = w; }
                 break;
-            case 'violet':
+            }
+            case 'violet': {
                 let lastV = 0;
                 for (let i = 0; i < size; i++) { const w = Math.random() * 2 - 1; d[i] = w - lastV; lastV = w; }
                 break;
-            case 'brown':
+            }
+            case 'brown': {
                 let lastBr = 0;
                 for (let i = 0; i < size; i++) { const w = Math.random() * 2 - 1; d[i] = (lastBr + 0.02 * w) / 1.02; lastBr = d[i]; }
                 break;
-            default:
+            }
+            default: {
                 // Default to white noise if color is unsupported
                 for (let i = 0; i < size; i++) d[i] = Math.random() * 2 - 1;
+            }
         }
 
         this._normalize(d);
         return buffer;
+    }
+
+    /**
+     * Attempts to create an AudioWorkletNode for real-time noise generation.
+     * Falls back to a looped AudioBufferSourceNode if noise-processor.js is missing
+     * or if the browser does not support AudioWorklets.
+     * 
+     * @param {string} color - The noise color (e.g., 'white', 'pink', 'brown').
+     * @param {object} options - Configuration options (loop, bufferSize).
+     * @returns {Promise<AudioNode|null>} An active noise node or null.
+     */
+    async createSafeNoiseNode(color, options = {}) {
+        const { loop = true, bufferSize = null } = options;
+        if (!this.ctx) return null;
+
+        // 1. Try AudioWorklet (Modern standard, low latency)
+        if (this.ctx.audioWorklet) {
+            try {
+                // Ensure we only attempt to add the module once per context
+                if (!this._workletLoading) {
+                    this._workletLoading = this.ctx.audioWorklet.addModule('./noise-processor.js');
+                }
+                await this._workletLoading;
+
+                const node = new AudioWorkletNode(this.ctx, 'noise-processor', {
+                    processorOptions: { color: color || 'white' }
+                });
+
+                // Compatibility shim: AudioWorkletNodes don't have .start()/.stop().
+                // We add no-ops so therapy modules can call them without checking node types.
+                if (typeof node.start !== 'function') node.start = () => {};
+                if (typeof node.stop !== 'function') node.stop = () => {};
+
+                return node;
+            } catch (e) {
+                console.warn("NoiseGenerator: AudioWorklet failed (noise-processor.js may be missing). Falling back to pre-rendered buffer.", e);
+            }
+        }
+
+        // 2. Fallback: Pre-rendered AudioBufferSourceNode
+        const buffer = this.generate(color, bufferSize);
+        if (!buffer) return null;
+
+        const source = this.ctx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = loop;
+        // Note: The caller must still call .start() on the returned source node.
+        return source;
     }
 }
 

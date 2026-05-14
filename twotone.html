@@ -65,10 +65,12 @@
             <button class="button stop-btn" onclick="stopAudio()">Stop All</button>
         </div>
 
-        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-            <button class="button" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-            <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
-            <button class="button email-audiologist-btn" style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
+        <div class="zen-keep" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+            <button class="button zen-keep" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
+            <button class="button zen-keep" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+            <button class="button email-audiologist-btn zen-keep" style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
+            <button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
+            <button class="button zen-keep" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetToDefaults()">Reset to Defaults</button>
         </div>
     </div>
 
@@ -79,6 +81,10 @@
             initNav("Use two tones to 'bracket' your tinnitus. By comparing two reference points, you can avoid common pitch-matching errors like 'octave confusion'. Match one tone, then adjust the other until you find the true frequency.");
             setupStepButtons();
             updateUI();
+
+            if (loadSetting('tt_zen_mode', 'false') === 'true') {
+                toggleZenMode(true);
+            }
         };
 
         function initAudio() {
@@ -134,6 +140,18 @@
             alert(`Frequency ${freq}Hz saved as your tinnitus pitch.`);
         }
 
+        function toggleZenMode() {
+            document.body.classList.toggle('zen-mode');
+            const isZen = document.body.classList.contains('zen-mode');
+            saveSetting('tt_zen_mode', isZen);
+            document.getElementById('zenBtn').textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
+        }
+
+        function resetToDefaults() {
+            if (confirm("Reset all settings for Two-Tone Comparison to their defaults?")) {
+                resetModuleSettings(['tt_']);
+            }
+        }
         function setupStepButtons() {
             document.querySelectorAll('.btn-group .button-step').forEach(btn => {
                 const delta = parseInt(btn.dataset.delta);

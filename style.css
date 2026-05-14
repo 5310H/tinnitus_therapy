@@ -43,7 +43,7 @@
     --accent: #00897b;
     --border: #ccd0d5;
 }
-body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: var(--font-size-base); background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; font-size: var(--font-size-base); background: radial-gradient(circle at top, var(--card-bg), var(--bg)); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
 a.back { position: fixed; top: 1rem; left: 1rem; color: var(--accent); text-decoration: none; font-size: .9rem; z-index: 110; }
 .help-btn { position: fixed; top: 1rem; right: 1rem; background: var(--card-bg); color: var(--accent); border: 1px solid var(--accent); padding: 8px 14px; border-radius: 8px; font-size: .9rem; cursor: pointer; z-index: 10; }
 .help-btn:hover { background: var(--accent); color: white; }
@@ -52,10 +52,11 @@ a.back { position: fixed; top: 1rem; left: 1rem; color: var(--accent); text-deco
 h1 { font-size: var(--font-size-h1); margin-bottom: .3rem; color: var(--accent); }
 h2 { font-size: var(--font-size-h2); margin-bottom: 1rem; color: var(--accent); }
 .info { color: var(--text-dim); font-size: var(--font-size-info); margin-bottom: 1rem; }
-.card { background: var(--card-bg); padding: var(--spacing-card); border-radius: var(--radius-card); border: 1px solid var(--border); text-align: left; position: relative; }
+.card { background: linear-gradient(165deg, var(--card-bg), var(--bg)); padding: var(--spacing-card); border-radius: var(--radius-card); border: 1px solid var(--border); text-align: left; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
 .ctrl { margin: var(--spacing-ctrl) 0; text-align: left; }
 .ctrl label { display: block; font-size: var(--font-size-label); color: #aaa; margin-bottom: .3rem; }
-.ctrl input[type=range], .ctrl select, .ctrl input[type=number], .ctrl textarea { width: 100%; accent-color: var(--accent); padding: .6rem; background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-input); font-size: var(--font-size-input); margin-top: 0.4rem; outline: none; font-family: inherit; }
+.ctrl input[type=range], .ctrl select, .ctrl input[type=number], .ctrl textarea { width: 100%; accent-color: var(--accent); padding: .6rem; background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-input); font-size: var(--font-size-input); margin-top: 0.4rem; outline: none; font-family: inherit; transition: all 0.2s ease; }
+.ctrl input[type=range]:hover { filter: brightness(1.2); }
 .val-input {
     background: transparent;
     border: none;
@@ -73,7 +74,7 @@ h2 { font-size: var(--font-size-h2); margin-bottom: 1rem; color: var(--accent); 
 .btn-group { display: flex; gap: 8px; margin: 0.5rem 0 1rem 0; }
 .button-step, .button {
     padding: var(--spacing-btn);
-    background: var(--card-bg);
+    background: linear-gradient(180deg, var(--surface), var(--card-bg));
     border: 1px solid var(--accent);
     color: var(--accent);
     border-radius: var(--radius-btn);
@@ -106,7 +107,7 @@ canvas { width: 100%; height: var(--viz-height); margin-top: 1rem; border-radius
 .fine-tune-btn {
     padding: 0.4rem 0.6rem;
     font-size: 0.8rem;
-    background: var(--surface);
+    background: linear-gradient(180deg, var(--surface), var(--card-bg));
     border: 1px solid var(--border);
     color: var(--text);
     border-radius: 6px;
@@ -116,6 +117,8 @@ canvas { width: 100%; height: var(--viz-height); margin-top: 1rem; border-radius
 .fine-tune-btn:active { transform: scale(0.95); background: var(--accent); color: #fff; }
 .tone-btn { padding: .5rem 1rem; margin-top: .5rem; background: var(--card-bg); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; cursor: pointer; font-size: .85rem; }
 .tone-btn:hover { background: var(--accent); color: #fff; }
+.info-icon { font-size: 0.75rem; color: var(--accent); cursor: help; margin-left: 4px; opacity: 0.8; font-weight: bold; }
+
 .volume-meter-canvas {
     width: 100%; height: 80px; margin-top: 1rem; border-radius: 8px; background: var(--bg); border: 1px solid var(--border);
     font-size: 0.8rem; color: white; /* For L/R labels */

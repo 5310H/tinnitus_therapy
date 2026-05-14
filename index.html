@@ -29,15 +29,36 @@
             <a class="button" href="cbt.html" id="step-thi" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
                 <span><b style="color:var(--accent)">1. Assessment:</b> Take the THI baseline.</span> <span class="step-status"></span>
             </a>
+            <div id="assessment-steps" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: -4px; margin-bottom: 8px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
+                <div id="astep-1">○ THI</div><div id="astep-2">○ Sleep</div><div id="astep-3">○ Mindset</div>
+            </div>
+
             <a class="button" href="validation.html" id="step-valid" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
                 <span><b style="color:var(--accent)">2. Validation:</b> Verify your hardware.</span> <span class="step-status"></span>
             </a>
+            <div id="validation-steps" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-top: -4px; margin-bottom: 8px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
+                <div id="vstep-1">○ Phase</div><div id="vstep-2">○ Engine</div>
+            </div>
+
             <a class="button" href="notchfinder.html" id="step-pitch" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
                 <span><b style="color:var(--accent)">3. Calibration:</b> Pitch-match your tinnitus.</span> <span class="step-status"></span>
             </a>
-            <a class="button" href="recommended.html" id="step-plan" style="text-align: left; padding: 10px; background: var(--accent); color: white;">
-                <b style="color:white">4. Your Plan:</b> View personalized recommendations.
+            <a class="button" href="recommended.html" id="step-plan" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center; background: var(--accent); color: white;">
+                <span><b style="color:white">4. Your Plan:</b> View personalized recommendations.</span> <span class="step-status"></span>
             </a>
+            <!-- Functional Calibration Wizard Status -->
+            <div id="wizard-progress-wrap" style="margin-top: 10px; padding: 12px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); font-size: 0.8rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-weight: bold; color: var(--accent);">Wizard Progress</span>
+                    <span id="wizard-percent" style="color: var(--text-dim); font-weight: bold;">0%</span>
+                </div>
+                <div class="usage-progress" style="margin: 0; height: 6px; background: rgba(255,255,255,0.1);">
+                    <div id="wizard-bar" class="usage-bar" style="width: 0%; box-shadow: 0 0 10px var(--accent);"></div>
+                </div>
+                <div id="wizard-steps" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
+                    <div id="wstep-1">○ Pitch</div><div id="wstep-2">○ Volume</div><div id="wstep-3">○ Notch</div>
+                </div>
+            </div>
         </div>
     </div>
     <div id="card-ai-insights" class="card grid-wide" draggable="true">
@@ -356,19 +377,81 @@ async function installPwa() {
 function updateStartPathStatus() {
     const hasThi = getLatestLogData('distress_log') !== null;
     const hasValid = loadSetting('last_validation_date', null) !== null;
-    const hasPitch = loadSetting('notchL', null) !== null;
+
+    // Expanded Step 1 Logic (Assessment)
+    const sleepSet = loadSetting('reports_sleep_issues', null) !== null;
+    const thoughtSet = getJson('thought_records', []).length > 0;
+    const assessmentComplete = hasThi && sleepSet && thoughtSet;
+
+    // Expanded Step 2 Logic (Validation)
+    const phaseStatus = loadSetting('phase_status', 'Not Verified');
+    const phaseSet = phaseStatus !== 'Not Verified' && !phaseStatus.includes('Error');
+    const engineResults = loadSetting('engine_validation_results', 'Not Performed');
+    const engineSet = engineResults !== 'Not Performed' && !engineResults.includes('[FAIL]');
+    const validationComplete = hasValid && phaseSet && engineSet;
+
+    // Functional Wizard Tracking (Check for saved calibration parameters in localStorage)
+    const pitchSet = loadSetting('notchL', null) !== null;
+    const volumeSet = loadSetting('volL', null) !== null || loadSetting('volMaster', null) !== null;
+    const nwSet = loadSetting('nw', null) !== null;
+
+    const wizardComplete = pitchSet && volumeSet && nwSet;
+    
+    const recommendationsViewed = loadSetting('recommendations_viewed', 'false') === 'true';
+    
+    // Check if any therapy session has been completed (any logged usage minutes > 0)
+    const usageLog = getJson('usage_log', {});
+    const hasCompletedTherapy = Object.values(usageLog).some(minutes => minutes > 0);
+
+    const planViewed = recommendationsViewed && hasCompletedTherapy;
 
     const setStatus = (id, complete) => {
         const el = document.querySelector(`#${id} .step-status`);
-        if (complete) {
-            el.innerHTML = '✅';
-            document.getElementById(id).style.borderColor = 'var(--accent)';
+        if (el) {
+            el.innerHTML = complete ? '✅' : '○';
+            if (complete) document.getElementById(id).style.borderColor = 'var(--accent)';
         }
     };
 
-    setStatus('step-thi', hasThi);
-    setStatus('step-valid', hasValid);
-    setStatus('step-pitch', hasPitch);
+    setStatus('step-thi', assessmentComplete);
+    setStatus('step-valid', validationComplete);
+    setStatus('step-pitch', wizardComplete);
+    setStatus('step-plan', planViewed);
+
+    // Update Granular Indicators
+    const updateSubStep = (id, set, label) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.color = set ? 'var(--accent)' : 'var(--text-dim)';
+            el.innerHTML = (set ? '✓' : '○') + ' ' + label;
+        }
+    };
+
+    updateSubStep('astep-1', hasThi, 'THI');
+    updateSubStep('astep-2', sleepSet, 'Sleep');
+    updateSubStep('astep-3', thoughtSet, 'Thought');
+
+    updateSubStep('vstep-1', phaseSet, 'Phase');
+    updateSubStep('vstep-2', engineSet, 'Engine');
+
+    // Update Wizard UI Indicator
+    const steps = [pitchSet, volumeSet, nwSet];
+    const completedCount = steps.filter(Boolean).length;
+    const percent = Math.round((completedCount / steps.length) * 100);
+
+    if (document.getElementById('wizard-bar')) document.getElementById('wizard-bar').style.width = percent + '%';
+    if (document.getElementById('wizard-percent')) document.getElementById('wizard-percent').textContent = percent + '%';
+    
+    const updateWStep = (id, set, label) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.color = set ? 'var(--accent)' : 'var(--text-dim)';
+            el.innerHTML = (set ? '✓' : '○') + ' ' + label;
+        }
+    };
+    updateWStep('wstep-1', pitchSet, 'Pitch');
+    updateWStep('wstep-2', volumeSet, 'Volume');
+    updateWStep('wstep-3', nwSet, 'Notch');
 }
 
 function showWhatsNew() {

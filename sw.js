@@ -54,7 +54,15 @@ const ASSETS = [
 // Install: Cache all essential assets
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+        caches.open(CACHE_NAME).then(async (cache) => {
+            // Use individual add for each asset so one missing file (like noise-processor.js)
+            // doesn't block the entire service worker installation.
+            for (const asset of ASSETS) {
+                try {
+                    await cache.add(asset);
+                } catch (e) { console.warn(`[PWA] Failed to cache asset: ${asset}`, e); }
+            }
+        })
     );
     self.skipWaiting();
 });

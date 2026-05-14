@@ -33,10 +33,12 @@
     <button class="button" id="start">Start Sweep</button>
     <button class="button stop-btn" id="stop">Stop</button>
 
-    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-        <button class="button" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-        <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
-        <button class="button email-audiologist-btn" style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
+    <div class="zen-keep" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <button class="button zen-keep" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
+        <button class="button zen-keep" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+        <button class="button email-audiologist-btn zen-keep" style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
+        <button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
+        <button class="button zen-keep" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetToDefaults()">Reset to Defaults</button>
     </div>
 </div>
 <script>
@@ -45,6 +47,10 @@ window.onload = () => initNav(`
     <b>Usage:</b> This helps you identify "dead zones" in your hearing or specific frequencies that trigger your tinnitus. It can also help you roughly verify your upper hearing limit.<br><br>
     <b>Safety:</b> High frequencies can be piercing. Start with your device volume very low.
 `);
+
+if (loadSetting('sweep_zen_mode', 'false') === 'true') {
+        toggleZenMode(true);
+    }
 let ctx=null, osc=null, startTime=null, raf=null, gainNode=null;
 
 function sweep(){
@@ -86,6 +92,18 @@ document.getElementById("start").onclick=start;
 document.getElementById("stop").onclick=stop;
 
 function getReportData() {
+function toggleZenMode() {
+    document.body.classList.toggle('zen-mode');
+    const isZen = document.body.classList.contains('zen-mode');
+    saveSetting('sweep_zen_mode', isZen);
+    document.getElementById('zenBtn').textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
+}
+
+function resetToDefaults() {
+    if (confirm("Reset all settings for Frequency Sweep to their defaults?")) {
+        resetModuleSettings(['sweep_']);
+    }
+}
     return {
         "Sweep Range": "20 Hz to 20,000 Hz",
         "Volume Level": document.getElementById('volSlider').value + "%"

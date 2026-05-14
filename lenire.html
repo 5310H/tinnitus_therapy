@@ -75,7 +75,7 @@
     </div>
 
     <div class="responsive-grid">
-        <div class="ctrl">
+        <div class="ctrl" title="Sets the central frequency of the tone bursts and the noise filter for the left ear.">
             <label>Carrier Freq L (Hz)
                 <div class="input-with-buttons">
                     <input type="number" id="freqL" class="val-input" min="200" max="12000" value="8000">
@@ -92,7 +92,7 @@
                 <button class="button-step" data-delta="100">+100</button>
             </div>
         </div>
-        <div class="ctrl">
+        <div class="ctrl" title="Sets the central frequency of the tone bursts and the noise filter for the right ear.">
             <label>Carrier Freq R (Hz)
                 <div class="input-with-buttons">
                     <input type="number" id="freqR" class="val-input" min="200" max="12000" value="8000">
@@ -153,7 +153,7 @@
     </div>
 
     <div class="responsive-grid">
-        <div class="ctrl">
+        <div class="ctrl" title="Adjusts the balance between the tone bursts and the modulated noise for the left ear. 0 = all noise, 1 = all tone.">
             <label>Tone/Noise Mix L <span class="val" id="mixValL">50%</span></label>
             <input id="mixL" type="range" min="0" max="1" step="0.01" value="0.5">
             <div class="btn-group" data-target="mixL">
@@ -161,7 +161,7 @@
                 <button class="button-step" data-delta="0.1">+0.1</button>
             </div>
         </div>
-        <div class="ctrl">
+        <div class="ctrl" title="Adjusts the balance between the tone bursts and the modulated noise for the right ear. 0 = all noise, 1 = all tone.">
             <label>Tone/Noise Mix R <span class="val" id="mixValR">50%</span></label>
             <input id="mixR" type="range" min="0" max="1" step="0.01" value="0.5">
             <div class="btn-group" data-target="mixR">
@@ -175,7 +175,7 @@
     </div>
 
     <div class="responsive-grid">
-        <div class="ctrl">
+        <div class="ctrl" title="Sets the frequency at which the background noise is amplitude-modulated for the left ear.">
             <label>Noise Mod L (Hz)
                 <div class="input-with-buttons">
                     <input type="number" id="modRateL" class="val-input" min="0.1" max="10" step="0.1" value="2.0">
@@ -189,7 +189,7 @@
             </label>
             <div class="btn-group" data-target="modRateL"><button class="button-step" data-delta="-0.1">-0.1</button><button class="button-step" data-delta="0.1">+0.1</button></div>
         </div>
-        <div class="ctrl">
+        <div class="ctrl" title="Sets the frequency at which the background noise is amplitude-modulated for the right ear.">
             <label>Noise Mod R (Hz)
                 <div class="input-with-buttons">
                     <input type="number" id="modRateR" class="val-input" min="0.1" max="10" step="0.1" value="2.0">
@@ -209,7 +209,7 @@
     </div>
 
     <div class="responsive-grid">
-        <div class="ctrl">
+        <div class="ctrl" title="Sets the repetition rate of the tone bursts for the left ear.">
             <label>Burst Rate L (Hz)
                 <div class="input-with-buttons">
                     <input type="number" id="burstRateL" class="val-input" min="0.2" max="10" step="0.1" value="1.5">
@@ -223,7 +223,7 @@
             </label>
             <div class="btn-group" data-target="burstRateL"><button class="button-step" data-delta="-0.1">-0.1</button><button class="button-step" data-delta="0.1">+0.1</button></div>
         </div>
-        <div class="ctrl">
+        <div class="ctrl" title="Sets the repetition rate of the tone bursts for the right ear.">
             <label>Burst Rate R (Hz)
                 <div class="input-with-buttons">
                     <input type="number" id="burstRateR" class="val-input" min="0.2" max="10" step="0.1" value="1.5">
@@ -274,10 +274,10 @@
     <button id="startBtn" class="big-btn play-btn zen-keep" onclick="startSession()">Start Session</button>
     <button id="stopBtn" class="big-btn stop-btn zen-keep" style="display:none" onclick="stopSession()">Stop Session</button>
     <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-    <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+    <button class="button zen-keep" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
     <button class="button" style="width:100%; margin-top:10px; border-color: #ff9800; color: #ff9800;" onclick="shareToCommunity()">💬 Share Setup to Community (BBCode/MD)</button>
     <button class="button email-audiologist-btn" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
-    <div class="timer zen-keep" id="timer">Session: 00:00 / 20:00</div>
+    <div class="timer zen-keep" id="timer" style="margin-top: 15px;">Session: 00:00 / 20:00</div>
     <div id="usageText" class="usage-text zen-keep">Today's Progress: 0 / 20 mins</div>
     <div class="breathing-pacer-wrap zen-keep">
         <div class="breathing-wave-label-container">
@@ -292,6 +292,7 @@
         <div id="usageBar" class="usage-bar" style="width: 0%"></div>
     </div>
     <button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
+    <button class="button zen-keep" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetToDefaults()">Reset to Defaults</button>
     <canvas id="viz" class="zen-keep"></canvas>
 </div>
 <script>
@@ -499,6 +500,12 @@ window.onload = () => {
 
     if (loadSetting('lenire_zen_mode', 'false') === 'true') {
         toggleZenMode(true);
+    }
+};
+
+function resetToDefaults() {
+    if (confirm("Reset all settings for Lenire-style therapy to their defaults?")) {
+        resetModuleSettings(['len_', 'eq_len_']);
     }
 };
 
@@ -710,6 +717,12 @@ document.getElementById('hapticPulse').onchange = (e) => {
     saveSetting('len_haptic_pulse', e.target.checked);
 };
 
+function toggleZenMode() {
+    document.body.classList.toggle('zen-mode');
+    const isZen = document.body.classList.contains('zen-mode');
+    saveSetting('lenire_zen_mode', isZen);
+    document.getElementById('zenBtn').textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
+}
 function formatTime(s){return Math.floor(s/60).toString().padStart(2,'0')+':'+(s%60).toString().padStart(2,'0')}
 function updateTimerDisplay(){timerEl.textContent='Session: '+formatTime(sessionSeconds-remaining)+' / '+formatTime(sessionSeconds)}
 const freqLEl=document.getElementById('freqL'),freqREl=document.getElementById('freqR'),volMasterEl=document.getElementById('volMaster');
@@ -765,8 +778,6 @@ async function setupAudio(){
   merger.connect(globalMasterGain).connect(audioCtx.destination);
 
   const color = document.getElementById('noiseColor').value;
-  noiseBuf = createTrahregNoise(audioCtx, color);
-  if (!noiseBuf) { console.error("Failed to generate carrier noise."); }
 
   let customSourceNode = null, splitter = null;
   if (document.getElementById('useLiveAudio').checked) {
@@ -783,19 +794,18 @@ async function setupAudio(){
       splitter = audioCtx.createChannelSplitter(2); customSourceNode.connect(splitter);
   }
 
-      const noiseModOsc = audioCtx.createOscillator();
-      const noiseModGain = audioCtx.createGain(); noiseModGain.gain.value = 0.4;
-      noiseModOsc.connect(noiseModGain);
+  const noiseModOsc = audioCtx.createOscillator();
+  const noiseModGain = audioCtx.createGain(); noiseModGain.gain.value = 0.4;
+  noiseModOsc.connect(noiseModGain);
 
-  const setupChannel = (side) => {
+  const setupChannel = async (side) => {
       const toneOsc = audioCtx.createOscillator();
       const toneGain = audioCtx.createGain();
       toneOsc.connect(toneGain);
 
       let noiseSource = null;
       if (!customSourceNode) {
-          noiseSource = audioCtx.createBufferSource();
-          if (noiseBuf) noiseSource.buffer = noiseBuf; noiseSource.loop = true;
+          noiseSource = await audioCtx.generator.createSafeNoiseNode(color);
       }
       const noiseFilter = audioCtx.createBiquadFilter(); noiseFilter.type='bandpass'; noiseFilter.Q.value=1.5;
       const noiseGain = audioCtx.createGain();
@@ -832,8 +842,8 @@ async function setupAudio(){
       return { toneOsc, toneGain, noiseSource, noiseFilter, noiseGain, masterGain, analyser, burstOsc, burstGain, noiseModOsc, noiseModGain, eqNodes };
   };
 
-  nodesL = setupChannel('L');
-  nodesR = setupChannel('R');
+  nodesL = await setupChannel('L');
+  nodesR = await setupChannel('R');
   analyserL = nodesL.analyser;
   analyserR = nodesR.analyser;
   eqNodesL = nodesL.eqNodes;

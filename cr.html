@@ -38,8 +38,8 @@
     <h1>Acoustic CR Tones</h1>
     <p class="info">Experimental Coordinated Reset (CR) Neuromodulation tones.</p>
 
-    <div class="card">
-        <h3>Tinnitus Pitch Bracketing</h3>
+    <div class="card" title="Fine-tune a tone to match your tinnitus pitch before calculating therapeutic CR sequences.">
+        <h3>Tinnitus Pitch Bracketing <span class="info-icon">?</span></h3>
         <p class="info">Use this tool to fine-tune your tinnitus pitch before calculating CR tones. Adjust the tone until it matches your tinnitus.</p>
         <div class="ctrl">
             <label>Test Tone Frequency (Hz) <input type="number" id="freqBracketInput" class="val-input" value="6000" min="500" max="16000"></label>
@@ -62,8 +62,8 @@
         </p>
     </div>
 
-    <div class="card" style="margin-top: 20px;">
-        <h3>Step 1: Calibration</h3>
+    <div class="card" style="margin-top: 20px;" title="Four therapeutic tones are calculated relative to your pitch to disrupt synchronized neural activity.">
+        <h3>Step 1: Calibration <span class="info-icon">?</span></h3>
         <p class="info">Enter your matched tinnitus frequency to calculate the four therapeutic CR tones.</p>
         <div class="ctrl">
             <label>Tinnitus Frequency (Hz)
@@ -81,8 +81,8 @@
         </div>
     </div>
 
-    <div class="card" style="margin-top: 20px;"> <!-- No responsive-grid needed here, tone-grid handles its own responsiveness -->
-        <h3>Playback Status</h3>
+    <div class="card" style="margin-top: 20px;" title="The sequence follows a research-standard 3-cycles-on, 2-cycles-off pattern at 1.5 Hz.">
+        <h3>Playback Status <span class="info-icon">?</span></h3>
         <div id="toneIndicators" class="tone-grid">
             <div class="tone-box" id="tone0">-</div>
             <div class="tone-box" id="tone1">-</div>
@@ -165,7 +165,7 @@
 </div>
 
 <script>
-let audioCtx, playing = false, timerInterval, frequencies = [], masterGain, noiseSource, noiseGain, toneBalFactors = [1,1,1,1], workletLoaded = false;
+let audioCtx, playing = false, timerInterval, frequencies = [], masterGain, noiseSource, noiseGain, toneBalFactors = [1,1,1,1], zenActive = false;
 let nextToneTime = 0, currentSequence = [], sequenceIdx = 0, cycleCount = 0;
 const TONE_DURATION = 0.120; // 120ms per tone
 const CYCLE_PERIOD = 0.666; // 1.5 Hz clinical cycle rate (666ms per cycle)
@@ -218,6 +218,10 @@ window.onload = () => {
     setupStepButtons(); // Apply step button logic to new bracketing controls
     calculateTones();
     refreshUsageUI();
+
+    if (loadSetting('cr_zen_mode', 'false') === 'true') {
+        toggleZenMode(true);
+    }
 };
 
 function calculateTones() {
@@ -255,17 +259,8 @@ async function toggle() {
     if (noiseColor !== 'none') {
         noiseGain = audioCtx.createGain();
         noiseGain.gain.value = noiseVol;
-        const typeMap = { 'white': 0, 'pink': 1, 'brown': 2, 'blue': 3, 'violet': 4 };
-        if (workletLoaded) {
-            noiseSource = new AudioWorkletNode(audioCtx, 'noise-processor', { parameterData: { type: typeMap[noiseColor] } });
-        } else {
-            const buf = createTrahregNoise(audioCtx, noiseColor);
-            if (buf) {
-                noiseSource = audioCtx.createBufferSource();
-                noiseSource.buffer = buf; noiseSource.loop = true;
-                noiseSource.start();
-            }
-        }
+        noiseSource = await audioCtx.generator.createSafeNoiseNode(noiseColor);
+        if (noiseSource) noiseSource.start();
         if (noiseSource) noiseSource.connect(noiseGain).connect(audioCtx.destination);
     }
     
@@ -418,6 +413,12 @@ function stopBracketTone() {
     document.getElementById('playBracketBtn').textContent = "Play Test Tone";
 }
 
+function toggleZenMode() {
+    document.body.classList.toggle('zen-mode');
+    const isZen = document.body.classList.contains('zen-mode');
+    saveSetting('cr_zen_mode', isZen);
+    document.getElementById('zenBtn').textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
+}
 function saveBracketToBaseFreq() {
     const bracketFreq = document.getElementById('freqBracketSlider').value;
     document.getElementById('baseFreq').value = bracketFreq;

@@ -65,10 +65,12 @@
     <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start Binaural Therapy</button>
     <div class="status" id="status">Stopped</div>
 
-    <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-        <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
-        <button class="button email-audiologist-btn" style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
+    <button class="button zen-keep" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
+    <div class="zen-keep" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+        <button class="button zen-keep" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+        <button class="button email-audiologist-btn zen-keep" style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
+        <button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
+        <button class="button zen-keep" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetToDefaults()">Reset to Defaults</button>
     </div>
 </div>
 
@@ -86,6 +88,10 @@ window.onload = () => {
     document.getElementById('beatSlider').value = loadSetting('bin_beat', 10);
     document.getElementById('volSlider').value = loadSetting('bin_vol', 20);
     updateUI();
+
+    if (loadSetting('bin_zen_mode', 'false') === 'true') {
+        toggleZenMode(true);
+    }
 };
 
 function updateUI() {
@@ -157,6 +163,18 @@ function stop() {
     document.getElementById('status').textContent = "Stopped";
 }
 
+function toggleZenMode() {
+    document.body.classList.toggle('zen-mode');
+    const isZen = document.body.classList.contains('zen-mode');
+    saveSetting('bin_zen_mode', isZen);
+    document.getElementById('zenBtn').textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
+}
+
+function resetToDefaults() {
+    if (confirm("Reset all settings for Binaural Beats to their defaults?")) {
+        resetModuleSettings(['bin_']);
+    }
+}
 function getReportData() {
     const beatFreq = parseFloat(document.getElementById('beatSlider').value);
     let reportedPreset = "Manual";

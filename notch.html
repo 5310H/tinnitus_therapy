@@ -200,7 +200,7 @@
 <canvas id="viz"></canvas>
 </div>
 <script>
-let ctx,playing=false,src,analyser,analyserL,analyserR,gainL,gainR,masterGain,toneCtx,toneOscL,toneOscR,tonePlaying=false,timerInterval=null,rafVolViz,nodeNotchL,nodeNotchR,eqNodesL=[],eqNodesR=[],workletLoaded=false;
+let ctx,playing=false,src,analyser,analyserL,analyserR,gainL,gainR,masterGain,toneCtx,toneOscL,toneOscR,tonePlaying=false,timerInterval=null,rafVolViz,nodeNotchL,nodeNotchR,eqNodesL=[],eqNodesR=[],zenActive=false,advancedSettingsOpen=false;
 window.lastValidationStatus = "Not Validated";
 const BUF_SIZE=2*44100;
 const eqBands = [2000, 4000, 8000, 12000];
@@ -289,7 +289,6 @@ function updateUI() {
     document.getElementById('volValMaster').textContent = document.getElementById('volMaster').value + '%';
 }
 
-let repeatTimeout, repeatInterval;
 function setupStepButtons() {
     document.querySelectorAll('.btn-group .button-step, .fine-tune-btn').forEach(btn => {
         const delta = parseInt(btn.dataset.delta);
@@ -459,17 +458,12 @@ async function start(){
     splitter.connect(nodeNotchR, 1);
     audioSource.play();
   } else {
-    const typeMap = { 'white': 0, 'pink': 1, 'brown': 2, 'blue': 3, 'violet': 4 };
-    if (workletLoaded) {
-        src = new AudioWorkletNode(ctx, 'noise-processor', { parameterData: { type: typeMap[color] } });
-    } else {
-        const buf = createTrahregNoise(ctx, color);
-        if (!buf) { stop(); return; }
-        src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
-        src.start();
-    }
+    // Use the safe centralized generator
+    src = await ctx.generator.createSafeNoiseNode(color);
+    if (!src) { stop(); return; }
     src.connect(nodeNotchL);
     src.connect(nodeNotchR);
+    src.start(); // Works for both Buffer and Worklet
   }
 
   playing=true;

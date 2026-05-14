@@ -57,7 +57,7 @@
 </div>
 
 <script>
-let audioCtx, noise, gain, startTime, measureInterval, maskingTimeout, workletLoaded = false;
+let audioCtx, noise, gain, startTime, measureInterval, maskingTimeout;
 
 window.onload = () => {
     initNav(`
@@ -75,22 +75,10 @@ async function startMasking() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
 
-    if (audioCtx.audioWorklet && !workletLoaded) {
-        try { await audioCtx.audioWorklet.addModule('noise-processor.js'); workletLoaded = true; }
-        catch (e) { console.error("Worklet failed", e); }
-    }
-
-    const typeMap = { 'white': 0, 'pink': 1, 'brown': 2, 'blue': 3, 'violet': 4 };
-    if (workletLoaded) {
-        noise = new AudioWorkletNode(audioCtx, 'noise-processor', { parameterData: { type: typeMap[color] } });
-    } else {
-        const buf = createTrahregNoise(audioCtx, color);
-        if (!buf) return;
-        noise = audioCtx.createBufferSource();
-        noise.buffer = buf;
-        noise.loop = true;
-        noise.start();
-    }
+    // Use the robust noise generator attached to the context (setup in nav.js)
+    noise = await audioCtx.generator.createSafeNoiseNode(color);
+    if (!noise) return;
+    noise.start(); // Works for both Buffer and Worklet
 
     gain = audioCtx.createGain();
     gain.gain.value = 0.3; // Calibrated comfort level

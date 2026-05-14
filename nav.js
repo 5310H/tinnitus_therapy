@@ -149,6 +149,10 @@ window.toggleUIInteraction = (locked) => {
     // Wrap the constructor to capture every context created in the suite
     const ProxyContext = function(...args) {
         const ctx = new OriginalAudioContext(...args);
+        
+        // Automatically attach the high-precision generator to the context
+        ctx.generator = new NoiseGenerator(ctx);
+
         let watchdogInterval = null;
 
         // Apply preferred output device (Sink ID) if supported

@@ -24,6 +24,7 @@
 window.onload = () => {
     initNav("These suggestions are generated based on your THI (distress) and MML (masking level) data. Clinical guidelines suggest prioritizing different modalities depending on symptom severity.");
     renderRecommendations();
+    saveSetting('recommendations_viewed', 'true');
 };
 
 function renderRecommendations() {

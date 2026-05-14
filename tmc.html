@@ -61,9 +61,11 @@
         <button class="button stop-btn" style="width: 100%; margin-top: 10px;" onclick="resetCurve()">Clear Curve</button>
     </div>
 
-    <div style="margin-top: 15px;">
-        <button class="button" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-        <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+    <div class="zen-keep" style="margin-top: 15px;">
+        <button class="button zen-keep" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
+        <button class="button zen-keep" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+        <button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
+        <button class="button zen-keep" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetToDefaults()">Reset to Defaults</button>
     </div>
 </div>
 
@@ -75,6 +77,10 @@ window.onload = () => {
     setupStepButtons();
     updateUI();
     drawCurve();
+
+    if (loadSetting('tmc_zen_mode', 'false') === 'true') {
+        toggleZenMode(true);
+    }
 };
 
 function importNotchFreq() {
@@ -139,6 +145,18 @@ function savePoint() {
 function resetCurve() {
     if (confirm("Reset the entire masking curve?")) {
         clearTMCLog();
+        drawCurve();
+    }
+}
+
+function toggleZenMode() {
+    document.body.classList.toggle('zen-mode');
+    const isZen = document.body.classList.contains('zen-mode');
+    saveSetting('tmc_zen_mode', isZen);
+    document.getElementById('zenBtn').textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
+}
+function resetToDefaults() {
+    if (confirm("Reset all settings for TMC to their defaults?")) {
         drawCurve();
     }
 }

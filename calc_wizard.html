@@ -38,14 +38,14 @@
 
 <div class="section">
     <h2>Therapy Mode</h2>
-    <label><input type="checkbox"> Minimal, calm UI with only essential controls</label>
-    <label><input type="checkbox"> Hide advanced settings behind a toggle</label>
+    <label><input type="checkbox" checked disabled> Minimal, calm UI with only essential controls (Zen Mode)</label>
+    <label><input type="checkbox" checked disabled> Hide advanced settings behind a toggle (Notch Therapy)</label>
 </div>
 
 <div class="section">
     <h2>Preset Profiles</h2>
-    <label><input type="checkbox"> Add presets (Hiss, Tonal, Reactive, Sleep)</label>
-    <label><input type="checkbox"> Save presets using localStorage</label>
+    <label><input type="checkbox" checked disabled> Add presets (Hiss, Tonal, Reactive, Sleep)</label>
+    <label><input type="checkbox" checked disabled> Save presets using localStorage</label>
 </div>
 
 <div class="section">
@@ -56,25 +56,26 @@
 
 <!-- ⭐ NEW SECTION ADDED HERE ⭐ -->
 <div class="section">
-    <h2>Calibration Wizard</h2>
-    <label><input type="checkbox"> Step 1: Match tinnitus pitch with slider + tone</label>
-    <label><input type="checkbox"> Step 2: Set comfortable baseline volume</label>
-    <label><input type="checkbox"> Step 3: Adjust notch depth for comfort</label>
-    <label><input type="checkbox"> Step 4: Choose therapy style (Soft / Balanced / Strong)</label>
-    <label><input type="checkbox"> Step 5: Save baseline settings to localStorage</label>
+    <h2>Calibration Wizard (Automated)</h2>
+    <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">This checklist is now refactored into a functional status indicator on the <b>Main Dashboard</b>.</p>
+    <label><input type="checkbox" checked disabled> Step 1: Match tinnitus pitch (Auto-detected)</label>
+    <label><input type="checkbox" checked disabled> Step 2: Set baseline volume (Auto-detected)</label>
+    <label><input type="checkbox" checked disabled> Step 3: Adjust notch width (Auto-detected)</label>
+    <label><input type="checkbox" checked disabled> Step 4: Choose therapy style (Tracked in Recommendations)</label>
+    <label><input type="checkbox" checked disabled> Step 5: Persistence (Handled by storage.js)</label>
 </div>
 <!-- ⭐ END OF NEW SECTION ⭐ -->
 
 <div class="section">
     <h2>Relaxation Layers</h2>
-    <label><input type="checkbox"> Add pink/brown noise options</label>
-    <label><input type="checkbox"> Add optional ambient loops</label>
+    <label><input type="checkbox" checked disabled> Add pink/brown noise options (Layerable)</label>
+    <label><input type="checkbox" checked disabled> Add optional ambient loops (Layerable)</label>
 </div>
 
 <div class="section">
-    <h2>Micro-Help Tooltips</h2>
-    <label><input type="checkbox"> Add “?” icons explaining each control</label>
-    <label><input type="checkbox"> Keep explanations short and friendly</label>
+    <h2>Micro-Help Tooltips (Implemented)</h2>
+    <label><input type="checkbox" checked disabled> Add “?” icons explaining each control</label>
+    <label><input type="checkbox" checked disabled> Keep explanations short and friendly</label>
 </div>
 
 <div class="section">
@@ -96,8 +97,8 @@
 
 <div class="section">
     <h2>Modern CSS Styling</h2>
-    <label><input type="checkbox"> Add soft gradients and rounded corners</label>
-    <label><input type="checkbox"> Use smooth transitions for sliders</label>
+    <label><input type="checkbox" checked disabled> Add soft gradients and rounded corners</label>
+    <label><input type="checkbox" checked disabled> Use smooth transitions for sliders</label>
 </div>
 
 <div class="section">
