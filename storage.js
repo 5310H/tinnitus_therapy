@@ -86,7 +86,7 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2.2.6";
+const APP_VERSION = "2.2.7";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
@@ -757,7 +757,6 @@ class NoiseGenerator {
                             console.warn(`[AudioEngine] High CPU Load: ${event.data.load}% at ${event.data.sampleRate}Hz`);
                             logTherapyError('Performance', `High DSP Load: ${event.data.load}%`, { color, sampleRate: event.data.sampleRate });
                         }
-                    }
                     }
                 };
 
