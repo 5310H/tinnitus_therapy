@@ -86,7 +86,7 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2.2.9";
+const APP_VERSION = "2.3.1";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
@@ -114,13 +114,14 @@ class TinnitusAIManager {
      * Robustly resolves the GoogleGenerativeAI class from various global namespaces.
      */
     _getSDK() {
-        let SDK = window.GoogleGenerativeAI || 
-                  (window.google && window.google.generativeAi && window.google.generativeAi.GoogleGenerativeAI) ||
-                  (window.google && window.google.generativeAi);
+        let SDK = window.GoogleGenerativeAI ||
+                  (window.google && (window.google.generativeai || window.google.generativeAi || {}).GoogleGenerativeAI) ||
+                  (window.google && (window.google.generativeai || window.google.generativeAi));
         
         if (SDK && typeof SDK !== 'function' && SDK.GoogleGenerativeAI) {
             SDK = SDK.GoogleGenerativeAI;
         }
+        // Ensure it's a valid constructor function
         return (typeof SDK === 'function') ? SDK : null;
     }
 
@@ -165,7 +166,7 @@ class TinnitusAIManager {
         if (!this.genAI) this.init();
 
         const SDK = this._getSDK();
-        
+
         if (!SDK) return { success: false, message: "AI SDK failed to load. Check your connection or disable ad-blockers (ensure cdn.jsdelivr.net is allowed)." };
         
         if (!this.genAI || !this.decryptedKey || this.decryptedKey === "YOUR_ACTUAL_API_KEY_HERE") {
@@ -348,8 +349,6 @@ class TinnitusAIManager {
     }
 }
 
-const tinnitusAI = new TinnitusAIManager();
-tinnitusAI.init();
 
 /**
  * Derives a cryptographic key from a PIN using PBKDF2.
@@ -1248,6 +1247,9 @@ function getLastTHIAssessmentDate() {
     const latest = getLatestLogData('distress_log');
     return latest ? new Date(latest.date) : null;
 }
+
+// Initialize the AI manager globally, but only after the DOM is ready
+const tinnitusAI = new TinnitusAIManager();
 
 /**
  * Generic "Video-Style" Walkthrough System

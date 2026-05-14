@@ -441,14 +441,9 @@ async function testLocalStorageQuota() {
 
 async function testAIConnectivity() {
     const title = 'AI Assistant Connectivity';
-    let SDK = window.GoogleGenerativeAI;
+    const SDK = tinnitusAI._getSDK();
 
-    // Handle structural variations in some CDN/UMD distributions
-    if (SDK && typeof SDK !== 'function' && SDK.GoogleGenerativeAI) {
-        SDK = SDK.GoogleGenerativeAI;
-    }
-
-    if (typeof SDK === 'function') {
+    if (SDK) {
         addResult(title, 'pass', 'Google Generative AI SDK is loaded and authorized for therapy support.');
     } else {
         addResult(title, 'fail', 'AI Assistant SDK failed to load.', 'Please check your internet connection or disable ad-blockers (ensure cdn.jsdelivr.net is allowed).');
@@ -460,9 +455,8 @@ function getReportData() {
     const mixStatus = engineLog.includes('Neuromodulation Mix: [PASS]') ? 'PASS' : 
                      (engineLog.includes('Neuromodulation Mix: [FAIL]') ? 'FAIL' : 'Not Tested');
 
-    let SDK = window.GoogleGenerativeAI;
-    if (SDK && typeof SDK !== 'function' && SDK.GoogleGenerativeAI) SDK = SDK.GoogleGenerativeAI;
-    const aiStatus = (typeof SDK === 'function') ? 'Active' : 'Unavailable/Blocked';
+    const SDK = tinnitusAI._getSDK();
+    const aiStatus = SDK ? 'Active' : 'Unavailable/Blocked';
 
     return { 
         settings: {

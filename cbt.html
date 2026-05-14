@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CBT & Wellness - Tinnitus Therapy</title>
-<script src="https://cdn.jsdelivr.net/npm/@google/generative-ai@0.10.0/dist/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/dist/index.min.js"></script>
 <script src="storage.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="nav.js"></script>
@@ -300,10 +300,10 @@ function checkAIState() {
     if (!responseBox) return;
     
     const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
-    const currentKey = decryptedGeminiKey || loadSetting('gemini_api_key', '');
+    const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
     const isConfigured = currentKey && currentKey !== "YOUR_ACTUAL_API_KEY_HERE" && currentKey !== "";
 
-    if (encryptedKeyExists && !decryptedGeminiKey) {
+    if (encryptedKeyExists && !activeSessionKey) {
         responseBox.style.display = 'flex';
         responseBox.innerHTML = `<div class="chat-bubble ai-bubble" style="border-color: #ff9800;">🔒 <b>AI Features Locked.</b> Your API key is encrypted. Please return to the <a href="index.html" style="color: var(--accent); text-decoration: underline;">Dashboard</a> to enter your PIN and unlock AI assistance.</div>`;
     } else if (!isConfigured) {
@@ -586,10 +586,10 @@ async function suggestBalancedThought() {
     const thought = autoField.value.trim();
 
     const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
-    const currentKey = decryptedGeminiKey || loadSetting('gemini_api_key', '');
+    const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
     const isConfigured = currentKey && currentKey !== "YOUR_ACTUAL_API_KEY_HERE" && currentKey !== "";
 
-    if (encryptedKeyExists && !decryptedGeminiKey) return alert("AI features are locked. Please unlock them on the dashboard with your PIN.");
+    if (encryptedKeyExists && !activeSessionKey) return alert("AI features are locked. Please unlock them on the dashboard with your PIN.");
     if (!isConfigured) return alert("AI features are not configured. Please add your Gemini API key on the dashboard.");
 
     if (!thought) return alert("Please enter an automatic thought first so Gemini can reframe it.");
@@ -614,10 +614,10 @@ async function generateGroundingScript() {
     const thought = document.getElementById('trBalancedThought').value;
 
     const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
-    const currentKey = decryptedGeminiKey || loadSetting('gemini_api_key', '');
+    const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
     const isConfigured = currentKey && currentKey !== "YOUR_ACTUAL_API_KEY_HERE" && currentKey !== "";
 
-    if (encryptedKeyExists && !decryptedGeminiKey) return alert("AI features are locked.");
+    if (encryptedKeyExists && !activeSessionKey) return alert("AI features are locked.");
     if (!isConfigured) return alert("AI features are not configured.");
 
     if (!thought) return alert("Please have a balanced thought ready first.");
