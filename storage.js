@@ -86,7 +86,7 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2.2.8";
+const APP_VERSION = "2.2.9";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
@@ -111,6 +111,20 @@ class TinnitusAIManager {
     }
 
     /**
+     * Robustly resolves the GoogleGenerativeAI class from various global namespaces.
+     */
+    _getSDK() {
+        let SDK = window.GoogleGenerativeAI || 
+                  (window.google && window.google.generativeAi && window.google.generativeAi.GoogleGenerativeAI) ||
+                  (window.google && window.google.generativeAi);
+        
+        if (SDK && typeof SDK !== 'function' && SDK.GoogleGenerativeAI) {
+            SDK = SDK.GoogleGenerativeAI;
+        }
+        return (typeof SDK === 'function') ? SDK : null;
+    }
+
+    /**
      * Initializes the Generative AI SDK with the provided or hardcoded key.
      */
     init(key = null) {
@@ -129,15 +143,10 @@ class TinnitusAIManager {
         }
 
         const activeKey = this.decryptedKey || HARDCODED_KEY;
-        let SDK = window.GoogleGenerativeAI || (window.google && window.google.generativeAi && window.google.generativeAi.GoogleGenerativeAI);
-
-        // Handle structural variations in some CDN/UMD distributions
-        if (SDK && typeof SDK !== 'function' && SDK.GoogleGenerativeAI) {
-            SDK = SDK.GoogleGenerativeAI;
-        }
+        const SDK = this._getSDK();
 
         try {
-            if (typeof SDK === 'function' && activeKey && activeKey !== HARDCODED_KEY && activeKey !== "ENCRYPTED_KEY_LOCKED") {
+            if (SDK && activeKey && activeKey !== HARDCODED_KEY && activeKey !== "ENCRYPTED_KEY_LOCKED") {
                 this.genAI = new SDK(activeKey);
             } else {
                 this.genAI = null;
@@ -155,8 +164,7 @@ class TinnitusAIManager {
         // Self-heal: Attempt to re-prime the engine in case the SDK loaded late
         if (!this.genAI) this.init();
 
-        // Robust Resolution: Check both standard and UMD paths
-        const SDK = window.GoogleGenerativeAI || (window.google && window.google.generativeAi && window.google.generativeAi.GoogleGenerativeAI);
+        const SDK = this._getSDK();
         
         if (!SDK) return { success: false, message: "AI SDK failed to load. Check your connection or disable ad-blockers (ensure cdn.jsdelivr.net is allowed)." };
         
@@ -1463,7 +1471,7 @@ function showWalkthrough(slides, startIndex = 0) {
  */
 function showWhatsNew() {
     showWalkthrough([
-        { title: "Version 2.2.8 - What's New", content: "This update resolves a race condition in AI SDK initialization and improves cross-module key persistence." },
+        { title: "Version 2.2.9 - What's New", content: "This update resolves a critical syntax error in the persistence engine and improves AI SDK stability." },
         { title: "Modular Architecture", content: "Data and AI management have been refactored into dedicated modules, improving reliability and stability across the entire suite." },
         { title: "Performance Profiling", content: "A new Performance Monitor has been added to track audio engine health, ensuring your therapeutic signals are always accurate." },
         { title: "Security Hardening", content: "Your API keys are now protected with high-grade AES-GCM encryption. We've also added security sanitization to our Python tools." },
