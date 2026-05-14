@@ -86,7 +86,7 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2.3.1";
+const APP_VERSION = "2.3.3";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
@@ -114,15 +114,21 @@ class TinnitusAIManager {
      * Robustly resolves the GoogleGenerativeAI class from various global namespaces.
      */
     _getSDK() {
-        let SDK = window.GoogleGenerativeAI ||
-                  (window.google && (window.google.generativeai || window.google.generativeAi || {}).GoogleGenerativeAI) ||
-                  (window.google && (window.google.generativeai || window.google.generativeAi));
-        
-        if (SDK && typeof SDK !== 'function' && SDK.GoogleGenerativeAI) {
-            SDK = SDK.GoogleGenerativeAI;
+        try {
+            // More exhaustive search for the Google AI SDK global across different CDN formats
+            let SDK = window.GoogleGenerativeAI ||
+                      (window.google && (window.google.generativeai || window.google.generativeAi || {}).GoogleGenerativeAI) ||
+                      (window.google && (window.google.generativeai || window.google.generativeAi)) ||
+                      window.GenerativeAI;
+
+            if (SDK && typeof SDK !== 'function' && SDK.GoogleGenerativeAI) SDK = SDK.GoogleGenerativeAI;
+            if (SDK && SDK.default) SDK = SDK.default;
+
+            return (typeof SDK === 'function') ? SDK : null;
+        } catch (e) {
+            console.error("TTS: Error resolving AI SDK:", e);
+            return null;
         }
-        // Ensure it's a valid constructor function
-        return (typeof SDK === 'function') ? SDK : null;
     }
 
     /**
@@ -167,7 +173,14 @@ class TinnitusAIManager {
 
         const SDK = this._getSDK();
 
-        if (!SDK) return { success: false, message: "AI SDK failed to load. Check your connection or disable ad-blockers (ensure cdn.jsdelivr.net is allowed)." };
+        if (!SDK) {
+            const scriptTag = document.querySelector('script[src*="generative-ai"]');
+            let diag = "Global variable not found.";
+            if (!scriptTag) diag = "SDK script tag missing from HTML.";
+            else diag = "Script tag present but failed to define globals (check browser console).";
+            
+            return { success: false, message: `AI SDK failed to load (${diag}). Check connection or disable ad-blockers (allow unpkg.com and cdn.jsdelivr.net).` };
+        }
         
         if (!this.genAI || !this.decryptedKey || this.decryptedKey === "YOUR_ACTUAL_API_KEY_HERE") {
             return { success: false, message: "AI Engine not initialized. Please provide a valid API key from Google AI Studio." };
@@ -738,7 +751,7 @@ class NoiseGenerator {
      * or if the browser does not support AudioWorklets.
      * 
      * @param {string} color - The noise color (e.g., 'white', 'pink', 'brown').
-     * @param {object} options - Configuration options (loop, bufferSize).
+maint     * @param {object} options - Configuration options (loop, bufferSize).
      * @returns {Promise<AudioNode|null>} An active noise node or null.
      */
     async createSafeNoiseNode(color, options = {}) {
@@ -1250,6 +1263,10 @@ function getLastTHIAssessmentDate() {
 
 // Initialize the AI manager globally, but only after the DOM is ready
 const tinnitusAI = new TinnitusAIManager();
+
+/** Developer Debugging Logs **/
+console.log(`[TTS] Persistence Engine v${APP_VERSION} initialized.`);
+console.log(`[TTS] AI SDK Detection: ${tinnitusAI._getSDK() ? "✅ Detected" : "❌ Missing"}`);
 
 /**
  * Generic "Video-Style" Walkthrough System

@@ -42,6 +42,9 @@ class NoiseProcessor extends AudioWorkletProcessor {
 
     process(inputs, outputs, parameters) {
         const startTime = performance.now();
+        
+        if (!outputs || !outputs[0] || outputs[0].length === 0) return true;
+        
         const output = outputs[0];
         const channel = output[0];
         const len = channel.length;

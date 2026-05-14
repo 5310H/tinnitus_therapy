@@ -56,7 +56,7 @@
             <button class="sm-btn noise-btn" onclick="handlePlayNoise('brown', this)" title="Low-frequency focus; best for low-pitched tinnitus.">Brown</button>
             <button class="sm-btn noise-btn" onclick="handlePlayNoise('blue', this)" title="High-frequency focus; useful for high-pitched tinnitus.">Blue</button>
             <button class="sm-btn noise-btn" onclick="handlePlayNoise('violet', this)" title="Strong high-frequency focus; best for piercing tones.">Violet</button>
-            <button class="sm-btn stop-btn" onclick="stopNoise()">Stop Noise</button>
+            <button class="sm-btn stop-btn" onclick="stopNoise()" style="grid-column: span 2;">Stop Noise</button>
         </div>
     </div>
 
@@ -84,7 +84,8 @@
             <button class="sm-btn ambient-btn" onclick="handlePlaySample('ocean', this)">Ocean</button>
             <button class="sm-btn ambient-btn" onclick="handlePlaySample('stream', this)">Stream</button>
             <button class="sm-btn ambient-btn" onclick="handlePlaySample('wind', this)">Wind</button>
-            <button class="sm-btn stop-btn" onclick="stopAmbient()" style="grid-column: span 2;">Stop Nature</button>
+            <button class="sm-btn stop-btn" onclick="stopAmbient()" style="grid-column: 1 / 2;">Stop Nature</button>
+            <button class="sm-btn stop-btn" onclick="stopAll()" style="grid-column: 2 / 3; background: #b71c1c;">Stop All</button>
         </div>
     </div>
 
@@ -257,6 +258,7 @@ document.getElementById('balInput').oninput = e => {
 async function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (!audioCtx.generator) audioCtx.generator = new NoiseGenerator(audioCtx);
         gainNode = audioCtx.createGain();
         gainNode.channelCount = 2;
         gainNode.channelCountMode = 'explicit';
@@ -294,10 +296,12 @@ function handlePlayNoise(type, btn) {
 }
 
 async function playNoise(type, btn) {
-    await initAudio(); stopNoise();
+    await initAudio(); 
+    stopNoise(); // Stop existing noise before starting new color
     setActiveBtn(btn, '.noise-btn');
 
-    noiseSource = await audioCtx.generator.createSafeNoiseNode(type);
+    // Centralized generator handles worklet loading and buffer fallbacks
+    noiseSource = await audioCtx.generator.createSafeNoiseNode(type, { loop: true });
     if (noiseSource) {
         noiseSource.connect(gainNode);
         noiseSource.start();
@@ -310,12 +314,24 @@ function handlePlaySample(type, btn) {
 }
 
 async function playSample(type, btn) {
-    await initAudio(); stopAmbient();
+    await initAudio(); 
+    stopAmbient(); // Stop existing ambient sample
     setActiveBtn(btn, '.ambient-btn');
+
     const fileMap = { rain:'audio/rain.mp3', ocean:'audio/ocean.mp3', stream:'audio/stream.mp3', wind:'audio/wind.mp3' };
-    const audio = new Audio(fileMap[type]); audio.loop = true;
-    const track = audioCtx.createMediaElementSource(audio); track.connect(gainNode);
-    audio.play(); ambientSource = audio;
+    
+    try {
+        const audio = new Audio(fileMap[type]);
+        audio.loop = true;
+        // We create a new track for every sample. Web Audio will garbage collect 
+        // the old MediaElementSourceNode once its reference (ambientSource) is cleared.
+        const track = audioCtx.createMediaElementSource(audio); 
+        track.connect(gainNode);
+        audio.play(); 
+        ambientSource = audio;
+    } catch (e) {
+        console.error("SoundTherapy: Failed to load nature sound.", e);
+    }
 }
 
 function handlePacer() {
@@ -391,8 +407,9 @@ document.getElementById('balance').oninput = e => { setBalance(e.target.value); 
 
 function stopNoise() {
     if(noiseSource) { 
-        try { if(noiseSource.stop) noiseSource.stop(); } catch(e){}
-        try { if(noiseSource.disconnect) noiseSource.disconnect(); } catch(e){}
+        // Disconnect immediately to stop sound even if .stop() shim takes a tick
+        try { noiseSource.disconnect(); } catch(e){}
+        try { if(typeof noiseSource.stop === 'function') noiseSource.stop(); } catch(e){}
         noiseSource=null; 
     }
     document.querySelectorAll('.noise-btn').forEach(b=>b.classList.remove('active'));
@@ -400,7 +417,8 @@ function stopNoise() {
 
 function stopAmbient() {
     if(ambientSource) { 
-        try { ambientSource.pause(); } catch(e){}
+        // MediaElementSource nodes are "muted" when the underlying audio element is paused
+        try { ambientSource.pause(); ambientSource.src = ""; } catch(e){}
         ambientSource=null; 
     }
     document.querySelectorAll('.ambient-btn').forEach(b=>b.classList.remove('active'));

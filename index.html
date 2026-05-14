@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
-<script src="https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/dist/index.min.js"></script>
+<script src="https://unpkg.com/@google/generative-ai@0.12.0/dist/index.js"></script>
 <script src="storage.js"></script>
 <script src="nav.js"></script>
 </head>
@@ -999,8 +999,10 @@ async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalT
         <h2 style="color: var(--accent); margin-top: 0;">What's New in v<span class="app-version-label"></span></h2>
         <p class="info">Recent improvements to your therapy experience:</p>
         <div style="max-height: 400px; overflow-y: auto; text-align: left; padding-right: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
-            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px;">Latest (v2.3.1) - May 2026</h3>
+            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px;">Latest (v2.3.3) - May 2026</h3>
             <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem;">
+                <li><b>Cache Busting Fix:</b> Resolved an issue where older versions (v2.2.9) were stuck in the browser cache, blocking AI features.</li>
+                <li><b>AI Debugger:</b> Improved SDK detection logic and diagnostic error messages for connectivity issues.</li>
                 <li><b>AI Reliability:</b> Enhanced SDK detection and synchronized Gemini libraries across all modules to resolve loading failures.</li>
                 <li><b>Critical Engine Fix:</b> Resolved a syntax error that prevented the app version from displaying and blocked AI features.</li>
                 <li><b>AI Reliability:</b> Upgraded to Gemini SDK v0.12.0 and improved resolution logic for restricted network environments.</li>
