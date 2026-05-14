@@ -178,6 +178,22 @@
 <script>
 let deferredPrompt = null;
 
+/** --- Global AI UI Helpers --- **/
+function openAISetup() {
+    const modal = document.getElementById('aiSetupModal');
+    if (modal) modal.style.display = 'block';
+    else console.error("TTS: AI Setup Modal not found in DOM.");
+}
+window.openAISetup = openAISetup;
+
+function closeAISetup() {
+    const modal = document.getElementById('aiSetupModal');
+    if (modal) modal.style.display = 'none';
+    const status = document.getElementById('modalTestStatus');
+    if (status) status.textContent = '';
+}
+window.closeAISetup = closeAISetup;
+
 // Register the PWA listener immediately to catch early events
 window.addEventListener('beforeinstallprompt', (e) => {
     console.log('PWA: beforeinstallprompt event fired');
@@ -235,8 +251,9 @@ async function loadDailyMotivation() {
     } catch (error) {
         console.error("AI Dashboard Error:", error);
         displayEl.innerHTML = `
-            <div style="color: #ef5350; font-weight: bold;">⚠️ AI Connection Error</div>
+            <div style="color: #ef5350; font-weight: bold;">⚠️ AI Connectivity Issue</div>
             <p style="font-size: 0.8rem; margin: 5px 0; color: var(--text-dim); font-style: normal;">The system could not reach Gemini. Verify your API key in settings and ensure your internet connection is active.</p>
+            <button class="button" style="font-size: 0.75rem; padding: 5px 12px; margin-top: 8px;" onclick="openAISetup()">Update Setup</button>
         `;
         displayEl.style.flexDirection = 'column';
         displayEl.style.fontStyle = 'normal';
@@ -825,13 +842,6 @@ function checkTHIReminder() {
     }
 }
 
-window.openAISetup = () => document.getElementById('aiSetupModal').style.display = 'block';
-window.closeAISetup = () => {
-    document.getElementById('aiSetupModal').style.display = 'none';
-    const status = document.getElementById('modalTestStatus');
-    if (status) status.textContent = '';
-};
-
 async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalTestStatus') {
     const keyInput = document.getElementById(inputId);
     const key = keyInput ? keyInput.value.trim() : '';
@@ -850,7 +860,16 @@ async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalT
         status.style.color = "var(--text-dim)";
     }
     
+    // Clear any lingering encrypted state to ensure the new plain-text key takes precedence
+    localStorage.removeItem('tts_gemini_api_key_encrypted');
+    localStorage.removeItem('tts_gemini_api_key_salt');
+    localStorage.removeItem('tts_gemini_api_key_iv');
+    localStorage.removeItem('tts_gemini_api_key_rc_encrypted');
+    localStorage.removeItem('tts_gemini_api_key_rc_salt');
+    localStorage.removeItem('tts_gemini_api_key_rc_iv');
+
     saveSetting('gemini_api_key', key);
+    decryptedGeminiKey = key; // Update session memory immediately
     initAI();
     
     const result = await performGeminiTest();
@@ -867,6 +886,8 @@ async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalT
             status.style.color = "#ef5350";
         }
         localStorage.removeItem('tts_gemini_api_key');
+        decryptedGeminiKey = null; // Clear from memory session variable
+        initAI(); // Re-sync manager to empty/locked state
         return false;
     }
 }
@@ -977,7 +998,7 @@ async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalT
         <h2 style="color: var(--accent); margin-top: 0;">What's New in v<span class="app-version-label"></span></h2>
         <p class="info">Recent improvements to your therapy experience:</p>
         <div style="max-height: 400px; overflow-y: auto; text-align: left; padding-right: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
-            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px;">Latest (v2.1.0) - May 2026</h3>
+            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px;">Latest (v2.2.5) - May 2026</h3>
             <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem;">
                 <li><b>AI Refinements:</b> Enhanced chat interface with typing indicators and improved context for Pattern Finder analysis.</li>
                 <li><b>Wellness Tools:</b> Integrated AI-generated mindfulness scripts into the Thought Record workflow to assist in grounding.</li>

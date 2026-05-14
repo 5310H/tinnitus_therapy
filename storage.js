@@ -70,7 +70,7 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2.2.4";
+const APP_VERSION = "2.2.5";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
@@ -98,7 +98,20 @@ class TinnitusAIManager {
      * Initializes the Generative AI SDK with the provided or hardcoded key.
      */
     init(key = null) {
-        if (key) this.decryptedKey = key;
+        if (key) {
+            this.decryptedKey = key;
+            // Sync back to session memory variable for session-wide availability
+            decryptedGeminiKey = key;
+            try { sessionStorage.setItem('tts_gemini_key_session', key); } catch(e) {}
+        } else {
+            // Attempt to load from session memory (variable or sessionStorage) or plain-text storage
+            this.decryptedKey = decryptedGeminiKey || 
+                                (function() { try { return sessionStorage.getItem('tts_gemini_key_session'); } catch(e) { return null; } })() || 
+                                loadSetting('gemini_api_key', null);
+            
+            if (this.decryptedKey) decryptedGeminiKey = this.decryptedKey;
+        }
+
         const activeKey = this.decryptedKey || HARDCODED_KEY;
         const SDK = window.GoogleGenerativeAI;
 
@@ -118,9 +131,10 @@ class TinnitusAIManager {
      * Performs a connectivity test to verify the API key is working.
      */
     async performTest() {
-        if (!this.genAI || !this.decryptedKey) {
-            return { success: false, message: "Gemini API key is not configured or invalid." };
-        }
+        const SDK = window.GoogleGenerativeAI;
+        if (!SDK) return { success: false, message: "AI SDK failed to load. Check your internet connection." };
+        if (!this.genAI || !this.decryptedKey) return { success: false, message: "Gemini API key is not configured or invalid." };
+        
         try {
             const model = this.genAI.getGenerativeModel({ model: this.modelName });
             const result = await model.generateContent("Test connection: hello");
@@ -148,6 +162,11 @@ class TinnitusAIManager {
      * Centralized method to handle AI requests with safety settings and disclaimers.
      */
     async fetchAIAssistance(taskType, payload) {
+        // Self-healing: try to re-init if genAI is missing (e.g. SDK loaded late or navigation reset)
+        if (!this.genAI) {
+            this.init();
+        }
+
         if (!this.genAI) {
             return "AI Features are currently unconfigured. Please check the suite's setup instructions to enable Gemini assistance.";
         }
@@ -1373,7 +1392,7 @@ function showWalkthrough(slides, startIndex = 0) {
  */
 function showWhatsNew() {
     showWalkthrough([
-        { title: "Version 2.2.1 - What's New", content: "Welcome to the latest update! We've overhauled the suite's internal architecture for better performance and security." },
+        { title: "Version 2.2.5 - What's New", content: "Welcome to the latest update! We've overhauled the suite's internal architecture for better performance and security." },
         { title: "Modular Architecture", content: "Data and AI management have been refactored into dedicated modules, improving reliability and stability across the entire suite." },
         { title: "Performance Profiling", content: "A new Performance Monitor has been added to track audio engine health, ensuring your therapeutic signals are always accurate." },
         { title: "Security Hardening", content: "Your API keys are now protected with high-grade AES-GCM encryption. We've also added security sanitization to our Python tools." },
