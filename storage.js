@@ -1,6 +1,51 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
+/** 
+ * Helpers for consistent localStorage interaction
+ * Initialized at the top to ensure availability for immediate-run IIFEs.
+ */
+let _memStorage = {};
+let _memSessionActive = false;
+
+const isStorageAvailable = () => {
+    try { localStorage.setItem('tts_t', '1'); localStorage.removeItem('tts_t'); return true; } 
+    catch (e) { return false; }
+};
+
+const _safeGet = (k) => { try { return localStorage.getItem(k); } catch(e) { return _memStorage[k]; } };
+const _safeSet = (k, v) => { try { localStorage.setItem(k, v); } catch(e) { _memStorage[k] = v; } };
+
+const getJson = (key, defaultVal = []) => {
+    const val = _safeGet('tts_' + key);
+    try { return val ? JSON.parse(val) : defaultVal; } catch (e) { return defaultVal; }
+};
+const setJson = (key, val) => _safeSet('tts_' + key, JSON.stringify(val));
+
+const loadSetting = (key, defaultVal) => _safeGet('tts_' + key) || defaultVal;
+const saveSetting = (key, val) => _safeSet('tts_' + key, val);
+
+const getTodayKey = () => new Date().toISOString().split('T')[0];
+
+/**
+ * Session Authorization
+ * Marks the onboarding as complete and authorizes the current session.
+ */
+function completeOnboarding() {
+    try {
+        saveSetting('onboarding_step', '1');
+        saveSetting('last_seen_version', APP_VERSION);
+        try { sessionStorage.setItem('tts_session_active', 'true'); } catch(e) {}
+        _memSessionActive = true;
+    } catch (e) { console.error("TTS: Failed to save onboarding state.", e); }
+    console.log("TTS: Onboarding completed.");
+}
+
+/**
+ * Core Settings Actions
+ * Attached to window for global access from UI buttons.
+ */
+
 /**
  * Requests that the browser treat the storage for this origin as persistent.
  * This makes it significantly less likely that your API key or logs will be 
@@ -341,26 +386,6 @@ async function _attemptDecrypt(secret, keySet, saltSet, ivSet) {
 }
 
 /**
- * Session Authorization Fallback
- * Used if SessionStorage is blocked by the browser environment.
- */
-let _memSessionActive = false;
-
-/**
- * Marks the onboarding as complete and authorizes the current session.
- * Call this when the user accepts the medical disclaimer.
- */
-function completeOnboarding() {
-    try {
-        saveSetting('onboarding_step', '1');
-        saveSetting('last_seen_version', APP_VERSION);
-        try { sessionStorage.setItem('tts_session_active', 'true'); } catch(e) {}
-        _memSessionActive = true;
-    } catch (e) { console.error("TTS: Failed to save onboarding state.", e); }
-    console.log("TTS: Onboarding completed.");
-}
-
-/**
  * Resets the application onboarding status and session.
  */
 function resetOnboarding() {
@@ -380,35 +405,11 @@ function resetOnboarding() {
     // Clear session storage as well to reset session-bound gatekeeper states
     sessionStorage.clear();
 
-    alert("Onboarding status reset. The application will now reload to the welcome screen.");
-    window.location.reload();
+    alert("System reset successful. Redirecting to welcome screen...");
+    // Force navigation to the base index.html without any query parameters
+    window.location.href = window.location.pathname.replace('index.html', '') + 'index.html';
 }
-
-/** 
- * Helpers for consistent localStorage interaction
- */
-const getTodayKey = () => new Date().toISOString().split('T')[0];
-
-let _memStorage = {};
-const isStorageAvailable = () => {
-    try { localStorage.setItem('tts_t', '1'); localStorage.removeItem('tts_t'); return true; } 
-    catch (e) { return false; }
-};
-
-const _safeGet = (k) => { try { return localStorage.getItem(k); } catch(e) { return _memStorage[k]; } };
-const _safeSet = (k, v) => { try { localStorage.setItem(k, v); } catch(e) { _memStorage[k] = v; } };
-
-const getJson = (key, defaultVal = []) => {
-    const val = _safeGet('tts_' + key);
-    try { return val ? JSON.parse(val) : defaultVal; } catch (e) { return defaultVal; }
-};
-const setJson = (key, val) => _safeSet('tts_' + key, JSON.stringify(val));
-
-/**
- * Helpers for simple string-based settings
- */
-const loadSetting = (key, defaultVal) => _safeGet('tts_' + key) || defaultVal;
-const saveSetting = (key, val) => _safeSet('tts_' + key, val);
+window.resetOnboarding = resetOnboarding;
 
 /**
  * Retrieves the most recent entry from a JSON-based log.
@@ -1443,6 +1444,7 @@ function toggleCompactMode() {
     saveSetting('compact_mode', isCompact ? 'false' : 'true');
     applyCompactMode();
 }
+window.toggleCompactMode = toggleCompactMode;
 
 function applyDashboardLayout() {
     const layout = loadSetting('dashboard_layout', '2-column');
@@ -1455,6 +1457,7 @@ function toggleDashboardLayout() {
     saveSetting('dashboard_layout', next);
     applyDashboardLayout();
 }
+window.toggleDashboardLayout = toggleDashboardLayout;
 
 function applyTheme() {
     const theme = loadSetting('theme', 'dark');
@@ -1478,6 +1481,7 @@ function toggleTheme() {
     saveSetting('theme', next);
     applyTheme();
 }
+window.toggleTheme = toggleTheme;
 
 function syncUIVersion() {
     document.querySelectorAll('.app-version-label').forEach(el => {

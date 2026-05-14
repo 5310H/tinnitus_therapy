@@ -42,7 +42,7 @@
     </div>
     <div id="card-ai-insights" class="card grid-wide" draggable="true">
         <div class="drag-handle">⠿</div>
-        <h2>✨ AI Insights (Gemini)</h2>
+        <h2>✨ AI Insights </h2>
         <p class="info">Your daily dose of motivation and personalized tips from your AI coach.</p>
         <div id="dailyMotivationDisplay" style="margin-top: 15px; padding: 15px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); min-height: 80px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic; color: var(--text-dim);">
             Loading your daily motivation...
@@ -224,8 +224,10 @@ async function loadDailyMotivation() {
 
 /** Global UI Actions - Moved outside onload for immediate availability **/
 window.restartOnboarding = () => {
-    if (confirm("This will reset your setup progress and all therapy calibrations. Continue?")) {
-        resetOnboarding();
+    const msg = "This will reset your setup progress and all therapy calibrations. Your dashboard will return to the welcome screen. Continue?";
+    if (confirm(msg)) {
+        if (typeof resetOnboarding === 'function') resetOnboarding();
+        else location.reload();
     }
 };
 
@@ -614,8 +616,9 @@ window.factoryReset = () => {
             if (input === 'RESET') {
                 localStorage.clear();
                 sessionStorage.clear();
-                alert("Data cleared successfully. Reloading...");
-                location.reload();
+                alert("All data has been cleared. Restarting the suite...");
+                // Navigate to root to ensure a clean slate
+                window.location.href = 'index.html';
             } else {
                 alert("Reset cancelled. No data was changed.");
             }
