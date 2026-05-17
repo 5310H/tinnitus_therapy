@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trahreg-tinnitus-suite-v2.3.3';
+const CACHE_NAME = 'trahreg-tinnitus-suite-v2.4.1';
 const ASSETS = [
     './',
     './index.html',
@@ -43,12 +43,13 @@ const ASSETS = [
     './audio/ocean.mp3',
     './audio/stream.mp3',
     './audio/wind.mp3',
+    './favicon.ico',
     './icon-192.png',
     './icon-512.png',
     './hardware/haptic_mount.glb', // Updated to professional GLB format
     'https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js', // Model Viewer for 3D hardware preview
     'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js', // For clinical report PDF generation
-    'https://unpkg.com/@google/generative-ai@0.12.0/dist/index.js' // Google Generative AI SDK (for direct client-side calls)
+    'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm' // Google Generative AI SDK (ESM Bridge)
 ];
 
 // Install: Cache all essential assets
@@ -60,7 +61,7 @@ self.addEventListener('install', (event) => {
             for (const asset of ASSETS) {
                 try {
                     await cache.add(asset);
-                } catch (e) { console.warn(`[PWA] Failed to cache asset: ${asset}`, e); }
+                } catch (e) { console.warn(`[PWA] Asset missing (skipping): ${asset}`); }
             }
         })
     );
@@ -90,6 +91,41 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
     const isStaticAsset = url.pathname.endsWith('.css') || url.pathname.endsWith('.js');
     const isHTML = url.pathname.endsWith('.html') || url.pathname.endsWith('/') || url.pathname === '';
+
+    // Special handling for noise-processor.js to ensure correct MIME type for AudioWorklet
+    if (url.pathname.endsWith('noise-processor.js')) {
+        event.respondWith(
+            caches.match(event.request).then((cachedResponse) => {
+                if (cachedResponse) {
+                    // Clone and set correct MIME type
+                    return cachedResponse.blob().then(blob => {
+                        return new Response(blob, {
+                            status: 200,
+                            statusText: 'OK',
+                            headers: { 'Content-Type': 'application/javascript' }
+                        });
+                    });
+                }
+                return fetch(event.request).then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const responseToCache = networkResponse.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseToCache);
+                        });
+                        return networkResponse.blob().then(blob => {
+                            return new Response(blob, {
+                                status: 200,
+                                statusText: 'OK',
+                                headers: { 'Content-Type': 'application/javascript' }
+                            });
+                        });
+                    }
+                    return networkResponse;
+                });
+            })
+        );
+        return;
+    }
 
     // Bypass cache for maintenance config to allow immediate remote toggling
     if (url.pathname.endsWith('maintenance.json')) {
@@ -127,7 +163,7 @@ self.addEventListener('fetch', (event) => {
                             cache.put(event.request, networkResponse.clone());
                         }
                         return networkResponse;
-                    });
+                    }).catch(() => cachedResponse);
                     return cachedResponse || fetchPromise;
                 });
             })
@@ -152,7 +188,7 @@ self.addEventListener('fetch', (event) => {
                     });
 
                     return networkResponse;
-                });
+                }).catch(() => caches.match(event.request));
             })
         );
     }

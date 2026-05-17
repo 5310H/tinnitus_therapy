@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="icon-192.png" type="image/png">
 <title>Dual‑Stimulus Neuromodulation</title>
 <script src="storage.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -296,7 +297,7 @@
     <canvas id="viz" class="zen-keep"></canvas>
 </div>
 <script>
-let audioCtx,merger,analyserL,analyserR,rafViz,rafPulse,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[],noiseBuf,nextChimeTime=0,lastVibrateTime=0,bleCharacteristic,batteryChar;
+let audioCtx,merger,analyserL,analyserR,rafViz,rafPulse,pacerTimer,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[],noiseBuf,nextChimeTime=0,lastVibrateTime=0,bleCharacteristic,batteryChar;
 let serialPort, serialWriter, lastUsbHeartbeat = 0;
 let running=false,remaining=0,timerId=null,sessionSeconds=1200;
 const eqBands = [2000, 4000, 8000, 12000];
@@ -702,7 +703,7 @@ function schedulePacerAudio() {
         playPacerChime(nextChimeTime + (duration / 2), 440);
         nextChimeTime += duration;
     }
-    setTimeout(schedulePacerAudio, 50);
+    pacerTimer = setTimeout(schedulePacerAudio, 50);
 }
 
 document.getElementById('visualPulse').onchange = (e) => {
@@ -733,6 +734,7 @@ async function startSession(){
   if(running)return;
   sessionSeconds=parseInt(document.getElementById('session').value); remaining=sessionSeconds;
   if(!audioCtx) await setupAudio();
+  audioCtx._expectingSound = true;
   validateLenireParams();
   updateParams(); running=true;
   nextChimeTime = audioCtx.currentTime;
@@ -761,11 +763,14 @@ function stopSession(){
   if(timerId)clearInterval(timerId);
   if(rafViz)cancelAnimationFrame(rafViz);
   if(rafPulse)cancelAnimationFrame(rafPulse);
+  if(pacerTimer)clearTimeout(pacerTimer);
+  document.body.style.background = ''; // Reset visual pulse
   if(liveStream) {
       liveStream.getTracks().forEach(t => t.stop());
       liveStream = null;
   }
   if(bgSrc && bgSrc.pause) bgSrc.pause();
+  if(audioCtx) audioCtx._expectingSound = false;
   if(audioCtx) { audioCtx.close(); audioCtx = null; }
   remaining=0;
   updateTimerDisplay();
@@ -775,7 +780,11 @@ async function setupAudio(){
   audioCtx=new(window.AudioContext||window.webkitAudioContext)();
   merger = audioCtx.createChannelMerger(2);
   globalMasterGain = audioCtx.createGain();
-  merger.connect(globalMasterGain).connect(audioCtx.destination);
+
+  const masterAnalyser = audioCtx.createAnalyser();
+  masterAnalyser.fftSize = 256;
+  merger.connect(globalMasterGain).connect(masterAnalyser).connect(audioCtx.destination);
+  audioCtx._healthAnalyser = masterAnalyser;
 
   const color = document.getElementById('noiseColor').value;
 
@@ -1064,6 +1073,18 @@ function emailToAudiologist() {
 function shareToCommunity() {
     shareSetup("Dual-Stimulus Neuromodulation", getReportData());
 }
+
+// Audio Recovery: Automatically restart session if the global watchdog detects silence
+window.addEventListener('tts-audio-recovery-triggered', () => {
+    if (running) {
+        console.warn("[AudioRecovery] Sustained silence detected. Re-initializing engine...");
+        const savedRemaining = remaining;
+        stopSession();
+        startSession().then(() => {
+            remaining = savedRemaining; updateTimerDisplay();
+        });
+    }
+});
 </script>
 </body>
 </html>

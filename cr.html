@@ -3,8 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="icon-192.png" type="image/png">
 <title>Acoustic CR Neuromodulation</title>
-<script src="https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/dist/index.min.js"></script>
+<script type="module">
+    import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
+    window.GoogleGenerativeAI = GoogleGenerativeAI;
+</script>
 <script src="storage.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="nav.js"></script>
@@ -260,6 +264,7 @@ async function toggle() {
     if (noiseColor !== 'none') {
         noiseGain = audioCtx.createGain();
         noiseGain.gain.value = noiseVol;
+        audioCtx._expectingSound = true;
         noiseSource = await audioCtx.generator.createSafeNoiseNode(noiseColor);
         if (noiseSource) noiseSource.start();
         if (noiseSource) noiseSource.connect(noiseGain).connect(audioCtx.destination);
@@ -268,6 +273,7 @@ async function toggle() {
     masterGain = audioCtx.createGain();
     masterGain.gain.value = document.getElementById('volSlider').value / 100;
     masterGain.connect(audioCtx.destination);
+    audioCtx._expectingSound = true;
 
     playing = true;
     document.getElementById('toggleBtn').textContent = "Stop Therapy";
@@ -283,6 +289,7 @@ async function toggle() {
 function stop() {
     playing = false;
     if (noiseSource && noiseSource.disconnect) noiseSource.disconnect();
+    if (audioCtx) audioCtx._expectingSound = false;
     clearInterval(timerInterval);
     if (audioCtx) { audioCtx.close(); audioCtx = null; }
     stopBracketTone(); // Ensure bracket tone is stopped when main therapy stops
@@ -510,6 +517,14 @@ async function generatePDFReport() {
     if (!isDark) document.documentElement.classList.remove('light-mode');
     document.body.removeChild(tempDiv);
 }
+
+// Audio Recovery: Automatically restart therapy if the global watchdog detects silence
+window.addEventListener('tts-audio-recovery-triggered', () => {
+    if (playing) {
+        console.warn("[AudioRecovery] Sustained silence detected. Restarting CR sequence...");
+        stop(); toggle();
+    }
+});
 </script>
 </body>
 </html>

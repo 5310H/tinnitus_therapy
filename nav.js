@@ -146,21 +146,30 @@ window.toggleUIInteraction = (locked) => {
     const OriginalAudioContext = window.AudioContext || window.webkitAudioContext;
     if (!OriginalAudioContext) return;
 
-    // Wrap the constructor to capture every context created in the suite
-    const ProxyContext = function(...args) {
-        const ctx = new OriginalAudioContext(...args);
-        
+    // Wrap the constructor to capture every context created in the suite.
+    // We use a proper class extension to ensure instanceof checks remain valid.
+    class ProxyContext extends OriginalAudioContext {
+        constructor(...args) {
+            super(...args);
         // Automatically attach the high-precision generator to the context
-        ctx.generator = new NoiseGenerator(ctx);
+            this.generator = new NoiseGenerator(this);
+            this._isRecovering = false;
+            this._expectingSoundVal = false;
+            this._healthAnalyser = null;
+            this._glitchCount = 0;
+            this._peakDetected = 0;
 
         let watchdogInterval = null;
 
+        // Closure-safe reference to updateUI for the setter
+        this._refreshUI = () => updateUI();
+
         // Apply preferred output device (Sink ID) if supported
         const applyOutputSink = async () => {
-            if (ctx.setSinkId) {
+            if (this.setSinkId) {
                 const sinkId = localStorage.getItem('tts_preferred_output_device') || '';
                 if (sinkId) {
-                    ctx.setSinkId(sinkId).catch(e => console.warn("[Routing] Sink error:", e));
+                    this.setSinkId(sinkId).catch(e => console.warn("[Routing] Sink error:", e));
                 }
             }
         };
@@ -169,52 +178,150 @@ window.toggleUIInteraction = (locked) => {
             const el = document.getElementById('audioStatusIndicator');
             if (!el) return;
             
-            el.style.display = 'block';
-            const state = ctx.state;
+            const state = this.state;
             
             if (state === 'running') {
-                el.innerHTML = '<span style="color: var(--accent)">●</span> Audio Active';
-                el.style.borderColor = 'var(--accent)';
-                el.title = "The audio engine is processing sound normally.";
+                if (this._expectingSoundVal) {
+                    el.style.display = 'block';
+                    el.innerHTML = '<span style="color: var(--accent)">●</span> Audio Active';
+                    el.style.borderColor = 'var(--accent)';
+                    el.title = "The audio engine is processing sound normally.";
+                } else {
+                    el.style.display = 'none';
+                }
                 applyOutputSink();
-                startWatchdog();
+                this._startWatchdog();
             } else if (state === 'suspended') {
+                el.style.display = 'block';
                 el.innerHTML = '<span style="color: #ff9800">●</span> Audio Suspended';
                 el.style.borderColor = '#ff9800';
                 el.title = "Audio is suspended by the browser. Interaction (like clicking Start) is required.";
-                stopWatchdog();
+                this._stopWatchdog();
             } else if (state === 'closed') {
+                el.style.display = 'block';
                 el.innerHTML = '○ Audio Closed';
                 el.style.borderColor = 'var(--border)';
                 el.title = "The audio engine has been shut down.";
-                stopWatchdog();
+                this._stopWatchdog();
             }
         };
 
-        const startWatchdog = () => {
+        this._startWatchdog = () => {
             if (watchdogInterval) return;
-            let lastTime = ctx.currentTime;
+            let lastTime = this.currentTime;
+            let silenceCount = 0;
+            let lastClockTime = performance.now();
+            const silenceThreshold = 0.00001;
+            const buffer = new Float32Array(128);
+
             watchdogInterval = setInterval(() => {
-                // If context is running but the clock isn't moving, the thread has stalled
-                if (ctx.state === 'running' && ctx.currentTime === lastTime && lastTime > 0) {
+                const state = this.state;
+                const time = this.currentTime;
+                const now = performance.now();
+
+                // 1. Clock Stall Check: Is the Web Audio clock actually moving?
+                if (state === 'running' && time === lastTime && lastTime > 0) {
                     console.warn("[Watchdog] Audio clock stall detected. Attempting recovery...");
-                    ctx.resume().catch(e => { if(typeof logTherapyError === 'function') logTherapyError("Watchdog", e); });
+                    this.resume().catch(e => { if(typeof logTherapyError === 'function') logTherapyError("Watchdog", e); });
                 }
-                lastTime = ctx.currentTime;
+                
+                // 2. Performance Glitch Detection: Has the clock drifted from real-time?
+                if (state === 'running' && time > lastTime) {
+                    const drift = Math.abs((now - lastClockTime) / 1000 - (time - lastTime));
+                    if (drift > 0.1) this._glitchCount++; // Drift > 100ms indicates a frame dropout
+                }
+
+                // 2. Silence Detection: Is the clock moving but the output is silent?
+                if (state === 'running' && this._expectingSound && this._healthAnalyser && time > lastTime) {
+                    try {
+                        this._healthAnalyser.getFloatTimeDomainData(buffer);
+                        let sum = 0;
+                        for (let i = 0; i < buffer.length; i++) sum += buffer[i] * buffer[i];
+                        const rms = Math.sqrt(sum / buffer.length);
+
+                        // Peak / Clipping Detection
+                        for (let i = 0; i < buffer.length; i++) {
+                            const abs = Math.abs(buffer[i]);
+                            if (abs > this._peakDetected) this._peakDetected = abs;
+                        }
+                        if (this._peakDetected > 0.98) console.warn("[Safety] Digital clipping detected in output graph.");
+
+                        if (rms < silenceThreshold) {
+                            silenceCount++;
+                            if (silenceCount >= 3) { // ~9 seconds of sustained silence while 'running'
+                                console.warn("[Watchdog] Sustained silence detected. Attempting engine recovery...");
+                                silenceCount = 0;
+                                this._isRecovering = true;
+                                this.resume().catch(() => {});
+                                
+                                // Telemetry: Report the failure to the host
+                                if (typeof sendClinicalTelemetry === 'function') {
+                                    sendClinicalTelemetry('recovery_triggered', { module: window.location.pathname.split('/').pop() });
+                                }
+
+                                window.dispatchEvent(new CustomEvent('tts-audio-recovery-triggered', { detail: { context: this } }));
+                            }
+                        } else {
+                            if (this._isRecovering) {
+                                this._isRecovering = false;
+                                window.dispatchEvent(new CustomEvent('tts-audio-recovered'));
+                            }
+                            silenceCount = 0;
+                        }
+                    } catch (e) { silenceCount = 0; }
+                }
+
+                lastTime = time;
+                lastClockTime = now;
             }, 3000);
         };
 
-        const stopWatchdog = () => {
+        this._stopWatchdog = () => {
             if (watchdogInterval) clearInterval(watchdogInterval);
             watchdogInterval = null;
         };
 
-        ctx.addEventListener('statechange', updateUI);
+        this.addEventListener('statechange', updateUI);
         setTimeout(updateUI, 100);
-        
-        return ctx;
-    };
+        }
 
-    ProxyContext.prototype = OriginalAudioContext.prototype;
+        get _expectingSound() { return this._expectingSoundVal; }
+        set _expectingSound(val) {
+            this._expectingSoundVal = val;
+            if (typeof this._refreshUI === 'function') this._refreshUI();
+        }
+    }
+
+    // Global listener for the recovery event to show UI feedback across all therapy modules
+    window.addEventListener('tts-audio-recovery-triggered', () => {
+        let el = document.getElementById('audioRecoveryNotice');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'audioRecoveryNotice';
+            el.className = 'recovery-notification';
+            document.body.appendChild(el);
+        }
+        el.textContent = '⚠️ Recovering Audio...';
+        el.classList.remove('recovery-success');
+        el.classList.remove('recovery-active');
+        void el.offsetWidth; // Trigger reflow to allow re-triggering the animation
+        el.classList.add('recovery-active');
+    });
+
+    window.addEventListener('tts-audio-recovered', () => {
+        let el = document.getElementById('audioRecoveryNotice');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'audioRecoveryNotice';
+            el.className = 'recovery-notification';
+            document.body.appendChild(el);
+        }
+        el.textContent = '✅ Audio Restored';
+        el.classList.add('recovery-success');
+        el.classList.remove('recovery-active');
+        void el.offsetWidth;
+        el.classList.add('recovery-active');
+    });
+
     window.AudioContext = window.webkitAudioContext = ProxyContext;
 })();

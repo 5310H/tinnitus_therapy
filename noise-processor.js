@@ -28,7 +28,8 @@ class NoiseProcessor extends AudioWorkletProcessor {
 
         // Scale Brown Noise Pole
         this.brownPole = Math.pow(1 / 1.02, ratio);
-        this.brownGain = (1 - this.brownPole) * 50; // Normalize gain relative to white noise input
+        // Calibrate gain to produce ~0.9 peak to match nature sound levels
+        this.brownGain = (1 - this.brownPole) * 30.0; // Increased for audibility
 
         if (sampleRate < 44100) {
             this.port.postMessage({
@@ -36,19 +37,22 @@ class NoiseProcessor extends AudioWorkletProcessor {
                 message: `Low Sample Rate: ${sampleRate}Hz. Audio quality below clinical standard.`
             });
         }
-
-        this._lastPerfReport = 0;
     }
 
     process(inputs, outputs, parameters) {
-        const startTime = performance.now();
-        
-        if (!outputs || !outputs[0] || outputs[0].length === 0) return true;
-        
         const output = outputs[0];
-        const channel = output[0];
-        const len = channel.length;
+        if (!output || !output[0]) return true;
+        
+        const channelL = output[0];
+        const channelR = output.length > 1 ? output[1] : null;
+        const len = channelL.length;
         const color = this.color;
+
+        // Helper to set sample for both channels simultaneously to ensure stereo presence
+        const setSample = (i, val) => {
+            channelL[i] = val;
+            if (channelR) channelR[i] = val;
+        };
 
         // Optimization: Pull color switch out of the loop for higher efficiency at 96kHz
         if (color === 'pink') {
@@ -60,56 +64,33 @@ class NoiseProcessor extends AudioWorkletProcessor {
                 this.b3 = this.p[3] * this.b3 + white * this.g[3];
                 this.b4 = this.p[4] * this.b4 + white * this.g[4];
                 this.b5 = this.p[5] * this.b5 + white * this.g[5];
-                channel[i] = (this.b0 + this.b1 + this.b2 + this.b3 + this.b4 + this.b5 + this.b6 + white * 0.5362) * 0.11;
+                setSample(i, (this.b0 + this.b1 + this.b2 + this.b3 + this.b4 + this.b5 + this.b6 + white * 0.5362) * 0.11);
                 this.b6 = white * 0.115926;
             }
         } else if (color === 'brown') {
             for (let i = 0; i < len; i++) {
                 const white = Math.random() * 2 - 1;
-                channel[i] = (this.lastOut * this.brownPole) + (white * this.brownGain);
-                this.lastOut = channel[i];
-                channel[i] *= 3.5;
+                const val = (this.lastOut * this.brownPole) + (white * this.brownGain);
+                this.lastOut = val;
+                setSample(i, val);
             }
         } else if (color === 'blue') {
             for (let i = 0; i < len; i++) {
                 const white = Math.random() * 2 - 1;
-                channel[i] = (white - (0.5 * this.lastIn)) * 0.7;
+                setSample(i, (white - (0.5 * this.lastIn)) * 0.95);
                 this.lastIn = white;
             }
         } else if (color === 'violet') {
             for (let i = 0; i < len; i++) {
                 const white = Math.random() * 2 - 1;
-                channel[i] = (white - this.lastIn);
+                setSample(i, (white - this.lastIn) * 0.85);
                 this.lastIn = white;
             }
         } else {
             for (let i = 0; i < len; i++) {
-                channel[i] = Math.random() * 2 - 1;
+                setSample(i, (Math.random() * 2 - 1) * 0.9);
             }
         }
-
-        // Mirror to second channel if stereo output is requested
-        if (output.length > 1) {
-            output[1].set(channel);
-        }
-
-        // Performance Monitoring: Calculate load vs the real-time budget (1.33ms @ 96kHz)
-        const endTime = performance.now();
-        const duration = endTime - startTime;
-        const budget = (len / sampleRate) * 1000;
-        const load = (duration / budget) * 100;
-
-        // Report performance metrics every 2 seconds
-        if (startTime - this._lastPerfReport > 2000) {
-            this.port.postMessage({
-                type: 'DSP_METRIC',
-                load: load.toFixed(1),
-                isStable: load < 80,
-                sampleRate: sampleRate
-            });
-            this._lastPerfReport = startTime;
-        }
-
         return true;
     }
 }

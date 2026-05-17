@@ -499,3 +499,34 @@ body.session-running .breathing-wave-bar {
     margin-top: 10px;
     border: 1px solid var(--border);
 }
+
+/* Audio Recovery Notification */
+.recovery-notification {
+    position: fixed;
+    top: 5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff9800;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    z-index: 12000;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    pointer-events: none;
+    display: none;
+}
+.recovery-active {
+    display: block;
+    animation: recovery-slide-in 4s ease forwards;
+}
+@keyframes recovery-slide-in {
+    0% { opacity: 0; transform: translate(-50%, -20px); }
+    10% { opacity: 1; transform: translate(-50%, 0); }
+    90% { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -20px); }
+}
+.recovery-success {
+    background: #4caf50 !important;
+}
