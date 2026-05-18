@@ -86,7 +86,7 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2.4.1";
+const APP_VERSION = "2.4.2";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
@@ -2008,27 +2008,45 @@ function syncUIVersion() {
     // --- Trahreg Gatekeeper Logic ---
     (async function() {
         const fullPath = decodeURIComponent(window.location.pathname).toLowerCase();
-        const pageName = fullPath.split('/').pop();
+        const pageName = fullPath.split('/').pop() || 'index.html';
         const isDocs = fullPath.includes('/docs/');
 
-        // Remote Maintenance Toggle: Check for a maintenance.json file to allow remote control
-        try {
-            const configPath = isDocs ? '../maintenance.json' : 'maintenance.json';
-            const response = await fetch(configPath, { cache: 'no-store' });
-            if (response.ok) {
-                const config = await response.json();
-                if (config && typeof config.enabled === 'boolean') {
-                    MAINTENANCE_MODE = config.enabled;
-                }
-            }
-        } catch (e) { /* Fallback to hardcoded MAINTENANCE_MODE on network error */ }
+        async function checkGatekeeper() {
+            try {
+                const configPath = isDocs ? '../maintenance.json' : 'maintenance.json';
+                const response = await fetch(configPath, { cache: 'no-store' });
+                if (response.ok) {
+                    const config = await response.json();
+                    
+                    // 1. Version Force Refresh: Detect if server code is newer than client session
+                    if (config.version && config.version !== APP_VERSION && !window.location.search.includes('v=' + config.version)) {
+                        console.info(`[Gatekeeper] Remote update detected (${config.version}). Forcing refresh...`);
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('v', config.version);
+                        window.location.replace(url.toString());
+                        return;
+                    }
 
-        // Maintenance Mode Redirect
-        if (MAINTENANCE_MODE && pageName !== 'maintenance.html') {
-            console.warn("[Gatekeeper] Suite is down for maintenance.");
-            window.location.replace(isDocs ? '../maintenance.html' : 'maintenance.html');
-            return;
+                    // 2. Maintenance Mode Routing
+                    const remoteMaintenance = config.enabled === true;
+                    if (remoteMaintenance && pageName !== 'maintenance.html') {
+                        console.warn("[Gatekeeper] Suite is down for maintenance. Redirecting...");
+                        window.location.replace(isDocs ? '../maintenance.html' : 'maintenance.html');
+                        return;
+                    } else if (!remoteMaintenance && pageName === 'maintenance.html') {
+                        console.log("[Gatekeeper] Maintenance concluded. Returning to suite...");
+                        window.location.replace(isDocs ? '../index.html' : 'index.html');
+                        return;
+                    }
+                    MAINTENANCE_MODE = remoteMaintenance;
+                    window.REMOTE_CONFIG = config;
+                }
+            } catch (e) { console.warn("[Gatekeeper] Health check failure:", e); }
         }
+
+        // Perform initial check on load and establish periodic heartbeats
+        await checkGatekeeper();
+        setInterval(checkGatekeeper, 300000); // Check every 5 minutes
 
         // 1. Identify Home/Root and authorize the session (more robust detection)
         // Check if the path ends with common root patterns or project directory name

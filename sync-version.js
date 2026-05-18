@@ -3,10 +3,16 @@ const path = require('path');
 const packageJson = require('./package.json');
 const version = packageJson.version;
 
+const dateObj = new Date();
+const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const dateStr = `${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+
 const filesToUpdate = [
     { file: 'storage.js', regex: /const APP_VERSION = ".*";/, type: 'js_const' },
     { file: 'sw.js', regex: /const CACHE_NAME = 'trahreg-tinnitus-suite-v.*';/, type: 'js_const_cache' },
-    { file: 'manifest.json', regex: /"version": ".*",/, type: 'json_field' }
+    { file: 'manifest.json', regex: /"version": ".*",/, type: 'json_field' },
+    { file: 'maintenance.json', regex: /"version": ".*"/, type: 'json_field_no_comma' },
+    { file: 'maintenance.json', regex: /"date": ".*",/, type: 'json_date' }
 ];
 
 filesToUpdate.forEach(cfg => {
@@ -20,6 +26,10 @@ filesToUpdate.forEach(cfg => {
             replacement = `const CACHE_NAME = 'trahreg-tinnitus-suite-v${version}';`;
         } else if (cfg.type === 'json_field') {
             replacement = `"version": "${version}",`;
+        } else if (cfg.type === 'json_field_no_comma') {
+            replacement = `"version": "${version}"`;
+        } else if (cfg.type === 'json_date') {
+            replacement = `"date": "${dateStr}",`;
         } else {
             console.warn(`Unknown type for file ${cfg.file}, skipping.`);
             return;
