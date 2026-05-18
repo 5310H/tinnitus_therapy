@@ -6,6 +6,7 @@ This document lists the components required to build the professional-grade Fing
 
 | Item | Part Number | Quantity | Est. Cost (USD) | Source |
 | :--- | :--- | :---: | :---: | :--- |
+| **Rakklor Headphones** | BT 5.4 (20Hr) | 1 | ~$25.00 | [Amazon](https://www.amazon.com/) |
 | **M5Stack Atom Lite** | C008 | 1 | $7.50 | [M5Stack Store](https://shop.m5stack.com/products/atom-lite-esp32-development-kit) |
 | **Haptic Motor Unit** | U083 | 1 | $4.95 | [M5Stack Store](https://shop.m5stack.com/products/haptic-motor-unit) |
 | **Grove Cable (20cm)** | Included with Unit | 1 | $0.00 | Included with Haptic Unit |
@@ -22,7 +23,7 @@ This document lists the components required to build the professional-grade Fing
 | Item | Description | Source |
 | :--- | :--- | :--- |
 | **10mm Velcro Strap** | Adjustable strap to hold the pacer to your finger | [Amazon/Hardware Store](https://www.amazon.com/dp/B001E1Y5O6) |
-| **3D Printed Mount** | Professional-grade matte finish finger saddle | See 3D Preview in the **Dual-Stimulus** module |
+| **3D Printed Saddle** | Ergonomic Bone-Conduction Mount (v3) | Use `saddle.scad` |
 
 ## 4. Software Requirements
 
