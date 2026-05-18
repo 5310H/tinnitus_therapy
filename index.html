@@ -144,6 +144,16 @@
             <a class="button" href="stats.html" style="width:100%; margin-top:10px;">View Progress History</a>
         </details>
     </div>
+    <div id="card-community" class="card" draggable="true" style="border-color: #9c27b0;">
+        <div class="drag-handle">⠿</div>
+        <h2 style="color: #9c27b0;">Help the Project</h2>
+        <p class="info">This suite is free and open-source. Help us reach more researchers and users.</p>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button class="button" onclick="navigator.clipboard.writeText('Check out this open-source Tinnitus Therapy Suite: ' + window.location.href); alert('Link copied to clipboard!');" style="border-color: #9c27b0; color: #9c27b0;">🔗 Copy Suite Link to Share</button>
+            <a class="button" href="https://github.com/kjgerhart/tinnitus_therapy" target="_blank" style="border-color: #9c27b0; color: #9c27b0;">⭐ Star on GitHub</a>
+            <p style="font-size: 0.7rem; color: var(--text-dim); text-align: center;">Sharing in forums like Tinnitus Talk helps fund future research.</p>
+        </div>
+    </div>
     <div id="card-settings" class="card" draggable="true">
         <div class="drag-handle">⠿</div>
         <h2>Project & Settings</h2>
@@ -163,6 +173,14 @@
             <div class="ctrl" style="margin-top:15px; border-top:1px dashed var(--border); padding-top:10px;">
                 <label>Audiologist Email</label>
                 <input type="email" id="audioEmail" placeholder="clinician@example.com" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
+            </div>
+            <div class="ctrl" style="margin-top:10px;">
+                <label>Clinic/Institution Name (For Reports)</label>
+                <input type="text" id="clinicName" placeholder="e.g. NEOMED Tinnitus Clinic" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
+            </div>
+            <div class="ctrl" style="margin-top:10px;">
+                <label>Clinic Logo URL</label>
+                <input type="text" id="clinicLogo" placeholder="https://example.com/logo.png" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
             </div>
             <!-- AI Security Controls -->
             <div style="margin-top:15px; border-top:1px dashed var(--border); padding-top:10px;">
@@ -353,6 +371,16 @@ window.onload = () => {
         applyEmailVisibility();
     };
 
+    const clinicNameEl = document.getElementById('clinicName');
+    if (clinicNameEl) clinicNameEl.oninput = (e) => {
+        saveSetting('clinic_name', e.target.value);
+    };
+
+    const clinicLogoEl = document.getElementById('clinicLogo');
+    if (clinicLogoEl) clinicLogoEl.oninput = (e) => {
+        saveSetting('clinic_logo', e.target.value);
+    };
+
     const keyEl = document.getElementById('geminiKey');
     if (keyEl) keyEl.oninput = (e) => {
         localStorage.removeItem('tts_gemini_api_key_encrypted');
@@ -392,6 +420,8 @@ window.onload = () => {
     loadDailyMotivation(); // Load daily motivation on page load
     document.getElementById('goalInput').value = loadSetting('daily_goal', 20);
     document.getElementById('audioEmail').value = loadSetting('audiologist_email', '');
+    document.getElementById('clinicName').value = loadSetting('clinic_name', '');
+    document.getElementById('clinicLogo').value = loadSetting('clinic_logo', '');
 
     // Highlight validation button if calibration was completed
     const phaseStatus = loadSetting('phase_status', 'Not Verified');

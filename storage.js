@@ -1290,6 +1290,10 @@ function getClinicalReportData(modeName, settingsObj, techSpecsObj = {}) {
         tmc: {
             latestQFactor: latestQFactor
         },
+        branding: {
+            name: loadSetting('clinic_name', ''),
+            logo: loadSetting('clinic_logo', '') // Can be URL or Base64
+        },
         storage: { usageKB: getLocalStorageUsage() },
         systemStatus: {
             hardwarePhase: validation.phase,
@@ -1371,6 +1375,17 @@ function generateClinicalReportText(reportData) {
 
 function generateClinicalReportHtml(reportData) {
     let html = `<div style="font-family: 'Segoe UI', sans-serif; color: #333; padding: 20px; max-width: 800px; margin: auto;">`;
+    
+    // Dynamic Clinic Branding Header
+    if (reportData.branding && reportData.branding.name) {
+        html += `<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px;">`;
+        if (reportData.branding.logo) {
+            html += `<img src="${reportData.branding.logo}" style="max-height: 50px; max-width: 200px; object-fit: contain;">`;
+        }
+        html += `<div style="text-align: right;"><h3 style="margin: 0; color: #555;">${reportData.branding.name}</h3><p style="margin: 0; font-size: 0.75rem; color: #888;">Clinical Monitoring Partner</p></div>`;
+        html += `</div>`;
+    }
+
     html += `<h1 style="color: #00bfa5; text-align: center;">TRAHREG TINNITUS THERAPY SUITE - CLINICAL REPORT</h1>`;
     html += `<p style="text-align: center; font-size: 0.9em; color: #666;">App Version: ${reportData.appVersion} | Therapy Mode: ${reportData.modeName} | Export Date: ${reportData.exportDate}</p>`;
     html += `<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">`;
