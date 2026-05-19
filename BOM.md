@@ -23,7 +23,7 @@ This document lists the components required to build the professional-grade Fing
 | Item | Description | Source |
 | :--- | :--- | :--- |
 | **10mm Velcro Strap** | Adjustable strap to hold the pacer to your finger | [Amazon/Hardware Store](https://www.amazon.com/dp/B001E1Y5O6) |
-| **3D Printed Saddle** | Ergonomic Bone-Conduction Mount (v3) | Use `saddle.scad` |
+| **3D Printed Saddle** | Ergonomic Bone-Conduction Mount (v3) | Use `saddle.scad`. See `hardware.html` for printing specs. |
 
 ## 4. Software Requirements
 

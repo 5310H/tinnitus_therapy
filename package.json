@@ -5,7 +5,14 @@
     "start": "python3 -m http.server 8080",
     "sync-version": "node sync-version.js",
     "version": "npm run sync-version && git add .",
-    "test-generator": "python3 tinnitus_generator.py --type tone --freq 1000 --duration 5"
+    "clean": "rm -f *.stl *.png *.csg",
+    "test-generator": "python3 tinnitus_generator.py --type tone --freq 1000 --duration 5",
+    "build-model-stl": "LIBGL_ALWAYS_SOFTWARE=1 xvfb-run openscad -o saddle.stl saddle.scad",
+    "build-model-left": "LIBGL_ALWAYS_SOFTWARE=1 xvfb-run openscad -D 'export_mode=\"left\"' -o left_saddle.stl saddle.scad",
+    "build-model-right": "LIBGL_ALWAYS_SOFTWARE=1 xvfb-run openscad -D 'export_mode=\"right\"' -o right_saddle.stl saddle.scad",
+    "build-models": "npm run build-model-left && npm run build-model-right",
+    "build-model-preview": "LIBGL_ALWAYS_SOFTWARE=1 openscad --preview -o saddle.png saddle.scad",
+    "build-model-csg": "LIBGL_ALWAYS_SOFTWARE=1 xvfb-run openscad -o saddle.csg saddle.scad"
   },
   "author": "trahreg"
 }

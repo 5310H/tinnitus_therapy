@@ -47,6 +47,7 @@ const ASSETS = [
     './icon-192.png',
     './icon-512.png',
     './hardware/haptic_mount.glb', // Updated to professional GLB format
+    './hardware/saddle.glb',
     'https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js', // Model Viewer for 3D hardware preview
     'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js', // For clinical report PDF generation
     'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm' // Google Generative AI SDK (ESM Bridge)

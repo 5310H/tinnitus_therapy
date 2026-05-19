@@ -22,8 +22,20 @@ const getJson = (key, defaultVal = []) => {
 };
 const setJson = (key, val) => _safeSet('tts_' + key, JSON.stringify(val));
 
-const loadSetting = (key, defaultVal) => _safeGet('tts_' + key) || defaultVal;
-const saveSetting = (key, val) => _safeSet('tts_' + key, val);
+const loadSetting = (key, defaultVal) => {
+    const val = _safeGet('tts_' + key);
+    return val === null ? defaultVal : val;
+};
+
+const saveSetting = (key, val) => {
+    // Technical Guard: Enforce safety bounds at the persistence layer
+    if (key === 'cr_baseFreq' || key === 'st_vol' || key === 'volMaster') {
+        const num = parseFloat(val);
+        if (key.includes('vol') && (num < 0 || num > 100)) return;
+        if (key === 'cr_baseFreq' && (num < 20 || num > 20000)) return;
+    }
+    _safeSet('tts_' + key, val);
+};
 
 const getTodayKey = () => new Date().toISOString().split('T')[0];
 
