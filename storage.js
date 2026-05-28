@@ -1159,7 +1159,7 @@ async function sendClinicalTelemetry(type, data) {
         // Format payload for Discord Embeds
         body = JSON.stringify({
             username: "Trahreg Suite Health",
-            avatar_url: "https://kjgerhart.github.io/tinnitus_therapy/icon-192.png",
+            avatar_url: "https://5310H.github.io/tinnitus_therapy/icon-192.png",
             embeds: [{
                 title: `Telemetry Event: ${type.toUpperCase()}`,
                 color: type === 'error' ? 16725074 : 16750848, // Red for error, Orange for recovery
@@ -1567,7 +1567,7 @@ function shareSetup(modeName, reportData) {
     if (thi) text += `\n[b]Latest THI Score:[/b] ${thi.data}/100 (${new Date(thi.date).toLocaleDateString()})\n`;
     text += `[b]System Validation:[/b] ${validation.isValid ? "Verified" : "Pending"}\n\n`;
     text += `Generated via Trahreg Tinnitus Therapy Suite (v${APP_VERSION})\n`;
-    text += `[url]https://github.com/kjgerhart/tinnitus_therapy[/url]`;
+    text += `[url]https://github.com/5310H/tinnitus_therapy[/url]`;
 
     navigator.clipboard.writeText(text).then(() => {
         alert("Setup summary copied to clipboard in BBCode (Tinnitus Talk) and Markdown (Reddit) format. You can now paste it into a forum post!");
