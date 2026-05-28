@@ -36,7 +36,11 @@ const TINNITUS_MANAGEMENT_GUIDE = `
         <li><b>Avoid Silence:</b> Use low-level broadband noise (Sound Therapy) in your environment even when not in a formal session to reduce the "contrast" of the tinnitus.</li>
         <li><b>Mental Health:</b> If a "spike" causes high distress, switch from Sound Therapy to <b>CBT & Wellness</b>. Managing the emotional reaction is as important as the sound itself.</li>
     </ul>
-`;
+    <h3 style="color:var(--accent); margin-bottom:10px;">Access & Updates</h3>
+    <p style="font-size:0.9rem; margin-bottom:15px;">
+        The latest version of this suite is always available at <a href="https://tinnitus.trahreg.com" style="color:var(--accent); text-decoration:underline;">tinnitus.trahreg.com</a>.
+    </p>
+
 
 function initNav(helpHtml) {
     const isDocs = window.location.pathname.toLowerCase().includes('/docs/');

@@ -8,14 +8,12 @@
 <script src="storage.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="nav.js"></script>
-<!-- Google Model Viewer for Professional 3D Preview -->
-<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="panel">
-    <h1>Dual‑Stimulus</h1>
-    <p class="info">Experimental auditory and tactile sensory pairing (inspired by technology like the Lenire).</p>
+    <h1>Dual‑Stimulus [WIP]</h1>
+    <p class="info">Experimental auditory and smartphone-based tactile sensory pairing. <b>Note: This module is currently a work in progress.</b></p>
     <div class="match-section" style="margin-bottom: 20px;">
         <h3>Clinical Significance</h3>
         <p>Inspired by the <b>TENT-A Clinical Trial (2020)</b>, these structured auditory patterns (tone bursts and modulated noise) are designed to engage neuroplasticity and disrupt tinnitus-related brain activity.</p>
@@ -42,24 +40,6 @@
             <div class="ctrl" id="hapticSensCtrl" style="margin-top: 5px; border-bottom: 1px dashed var(--border); padding-bottom: 10px;">
                 <label>Trigger Sensitivity <span class="val" id="hapticSensVal">0.08</span></label>
                 <input id="hapticSens" type="range" min="0.01" max="0.3" value="0.08" step="0.01">
-            </div>
-            <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button id="connectBleBtn" class="button" style="padding: 8px; font-size: 0.75rem; border-color: #2196f3; color: #2196f3;" onclick="connectHapticBLE()">📡 Wireless (BLE)</button>
-                <button id="connectUsbBtn" class="button" style="padding: 8px; font-size: 0.75rem; border-color: #ff9800; color: #ff9800;" onclick="connectHapticUSB()">🔌 Wired (USB/Phone)</button>
-            </div>
-            <div style="margin-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
-                <span id="serialStatus" style="font-size: 0.7rem; color: var(--text-dim);">Not Connected</span>
-                <span id="batteryStatus" style="font-size: 0.7rem; color: var(--text-dim); display: none;">🔋 --%</span>
-                <button class="button" style="font-size: 0.65rem; padding: 4px 8px; border-color: var(--border); color: var(--muted); margin-top: 5px;" onclick="toggle3DPreview()">🔍 Toggle Hardware Preview</button>
-            </div>
-            
-            <div id="haptic-preview-wrapper" style="display:none; height: 300px; margin-top: 15px;">
-                <model-viewer 
-                    src="./hardware/haptic_mount.glb" 
-                    alt="3D Professional Finger Mount" 
-                    auto-rotate camera-controls shadow-intensity="1" 
-                    style="width: 100%; height: 100%; background-color: #000810; border-radius: 8px;">
-                </model-viewer>
             </div>
         </div>
         <div class="ctrl">
@@ -297,135 +277,9 @@
     <canvas id="viz" class="zen-keep"></canvas>
 </div>
 <script>
-let audioCtx,merger,analyserL,analyserR,rafViz,rafPulse,pacerTimer,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[],noiseBuf,nextChimeTime=0,lastVibrateTime=0,bleCharacteristic,batteryChar;
-let serialPort, serialWriter, lastUsbHeartbeat = 0;
+let audioCtx,merger,analyserL,analyserR,rafViz,rafPulse,pacerTimer,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[],noiseBuf,nextChimeTime=0,lastVibrateTime=0;
 let running=false,remaining=0,timerId=null,sessionSeconds=1200;
 const eqBands = [2000, 4000, 8000, 12000];
-
-function toggle3DPreview() {
-    const wrapper = document.getElementById('haptic-preview-wrapper');
-    wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none';
-}
-
-async function connectHapticBLE() {
-    const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
-    const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
-    const statusEl = document.getElementById('serialStatus');
-    statusEl.textContent = "Connecting...";
-    try {
-        const device = await navigator.bluetooth.requestDevice({
-            filters: [{ name: 'TTS-FingerPacer' }],
-            optionalServices: [SERVICE_UUID, 'battery_service']
-        });
-
-        device.addEventListener('gattserverdisconnected', onDisconnected);
-
-        const server = await device.gatt.connect();
-        const service = await server.getPrimaryService(SERVICE_UUID);
-        bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
-
-        document.getElementById('serialStatus').textContent = "Bluetooth Connected";
-        document.getElementById('serialStatus').style.color = "#2196f3";
-        document.getElementById('connectBleBtn').textContent = "📡 Device Linked";
-
-        // Battery level monitoring via standard service
-        try {
-            const batteryService = await server.getPrimaryService('battery_service');
-            batteryChar = await batteryService.getCharacteristic('battery_level');
-
-            const updateBatteryUI = (event) => {
-                const level = event.target.value.getUint8(0);
-                const el = document.getElementById('batteryStatus');
-                el.textContent = `🔋 ${level}%`;
-                el.style.display = 'inline';
-                // Turn red if battery is low (below 20%)
-                el.style.color = level < 20 ? '#ef5350' : 'var(--accent)';
-            };
-
-            batteryChar.addEventListener('characteristicvaluechanged', updateBatteryUI);
-            await batteryChar.startNotifications();
-            
-            // Initial read
-            const val = await batteryChar.readValue();
-            updateBatteryUI({ target: { value: val } });
-        } catch (battErr) {
-            console.log("Battery service not available on device.");
-        }
-    } catch (e) {
-        console.error("Connection error:", e);
-        let msg = "Bluetooth connection failed: " + e.message;
-        if (e.name === 'NotFoundError') msg = "Connection cancelled or device not found.";
-        if (e.name === 'SecurityError') msg = "Security Error: Web Bluetooth requires an HTTPS connection or localhost.";
-        if (location.protocol === 'file:') msg += "\n\nNote: Bluetooth will not work when opening the HTML file directly. Please use a local server or HTTPS.";
-        alert(msg);
-    }
-}
-
-async function connectHapticUSB() {
-    const statusEl = document.getElementById('serialStatus');
-    if (!("serial" in navigator)) {
-        alert("Web Serial is not supported on this browser. Use Android Chrome or a Desktop browser.");
-        return;
-    }
-    statusEl.textContent = "Connecting (USB)...";
-    try {
-        serialPort = await navigator.serial.requestPort();
-        await serialPort.open({ baudRate: 921600 });
-        serialWriter = serialPort.writable.getWriter();
-        
-        document.getElementById('serialStatus').textContent = "USB Connected";
-        document.getElementById('serialStatus').style.color = "#ff9800";
-        document.getElementById('connectUsbBtn').textContent = "🔌 USB Linked";
-        
-        // Start monitoring for device heartbeats
-        monitorUsbHeartbeat();
-
-        serialPort.addEventListener('disconnect', () => {
-            document.getElementById('serialStatus').textContent = "USB Disconnected";
-            document.getElementById('connectUsbBtn').textContent = "🔌 Connect Wired (USB)";
-            serialWriter = null;
-            lastUsbHeartbeat = 0;
-        });
-    } catch (e) {
-        console.error("USB error:", e);
-        statusEl.textContent = "USB failed: " + e.message;
-    }
-}
-
-async function monitorUsbHeartbeat() {
-    if (!serialPort.readable) return;
-    const reader = serialPort.readable.getReader();
-    lastUsbHeartbeat = Date.now();
-    
-    const staleCheck = setInterval(() => {
-        if (!serialWriter) { clearInterval(staleCheck); return; }
-        // If no heartbeat for 3 seconds, mark as stale
-        if (Date.now() - lastUsbHeartbeat > 3000) {
-            const statusEl = document.getElementById('serialStatus');
-            statusEl.textContent = "USB Link Stale (Check Device)";
-            statusEl.style.color = "#f44336"; // Warning Red
-        }
-    }, 2000);
-
-    try {
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            // Device sends 0x01 every second
-            if (value.includes(1)) {
-                lastUsbHeartbeat = Date.now();
-                const statusEl = document.getElementById('serialStatus');
-                statusEl.textContent = "USB Connected (Active)";
-                statusEl.style.color = "#4caf50"; // Active Green
-            }
-        }
-    } catch (err) {
-        console.error("USB Monitor Error:", err);
-    } finally {
-        reader.releaseLock();
-        clearInterval(staleCheck);
-    }
-}
 
 window.onload = () => {
     initNav(`
@@ -656,18 +510,8 @@ function runVisualPulse() {
     if (rms > threshold && Date.now() - lastVibrateTime > 200) {
         document.body.style.background = 'rgba(0, 191, 165, 0.15)';
         lastVibrateTime = Date.now();
-        const strength = new Uint8Array([parseInt(document.getElementById('hapticStrength').value)]);
         
         if (hapticEnabled && "vibrate" in navigator) navigator.vibrate(40);
-        if (bleCharacteristic) {
-            bleCharacteristic.writeValueWithoutResponse(strength);
-        }
-        if (serialWriter) {
-            serialWriter.write(strength).catch(err => {
-                console.error("Serial write failed", err);
-                serialWriter = null;
-            });
-        }
     } else if (rms <= threshold) {
         document.body.style.background = '';
     }

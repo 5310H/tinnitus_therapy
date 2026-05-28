@@ -486,7 +486,7 @@ class TinnitusAIManager {
     async getClinicalSummary() {
         const reportData = getClinicalReportData("AI Summary Generation", {}, {});
         const prompt = {
-            system_instruction: "Summarize the user's progress for an audiologist focus on trends in distress, adherence, and reported sleep issues. Write one professional paragraph.",
+            system_instruction: "Summarize the user's progress for an audiologist focus on trends in distress, adherence, and reported sleep issues. Write one professional paragraph. Conclude by mentioning that the full clinical suite is available for further tracking at tinnitus.trahreg.com.",
             input: { 
                 distress: reportData.psychological.lastTHIScore, 
                 usage: reportData.usage.todayMinutes,
@@ -1321,6 +1321,7 @@ function generateClinicalReportText(reportData) {
     text += `App Version: ${reportData.appVersion}\n`;
     text += `Therapy Mode: ${reportData.modeName}\n`;
     text += `Export Date: ${reportData.exportDate}\n`;
+    text += `Access: https://tinnitus.trahreg.com\n`;
     text += `-------------------------------------------\n`;
     
     text += `\nTHERAPY SETTINGS:\n`;
@@ -1399,7 +1400,7 @@ function generateClinicalReportHtml(reportData) {
     }
 
     html += `<h1 style="color: #00bfa5; text-align: center;">TRAHREG TINNITUS THERAPY SUITE - CLINICAL REPORT</h1>`;
-    html += `<p style="text-align: center; font-size: 0.9em; color: #666;">App Version: ${reportData.appVersion} | Therapy Mode: ${reportData.modeName} | Export Date: ${reportData.exportDate}</p>`;
+    html += `<p style="text-align: center; font-size: 0.9em; color: #666;">App Version: ${reportData.appVersion} | Mode: ${reportData.modeName} | Export Date: ${reportData.exportDate}<br>Access via: <a href="https://tinnitus.trahreg.com" style="color:#00bfa5;">tinnitus.trahreg.com</a></p>`;
     html += `<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">`;
 
     if (reportData.aiSummary) {
@@ -1567,7 +1568,7 @@ function shareSetup(modeName, reportData) {
     if (thi) text += `\n[b]Latest THI Score:[/b] ${thi.data}/100 (${new Date(thi.date).toLocaleDateString()})\n`;
     text += `[b]System Validation:[/b] ${validation.isValid ? "Verified" : "Pending"}\n\n`;
     text += `Generated via Trahreg Tinnitus Therapy Suite (v${APP_VERSION})\n`;
-    text += `[url]https://github.com/5310H/tinnitus_therapy[/url]`;
+    text += `[url]https://tinnitus.trahreg.com[/url]`;
 
     navigator.clipboard.writeText(text).then(() => {
         alert("Setup summary copied to clipboard in BBCode (Tinnitus Talk) and Markdown (Reddit) format. You can now paste it into a forum post!");
@@ -1842,11 +1843,11 @@ function showWalkthrough(slides, startIndex = 0) {
  */
 function showWhatsNew() {
     showWalkthrough([
-        { title: "Version 2.2.9 - What's New", content: "This update resolves a critical syntax error in the persistence engine and improves AI SDK stability." },
+        { title: "Version 2.4.2 - What's New", content: "This update introduces smartphone-based haptics for bimodal neuromodulation and adds the unified access portal at tinnitus.trahreg.com." },
         { title: "Modular Architecture", content: "Data and AI management have been refactored into dedicated modules, improving reliability and stability across the entire suite." },
         { title: "Performance Profiling", content: "A new Performance Monitor has been added to track audio engine health, ensuring your therapeutic signals are always accurate." },
         { title: "Security Hardening", content: "Your API keys are now protected with high-grade AES-GCM encryption. We've also added security sanitization to our Python tools." },
-        { title: "Enhanced Reports", content: "Clinical reports now feature deeper data integration and AI-generated progress summaries, making it easier to share results with your clinician." }
+        { title: "Enhanced Reports", content: "Clinical reports now feature deeper data integration, AI-generated progress summaries, and clinic branding options." }
     ]);
 }
 
@@ -1894,8 +1895,6 @@ function startModuleTutorial(key, startIndex = 0) {
             { title: "Tactile Bimodal Setup", content: "If using a smartphone, enable Haptic Pulse. The phone will vibrate in sync with the sound bursts, providing a safe, tactile 'second sense' to help your brain re-focus away from tinnitus.", selector: "#hapticPulse" },
             { title: "Intensity Control", content: "Adjust the Vibration Intensity to find a level that is noticeable but not distracting. A gentle tap synchronized with the sound is usually most effective.", selector: "#hapticStrengthCtrl" },
             { title: "Trigger Calibration", content: "Adjust Trigger Sensitivity until the device pulses only when you hear a tone burst. If it vibrates constantly, increase the value. If it misses bursts, decrease it.", selector: "#hapticSensCtrl" },
-            { title: "Dual-Mode Connection", content: "Pair your Finger Pacer via **Bluetooth** for wireless use, or **USB** for the highest reliability. USB mode is fully supported on Android phones using an OTG adapter.", selector: "#connectBleBtn" },
-            { title: "3D Design Preview", content: "You can view the professional, ergonomic mount design here. This model helps during fitting and user testing.", selector: "button[onclick='toggle3DPreview()']" },
             { title: "Auditory Pacer", content: "Enable Auditory Cues to hear a subtle chime at the start of each breath. This allows you to maintain synchronization even with your eyes closed.", selector: "#pacerAudio" },
             { title: "Pulse Rate", content: "Adjust the pulse speed to match your natural resting breath. A slow, steady rhythm (around 5-6 breaths per minute) is usually best for relaxation.", selector: "#pulseRate" },
             { title: "Breathing Sync", content: "Try to match your breathing to the visual pulse. Inhaling as the light expands and exhaling as it fades helps activate the body's relaxation response, further aiding habituation.", selector: "#visualPulse" },

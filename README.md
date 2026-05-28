@@ -1,7 +1,13 @@
 # Trahreg Tinnitus Therapy Suite  
 Open‑source, browser‑based sound therapy tools for tinnitus research and experimentation.
 
-This project provides research‑based sound therapy tools implemented entirely in the browser. It features a high-precision DSP engine that supports internal noise generators, custom media uploads, live system audio capture, and advanced AI-powered features.
+## Executive Abstract
+The Trahreg Tinnitus Therapy Suite is a research-oriented platform providing evidence-based auditory stimulation tools implemented entirely in-browser. By leveraging high-precision DSP and client-side AI, the suite enables users to explore personalized habituation protocols including Notch Therapy, Acoustic CR, and Bimodal Neuromodulation.
+
+**Official Clinical Access:** [https://tinnitus.trahreg.com](https://tinnitus.trahreg.com)
+
+This project features a high-precision engine that supports internal noise generators, custom media uploads, live system audio capture, and advanced AI-powered features using Google Gemini.
+
 
 ---
 
@@ -13,14 +19,13 @@ Left/right decorrelated broadband noise designed to reduce auditory synchrony. S
 ### **2. Notch Therapy**
 Broadband noise with a narrow frequency band removed around the user’s tinnitus pitch. Users can process built-in noise, local files, or live streams from other applications.
 
-### **3. Dual‑Stimulus Neuromodulation (Sound & Haptics)**
+### **3. Dual‑Stimulus Neuromodulation (Sound & Haptics) [Work in Progress]**
 An experimental implementation of bimodal sensory pairing, similar to the method used by the **Lenire** device. Based on publicly available research (e.g., TENT-A, 2020).
 Includes:
 - Carrier tones  
 - Frequency‑shaped noise  
 - Amplitude‑modulated noise  
 - Tone‑burst patterns  
- - Tactile Haptic Pairing (Finger Pacer support)
 
 ⚠️ No electrical stimulation is included.  
 This is an experimental tool for educational exploration of bimodal sensory integration.
@@ -177,10 +182,7 @@ This suite is designed with a "Privacy-First" architecture:
 ## � Third-Party Libraries & Credits
 This project utilizes several open-source libraries:
 - **Google Generative AI SDK:** For client-side AI insights.
-- **Model Viewer (@google/model-viewer):** For 3D hardware previews.
 - **html2pdf.js:** For clinical report generation.
-- **ESPHome:** Used for the Finger Pacer firmware.
-- **M5Stack:** Hardware platform for tactile bimodal stimulation.
 
 ## 📄 License
 This project is licensed under the **GNU General Public License v3 (GPLv3)**. See the `LICENSE` file for details.
