@@ -10,16 +10,16 @@
 ## Therapy & Tools
 - [ ] Expand therapy modes (e.g., additional neuromodulation protocols, new sound therapies)
 - [ ] Add more preset soundscapes and user-customizable sound recipes
-- [ ] Enable saving/loading of user therapy profiles and session history
+- [x] Enable saving/loading of user therapy profiles and session history (Enhanced in v2.5.0)
 - [ ] Integrate more advanced AI features (e.g., real-time feedback, adaptive therapy adjustments)
-- [ ] Add support for additional haptic hardware platforms
+- [x] Add support for additional haptic hardware platforms (Smartphone-based haptics refined in v2.5.0)
 
 ## Clinical & Research Features
 - [ ] Enable export/import of clinical data in standard formats (CSV, HL7, FHIR)
 - [ ] Add more detailed progress tracking and visualization (charts, trends)
 - [ ] Implement reminders for regular hearing tests and therapy sessions
 - [ ] Provide more in-depth educational content and research summaries
-
+- [x] Enhanced clinical reporting features (v2.5.0)
 ## Technical & Performance
 - [ ] Optimize DSP engine for lower latency and higher efficiency
 - [ ] Improve offline/PWA experience (background sync, push notifications)

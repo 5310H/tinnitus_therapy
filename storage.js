@@ -98,7 +98,7 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2.4.2";
+const APP_VERSION = "2.5.0";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
@@ -486,7 +486,7 @@ class TinnitusAIManager {
     async getClinicalSummary() {
         const reportData = getClinicalReportData("AI Summary Generation", {}, {});
         const prompt = {
-            system_instruction: "Summarize the user's progress for an audiologist focus on trends in distress, adherence, and reported sleep issues. Write one professional paragraph. Conclude by mentioning that the full clinical suite is available for further tracking at tinnitus.trahreg.com.",
+            system_instruction: "Summarize the user's progress for an audiologist. Focus on trends in distress, adherence, and reported sleep issues. Write one professional paragraph. This is a Professional Summary for a clinical report. Conclude by explicitly stating that the full therapeutic suite is available for professional use and patient tracking at https://tinnitus.trahreg.com.",
             input: { 
                 distress: reportData.psychological.lastTHIScore, 
                 usage: reportData.usage.todayMinutes,
@@ -1327,7 +1327,7 @@ function generateClinicalReportText(reportData) {
     text += `\nTHERAPY SETTINGS:\n`;
     
     if (reportData.aiSummary) {
-        text += `\nAI-GENERATED EXECUTIVE SUMMARY:\n`;
+        text += `\nPROFESSIONAL SUMMARY:\n`;
         text += `${reportData.aiSummary}\n`;
     }
     for (const [label, value] of Object.entries(reportData.settings)) {
@@ -1404,7 +1404,7 @@ function generateClinicalReportHtml(reportData) {
     html += `<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">`;
 
     if (reportData.aiSummary) {
-        html += `<h2 style="color: #00bfa5;">AI-GENERATED EXECUTIVE SUMMARY</h2>`;
+        html += `<h2 style="color: #00bfa5;">PROFESSIONAL SUMMARY</h2>`;
         html += `<div style="background: #f0f7f4; border: 1px solid #c8e6c9; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.95rem;">`;
         html += `<p>${reportData.aiSummary.replace(/\n/g, '<br>')}</p>`;
         html += `</div>`;
@@ -1568,7 +1568,8 @@ function shareSetup(modeName, reportData) {
     if (thi) text += `\n[b]Latest THI Score:[/b] ${thi.data}/100 (${new Date(thi.date).toLocaleDateString()})\n`;
     text += `[b]System Validation:[/b] ${validation.isValid ? "Verified" : "Pending"}\n\n`;
     text += `Generated via Trahreg Tinnitus Therapy Suite (v${APP_VERSION})\n`;
-    text += `[url]https://tinnitus.trahreg.com[/url]`;
+    text += `[url]https://tinnitus.trahreg.com[/url]\n`;
+    text += `[url]https://github.com/5310H/tinnitus_therapy[/url]`;
 
     navigator.clipboard.writeText(text).then(() => {
         alert("Setup summary copied to clipboard in BBCode (Tinnitus Talk) and Markdown (Reddit) format. You can now paste it into a forum post!");
@@ -1843,7 +1844,7 @@ function showWalkthrough(slides, startIndex = 0) {
  */
 function showWhatsNew() {
     showWalkthrough([
-        { title: "Version 2.4.2 - What's New", content: "This update introduces smartphone-based haptics for bimodal neuromodulation and adds the unified access portal at tinnitus.trahreg.com." },
+        { title: "Version 2.5.0 - What's New", content: "This update brings further refinements to smartphone-based bimodal neuromodulation, enhanced clinical reporting features, and improved AI integration." },
         { title: "Modular Architecture", content: "Data and AI management have been refactored into dedicated modules, improving reliability and stability across the entire suite." },
         { title: "Performance Profiling", content: "A new Performance Monitor has been added to track audio engine health, ensuring your therapeutic signals are always accurate." },
         { title: "Security Hardening", content: "Your API keys are now protected with high-grade AES-GCM encryption. We've also added security sanitization to our Python tools." },

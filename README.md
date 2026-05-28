@@ -2,7 +2,7 @@
 Open‑source, browser‑based sound therapy tools for tinnitus research and experimentation.
 
 ## Executive Abstract
-The Trahreg Tinnitus Therapy Suite is a research-oriented platform providing evidence-based auditory stimulation tools implemented entirely in-browser. By leveraging high-precision DSP and client-side AI, the suite enables users to explore personalized habituation protocols including Notch Therapy, Acoustic CR, and Bimodal Neuromodulation.
+The Trahreg Tinnitus Therapy Suite is a research-oriented platform providing evidence-based auditory stimulation tools implemented entirely in-browser. By leveraging high-precision DSP and client-side AI, the suite enables users and clinicians to explore personalized habituation protocols including Notch Therapy, Acoustic CR, and Bimodal Neuromodulation.
 
 **Official Clinical Access:** [https://tinnitus.trahreg.com](https://tinnitus.trahreg.com)
 

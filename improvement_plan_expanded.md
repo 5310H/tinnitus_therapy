@@ -22,14 +22,14 @@
 - [ ] **Therapy Modes:**
     - Add new neuromodulation protocols (e.g., amplitude-modulated tones, new CR variants)
     - Expand sound therapy options (nature soundscapes, user-generated presets)
-- [ ] **Personalization:**
-    - Save/load user therapy profiles and session history
+- [x] **Personalization:** (Enhanced in v2.5.0)
+    - Save/load user therapy profiles and session history (Refined in v2.5.0)
     - Adaptive therapy suggestions based on user progress
 - [ ] **AI Features:**
     - Real-time feedback and adaptive adjustments
     - Enhanced AI log correlation and pattern detection
-- [ ] **Hardware Support:**
-    - Add support for more haptic devices (Bluetooth, USB)
+- [x] **Hardware Support:** (Refined in v2.5.0)
+    - Add support for more haptic devices (Smartphone-based haptics refined in v2.5.0)
     - Modular hardware abstraction layer
 
 ## 3. Clinical & Research Features (Medium Priority)
@@ -38,6 +38,7 @@
     - Secure sharing with clinicians
 - [ ] **Progress Tracking:**
     - Advanced charts, trends, and milestone tracking
+    - [x] Enhanced clinical reporting features (v2.5.0)
     - Automated reminders for hearing tests and therapy sessions
 - [ ] **Education:**
     - Expand research summaries and clinical explanations
