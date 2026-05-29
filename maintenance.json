@@ -1,5 +1,5 @@
 {
-  "enabled": false,
+  "enabled": true,
   "whatsNew": [
     "<b>Update Orchestration:</b> Automated version synchronization across all system manifests and configuration files."
   ],

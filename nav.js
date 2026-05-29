@@ -117,15 +117,28 @@ window.showPreFlight = (onConfirm) => {
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+    toggleUIInteraction(true); // Disable background UI while pre-flight is active
     document.getElementById('preFlightStart').onclick = () => { 
         if (document.getElementById('skipPreFlightCheck').checked) {
             saveSetting('skip_preflight', 'true');
         }
         closePreFlight(); 
-        if(onConfirm) onConfirm(); 
+        // Attempt to resume the active AudioContext on user interaction
+        if (window.audioCtx && window.audioCtx.state === 'suspended') {
+            window.audioCtx.resume().then(() => {
+                console.log("AudioContext resumed by user interaction.");
+                if(onConfirm) onConfirm(); 
+            }).catch(e => console.error("Error resuming AudioContext:", e));
+        } else {
+            if(onConfirm) onConfirm(); 
+        }
     };
 };
-window.closePreFlight = () => { const el = document.getElementById('preFlightModal'); if(el) el.remove(); };
+window.closePreFlight = () => { 
+    const el = document.getElementById('preFlightModal'); 
+    if(el) el.remove(); 
+    toggleUIInteraction(false); // Re-enable UI after pre-flight is closed
+};
 
 /**
  * UI Utility: Locks or unlocks therapy controls.
@@ -155,6 +168,9 @@ window.toggleUIInteraction = (locked) => {
     class ProxyContext extends OriginalAudioContext {
         constructor(...args) {
             super(...args);
+            // Ensure the global reference always points to the most recently created context
+            window.audioCtx = this;
+
         // Automatically attach the high-precision generator to the context
             this.generator = new NoiseGenerator(this);
             this._isRecovering = false;

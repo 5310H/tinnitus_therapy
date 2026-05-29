@@ -31,6 +31,7 @@ class NoiseProcessor extends AudioWorkletProcessor {
         // Calibrate gain to produce ~0.9 peak to match nature sound levels
         this.brownGain = (1 - this.brownPole) * 30.0; // Increased for audibility
 
+        this.outputPeakTarget = 0.5; // Standardize output peak for all noises
         if (sampleRate < 44100) {
             this.port.postMessage({
                 type: 'DSP_WARNING',
@@ -58,7 +59,7 @@ class NoiseProcessor extends AudioWorkletProcessor {
         if (color === 'pink') {
             for (let i = 0; i < len; i++) {
                 const white = Math.random() * 2 - 1;
-                this.b0 = this.p[0] * this.b0 + white * this.g[0];
+                this.b0 = this.p[0] * this.b0 + white * this.g[0]; // Pink noise coefficients are already scaled
                 this.b1 = this.p[1] * this.b1 + white * this.g[1];
                 this.b2 = this.p[2] * this.b2 + white * this.g[2];
                 this.b3 = this.p[3] * this.b3 + white * this.g[3];
@@ -66,29 +67,29 @@ class NoiseProcessor extends AudioWorkletProcessor {
                 this.b5 = this.p[5] * this.b5 + white * this.g[5];
                 setSample(i, (this.b0 + this.b1 + this.b2 + this.b3 + this.b4 + this.b5 + this.b6 + white * 0.5362) * 0.11);
                 this.b6 = white * 0.115926;
-            }
+            } // Pink noise output is already balanced with the 0.11 multiplier
         } else if (color === 'brown') {
             for (let i = 0; i < len; i++) {
                 const white = Math.random() * 2 - 1;
                 const val = (this.lastOut * this.brownPole) + (white * this.brownGain);
                 this.lastOut = val;
-                setSample(i, val);
+                setSample(i, val * 0.05); // Balanced scaling for brown noise
             }
         } else if (color === 'blue') {
             for (let i = 0; i < len; i++) {
                 const white = Math.random() * 2 - 1;
-                setSample(i, (white - (0.5 * this.lastIn)) * 0.95);
+                setSample(i, (white - (0.5 * this.lastIn)) * this.outputPeakTarget); // Scale blue noise to target 0.3 peak
                 this.lastIn = white;
             }
         } else if (color === 'violet') {
             for (let i = 0; i < len; i++) {
                 const white = Math.random() * 2 - 1;
-                setSample(i, (white - this.lastIn) * 0.85);
+                setSample(i, (white - this.lastIn) * this.outputPeakTarget); // Scale violet noise to target 0.3 peak
                 this.lastIn = white;
             }
         } else {
             for (let i = 0; i < len; i++) {
-                setSample(i, (Math.random() * 2 - 1) * 0.9);
+                setSample(i, (Math.random() * 2 - 1) * this.outputPeakTarget); // Scale white noise to target 0.3 peak
             }
         }
         return true;

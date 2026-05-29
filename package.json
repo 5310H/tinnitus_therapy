@@ -1,6 +1,6 @@
 {
   "name": "trahreg-tinnitus-suite",
-  "version": "2.4.2",
+  "version": "2026.05.1",
   "scripts": {
     "start": "python3 -m http.server 8080",
     "sync-version": "node sync-version.js",

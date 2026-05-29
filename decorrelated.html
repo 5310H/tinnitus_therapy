@@ -490,6 +490,7 @@ async function start(){
   document.getElementById('toggleBtn').textContent='Stop';
   document.getElementById('toggleBtn').className='big-btn stop-btn';
   drawVolumeViz();
+  // toggleUIInteraction(false); // UI is already interactive by default, only lock when needed
   drawViz();
 }
 
@@ -513,6 +514,7 @@ function stop(){
   if(rafVolViz) cancelAnimationFrame(rafVolViz);
   document.getElementById('toggleBtn').textContent='Start Therapy';
   document.getElementById('toggleBtn').className='big-btn play-btn';
+  toggleUIInteraction(false); // Re-enable UI interaction when stopped
   document.getElementById('status').textContent='Stopped'
   const canvas = document.getElementById('volumeViz');
   if (canvas) canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);

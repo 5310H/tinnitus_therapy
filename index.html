@@ -1135,8 +1135,10 @@ async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalT
         <div style="max-height: 400px; overflow-y: auto; text-align: left; padding-right: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
             <div id="dynamicWhatsNew"></div>
 
-            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2.4.1 - May 2026</h3>
+            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.05.1 - May 2026</h3>
             <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
+                <li><b>Audio Reliability:</b> Fixed a critical bug where the AudioContext was not correctly resumed on therapy start.</li>
+                <li><b>Versioning:</b> Migrated to yyyy.mm,counter format as per project requirements.</li>
                 <li><b>AI Connectivity:</b> Finalized dynamic model auto-discovery to resolve 404 errors with newer Gemini 2.0/2.5 keys.</li>
                 <li><b>AI Milestone:</b> Successfully resolved Gemini SDK connectivity and model authorization issues for high-precision therapeutic insights.</li>
                 <li><b>404 File Fix:</b> Added missing system files (maintenance.json and docs/index.html) to resolve server errors.</li>

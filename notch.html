@@ -363,46 +363,47 @@ function performGlobalSync() {
 let liveStream;
 function handleToggle(){ if(playing) stop(); else showPreFlight(() => start()); }
 async function toggle(){if(!playing) await start();else stop()}
-async function start(){
-  ctx=new(window.AudioContext||window.webkitAudioContext)();
-  if (!ctx.generator) ctx.generator = new NoiseGenerator(ctx);
-  if (ctx.state === 'suspended') await ctx.resume();
-  ctx._expectingSound = true;
+async function start() {
   toggleUIInteraction(true);
+  try {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!ctx.generator) ctx.generator = new NoiseGenerator(ctx);
+    if (ctx.state === 'suspended') await ctx.resume();
+    ctx._expectingSound = true;
 
-  const color=document.getElementById('color').value;
-  const volL=document.getElementById('volL').value/100;
-  const volR=document.getElementById('volR').value/100;
-  const isMuted = document.getElementById('muteToggle').checked;
-  const volMaster = isMuted ? 0 : document.getElementById('volMaster').value/100;
-  const notchFL=+document.getElementById('notchL').value;
-  const notchFR=+document.getElementById('notchR').value;
-  const nw=+document.getElementById('nw').value;
-  const halfOct=nw/2;
+    const color = document.getElementById('color').value;
+    const volL = document.getElementById('volL').value / 100;
+    const volR = document.getElementById('volR').value / 100;
+    const isMuted = document.getElementById('muteToggle').checked;
+    const volMaster = isMuted ? 0 : document.getElementById('volMaster').value / 100;
+    const notchFL = +document.getElementById('notchL').value;
+    const notchFR = +document.getElementById('notchR').value;
+    const nw = +document.getElementById('nw').value;
+    const halfOct = nw / 2;
 
-  const createFilter = (f) => {
-    // Ensure frequency never exceeds Nyquist margin (Robustness check)
-    const limit = (ctx.sampleRate / 2) * 0.95;
-    const clampedF = Math.min(f, limit);
-    const lo = clampedF*Math.pow(2,-halfOct), hi = clampedF*Math.pow(2,halfOct);
-    const n = ctx.createBiquadFilter(); n.type='notch'; n.frequency.value=clampedF; n.Q.value=clampedF/((hi-lo)||1);
-    return n;
-  };
+    const createFilter = (f) => {
+      // Ensure frequency never exceeds Nyquist margin (Robustness check)
+      const limit = (ctx.sampleRate / 2) * 0.95;
+      const clampedF = Math.min(f, limit);
+      const lo = clampedF * Math.pow(2, -halfOct), hi = clampedF * Math.pow(2, halfOct);
+      const n = ctx.createBiquadFilter(); n.type = 'notch'; n.frequency.value = clampedF; n.Q.value = clampedF / ((hi - lo) || 1);
+      return n;
+    };
 
-  nodeNotchL = createFilter(notchFL); nodeNotchR = createFilter(notchFR);
-  gainL = ctx.createGain(); gainL.gain.value = volL;
-  gainR = ctx.createGain(); gainR.gain.value = volR;
-  masterGain = ctx.createGain(); masterGain.gain.value = volMaster;
-  
-  analyserL = ctx.createAnalyser(); analyserL.fftSize = 256;
-  analyserR = ctx.createAnalyser(); analyserR.fftSize = 256;
+    nodeNotchL = createFilter(notchFL); nodeNotchR = createFilter(notchFR);
+    gainL = ctx.createGain(); gainL.gain.value = volL;
+    gainR = ctx.createGain(); gainR.gain.value = volR;
+    masterGain = ctx.createGain(); masterGain.gain.value = volMaster;
 
-  const merger = ctx.createChannelMerger(2);
-  analyser=ctx.createAnalyser();analyser.fftSize=2048;
+    analyserL = ctx.createAnalyser(); analyserL.fftSize = 256;
+    analyserR = ctx.createAnalyser(); analyserR.fftSize = 256;
 
-  // Build EQ Chains
-  let headL = nodeNotchL;
-  eqNodesL = eqBands.map(freq => {
+    const merger = ctx.createChannelMerger(2);
+    analyser = ctx.createAnalyser(); analyser.fftSize = 2048;
+
+    // Build EQ Chains
+    let headL = nodeNotchL;
+    eqNodesL = eqBands.map(freq => {
       if (!isFrequencySafe(ctx, freq)) return null;
       const f = ctx.createBiquadFilter();
       f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1;
@@ -410,11 +411,11 @@ async function start(){
       headL.connect(f);
       headL = f;
       return f;
-  }).filter(n => n !== null);
-  headL.connect(gainL).connect(analyserL).connect(merger, 0, 0);
+    }).filter(n => n !== null);
+    headL.connect(gainL).connect(analyserL).connect(merger, 0, 0);
 
-  let headR = nodeNotchR;
-  eqNodesR = eqBands.map(freq => {
+    let headR = nodeNotchR;
+    eqNodesR = eqBands.map(freq => {
       if (!isFrequencySafe(ctx, freq)) return null;
       const f = ctx.createBiquadFilter();
       f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1;
@@ -422,62 +423,77 @@ async function start(){
       headR.connect(f);
       headR = f;
       return f;
-  }).filter(n => n !== null);
-  headR.connect(gainR).connect(analyserR).connect(merger, 0, 1);
+    }).filter(n => n !== null);
+    headR.connect(gainR).connect(analyserR).connect(merger, 0, 1);
 
-  merger.connect(masterGain).connect(analyser).connect(ctx.destination);
-  ctx._healthAnalyser = analyser;
+    merger.connect(masterGain).connect(analyser).connect(ctx.destination);
+    ctx._healthAnalyser = analyser;
 
-  const natureMap = { rain:'audio/rain.mp3', ocean:'audio/ocean.mp3', stream:'audio/stream.mp3', wind:'audio/wind.mp3' };
-  let audioSource;
-  if (color === 'live') {
-    try {
-      liveStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-      if (!liveStream.getAudioTracks().length) {
-         alert("No audio track found. Please ensure 'Share Audio' is checked in the capture dialog.");
-         stop(); return;
+    const natureMap = { rain: 'audio/rain.mp3', ocean: 'audio/ocean.mp3', stream: 'audio/stream.mp3', wind: 'audio/wind.mp3' };
+    let audioSource;
+    if (color === 'live') {
+      try {
+        liveStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        if (!liveStream.getAudioTracks().length) {
+          alert("No audio track found. Please ensure 'Share Audio' is checked in the capture dialog.");
+          stop();
+          return;
+        }
+        const streamSource = ctx.createMediaStreamSource(liveStream);
+        const splitter = ctx.createChannelSplitter(2);
+        streamSource.connect(splitter);
+        splitter.connect(nodeNotchL, 0);
+        splitter.connect(nodeNotchR, 1);
+      } catch (err) {
+        console.error(err);
+        stop();
+        return;
       }
-      const streamSource = ctx.createMediaStreamSource(liveStream);
+    } else if (color === 'custom') {
+      const file = document.getElementById('customFile').files[0];
+      if (file) audioSource = new Audio(URL.createObjectURL(file));
+      else {
+        alert("Please select a file.");
+        stop();
+        return;
+      }
+    } else if (natureMap[color]) {
+      audioSource = new Audio(natureMap[color]);
+    }
+
+    if (audioSource) {
+      src = audioSource; src.loop = true;
+      const track = ctx.createMediaElementSource(audioSource);
       const splitter = ctx.createChannelSplitter(2);
-      streamSource.connect(splitter);
+      track.connect(splitter);
       splitter.connect(nodeNotchL, 0);
       splitter.connect(nodeNotchR, 1);
-    } catch (err) {
-      console.error(err); stop(); return;
+      audioSource.play();
+    } else {
+      // Use the safe centralized generator
+      src = await (ctx.generator ? ctx.generator.createSafeNoiseNode(color) : null);
+      if (!src) {
+        stop();
+        return;
+      }
+      src.connect(nodeNotchL);
+      src.connect(nodeNotchR);
+      src.start(); // Works for both Buffer and Worklet
     }
-  } else if (color === 'custom') {
-    const file = document.getElementById('customFile').files[0];
-    if (file) audioSource = new Audio(URL.createObjectURL(file));
-    else { alert("Please select a file."); stop(); return; }
-  } else if (natureMap[color]) {
-    audioSource = new Audio(natureMap[color]);
-  }
 
-  if (audioSource) {
-    src = audioSource; src.loop = true;
-    const track = ctx.createMediaElementSource(audioSource);
-    const splitter = ctx.createChannelSplitter(2);
-    track.connect(splitter);
-    splitter.connect(nodeNotchL, 0);
-    splitter.connect(nodeNotchR, 1);
-    audioSource.play();
-  } else {
-    // Use the safe centralized generator
-    src = await (ctx.generator ? ctx.generator.createSafeNoiseNode(color) : null);
-    if (!src) { stop(); return; }
-    src.connect(nodeNotchL);
-    src.connect(nodeNotchR);
-    src.start(); // Works for both Buffer and Worklet
+    playing = true;
+    validateFilter(nodeNotchL);
+    document.getElementById('toggleBtn').textContent = 'Stop';
+    document.getElementById('toggleBtn').className = 'big-btn stop-btn';
+    document.getElementById('status').textContent = `Notch L:${notchFL} R:${notchFR} (${color})`;
+    drawViz();
+    drawVolumeViz();
+  } catch (e) {
+    console.error("Error starting Notch therapy:", e);
+    stop(); // Ensure stop cleans up and unlocks UI
+  } finally {
+    toggleUIInteraction(false); // Unlock UI after setup (or failure)
   }
-
-  playing=true;
-  validateFilter(nodeNotchL);
-  document.getElementById('toggleBtn').textContent='Stop';
-  document.getElementById('toggleBtn').className='big-btn stop-btn';
-  document.getElementById('status').textContent=`Notch L:${notchFL} R:${notchFR} (${color})`;
-  drawViz();
-  drawVolumeViz();
-  toggleUIInteraction(false);
 }
 
 function validateFilter(filterNode) {

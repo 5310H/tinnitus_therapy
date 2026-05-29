@@ -98,7 +98,7 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2.5.0";
+const APP_VERSION = "2026.05.1";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
