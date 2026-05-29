@@ -26,7 +26,7 @@
 </div>
 
 <div class="ctrl">
-  <label>Sound Source</label>
+  <label style="display: flex; align-items: center;">Sound Source <span class="status-dot" id="sourceStatus">○</span></label>
   <select id="color">
     <optgroup label="Broadband Noise">
       <option value="white" title="Flat spectrum; effective for broadband masking.">White Noise</option>
@@ -48,7 +48,7 @@
 </div>
 <div class="ctrl">
   <label style="display: flex; justify-content: space-between; align-items: center;">
-    <span>Master Volume <span class="val" id="volValMaster" style="float:none; margin-left:10px;">100%</span></span>
+    <span style="display: flex; align-items: center;">Master Volume <span class="status-dot" id="volMasterStatus">○</span> <span class="val" id="volValMaster" style="float:none; margin-left:10px;">100%</span></span>
     <label style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; color: var(--accent);">
       <input type="checkbox" id="muteToggle" style="width: 16px; height: 16px; margin: 0;"> Mute
     </label>
@@ -61,7 +61,7 @@
 </div>
 <div class="responsive-grid">
   <div class="ctrl">
-    <label>Volume L <span class="val" id="volValL">40%</span></label>
+    <label style="display: flex; align-items: center;">Volume L <span class="status-dot" id="volLStatus">○</span> <span class="val" id="volValL" style="margin-left: auto;">40%</span></label>
     <input type="range" id="volL" min="0" max="100" value="40">
     <div class="btn-group" data-target="volL">
       <button class="button-step" data-delta="-5">-5</button>
@@ -69,7 +69,7 @@
     </div>
   </div>
   <div class="ctrl" id="volRGroup">
-    <label>Volume R <span class="val" id="volValR">40%</span></label>
+    <label style="display: flex; align-items: center;">Volume R <span class="status-dot" id="volRStatus">○</span> <span class="val" id="volValR" style="margin-left: auto;">40%</span></label>
     <input type="range" id="volR" min="0" max="100" value="40">
     <div class="btn-group" data-target="volR">
       <button class="button-step" data-delta="-5">-5</button>
@@ -80,10 +80,10 @@
 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
   <button class="tone-btn" id="syncVolBtn" style="flex: 1;" onclick="syncVolToR()">Sync Volume L &rarr; R</button>
 </div>
-<div class="ctrl" title="Controls the independence of the left and right audio streams. 100% means completely independent signals."><label>Decorrelation Amount <span class="info-icon">?</span> <span class="val" id="decVal">100%</span></label><input type="range" id="dec" min="0" max="100" value="100"></div>
+<div class="ctrl" title="Controls the independence of the left and right audio streams. 100% means completely independent signals."><label style="display: flex; align-items: center;">Decorrelation Amount <span class="status-dot" id="decStatus">○</span> <span class="info-icon">?</span> <span class="val" id="decVal" style="margin-left: auto;">100%</span></label><input type="range" id="dec" min="0" max="100" value="100"></div>
 <div class="responsive-grid">
   <div class="ctrl">
-    <label>Low-Cut L (Hz)
+    <label style="display: flex; align-items: center; flex-wrap: wrap;">Low-Cut L (Hz) <span class="status-dot" id="lcLStatus">○</span>
       <div class="input-with-buttons">
         <input type="number" id="lcInputL" class="val-input" value="80" min="20" max="500">
         <div class="fine-tune-group" data-target="lcL">
@@ -103,7 +103,7 @@
     </div>
   </div>
   <div class="ctrl" id="lcRGroup">
-    <label>Low-Cut R (Hz)
+    <label style="display: flex; align-items: center; flex-wrap: wrap;">Low-Cut R (Hz) <span class="status-dot" id="lcRStatus">○</span>
       <div class="input-with-buttons">
         <input type="number" id="lcInputR" class="val-input" value="80" min="20" max="500">
         <div class="fine-tune-group" data-target="lcR">
@@ -128,7 +128,7 @@
 </div>
 <div class="responsive-grid">
   <div class="ctrl">
-    <label>High-Cut L (Hz)
+    <label style="display: flex; align-items: center; flex-wrap: wrap;">High-Cut L (Hz) <span class="status-dot" id="hcLStatus">○</span>
       <div class="input-with-buttons">
         <input type="number" id="hcInputL" class="val-input" value="14000" min="2000" max="20000">
         <div class="fine-tune-group" data-target="hcL">
@@ -148,7 +148,7 @@
     </div>
   </div>
   <div class="ctrl" id="hcRGroup">
-    <label>High-Cut R (Hz)
+    <label style="display: flex; align-items: center; flex-wrap: wrap;">High-Cut R (Hz) <span class="status-dot" id="hcRStatus">○</span>
       <div class="input-with-buttons">
         <input type="number" id="hcInputR" class="val-input" value="14000" min="2000" max="20000">
         <div class="fine-tune-group" data-target="hcR">
@@ -173,7 +173,7 @@
 </div>
 
   <div class="match-section" id="eqSection">
-  <h3>Hearing Compensation (EQ)</h3>
+  <h3 style="display: flex; align-items: center;">Hearing Compensation (EQ) <span class="status-dot" id="eqStatus">○</span></h3>
   <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
   <div class="responsive-grid">
     <div id="eqControlsL"></div>
@@ -258,6 +258,7 @@ window.onload = () => {
     }
 
     updateLabels();
+    updateStatusDots();
     setupStepButtons();
     refreshUsageUI();
 };
@@ -307,6 +308,7 @@ function createEqUI() {
                     const node = nodes.find(n => n.frequency.value === freq);
                     if (node) node.gain.setTargetAtTime(v, ctx.currentTime, 0.05);
                 }
+                updateStatusDots();
             };
         });
     });
@@ -491,6 +493,7 @@ async function start(){
   document.getElementById('toggleBtn').className='big-btn stop-btn';
   drawVolumeViz();
   // toggleUIInteraction(false); // UI is already interactive by default, only lock when needed
+  updateStatusDots();
   drawViz();
 }
 
@@ -516,6 +519,7 @@ function stop(){
   document.getElementById('toggleBtn').className='big-btn play-btn';
   toggleUIInteraction(false); // Re-enable UI interaction when stopped
   document.getElementById('status').textContent='Stopped'
+  updateStatusDots();
   const canvas = document.getElementById('volumeViz');
   if (canvas) canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
 }
@@ -667,7 +671,7 @@ document.getElementById('lockLR').onchange = (e) => {
     if (e.target.checked) performGlobalSync();
 };
 
-document.getElementById('dec').oninput=e=>{document.getElementById('decVal').textContent=e.target.value+'%';saveSetting('dec_dec',e.target.value)};
+document.getElementById('dec').oninput=e=>{document.getElementById('decVal').textContent=e.target.value+'%';saveSetting('dec_dec',e.target.value); updateStatusDots();};
 
 document.getElementById('volMaster').oninput = e => {
     const v = e.target.value;
@@ -676,6 +680,7 @@ document.getElementById('volMaster').oninput = e => {
     if (playing && !document.getElementById('muteToggle').checked) { 
         globalMasterGain.gain.setTargetAtTime(v / 100, ctx.currentTime, 0.05); 
     }
+    updateStatusDots();
 };
 
 document.getElementById('muteToggle').onchange = e => {
@@ -685,6 +690,7 @@ document.getElementById('muteToggle').onchange = e => {
         const targetVol = isMuted ? 0 : document.getElementById('volMaster').value / 100;
         globalMasterGain.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.1); // Smooth 100ms fade
     }
+    updateStatusDots();
 };
 
 ['L', 'R'].forEach(side => {
@@ -701,6 +707,7 @@ document.getElementById('muteToggle').onchange = e => {
             const node = (side === 'L' ? nodesL : nodesR);
             if (node) node.gain.gain.value = e.target.value / 100;
         }
+        updateStatusDots();
     };
     document.getElementById(`lc${side}`).oninput = e => {
         const isLocked = document.getElementById('lockLR').checked;
@@ -715,6 +722,7 @@ document.getElementById('muteToggle').onchange = e => {
             (side === 'L' ? nodesL : nodesR).lo.frequency.setTargetAtTime(+e.target.value, ctx.currentTime, 0.05);
             validateFilterSettings();
         }
+        updateStatusDots();
     };
     document.getElementById(`hc${side}`).oninput = e => {
         const isLocked = document.getElementById('lockLR').checked;
@@ -729,11 +737,13 @@ document.getElementById('muteToggle').onchange = e => {
             (side === 'L' ? nodesL : nodesR).hi.frequency.setTargetAtTime(+e.target.value, ctx.currentTime, 0.05);
             validateFilterSettings();
         }
+        updateStatusDots();
     };
 });
 document.getElementById('color').onchange=e=>{
     saveSetting('dec_color',e.target.value);
     document.getElementById('customFile').style.display = (e.target.value === 'custom') ? 'block' : 'none';
+    updateStatusDots();
 };
 
 

@@ -98,7 +98,7 @@
         </div>
     </div>
 
-    <button class="big-btn" id="playBtn">Play Tones</button>
+    <button class="big-btn play-btn" id="playBtn">Play Tones</button>
 
     <div class="responsive-grid">
         <div class="ctrl">
@@ -191,8 +191,7 @@ function playTones() {
 
     playing = true;
     updateGains();
-    playBtn.textContent = "Stop Tones";
-    playBtn.classList.add("stop-btn");
+    playBtn.textContent = "Stop Tones"; playBtn.classList.replace("play-btn", "stop-btn");
     drawVolumeViz();
 }
 
@@ -205,8 +204,7 @@ function stopTone() {
     const canvas = document.getElementById('volumeViz');
     const c = canvas.getContext('2d');
     c.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
-    playBtn.textContent = "Play Tones";
-    playBtn.classList.remove("stop-btn");
+    playBtn.textContent = "Play Tones"; playBtn.classList.replace("stop-btn", "play-btn");
 }
 
 function updateGains() {
@@ -386,29 +384,31 @@ function stopRepeat() {
     clearInterval(repeatInterval);
 }
 
-let repeatTarget = "";
-document.querySelectorAll('.btn-group .button-step[data-delta], .fine-tune-btn[data-delta]').forEach(btn => {
-    const delta = parseInt(btn.dataset.delta);
-    btn.onmousedown = btn.ontouchstart = (e) => { 
-        e.preventDefault(); 
-        repeatTarget = btn.parentElement.dataset.target; 
-        startRepeat(delta); 
-        const isLocked = document.getElementById('lockLR').checked;
-        if (isLocked && repeatTarget.endsWith('L')) {
-            const rightId = repeatTarget.replace('L', 'R');
-            const rightEl = document.getElementById(rightId);
-            if (rightEl) {
-                setTimeout(() => {
-                    rightEl.value = document.getElementById(repeatTarget).value;
-                    rightEl.dispatchEvent(new Event('input'));
-                }, 10);
+function setupStepButtons() {
+    let repeatTarget = "";
+    document.querySelectorAll('.btn-group .button-step[data-delta], .fine-tune-btn[data-delta]').forEach(btn => {
+        const delta = parseInt(btn.dataset.delta);
+        btn.onmousedown = btn.ontouchstart = (e) => { 
+            e.preventDefault(); 
+            repeatTarget = btn.parentElement.dataset.target; 
+            startRepeat(delta); 
+            const isLocked = document.getElementById('lockLR').checked;
+            if (isLocked && repeatTarget.endsWith('L')) {
+                const rightId = repeatTarget.replace('L', 'R');
+                const rightEl = document.getElementById(rightId);
+                if (rightEl) {
+                    setTimeout(() => {
+                        rightEl.value = document.getElementById(repeatTarget).value;
+                        rightEl.dispatchEvent(new Event('input'));
+                    }, 10);
+                }
             }
-        }
-    };
-    btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => { stopRepeat(); repeatTarget = ""; };
-    // Accessible fallback
-    btn.onclick = (e) => { if(!repeatInterval) startRepeat(delta); stopRepeat(); };
-});
+        };
+        btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => { stopRepeat(); repeatTarget = ""; };
+        // Accessible fallback
+        btn.onclick = (e) => { if(!repeatInterval) startRepeat(delta); stopRepeat(); };
+    });
+}
 
 function toggleSweep(mode) {
     if (sweeping === mode) {
@@ -523,6 +523,7 @@ window.onload = () => {
 
     updateLockVisuals();
     updateLabels();
+    setupStepButtons();
 };
 
 // Mirror logic for sliders

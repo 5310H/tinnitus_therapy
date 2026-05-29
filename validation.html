@@ -55,8 +55,8 @@
         <h2>System Calibration (Phase Test)</h2>
         <p class="info">Verify that your headphones are correctly wired and in-phase.</p>
         <button class="button" onclick="testPhase('in')">Test In-Phase (Center)</button>
-        <button class="button" onclick="testPhase('out')">Test Out-of-Phase (Diffuse)</button>
-        <button class="button stop-btn" style="width:100%; margin-top:10px" onclick="stopPhase()">Stop Phase Tone</button>
+        <button class="button play-btn" onclick="testPhase('out')">Test Out-of-Phase (Diffuse)</button>
+        <button class="button stop-btn" style="width:100%; margin-top:10px; background: var(--error);" onclick="stopPhase()">Stop Phase Tone</button>
         
         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); text-align: center;">
             <p style="font-size: 0.85rem; margin-bottom: 10px;">Does the In-Phase tone sound centered?</p>

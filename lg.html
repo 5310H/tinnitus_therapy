@@ -39,19 +39,19 @@
             </div>
         </div>
 
-        <button class="button" id="toggleBtn" onclick="toggle()">Start Tone</button>
+        <button class="button play-btn" id="toggleBtn" onclick="toggle()">Start Tone</button>
     </div>
 
     <div class="card" style="margin-top: 20px;">
         <h3>2. Subjective Loudness Rating</h3>
         <p class="info">How loud does the tone sound to you at the current volume?</p>
         <div class="btn-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));">
-            <button class="sm-btn" onclick="savePoint(1)">Very Soft</button>
-            <button class="sm-btn" onclick="savePoint(2)">Soft</button>
-            <button class="sm-btn" onclick="savePoint(3)">Medium</button>
-            <button class="sm-btn" onclick="savePoint(4)">Loud</button>
-            <button class="sm-btn" onclick="savePoint(5)">Very Loud</button>
-            <button class="sm-btn" onclick="savePoint(6)">Uncomfortably Loud</button>
+            <button class="sm-btn opt-btn" onclick="savePoint(1, this)">Very Soft</button>
+            <button class="sm-btn opt-btn" onclick="savePoint(2, this)">Soft</button>
+            <button class="sm-btn opt-btn" onclick="savePoint(3, this)">Medium</button>
+            <button class="sm-btn opt-btn" onclick="savePoint(4, this)">Loud</button>
+            <button class="sm-btn opt-btn" onclick="savePoint(5, this)">Very Loud</button>
+            <button class="sm-btn opt-btn" onclick="savePoint(6, this)">Uncomfortably Loud</button>
         </div>
     </div>
 
@@ -120,18 +120,22 @@ async function toggle() {
     osc.start();
     playing = true;
     updateUI();
-    document.getElementById('toggleBtn').textContent = "Stop Tone";
+    const btn = document.getElementById('toggleBtn');
+    btn.textContent = "Stop Tone"; btn.classList.replace('play-btn', 'stop-btn');
 }
 
 function stop() {
     if (audioCtx) { audioCtx.close(); audioCtx = null; }
     playing = false;
-    document.getElementById('toggleBtn').textContent = "Start Tone";
+    const btn = document.getElementById('toggleBtn');
+    btn.textContent = "Start Tone"; btn.classList.replace('stop-btn', 'play-btn');
 }
 
-function savePoint(subjectiveRating) {
+function savePoint(subjectiveRating, btn) {
     const freq = document.getElementById('freqSlider').value;
     const objVol = document.getElementById('volSlider').value;
+    document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
     logLoudnessGrowthPoint(freq, objVol, subjectiveRating);
     drawCurve();
 }

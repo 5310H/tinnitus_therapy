@@ -43,27 +43,27 @@
     </div>
 
     <div class="ctrl" title="Calibrated broadband noise reduces the contrast between tinnitus and silence, making the tinnitus less noticeable.">
-        <h3>Noise Types <span id="noiseEngineStatus" style="font-size: 0.65rem; font-weight: normal; margin-left: 8px; vertical-align: middle;"></span> <span class="info-icon">?</span></h3>
+        <h3 id="noiseTypesSection" style="display: flex; align-items: center; flex-wrap: wrap;">Noise Types <span class="status-dot" id="noiseTypesStatus">○</span> <span id="noiseEngineStatus" style="font-size: 0.65rem; font-weight: normal; margin-left: 8px;"></span> <span class="info-icon">?</span></h3>
         <div class="btn-grid">
             <button class="sm-btn noise-btn" onclick="handlePlayNoise('white', this)" title="Flat spectrum; effective for broadband masking.">White</button>
             <button class="sm-btn noise-btn" onclick="handlePlayNoise('pink', this)" title="Balanced power; research standard for comfort.">Pink</button>
             <button class="sm-btn noise-btn" onclick="handlePlayNoise('brown', this)" title="Low-frequency focus; best for low-pitched tinnitus.">Brown</button>
             <button class="sm-btn noise-btn" onclick="handlePlayNoise('blue', this)" title="High-frequency focus; useful for high-pitched tinnitus.">Blue</button>
             <button class="sm-btn noise-btn" onclick="handlePlayNoise('violet', this)" title="Strong high-frequency focus; best for piercing tones.">Violet</button>
-            <button class="sm-btn stop-btn" onclick="stopNoise()" style="grid-column: span 2;">Stop Noise</button>
+            <button class="sm-btn stop-btn" onclick="stopNoise()" style="grid-column: span 2; background: var(--error);">Stop Noise</button>
         </div>
     </div>
 
     <div class="ctrl" title="The 4-7-8 breathing technique helps lower physiological stress and reduce the intensity of tinnitus spikes.">
-        <h3>Relaxation Pacer (4-7-8) <span class="info-icon">?</span></h3>
+        <h3 id="pacerSection" style="display: flex; align-items: center;">Relaxation Pacer (4-7-8) <span class="status-dot" id="pacerStatus">○</span> <span class="info-icon">?</span></h3>
         <div class="pacer-circle" id="pacerCircle"><span id="pacerLabel">In</span></div>
         <div class="btn-grid">
             <button class="sm-btn" id="pacerToggle" onclick="handlePacer()">Start Breathing Pacer</button>
         </div>
     </div>
 
-    <div class="match-section" title="Boosting frequencies where you have hearing loss reduces 'neural gain' and listening effort.">
-        <h3>Hearing Compensation (EQ) <span class="info-icon">?</span></h3>
+    <div class="match-section" id="eqSection" title="Boosting frequencies where you have hearing loss reduces 'neural gain' and listening effort.">
+        <h3 style="display: flex; align-items: center;">Hearing Compensation (EQ) <span class="status-dot">○</span> <span class="info-icon">?</span></h3>
         <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div id="eqControlsL"></div>
@@ -71,20 +71,20 @@
         </div>
     </div>
 
-    <div class="ctrl">
-        <h3>Nature Sounds</h3>
+    <div class="ctrl" id="natureSoundsSection">
+        <h3>Nature Sounds <span class="status-dot">○</span></h3>
         <div class="btn-grid">
             <button class="sm-btn ambient-btn" onclick="handlePlaySample('rain', this)">Rain</button>
             <button class="sm-btn ambient-btn" onclick="handlePlaySample('ocean', this)">Ocean</button>
             <button class="sm-btn ambient-btn" onclick="handlePlaySample('stream', this)">Stream</button>
             <button class="sm-btn ambient-btn" onclick="handlePlaySample('wind', this)">Wind</button>
-            <button class="sm-btn stop-btn" onclick="stopAmbient()" style="grid-column: 1 / 2;">Stop Nature</button>
-            <button class="sm-btn stop-btn" onclick="stopAll()" style="grid-column: 2 / 3; background: #b71c1c;">Stop All</button>
+            <button class="sm-btn stop-btn" onclick="stopAmbient()" style="grid-column: 1 / 2; background: var(--error);">Stop Nature</button>
+            <button class="sm-btn stop-btn" onclick="stopAll()" style="grid-column: 2 / 3; background: var(--error);">Stop All</button>
         </div>
     </div>
 
     <div class="ctrl" title="Set the volume to the 'Mixing Point'—where the noise and your tinnitus blend together without one hiding the other.">
-        <label>Volume (%) <span class="info-icon">?</span>
+        <label>Volume (%) <span class="status-dot" id="volumeStatus">○</span> <span class="info-icon">?</span>
             <div class="input-with-buttons">
                 <input type="number" id="volInput" class="val-input" min="0" max="100" value="30">
                 <div class="fine-tune-group" data-target="volume">
@@ -101,7 +101,7 @@
             <button class="button-step" data-delta="5">+5</button>
         </div>
 
-        <label style="display:block;margin-top:10px" title="Adjust the sound level between ears to match the perceived location of your tinnitus.">L/R Balance <span class="info-icon">?</span>
+        <label id="balanceLabel" style="display: flex; align-items: center; margin-top: 10px;" title="Adjust the sound level between ears to match the perceived location of your tinnitus.">L/R Balance <span class="status-dot" id="balanceStatus">○</span> <span class="info-icon">?</span></label>
             <div class="input-with-buttons">
                 <input type="number" id="balInput" class="val-input" min="-1" max="1" step="0.1" value="0">
                 <div class="fine-tune-group" data-target="balance">
@@ -141,7 +141,7 @@
         <button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
     </div>
 </div>
-
+<div id="status" class="status zen-keep" style="text-align: center; margin-top: 10px;"></div>
 <script>
 let audioCtx, noiseSource, ambientSource, gainNode, pannerNode, eqNodesL = [], eqNodesR = [], pacerActive = false, zenActive = false,
     pacerOsc = null, pacerGain = null, pacerTimeout = null, timerInterval = null;
@@ -156,6 +156,7 @@ window.onload = () => {
             <li><b>24/7 Enrichment:</b> Many clinicians recommend never being in total silence. Use these sounds at a very low level throughout the day.</li>
             <li><b>Fatigue Management:</b> If noise becomes annoying, switch to <b>Nature Sounds</b> (Rain/Ocean). The therapeutic effect remains the same.</li>
             <li><b>Sleep Fade:</b> Use the "Sleep Fade" option if using this to fall asleep; a sudden stop in sound can cause a "rebound" spike.</li>
+            <li><b>AI Sound Recipe:</b> Get personalized sound suggestions based on your tinnitus description. <i>(Requires your own Gemini API key)</i></li>
         </ul>
 
         <b>Noise Selection Guide:</b><br>
@@ -171,6 +172,7 @@ window.onload = () => {
     document.getElementById('balance').value = b;
     createEqUI();
     updateLabels();
+    updateStatusDots(); // Call on load
     setupStepButtons();
     if (loadSetting('st_zen_mode', 'false') === 'true') {
         toggleZenMode();
@@ -201,6 +203,7 @@ function createEqUI() {
                     const node = nodes.find(n => n.frequency.value === freq);
                     if (node) node.gain.setTargetAtTime(v, audioCtx.currentTime, 0.05);
                 }
+                updateStatusDots(); // Call when EQ changes
             };
         });
     });
@@ -250,11 +253,18 @@ document.getElementById('balInput').oninput = e => {
 };
 
 async function initAudio() {
-    // Ensure audio engine components are fully present and wired
-    if (!audioCtx || audioCtx.state === 'closed' || !gainNode || !pannerNode || !audioCtx._healthAnalyser) {
+    // Check if context is closed or missing
+    if (!audioCtx || audioCtx.state === 'closed') {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (!audioCtx.generator) audioCtx.generator = new NoiseGenerator(audioCtx);
-        
+    }
+
+    // Ensure generator is always attached to current context
+    if (audioCtx && !audioCtx.generator) {
+        audioCtx.generator = new NoiseGenerator(audioCtx);
+    }
+    
+    // Re-create routing chain if missing or context changed
+    if (!gainNode || !pannerNode || !audioCtx._healthAnalyser) {
         gainNode = audioCtx.createGain();
         gainNode.channelCount = 2;
         gainNode.channelCountMode = 'explicit';
@@ -263,7 +273,6 @@ async function initAudio() {
         const merger = audioCtx.createChannelMerger(2);
         gainNode.connect(splitter);
 
-        // Build EQ Chains
         ['L', 'R'].forEach((side, idx) => {
             let head = audioCtx.createGain();
             splitter.connect(head, idx);
@@ -282,18 +291,18 @@ async function initAudio() {
         const masterAnalyser = audioCtx.createAnalyser();
         masterAnalyser.fftSize = 256;
         merger.connect(pannerNode);
-        
         pannerNode.connect(masterAnalyser).connect(audioCtx.destination);
         audioCtx._healthAnalyser = masterAnalyser;
-        syncAudioNodes();
     }
+
     if (audioCtx.state === 'suspended') await audioCtx.resume();
+    syncAudioNodes();
+    updateStatusDots(); // Call after audio init
 }
-function syncAudioNodes() { setVolume(document.getElementById('volume').value); setBalance(document.getElementById('balance').value); }
+function syncAudioNodes() { if(gainNode) setVolume(document.getElementById('volume').value); if(pannerNode) setBalance(document.getElementById('balance').value); }
 
 function handlePlayNoise(type, btn) {
-    if (audioCtx && gainNode && audioCtx.state !== 'closed' && audioCtx.generator) playNoise(type, btn);
-    else showPreFlight(() => playNoise(type, btn));
+    showPreFlight(() => playNoise(type, btn));
 }
 
 async function playNoise(type, btn) {
@@ -313,25 +322,25 @@ async function playNoise(type, btn) {
         const statusEl = document.getElementById('noiseEngineStatus');
         if (statusEl) {
             if (noiseSource.engineType === 'worklet') {
-                statusEl.textContent = "● High-Precision";
+                statusEl.textContent = "● Precision";
                 statusEl.style.color = "var(--accent)";
                 statusEl.title = "The High-Precision AudioWorklet engine is active for low-latency, clinical-grade noise generation.";
             } else {
-                statusEl.textContent = "● Safe-Mode Fallback";
+                statusEl.textContent = "● Fallback";
                 statusEl.style.color = "#ff9800";
-                statusEl.title = "Using the standard buffer engine. This occurs if running from a local file (file://), a non-secure context (http://), or if the browser doesn't support modern audio modules.";
+                statusEl.title = "Using the standard buffer engine. This occurs if running from a local file or if the browser doesn't support modern audio modules.";
             }
         }
         noiseSource.connect(gainNode);
         noiseSource.start();
+        document.getElementById('status').textContent = `Playing ${type} noise...`;
     } else if (noiseSource) {
         try { noiseSource.disconnect(); } catch(e){}
     }
 }
 
 function handlePlaySample(type, btn) {
-    if (audioCtx && gainNode) playSample(type, btn);
-    else showPreFlight(() => playSample(type, btn));
+    showPreFlight(() => playSample(type, btn));
 }
 
 async function playSample(type, btn) {
@@ -351,8 +360,13 @@ async function playSample(type, btn) {
         if (!btn || btn.classList.contains('active')) {
             audioCtx._expectingSound = true;
             track.connect(gainNode);
-            audio.play(); 
+            audio.play().catch(e => {
+                console.error("SoundTherapy: play() failed:", e);
+                document.getElementById('status').textContent = "Playback blocked. Click 'Confirm & Start' again.";
+            });
             ambientSource = audio;
+            document.getElementById('status').textContent = `Playing ${type} sound...`;
+            updateStatusDots(); // Call when ambient sound starts
         }
     } catch (e) {
         console.error("SoundTherapy: Failed to load nature sound.", e);
@@ -383,6 +397,7 @@ function togglePacer() {
         btn.textContent = "Stop Pacer";
         btn.classList.add('stop-btn');
         circle.classList.add('pacer-active');
+        updateStatusDots(); // Call when pacer starts
         runPacerStep('Inhale', 4000, 'breathe-in');
     } else {
         stopPacer();
@@ -398,6 +413,7 @@ function stopPacer() {
     document.getElementById('pacerCircle').classList.remove('pacer-active');
     document.getElementById('pacerCircle').style.animation = 'none';
     if (audioCtx) audioCtx._expectingSound = !!(noiseSource || ambientSource || pacerActive);
+    updateStatusDots(); // Call when pacer stops
 }
 
 function runPacerStep(phase, duration, anim) {
@@ -421,13 +437,15 @@ function runPacerStep(phase, duration, anim) {
     }, duration);
 }
 
-function setVolume(v) { if(gainNode) gainNode.gain.value = v / 100; document.getElementById('volInput').value = v; saveSetting('st_vol', v); }
+function setVolume(v) { if(gainNode) gainNode.gain.value = v / 100; document.getElementById('volInput').value = v; saveSetting('st_vol', v); updateStatusDots(); }
 function setBalance(v) { 
     if(pannerNode) pannerNode.pan.value = v; 
     document.getElementById('balInput').value = v; 
     document.getElementById('balMarker').style.left = ((parseFloat(v) + 1) / 2 * 100) + '%';
-    saveSetting('st_bal', v); 
+    saveSetting('st_bal', v);
+    updateStatusDots();
 }
+
 
 document.getElementById('volume').oninput = e => { setVolume(e.target.value); };
 document.getElementById('balance').oninput = e => { setBalance(e.target.value); };
@@ -441,8 +459,10 @@ function stopNoise() {
     }
     const statusEl = document.getElementById('noiseEngineStatus');
     if (statusEl) statusEl.textContent = "";
+    document.getElementById('status').textContent = "";
     document.querySelectorAll('.noise-btn').forEach(b=>b.classList.remove('active'));
     if (audioCtx) audioCtx._expectingSound = !!(noiseSource || ambientSource || pacerActive);
+    updateStatusDots(); // Call when noise stops
 }
 
 function stopAmbient() {
@@ -451,8 +471,10 @@ function stopAmbient() {
         try { ambientSource.pause(); ambientSource.src = ""; } catch(e){}
         ambientSource=null; 
     }
+    document.getElementById('status').textContent = "";
     document.querySelectorAll('.ambient-btn').forEach(b=>b.classList.remove('active'));
     if (audioCtx) audioCtx._expectingSound = !!(noiseSource || ambientSource || pacerActive);
+    updateStatusDots(); // Call when ambient stops
 }
 
 function stopAll() {
@@ -460,6 +482,7 @@ function stopAll() {
     stopAmbient();
     stopPacer();
     if (audioCtx) audioCtx._expectingSound = false;
+    updateStatusDots(); // Call when all stops
 }
 
 function toggleZenMode() {
@@ -467,6 +490,7 @@ function toggleZenMode() {
     const isZen = document.body.classList.contains('zen-mode');
     saveSetting('st_zen_mode', isZen);
     const btn = document.getElementById('zenBtn');
+    updateStatusDots(); // Call when zen mode changes
     if (btn) btn.textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
 }
 
@@ -575,8 +599,13 @@ window.addEventListener('tts-audio-recovery-triggered', () => {
     if (activeNoise || activeAmbient) {
         console.warn("[AudioRecovery] Sustained silence detected. Attempting to restart sound therapy...");
         if (activeNoise) {
-            const match = activeNoise.getAttribute('onclick').match(/handlePlayNoise\('([^']+)'/);
+            // Use the data-type or parsed onclick to restart
+            let type = 'pink'; // default
+            const noiseTypes = ['white', 'pink', 'brown', 'blue', 'violet'];
+            for (const t of noiseTypes) { if (activeNoise.textContent.toLowerCase().includes(t)) type = t; }
+            const match = activeNoise.getAttribute('onclick')?.match(/handlePlayNoise\('([^']+)'/);
             if (match) playNoise(match[1], activeNoise);
+            else playNoise(type, activeNoise);
         }
         if (activeAmbient) {
             const match = activeAmbient.getAttribute('onclick').match(/handlePlaySample\('([^']+)'/);
@@ -638,6 +667,36 @@ async function triggerAISoundRecipe() {
         console.error("Error getting AI sound recipe:", error);
         responseBox.innerHTML = "Failed to get AI sound recipe. Please try again later.";
     }
+}
+</script>
+<script>
+function updateStatusDots() {
+    const updateDot = (id, active, container = document) => {
+        const el = container.querySelector(id.startsWith('#') || id.startsWith('.') ? id : `#${id}`);
+        if (el) {
+            el.textContent = active ? '✓' : '○';
+            el.classList.toggle('active', !!active);
+        }
+    };
+
+    // Noise Types
+    updateDot('noiseTypesStatus', document.querySelector('.noise-btn.active'));
+
+    // Relaxation Pacer
+    updateDot('pacerStatus', pacerActive);
+
+    // Hearing Compensation (EQ) - check if any EQ is not 0
+    const anyEqAdjusted = eqBands.some(freq => parseFloat(loadSetting(`eq_st_L_${freq}`, 0)) !== 0 || parseFloat(loadSetting(`eq_st_R_${freq}`, 0)) !== 0);
+    updateDot('#eqSection h3 .status-dot', anyEqAdjusted);
+
+    // Nature Sounds
+    updateDot('#natureSoundsSection h3 .status-dot', document.querySelector('.ambient-btn.active'));
+
+    // Volume & Balance (if not default)
+    const volumeAdjusted = parseFloat(document.getElementById('volume').value) !== 30; // Default is 30
+    const balanceAdjusted = parseFloat(document.getElementById('balance').value) !== 0; // Default is 0
+    updateDot('volumeStatus', volumeAdjusted);
+    updateDot('balanceStatus', balanceAdjusted);
 }
 </script>
 </body>

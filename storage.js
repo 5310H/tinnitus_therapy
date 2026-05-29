@@ -98,7 +98,7 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2026.05.1";
+const APP_VERSION = "2026.05.2";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
@@ -106,11 +106,6 @@ let activeSessionKey = null; // Tracks the unlocked key for the current session
 
 // ⚠️ CRITICAL SECURITY WARNING ⚠️
 // DIRECTLY INCLUDING YOUR GEMINI API KEY IN CLIENT-SIDE CODE IS UNSAFE FOR PRODUCTION.
-// THIS KEY WILL BE PUBLICLY VISIBLE TO ANYONE INSPECTING YOUR BROWSER'S SOURCE CODE.
-// USE A SECURE SERVER-SIDE PROXY FOR PRODUCTION DEPLOYMENTS.
-const GEMINI_PLACEHOLDER = "YOUR_ACTUAL_API_KEY_HERE";
-const HARDCODED_KEY = GEMINI_PLACEHOLDER; 
-
 /**
  * Telemetry Configuration
  * Point this to your proxy or a webhook to monitor suite health and usage.
@@ -173,7 +168,7 @@ class TinnitusAIManager {
     }
 
     /**
-     * Initializes the Generative AI SDK with the provided or hardcoded key.
+     * Initializes the Generative AI SDK with the provided or stored key.
      */
     init(key = null) {
         if (key) {
@@ -190,11 +185,11 @@ class TinnitusAIManager {
             if (this.decryptedKey) activeSessionKey = this.decryptedKey;
         }
 
-        const activeKey = this.decryptedKey || HARDCODED_KEY;
+        const activeKey = this.decryptedKey;
         const SDK = this._getSDK();
 
         try {
-            if (SDK && activeKey && activeKey !== GEMINI_PLACEHOLDER && activeKey !== "ENCRYPTED_KEY_LOCKED") {
+            if (SDK && activeKey && activeKey !== "ENCRYPTED_KEY_LOCKED") {
                 this.genAI = new SDK(activeKey);
             } else {
                 this.genAI = null;
@@ -214,7 +209,8 @@ class TinnitusAIManager {
         try {
             // The SDK doesn't always expose listModels directly on the GenAI instance 
             // depending on the version/build, but we can attempt to fetch it via the v1 endpoint.
-            const key = this.decryptedKey || HARDCODED_KEY;
+            const key = this.decryptedKey;
+            if (!key || key === "ENCRYPTED_KEY_LOCKED") return { success: false, message: "API key not available." };
             const response = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${key}`);
             const data = await response.json();
             
@@ -932,7 +928,7 @@ class NoiseGenerator {
     /**
      * Peak normalization to ensure consistent therapeutic output.
      */
-    _normalize(data, targetPeak = 0.9) {
+    _normalize(data, targetPeak = 0.5) { // Changed default targetPeak to 0.5 for consistency with usage
         let peak = 0;
         for (let i = 0; i < data.length; i++) {
             const abs = Math.abs(data[i]);
@@ -988,7 +984,7 @@ class NoiseGenerator {
                     const w = Math.random() * 2 - 1;
                     b0 = p[0] * b0 + w * g[0]; b1 = p[1] * b1 + w * g[1]; b2 = p[2] * b2 + w * g[2];
                     b3 = p[3] * b3 + w * g[3]; b4 = p[4] * b4 + w * g[4]; b5 = p[5] * b5 + w * g[5];
-                    dL[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * 0.11 * 0.95; b6 = w * .115926;
+                    dL[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * 0.85; b6 = w * .115926;
                 }
                 break;
             }
@@ -1005,6 +1001,7 @@ class NoiseGenerator {
             case 'brown': {
                 let lastBr = 0;
                 for (let i = 0; i < size; i++) { const w = Math.random() * 2 - 1; dL[i] = (lastBr * brP) + (w * brG); lastBr = dL[i]; }
+                for (let i = 0; i < size; i++) dL[i] *= 0.5; // Calibrate brown output
                 break;
             }
             default: {
@@ -1013,9 +1010,9 @@ class NoiseGenerator {
         }
 
         dR.set(dL); // Mirror for stereo fallback
-        // Normalize to ~0.3 peak to match the gain-scaling in noise-processor.js
-        this._normalize(dL, 0.3);
-        this._normalize(dR, 0.3);
+        // Normalize to ~0.5 peak to match standardized Worklet engine
+        this._normalize(dL, 0.5);
+        this._normalize(dR, 0.5);
         return buffer;
     }
 
@@ -1031,7 +1028,11 @@ class NoiseGenerator {
         const targetColor = (color || 'white').toLowerCase().trim().replace(/(_noise| noise)/g, '');
         if (this.ctx.audioWorklet) {
             try {
-                const workletPath = 'noise-processor.js';
+                // Robust path resolution for subfolders (e.g. /docs/)
+                const isDocs = window.location.pathname.toLowerCase().includes('/docs/');
+                // Force cache refresh by appending the version number as a query parameter
+                const workletPath = (isDocs ? '../noise-processor.js' : 'noise-processor.js') + '?v=' + APP_VERSION;
+
                 if (!this._workletLoading) {
                     console.log('[NoiseGenerator] Loading AudioWorklet module:', workletPath);
                     this._workletLoading = this.ctx.audioWorklet.addModule(workletPath);
@@ -1281,11 +1282,13 @@ function getClinicalReportData(modeName, settingsObj, techSpecsObj = {}) {
         settings: settingsObj,
         techSpecs: techSpecsObj,
         usage: {
-            todayMinutes: Math.round(usage)
+            todayMinutes: Math.round(usage),
+            history: getJson('usage_log', {})
         },
         psychological: {
             lastTHIScore: lastScore,
             lastTHIDate: lastTHIDateDisplay,
+            thiHistory: getDistressScores(),
             thoughtRecordsCount: thoughtRecordsCount,
             recentThoughtSummary: recentThoughtSummary
         },
@@ -1387,94 +1390,206 @@ function generateClinicalReportText(reportData) {
 }
 
 function generateClinicalReportHtml(reportData) {
-    let html = `<div style="font-family: 'Segoe UI', sans-serif; color: #333; padding: 20px; max-width: 800px; margin: auto;">`;
+    let html = `<div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1a1a1a; padding: 1in; max-width: 8.5in; margin: auto; background: #fff; line-height: 1.6; font-size: 12pt; box-sizing: border-box;">`;
     
     // Dynamic Clinic Branding Header
-    if (reportData.branding && reportData.branding.name) {
-        html += `<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px;">`;
-        if (reportData.branding.logo) {
-            html += `<img src="${reportData.branding.logo}" style="max-height: 50px; max-width: 200px; object-fit: contain;">`;
-        }
-        html += `<div style="text-align: right;"><h3 style="margin: 0; color: #555;">${reportData.branding.name}</h3><p style="margin: 0; font-size: 0.75rem; color: #888;">Clinical Monitoring Partner</p></div>`;
-        html += `</div>`;
+    html += `<div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 30px;">`;
+    html += `  <div style="flex: 1;">`;
+    if (reportData.branding && reportData.branding.logo) {
+        html += `    <img src="${reportData.branding.logo}" style="max-height: 50px; margin-bottom: 10px; display: block;">`;
     }
-
-    html += `<h1 style="color: #00bfa5; text-align: center;">TRAHREG TINNITUS THERAPY SUITE - CLINICAL REPORT</h1>`;
-    html += `<p style="text-align: center; font-size: 0.9em; color: #666;">App Version: ${reportData.appVersion} | Mode: ${reportData.modeName} | Export Date: ${reportData.exportDate}<br>Access via: <a href="https://tinnitus.trahreg.com" style="color:#00bfa5;">tinnitus.trahreg.com</a></p>`;
-    html += `<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">`;
+    html += `    <h1 style="font-size: 22pt; color: #1c1e21; margin: 0; font-weight: bold; line-height: 1;">Clinical Progress Report</h1>`;
+    html += `    <p style="font-size: 14px; color: #7f8c8d; margin: 5px 0 0 0;">Trahreg Tinnitus Suite v${reportData.appVersion}</p>`;
+    html += `  </div>`;
+    html += `  <div style="text-align: right; flex: 1;">`;
+    if (reportData.branding && reportData.branding.name) {
+        html += `    <h3 style="margin: 0; color: #34495e; font-size: 16px;">${reportData.branding.name}</h3>`;
+    }
+    html += `    <p style="margin: 3px 0; font-size: 14px;"><b>Mode:</b> ${reportData.modeName}</p>`;
+    html += `    <p style="margin: 3px 0; font-size: 14px;"><b>Exported:</b> ${reportData.exportDate}</p>`;
+    html += `  </div>`;
+    html += `</div>`;
 
     if (reportData.aiSummary) {
-        html += `<h2 style="color: #00bfa5;">PROFESSIONAL SUMMARY</h2>`;
-        html += `<div style="background: #f0f7f4; border: 1px solid #c8e6c9; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.95rem;">`;
-        html += `<p>${reportData.aiSummary.replace(/\n/g, '<br>')}</p>`;
+        html += `<div style="background: #f9f9f9; border: 1px solid #ddd; padding: 20px; margin-bottom: 30px; border-radius: 4px; page-break-inside: avoid;">`;
+        html += `  <h2 style="font-size: 12pt; color: #333; margin: 0 0 10px 0; text-transform: uppercase; font-weight: bold; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Executive Clinical Summary</h2>`;
+        html += `  <p style="margin: 0; font-size: 12pt; color: #1a1a1a; line-height: 1.6;">${reportData.aiSummary.replace(/\n/g, '<br>')}</p>`;
         html += `</div>`;
     }
-    html += `<h2 style="color: #00bfa5;">THERAPY SETTINGS</h2>`;
-    html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">`;
+
+    const sectionHeader = (title) => `<div style="page-break-inside: avoid; margin-bottom: 25px;"><h2 style="font-size: 14pt; color: #333; border-bottom: 1.5px solid #333; padding-bottom: 5px; margin: 35px 0 15px 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold;">${title}</h2>`;
+
+    html += sectionHeader("Current Therapy Parameters");
+    html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 14px;">`;
+    let rowToggle = false;
     for (const [label, value] of Object.entries(reportData.settings)) {
-        html += `<tr><td style="padding: 5px 0; border-bottom: 1px dashed #eee; width: 40%;">${label}</td><td style="padding: 5px 0; border-bottom: 1px dashed #eee;">${value}</td></tr>`;
+        const rowBg = rowToggle ? '#f9f9f9' : '#fff';
+        html += `<tr style="background: ${rowBg};"><td style="padding: 10px; border: 1px solid #ecf0f1; font-weight: 700; width: 40%; color: #1a1a1a;">${label}</td><td style="padding: 10px; border: 1px solid #ecf0f1;">${value}</td></tr>`;
+        rowToggle = !rowToggle;
     }
-    html += `</table>`;
+    html += `</table></div>`;
 
     if (Object.keys(reportData.techSpecs).length > 0) {
-        html += `<h2 style="color: #00bfa5;">TECHNICAL SPECIFICATIONS</h2>`;
-        html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">`;
+        html += sectionHeader("System Specifications");
+        html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 14px;">`;
         for (const [label, value] of Object.entries(reportData.techSpecs)) {
-            html += `<tr><td style="padding: 5px 0; border-bottom: 1px dashed #eee; width: 40%;">${label}</td><td style="padding: 5px 0; border-bottom: 1px dashed #eee;">${value}</td></tr>`;
+            html += `<tr><td style="padding: 10px; border: 1px solid #ecf0f1; font-weight: 700; width: 40%; color: #1a1a1a;">${label}</td><td style="padding: 10px; border: 1px solid #ecf0f1;">${value}</td></tr>`;
         }
-        html += `</table>`;
+        html += `</table></div>`;
     }
 
-    html += `<h2 style="color: #00bfa5;">USAGE & STATUS</h2>`;
-    html += `<p><strong>Today's Usage:</strong> ${reportData.usage.todayMinutes} minutes</p>`;
+    html += `<div style="display: flex; gap: 20px; margin-bottom: 25px;">`;
+    html += `  <div style="flex: 1; border: 1px solid #ecf0f1; padding: 15px; border-radius: 4px;">`;
+    html += `    <p style="font-size: 11px; color: #95a5a6; margin: 0 0 5px 0; text-transform: uppercase;">Adherence</p>`;
+    html += `    <p style="font-size: 18px; margin: 0; color: #2c3e50;"><b>${reportData.usage.todayMinutes}</b> <span style="font-size: 14px;">min today</span></p>`;
+    html += `  </div>`;
+    html += `  <div style="flex: 1; border: 1px solid #ecf0f1; padding: 15px; border-radius: 4px;">`;
+    html += `    <p style="font-size: 11px; color: #95a5a6; margin: 0 0 5px 0; text-transform: uppercase;">Handicap (THI)</p>`;
+    html += `    <p style="font-size: 18px; margin: 0; color: #2c3e50;"><b>${reportData.psychological.lastTHIScore}</b> <span style="font-size: 11px; color: #7f8c8d;">(as of ${reportData.psychological.lastTHIDate})</span></p>`;
+    html += `  </div>`;
+    html += `</div>`;
 
-    html += `<h2 style="color: #00bfa5;">PSYCHOLOGICAL BASELINE (CBT)</h2>`;
-    html += `<p><strong>Last THI Score:</strong> ${reportData.psychological.lastTHIScore}</p>`;
-    html += `<p><strong>Last THI Date:</strong> ${reportData.psychological.lastTHIDate}</p>`;
+    // Visual Progress Chart (THI History)
+    if (reportData.psychological.thiHistory && Object.keys(reportData.psychological.thiHistory).length > 1) {
+        const history = Object.entries(reportData.psychological.thiHistory)
+            .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+            .slice(-12);
+
+        const width = 600;
+        const height = 140;
+        const padding = 35;
+        const chartWidth = width - (padding * 2);
+        const chartHeight = height - (padding * 2);
+
+        let points = "";
+        const step = chartWidth / (history.length - 1);
+        
+        history.forEach((entry, i) => {
+            const x = padding + (i * step);
+            const y = padding + (chartHeight - (entry[1] / 100 * chartHeight));
+            points += `${x},${y} `;
+        });
+
+        html += `<div style="background: #fdfdfd; border: 1px solid #ecf0f1; border-radius: 4px; padding: 15px 15px 25px 15px; text-align: center; margin-bottom: 25px;">`;
+        html += `  <p style="font-size: 11px; color: #95a5a6; margin: 0 0 15px 0; text-transform: uppercase; text-align: left;">Distress Trend (THI History)</p>`;
+        html += `  <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="max-width: 100%; height: auto; font-family: sans-serif;" shape-rendering="geometricPrecision">`;
+        [0, 25, 50, 75, 100].forEach(val => {
+            const y = padding + (chartHeight - (val / 100 * chartHeight));
+            html += `<line x1="${padding}" y1="${y}" x2="${width - padding}" y2="${y}" stroke="#f0f0f0" stroke-width="1" />`;
+            html += `<text x="${padding - 8}" y="${y + 3}" font-size="9" fill="#bdc3c7" text-anchor="end">${val}</text>`;
+        });
+        html += `<polyline points="${points}" fill="none" stroke="#00bfa5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />`;
+        history.forEach((entry, i) => {
+            const x = padding + (i * step);
+            const y = padding + (chartHeight - (entry[1] / 100 * chartHeight));
+            html += `<circle cx="${x}" cy="${y}" r="3.5" fill="#fff" stroke="#00bfa5" stroke-width="2" />`;
+            const dateStr = new Date(entry[0]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            html += `<text x="${x}" y="${height - 5}" font-size="8" fill="#95a5a6" text-anchor="middle">${dateStr}</text>`;
+        });
+        html += `  </svg>`;
+        html += `  </svg></div></div>`;
+    }
+
+    // Adherence Trend (30-Day Usage)
+    if (reportData.usage.history && Object.keys(reportData.usage.history).length > 1) {
+        const history = Object.entries(reportData.usage.history)
+            .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+            .slice(-30);
+
+        const width = 600;
+        const height = 110;
+        const padding = 35;
+        const chartWidth = width - (padding * 2);
+        const chartHeight = height - (padding * 2);
+
+        const maxUsage = Math.max(60, ...history.map(e => e[1]));
+        const barWidth = (chartWidth / history.length) * 0.7;
+        const spacing = (chartWidth / history.length) * 0.3;
+
+        html += `<div style="background: #fdfdfd; border: 1px solid #ecf0f1; border-radius: 4px; padding: 15px 15px 25px 15px; text-align: center; margin-bottom: 25px;">`;
+        html += `  <p style="font-size: 11px; color: #95a5a6; margin: 0 0 15px 0; text-transform: uppercase; text-align: left;">Adherence Trend (Last 30 Days Usage)</p>`;
+        html += `  <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="max-width: 100%; height: auto; font-family: sans-serif;" shape-rendering="geometricPrecision">`;
+        
+        [0, 0.5, 1].forEach(tick => {
+            const val = Math.round(maxUsage * tick);
+            const y = padding + (chartHeight - (tick * chartHeight));
+            html += `<line x1="${padding}" y1="${y}" x2="${width - padding}" y2="${y}" stroke="#f0f0f0" stroke-width="1" />`;
+            html += `<text x="${padding - 8}" y="${y + 3}" font-size="9" fill="#bdc3c7" text-anchor="end">${val}m</text>`;
+        });
+
+        history.forEach((entry, i) => {
+            const h = (entry[1] / maxUsage) * chartHeight;
+            const x = padding + (i * (barWidth + spacing));
+            const y = padding + (chartHeight - h);
+            html += `<rect x="${x}" y="${y}" width="${barWidth}" height="${h}" fill="#3498db" rx="1" />`;
+            
+            if (i === 0 || i === history.length - 1 || (history.length > 7 && i % Math.floor(history.length/4) === 0)) {
+                const dateStr = new Date(entry[0]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                html += `<text x="${x + barWidth/2}" y="${height - 5}" font-size="8" fill="#95a5a6" text-anchor="middle">${dateStr}</text>`;
+            }
+        });
+        html += `  </svg>`;
+        html += `  </svg></div></div>`;
+    }
+
+    html += sectionHeader("Clinical Metrics");
+    html += `<div style="font-size: 14px; color: #34495e;">`;
+    html += `  <p style="margin: 8px 0;"><b>Residual Inhibition (RI):</b> ${reportData.ri.latestRIResult}</p>`;
+    html += `  <p style="margin: 8px 0;"><b>Min Masking Level (MML):</b> ${reportData.mml.latestMMLResult}</p>`;
+    html += `  <p style="margin: 8px 0;"><b>Loudness Growth (LG):</b> ${reportData.lg.latestLGTest}</p>`;
+    html += `  <p style="margin: 8px 0;"><b>TMC Q-Factor:</b> ${reportData.tmc.latestQFactor}</p>`;
+    html += `</div></div>`;
 
     if (reportData.recommendations.length > 0) {
-        html += `<h3 style="color: #00bfa5;">PERSONALIZED THERAPY SUGGESTIONS</h3>`;
-        html += `<ul style="margin-left: 20px; margin-bottom: 10px;">`;
+        html += sectionHeader("Protocol Adjustments");
+        html += `<ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #34495e;">`;
         reportData.recommendations.forEach(r => {
-            html += `<li><strong>${r.mode}:</strong> ${r.reason}</li>`;
+            html += `<li style="margin-bottom: 8px;"><b>${r.mode}:</b> ${r.reason}</li>`;
         });
-        html += `</ul>`;
+        html += `</ul></div>`;
     }
 
-    html += `<p><strong>Thought Records Logged:</strong> ${reportData.psychological.thoughtRecordsCount}</p>`;
-    html += `<p><strong>Most Recent Record:</strong><br><pre style="background: #f9f9f9; padding: 10px; border-radius: 5px; white-space: pre-wrap;">${reportData.psychological.recentThoughtSummary}</pre></p>`;
-
-    html += `<h2 style="color: #00bfa5;">RESIDUAL INHIBITION (RI)</h2>`;
-    html += `<p><strong>Latest RI Result:</strong> ${reportData.ri.latestRIResult}</p>`;
-
-    html += `<h2 style="color: #00bfa5;">MINIMUM MASKING LEVEL (MML)</h2>`;
-    html += `<p><strong>Latest MML Result:</strong> ${reportData.mml.latestMMLResult}</p>`;
-
-    html += `<h2 style="color: #00bfa5;">LOUDNESS GROWTH (LG)</h2>`;
-    html += `<p><strong>Latest LG Test:</strong> ${reportData.lg.latestLGTest}</p>`;
-
-    html += `<h2 style="color: #00bfa5;">TINNITUS MASKING CURVE (TMC)</h2>`;
-    html += `<p><strong>Latest Q-factor:</strong> ${reportData.tmc.latestQFactor}</p>`;
-
-    html += `<h2 style="color: #00bfa5;">SYSTEM STATUS</h2>`;
-    html += `<p><strong>Hardware Phase Status:</strong> ${reportData.systemStatus.hardwarePhase}</p>`;
-    html += `<p><strong>Automated Engine Validation:</strong><br><pre style="background: #f9f9f9; padding: 10px; border-radius: 5px; white-space: pre-wrap;">${reportData.systemStatus.engineValidation}</pre></p>`;
-    
-    if (reportData.systemStatus.dspValidation !== 'Not Performed') {
-        html += `<p><strong>Internal DSP Validation:</strong> ${reportData.systemStatus.dspValidation}</p>`;
-    }
+    html += sectionHeader("Technical Integrity Audit");
+    html += `<div style="font-size: 12px; color: #7f8c8d; background: #fdfdfd; border: 1px solid #f0f0f0; padding: 15px; border-radius: 4px;">`;
+    html += `  <p style="margin: 0 0 10px 0;"><b>Hardware Phase:</b> ${reportData.systemStatus.hardwarePhase}</p>`;
+    html += `  <p style="margin: 0 0 10px 0;"><b>DSP Engine Status:</b> ${reportData.systemStatus.dspValidation}</p>`;
+    html += `  <p style="margin: 0;"><b>Validation Summary:</b></p>`;
+    html += `  <pre style="margin: 5px 0 0 0; white-space: pre-wrap; font-family: monospace; font-size: 11px;">${reportData.systemStatus.engineValidation}</pre>`;
+    html += `</div></div>`;
 
     if (reportData.systemStatus.actionableRecommendations.length > 0) {
-        html += `<h3 style="color: #f44336;">ACTIONABLE RECOMMENDATIONS</h3>`;
-        html += `<ul style="margin-left: 20px; color: #f44336;">`;
+        html += `<div style="margin-top: 25px; padding: 15px; background: #fff5f5; border: 1px solid #feb2b2; border-radius: 4px;">`;
+        html += `  <h3 style="color: #c53030; font-size: 13px; margin: 0 0 10px 0; text-transform: uppercase;">Required Technical Actions</h3>`;
+        html += `  <ul style="margin: 0; padding-left: 20px; color: #c53030; font-size: 12px;">`;
         reportData.systemStatus.actionableRecommendations.forEach(rec => {
-            html += `<li>${rec}</li>`;
+            html += `<li style="margin-bottom: 5px;">${rec}</li>`;
         });
-        html += `</ul>`;
+        html += `  </ul>`;
+        html += `  </ul></div></div>`;
     }
 
-    html += `<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">`;
-    html += `<p style="text-align: center; font-size: 0.8em; color: #666;">End of Report</p>`;
+    if (reportData.psychological.thoughtRecordsCount > 0) {
+        html += sectionHeader("Psychological Context (Last Record)");
+        html += `<pre style="background: #fcfcfc; border: 1px solid #f0f0f0; padding: 15px; border-radius: 4px; font-family: sans-serif; font-size: 12px; color: #555; white-space: pre-wrap; line-height: 1.4;">${reportData.psychological.recentThoughtSummary}</pre></div>`;
+    }
+
+    // Signature Section
+    html += `<div style="margin-top: 60px; display: flex; justify-content: space-between; page-break-inside: avoid;">`;
+    html += `  <div style="width: 45%; border-top: 1.5px solid #333; padding-top: 8px;">`;
+    html += `    <p style="font-size: 10px; margin: 0; color: #333; text-transform: uppercase; font-weight: bold;">Clinician Signature</p>`;
+    html += `  </div>`;
+    html += `  <div style="width: 45%; border-top: 1.5px solid #333; padding-top: 8px;">`;
+    html += `    <p style="font-size: 10px; margin: 0; color: #333; text-transform: uppercase; font-weight: bold;">Review Date</p>`;
+    html += `  </div>`;
+    html += `</div>`;
+
+    html += `<div style="margin-top: 60px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-start;">`;
+    html += `  <div>`;
+    html += `    <p style="font-size: 9px; color: #999; margin: 0;">Verified Clinical Assessment Tool | tinnitus.trahreg.com</p>`;
+    html += `    <p style="font-size: 8px; color: #bbb; margin: 3px 0 0 0; font-style: italic;">Confidential Medical Document - For Professional Use Only</p>`;
+    html += `  </div>`;
+    html += `  <p style="font-size: 9px; color: #999; margin: 0;">Page 1 of 1</p>`;
+    html += `</div>`;
     html += `</div>`;
     return html;
 }
@@ -1844,11 +1959,10 @@ function showWalkthrough(slides, startIndex = 0) {
  */
 function showWhatsNew() {
     showWalkthrough([
-        { title: "Version 2.5.0 - What's New", content: "This update brings further refinements to smartphone-based bimodal neuromodulation, enhanced clinical reporting features, and improved AI integration." },
-        { title: "Modular Architecture", content: "Data and AI management have been refactored into dedicated modules, improving reliability and stability across the entire suite." },
-        { title: "Performance Profiling", content: "A new Performance Monitor has been added to track audio engine health, ensuring your therapeutic signals are always accurate." },
-        { title: "Security Hardening", content: "Your API keys are now protected with high-grade AES-GCM encryption. We've also added security sanitization to our Python tools." },
-        { title: "Enhanced Reports", content: "Clinical reports now feature deeper data integration, AI-generated progress summaries, and clinic branding options." }
+        { title: "Version 2026.05.2 - What's New", content: "This maintenance update focuses on engine stability and UI reliability to ensure uninterrupted therapy sessions." },
+        { title: "Audio Engine Watchdog", content: "A new background observer detects and automatically recovers from audio 'stalls' or browser-induced suspensions, particularly common on mobile devices." },
+        { title: "Critical Bug Fixes", content: "Resolved a UI lock-up issue where buttons became unresponsive due to missing status indicators, and added recovery logic for digital filter instability." },
+        { title: "System Resilience", content: "The suite is now better protected against background tab throttling, ensuring your sound therapy continues even when the screen is off." }
     ]);
 }
 
@@ -1912,6 +2026,7 @@ function startModuleTutorial(key, startIndex = 0) {
         ],
         'notchfinder': [
             { title: "Frequency Input", content: "Adjust the pitch using the slider or type a value. This identifies your tinnitus 'center frequency'.", selector: ".responsive-grid" },
+            { title: "First-Time Calibration Checklist", content: "To avoid <b>Octave Confusion</b>: 1. Find your match. 2. Double the frequency; if it sounds closer to your tinnitus, your original was too low. 3. Half the frequency; if it sounds like a deeper version of your tinnitus, your original was too high. The fundamental (lowest) clear match is your target.", selector: ".responsive-grid" },
             { title: "Auto-Sweep", content: "Use this to slowly climb the frequency range. It's often easier to find the match while the sound is moving.", selector: "#speedSlider" },
             { title: "Test & Listen", content: "Toggle the tones to compare the external sound against your internal tinnitus.", selector: "#playBtn" },
             { title: "Save Settings", content: "Once matched, save here. This frequency will be used across all other therapy modules automatically.", selector: "#saveBtn" },

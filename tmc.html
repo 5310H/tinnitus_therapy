@@ -20,7 +20,7 @@
         <p class="info">Select a frequency and find the lowest volume (MML) that completely masks your tinnitus.</p>
         
         <div class="ctrl">
-            <label>Test Frequency (Hz) <span class="val" id="freqVal">4000 Hz</span></label>
+            <label>Test Frequency (Hz) <span class="val" id="freqVal">4000 Hz</span> <span class="status-dot" id="freqStatus">○</span></label>
             <input id="freqSlider" type="range" min="500" max="12000" step="100" value="4000">
             <div class="btn-group" data-target="freqSlider">
                 <button class="button-step" data-delta="-500">-500</button>
@@ -31,12 +31,12 @@
         </div>
 
         <div class="ctrl">
-            <label>Volume / Masking Level <span class="val" id="volVal">10%</span></label>
+            <label>Volume / Masking Level <span class="val" id="volVal">10%</span> <span class="status-dot" id="volStatus">○</span></label>
             <input id="volSlider" type="range" min="0" max="100" value="10">
         </div>
 
         <div class="responsive-grid" style="margin-bottom: 10px;">
-            <button class="button" id="toggleBtn" onclick="toggle()">Start Tone</button>
+            <button class="button play-btn" id="toggleBtn" onclick="toggle()">Start Tone</button>
             <button class="button" style="background: var(--accent); color: white;" onclick="savePoint()">Save Point</button>
         </div>
         
@@ -59,7 +59,7 @@
         <p class="info" style="text-align: center; margin-top: 10px;">
             Calculated Q-factor: <span id="qFactorDisplay" style="font-weight: bold; color: var(--accent);">N/A</span>
         </p>
-        <button class="button stop-btn" style="width: 100%; margin-top: 10px;" onclick="resetCurve()">Clear Curve</button>
+        <button class="button stop-btn" style="width: 100%; margin-top: 10px; background: var(--error);" onclick="resetCurve()">Clear Curve</button>
     </div>
 
     <div class="zen-keep" style="margin-top: 15px;">
@@ -124,16 +124,18 @@ async function toggle() {
     osc.type = 'sine';
     
     osc.connect(gainNode).connect(audioCtx.destination);
-    osc.start();
+    osc.start(); // Start the oscillator
     playing = true;
     updateUI();
-    document.getElementById('toggleBtn').textContent = "Stop Tone";
+    const btn = document.getElementById('toggleBtn');
+    btn.textContent = "Stop Tone"; btn.classList.replace('play-btn', 'stop-btn');
 }
 
 function stop() {
     if (audioCtx) { audioCtx.close(); audioCtx = null; }
     playing = false;
-    document.getElementById('toggleBtn').textContent = "Start Tone";
+    const btn = document.getElementById('toggleBtn');
+    btn.textContent = "Start Tone"; btn.classList.replace('stop-btn', 'play-btn');
 }
 
 function savePoint() {

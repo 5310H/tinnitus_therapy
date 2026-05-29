@@ -29,7 +29,7 @@
                     <option value="violet" title="Strong high-frequency focus; best for piercing tones.">Violet Noise (High-Tone)</option>
                 </select>
             </div>
-            <button class="big-btn play-btn" onclick="startMasking()">Start 60s Masking</button>
+            <button class="big-btn play-btn" id="startMaskingBtn" onclick="startMasking()">Start 60s Masking</button>
         </div>
 
         <div id="step2" style="display:none;">
@@ -42,7 +42,7 @@
             <h3 style="color: var(--accent);">Noise Stopped!</h3>
             <p>Is your tinnitus quieter or gone? Click the button the <b>moment</b> your tinnitus returns to its normal level.</p>
             <h2 id="stopwatch">0.0s</h2>
-            <button class="big-btn stop-btn" onclick="stopMeasurement()">Tinnitus Has Returned</button>
+            <button class="big-btn stop-btn" style="background: var(--error);" onclick="stopMeasurement()">Tinnitus Has Returned</button>
         </div>
     </div>
 
@@ -80,6 +80,8 @@ async function startMasking() {
     noise = await audioCtx.generator.createSafeNoiseNode(color);
     if (!noise) return;
     noise.start(); // Works for both Buffer and Worklet
+    document.getElementById('startMaskingBtn').classList.replace('play-btn', 'stop-btn');
+    document.getElementById('startMaskingBtn').textContent = 'Masking...';
 
     gain = audioCtx.createGain();
     gain.gain.value = 0.3; // Calibrated comfort level
@@ -96,6 +98,8 @@ async function startMasking() {
         if (timeLeft <= 0) {
             clearInterval(maskingTimeout);
             startMeasurement();
+            document.getElementById('startMaskingBtn').classList.replace('stop-btn', 'play-btn');
+            document.getElementById('startMaskingBtn').textContent = 'Start 60s Masking'; // Reset for next time
         }
     }, 1000);
 }

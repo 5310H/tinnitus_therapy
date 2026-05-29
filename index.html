@@ -47,7 +47,7 @@
             <a class="button" href="notchfinder.html" id="step-pitch" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
                 <span><b style="color:var(--accent)">3. Calibration:</b> Pitch-match your tinnitus.</span> <span class="step-status"></span>
             </a>
-            <a class="button" href="recommended.html" id="step-plan" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center; background: var(--accent); color: white;">
+            <a class="button" href="recommended.html" id="step-plan" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center; background: var(--success); color: white;">
                 <span><b style="color:white">4. Your Plan:</b> View personalized recommendations.</span> <span class="step-status"></span>
             </a>
             <!-- Functional Calibration Wizard Status -->
@@ -185,6 +185,10 @@
             <!-- AI Security Controls -->
             <div style="margin-top:15px; border-top:1px dashed var(--border); padding-top:10px;">
                 <h3 style="color:var(--accent); font-size:0.9rem; margin-bottom:10px;">✨ AI Security & Encryption</h3>
+                <div class="info" style="font-size: 0.75rem; line-height: 1.4; margin-bottom: 15px; border-left: 2px solid var(--accent); padding-left: 10px;">
+                    <b>Security Note:</b> This suite does <u>not</u> provide an internal Gemini API key. You must obtain your own private key from 
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent); text-decoration:underline;">Google AI Studio</a> to enable these features.
+                </div>
                 <div class="ctrl">
                     <label>Gemini API Key</label>
                     <input type="password" id="geminiKey" placeholder="Paste Key Here" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
@@ -208,6 +212,7 @@
             <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetLayout()">Reset Layout</button>
             <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="toggleDashboardLayout()">Toggle 1/2 Column Layout</button>
             <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetPreferences()">Reset All Warnings</button>
+            <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="window.location.href='user_manual.html'">Generate User Manual (PDF)</button>
             <button class="button" style="width:100%; margin-top:10px; border-color: #ef5350; color: #ef5350;" onclick="factoryReset()">Clear All Data (Factory Reset)</button>
         </details>
     </div>
@@ -258,7 +263,7 @@ async function loadDailyMotivation() {
 
     const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
     const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
-    const isConfigured = currentKey && currentKey !== "YOUR_ACTUAL_API_KEY_HERE";
+    const isConfigured = !!currentKey;
 
     if (encryptedKeyExists && !activeSessionKey) {
         displayEl.innerHTML = `
@@ -274,7 +279,7 @@ async function loadDailyMotivation() {
     } else if (!isConfigured) {
         displayEl.innerHTML = `
             <div style="color: #ef5350; font-weight: bold;">⚠️ AI Features Unconfigured</div>
-            <p style="font-size: 0.8rem; margin: 8px 0; color: var(--text-dim); font-style: normal;">Add your Gemini API key in Settings to enable personalized insights, crisis support, and pattern analysis.</p>
+            <p style="font-size: 0.8rem; margin: 8px 0; color: var(--text-dim); font-style: normal;">This program does <u>not</u> provide an API key. Add your own private key from Google AI Studio to enable personalized insights.</p>
             <button class="button" style="font-size: 0.75rem; padding: 5px 12px;" onclick="openAISetup()">Setup Gemini Key</button>
         `;
         displayEl.style.flexDirection = 'column';
@@ -521,8 +526,13 @@ function updateStartPathStatus() {
     const updateSubStep = (id, set, label) => {
         const el = document.getElementById(id);
         if (el) {
-            el.style.color = set ? 'var(--accent)' : 'var(--text-dim)';
-            el.innerHTML = (set ? '✓' : '○') + ' ' + label;
+            el.style.display = 'flex';
+            el.style.alignItems = 'center';
+            el.style.justifyContent = 'center';
+            el.style.color = set ? 'var(--success)' : 'var(--text-dim)';
+            el.style.fontWeight = set ? 'bold' : 'normal';
+            el.style.opacity = set ? '1' : '0.6';
+            el.innerHTML = `<span style="font-family: monospace; font-size: 1.25em; margin-right: 6px; line-height: 1;">${set ? '✓' : '○'}</span>${label}`;
         }
     };
 
@@ -1079,7 +1089,8 @@ async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalT
         <div id="onboarding-5" style="display:none;">
              <h2>Step 5: Enable AI Assistant</h2>
              <p>Enable personalized progress analysis and crisis support by adding a Gemini API Key.</p>
-             <div style="background: var(--surface); padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; text-align: left;">
+             <p class="info" style="font-size: 0.8rem; border-left: 2px solid var(--accent); padding-left: 10px;"><b>Note:</b> This program does <u>not</u> provide an API key. You must get your own from Google.</p>
+             <div style="background: var(--surface); padding: 12px; border-radius: 8px; margin-top: 10px; margin-bottom: 15px; font-size: 0.85rem; text-align: left;">
                 1. <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--accent);">Get Key from Google</a><br>
                 2. Copy the key and paste it below.
              </div>
@@ -1108,6 +1119,10 @@ async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalT
 <div id="aiSetupModal" class="modal-overlay">
     <div class="modal-card">
         <h2 style="color: var(--accent); margin-top: 0;">✨ AI Assistant Setup</h2>
+        <div class="info" style="font-size: 0.8rem; margin-bottom: 15px; border-left: 2px solid var(--accent); padding-left: 10px;">
+            <b>Privacy Note:</b> This program does <u>not</u> provide an API key. You must use your own private key from 
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent); text-decoration:underline;">Google AI Studio</a>.
+        </div>
         <p class="info" style="color: var(--text);">Enable personalized motivation and crisis support in 3 easy steps:</p>
         
         <div style="background: var(--surface); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.6;">
@@ -1138,31 +1153,31 @@ async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalT
             <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.05.1 - May 2026</h3>
             <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
                 <li><b>Audio Reliability:</b> Fixed a critical bug where the AudioContext was not correctly resumed on therapy start.</li>
-                <li><b>Versioning:</b> Migrated to yyyy.mm,counter format as per project requirements.</li>
+                <li><b>Versioning:</b> Migrated to yyyy.mm.counter format as per project requirements.</li>
                 <li><b>AI Connectivity:</b> Finalized dynamic model auto-discovery to resolve 404 errors with newer Gemini 2.0/2.5 keys.</li>
                 <li><b>AI Milestone:</b> Successfully resolved Gemini SDK connectivity and model authorization issues for high-precision therapeutic insights.</li>
                 <li><b>404 File Fix:</b> Added missing system files (maintenance.json and docs/index.html) to resolve server errors.</li>
                 <li><b>AI Skypack Bridge:</b> Switched to Skypack CDN for better ESM compatibility and to resolve 'exports is not defined' errors on Chromebooks.</li>
                 <li><b>AI Stability Fix:</b> Resolved global namespace conflicts for the Gemini SDK on Chromebooks and Chrome browsers.</li>
                 <li><b>UI Restoration:</b> Added missing AI security fields to the main settings card and resolved a crash in the dashboard initialization.</li>
-                <li><b>AI SDK Stability:</b> Switched to UMD browser bundle to resolve global namespace conflicts.</li>
+                <li><b>AI SDK Stability:</b> Switched to UMD browser bundle to resolve global namespace conflicts.</li> 
                 <li><b>AI Debugger:</b> Improved SDK detection logic and diagnostic error messages for connectivity issues.</li>
                 <li><b>AI Reliability:</b> Enhanced SDK detection and synchronized Gemini libraries across all modules to resolve loading failures.</li>
                 <li><b>Critical Engine Fix:</b> Resolved a syntax error that prevented the app version from displaying and blocked AI features.</li>
                 <li><b>AI Reliability:</b> Upgraded to Gemini SDK v0.12.0 and improved resolution logic for restricted network environments.</li>
                 <li><b>AI Reliability:</b> Improved resolution logic for the Gemini SDK to resolve race conditions and blockages.</li>
                 <li><b>AI Refinements:</b> Enhanced chat interface with typing indicators and improved context for Pattern Finder analysis.</li>
-                <li><b>Wellness Tools:</b> Integrated AI-generated mindfulness scripts into the Thought Record workflow to assist in grounding.</li>
+                <li><b>Wellness Tools:</b> Integrated AI-generated mindfulness scripts into the Thought Record workflow to assist in grounding.</li> 
                 <li><b>Dashboard Performance:</b> Optimized loading of AI insights and improved real-time connectivity validation for Gemini keys.</li>
             </ul>
 
-            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2.0.0: Major AI Integration - May 2026</h3>
+            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.05.0: Major AI Integration - May 2026</h3>
             <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
                 <li><b>Clinical Pilot Program:</b> New inquiry system for professional partners.</li>
                 <li><b>AI-Powered Features (Google Gemini):</b> Integrated 5 new AI-driven tools for crisis support, personalized soundscapes, pattern analysis, TRT education, and clinical report summaries.</li>
             </ul>
 
-            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v1.5.0: Professional Integration - May 2026</h3>
+            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.04.5: Professional Integration - May 2026</h3>
             <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
                 <li><b>Dual-Stimulus (Bimodal) Support:</b> Synchronize auditory bursts with wireless tactile pulses using the new <b>Finger Pacer</b> hardware or mobile haptics.</li>
                 <li><b>Clinical Summary for Doctors:</b> Generate professional technical PDFs and handouts summarizing protocols and citations to share with audiologists.</li>
@@ -1170,7 +1185,7 @@ async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalT
                 <li><b>Breathing Wave Pacer:</b> Integrated visual and auditory pacing for resonance breathing during therapeutic sessions.</li>
             </ul>
 
-            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v1.4.0: Interface & Guidance - April 2026</h3>
+            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.04.4: Interface & Guidance - April 2026</h3>
             <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 10px; font-size: 0.9rem; color: var(--text-dim);">
                 <li><b>Interactive Tutorials:</b> Voice-narrated UI walkthroughs and visual highlights for every therapy and tool.</li>
                 <li><b>Guided Onboarding:</b> A visual "Path to Relief" sequence on the dashboard to help you complete your clinical setup.</li>

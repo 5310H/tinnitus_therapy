@@ -242,6 +242,7 @@ window.onload = () => {
             <li><b>Capture:</b> Describe the <b>Situation</b> and the initial <b>Automatic Thought</b> (e.g., "This will never end").</li>
             <li><b>Examine:</b> List objective <b>Evidence</b> for and against that specific thought.</li>
             <li><b>Reframe:</b> Construct a <b>Balanced Thought</b> that acknowledges the sound without a catastrophic label.</li>
+            <li><b>AI Support:</b> Use the SOS button or TRT coach for immediate support. <i>Note: These features require your own API key.</i></li>
         </ul><br>
         
         <b>Habituation Assessment:</b> Take the <b>THI</b> once a month. Habituation is a slow process; monthly tracking provides a more accurate view of progress than daily check-ins.<br><br>
@@ -305,14 +306,14 @@ function checkAIState() {
     
     const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
     const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
-    const isConfigured = currentKey && currentKey !== "YOUR_ACTUAL_API_KEY_HERE" && currentKey !== "";
+    const isConfigured = !!currentKey;
 
     if (encryptedKeyExists && !activeSessionKey) {
         responseBox.style.display = 'flex';
         responseBox.innerHTML = `<div class="chat-bubble ai-bubble" style="border-color: #ff9800;">🔒 <b>AI Features Locked.</b> Your API key is encrypted. Please return to the <a href="index.html" style="color: var(--accent); text-decoration: underline;">Dashboard</a> to enter your PIN and unlock AI assistance.</div>`;
     } else if (!isConfigured) {
         responseBox.style.display = 'flex';
-        responseBox.innerHTML = `<div class="chat-bubble ai-bubble" style="border-color: #ef5350;">⚠️ <b>AI Features Unconfigured.</b> Please return to the <a href="index.html" style="color: var(--accent); text-decoration: underline;">Dashboard</a> and use the "Setup Gemini Key" tool to enable AI insights.</div>`;
+        responseBox.innerHTML = `<div class="chat-bubble ai-bubble" style="border-color: #ef5350;">⚠️ <b>AI Features Unconfigured.</b> This program does <u>not</u> provide an API key. Please return to the <a href="index.html" style="color: var(--accent); text-decoration: underline;">Dashboard</a> to add your own private key from Google AI Studio.</div>`;
     }
 }
 
@@ -321,7 +322,7 @@ function select(btn, val) {
     const parent = btn.parentElement;
     parent.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    responses[parseInt(parent.dataset.idx)] = val;
+    responses[parseInt(parent.dataset.idx)] = val; // Store the selected value
 }
 
 function calculateScore() {
@@ -519,13 +520,15 @@ function startPMR() {
     if (pmrActive) {
         clearTimeout(pmrTimer);
         pmrActive = false;
-        document.getElementById('pmrBtn').textContent = "Start PMR Sequence";
+        const btn = document.getElementById('pmrBtn');
+        btn.textContent = "Start PMR Sequence"; btn.classList.replace('stop-btn', 'play-btn');
         document.getElementById('pmrStepText').textContent = "Ready to begin?";
         document.getElementById('pmrProgressBar').style.width = "0%";
         return;
     }
     pmrActive = true; pmrIdx = 0;
-    document.getElementById('pmrBtn').textContent = "Stop Sequence";
+    const btn = document.getElementById('pmrBtn');
+    btn.textContent = "Stop Sequence"; btn.classList.replace('play-btn', 'stop-btn');
     runPmrStep();
 }
 
@@ -591,7 +594,7 @@ async function suggestBalancedThought() {
 
     const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
     const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
-    const isConfigured = currentKey && currentKey !== "YOUR_ACTUAL_API_KEY_HERE" && currentKey !== "";
+    const isConfigured = !!currentKey;
 
     if (encryptedKeyExists && !activeSessionKey) return alert("AI features are locked. Please unlock them on the dashboard with your PIN.");
     if (!isConfigured) return alert("AI features are not configured. Please add your Gemini API key on the dashboard.");
@@ -619,7 +622,7 @@ async function generateGroundingScript() {
 
     const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
     const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
-    const isConfigured = currentKey && currentKey !== "YOUR_ACTUAL_API_KEY_HERE" && currentKey !== "";
+    const isConfigured = !!currentKey;
 
     if (encryptedKeyExists && !activeSessionKey) return alert("AI features are locked.");
     if (!isConfigured) return alert("AI features are not configured.");

@@ -25,10 +25,10 @@
   </label>
 </div>
 <div class="match-section" id="step1Section">
-  <h3>Step 1 - Find Your Tinnitus Frequency</h3>
+  <h3 style="display: flex; align-items: center;">Step 1 - Find Your Tinnitus Frequency <span class="status-dot" id="step1Status">○</span></h3>
   <div class="responsive-grid">
     <div class="ctrl">
-      <label>Left Ear <span class="val" id="toneFreqValL">6000 Hz</span>
+      <label style="display: flex; align-items: center; flex-wrap: wrap;">Left Ear <span class="val" id="toneFreqValL" style="margin-left: auto;">6000 Hz</span>
         <div class="input-with-buttons">
           <input type="number" id="toneFreqInputL" class="val-input" value="6000" min="500" max="16000">
           <div class="fine-tune-group" data-target="toneFreqL">
@@ -48,7 +48,7 @@
       </div>
     </div>
     <div class="ctrl" id="toneFreqRGroup">
-      <label>Right Ear <span class="val" id="toneFreqValR">6000 Hz</span>
+      <label style="display: flex; align-items: center; flex-wrap: wrap;">Right Ear <span class="val" id="toneFreqValR" style="margin-left: auto;">6000 Hz</span>
         <div class="input-with-buttons">
           <input type="number" id="toneFreqInputR" class="val-input" value="6000" min="500" max="16000">
           <div class="fine-tune-group" data-target="toneFreqR">
@@ -69,16 +69,16 @@
     </div>
   </div>
   <div style="display: flex; gap: 10px;">
-    <button class="tone-btn" id="toneBtn" style="flex: 1;" onclick="toggleTone()">Play Test Tones</button>
+    <button class="tone-btn play-btn" id="toneBtn" style="flex: 1;" onclick="toggleTone()">Play Test Tones</button>
     <button class="tone-btn" id="syncFreqBtn" style="flex: 1;" onclick="syncFrequencies()">Sync L &rarr; R</button>
   </div>
 </div>
 
 <div class="match-section" id="step2Section">
-  <h3>Step 2 - Configure Notch Filter</h3>
+  <h3 style="display: flex; align-items: center;">Step 2 - Configure Notch Filter <span class="status-dot" id="step2Status">○</span></h3>
   <div class="responsive-grid">
     <div class="ctrl">
-      <label>Notch L <span class="val" id="notchValL">6000 Hz</span>
+      <label style="display: flex; align-items: center; flex-wrap: wrap;">Notch L <span class="val" id="notchValL" style="margin-left: auto;">6000 Hz</span>
         <div class="input-with-buttons">
           <input type="number" id="notchInputL" class="val-input" value="6000" min="500" max="16000">
           <div class="fine-tune-group" data-target="notchL">
@@ -98,7 +98,7 @@
       </div>
     </div>
     <div class="ctrl" id="notchRGroup">
-      <label>Notch R <span class="val" id="notchValR">6000 Hz</span>
+      <label style="display: flex; align-items: center; flex-wrap: wrap;">Notch R <span class="val" id="notchValR" style="margin-left: auto;">6000 Hz</span>
         <div class="input-with-buttons">
           <input type="number" id="notchInputR" class="val-input" value="6000" min="500" max="16000">
           <div class="fine-tune-group" data-target="notchR">
@@ -118,11 +118,11 @@
       </div>
     </div>
   </div>
-  <div class="ctrl"><label>Notch Width <span class="val" id="nwVal">1.0 octave</span></label><input type="range" id="nw" min="0.25" max="2" value="1" step="0.05"></div>
+  <div class="ctrl"><label style="display: flex; align-items: center;">Notch Width <span class="val" id="nwVal" style="margin-left: auto;">1.0 octave</span></label><input type="range" id="nw" min="0.25" max="2" value="1" step="0.05"></div>
 </div>
 
 <div class="match-section" id="eqSection">
-  <h3>Step 3 - Hearing Compensation (EQ)</h3>
+  <h3 style="display: flex; align-items: center;">Step 3 - Hearing Compensation (EQ) <span class="status-dot" id="eqStatus">○</span></h3>
   <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
   <div class="responsive-grid">
     <div id="eqControlsL"></div>
@@ -131,7 +131,7 @@
 </div>
 
 <div class="ctrl">
-  <label>Sound Source</label>
+  <label style="display: flex; align-items: center;">Sound Source <span class="status-dot" id="sourceStatus">○</span></label>
   <select id="color">
     <optgroup label="Broadband Noise">
       <option value="white" title="Flat spectrum; effective for broadband masking.">White Noise</option>
@@ -153,7 +153,7 @@
 </div>
 <div class="ctrl">
   <label style="display: flex; justify-content: space-between; align-items: center;">
-    <span>Master Volume <span class="val" id="volValMaster" style="float:none; margin-left:10px;">100%</span></span>
+    <span style="display: flex; align-items: center;">Master Volume <span class="status-dot" id="volMasterStatus">○</span> <span class="val" id="volValMaster" style="float:none; margin-left:10px;">100%</span></span>
     <label style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; color: var(--accent);">
       <input type="checkbox" id="muteToggle" style="width: 16px; height: 16px; margin: 0;"> Mute
     </label>
@@ -166,7 +166,7 @@
 </div>
 <div class="responsive-grid">
   <div class="ctrl">
-    <label>Volume L <span class="val" id="volValL">40%</span></label>
+    <label style="display: flex; align-items: center;">Volume L <span class="val" id="volValL" style="margin-left: auto;">40%</span></label>
     <input type="range" id="volL" min="0" max="100" value="40">
     <div class="btn-group" data-target="volL">
       <button class="button-step" data-delta="-5">-5</button>
@@ -174,7 +174,7 @@
     </div>
   </div>
   <div class="ctrl" id="volRGroup">
-    <label>Volume R <span class="val" id="volValR">40%</span></label>
+    <label style="display: flex; align-items: center;">Volume R <span class="val" id="volValR" style="margin-left: auto;">40%</span></label>
     <input type="range" id="volR" min="0" max="100" value="40">
     <div class="btn-group" data-target="volR">
       <button class="button-step" data-delta="-5">-5</button>
@@ -240,6 +240,7 @@ window.onload = () => {
     createEqUI();
     updateLockVisuals();
     updateUI();
+    updateStatusDots();
     setupStepButtons();
 };
 
@@ -270,6 +271,7 @@ function createEqUI() {
                     const node = nodes.find(n => n.frequency.value === freq);
                     if (node) node.gain.setTargetAtTime(v, ctx.currentTime, 0.05);
                 }
+                updateStatusDots();
             };
         });
     });
@@ -367,7 +369,6 @@ async function start() {
   toggleUIInteraction(true);
   try {
     ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (!ctx.generator) ctx.generator = new NoiseGenerator(ctx);
     if (ctx.state === 'suspended') await ctx.resume();
     ctx._expectingSound = true;
 
@@ -488,6 +489,7 @@ async function start() {
     document.getElementById('status').textContent = `Notch L:${notchFL} R:${notchFR} (${color})`;
     drawViz();
     drawVolumeViz();
+    updateStatusDots();
   } catch (e) {
     console.error("Error starting Notch therapy:", e);
     stop(); // Ensure stop cleans up and unlocks UI
@@ -594,6 +596,7 @@ function stop(){
   playing=false;document.getElementById('toggleBtn').textContent='Start Notch Therapy';document.getElementById('toggleBtn').className='big-btn play-btn';document.getElementById('status').textContent='Stopped'
   eqNodesL = []; eqNodesR = [];
   if(rafVolViz) cancelAnimationFrame(rafVolViz);
+  updateStatusDots();
   const canvas = document.getElementById('volumeViz');
   if (canvas) {
     const c = canvas.getContext('2d');
@@ -721,8 +724,14 @@ function toggleTone(){
     merger.connect(toneCtx.destination);
     toneOscL.start(); toneOscR.start();
     tonePlaying=true;
-    document.getElementById('toneBtn').textContent='Stop Test Tone';
-  }else{toneCtx.close();tonePlaying=false;document.getElementById('toneBtn').textContent='Play Test Tone'}
+    const btn = document.getElementById('toneBtn');
+    btn.textContent='Stop Test Tone'; btn.classList.replace('play-btn', 'stop-btn');
+  }else{
+    toneCtx.close();tonePlaying=false;
+    const btn = document.getElementById('toneBtn');
+    btn.textContent='Play Test Tones'; btn.classList.replace('stop-btn', 'play-btn');
+  }
+  updateStatusDots();
 }
 
 ['L', 'R'].forEach(side => {
@@ -736,6 +745,7 @@ function toggleTone(){
         document.getElementById(`toneFreqVal${side}`).textContent = e.target.value + ' Hz';
         if (tonePlaying) { if(side==='L') toneOscL.frequency.value = e.target.value; else toneOscR.frequency.value = e.target.value; }
         saveSetting(`toneFreq${side}`, e.target.value);
+        updateStatusDots();
     };
     document.getElementById(`notch${side}`).oninput = e => {
         const isLocked = document.getElementById('lockLR').checked;
@@ -752,6 +762,7 @@ function toggleTone(){
             if (side === 'L') validateFilter(nodeNotchL);
             document.getElementById('status').textContent = `Notch L:${document.getElementById('notchL').value} R:${document.getElementById('notchR').value} (${document.getElementById('color').value})`;
         }
+        updateStatusDots();
     };
 });
 
@@ -762,6 +773,7 @@ document.getElementById('volMaster').oninput = e => {
     if (playing && !document.getElementById('muteToggle').checked) { 
         masterGain.gain.setTargetAtTime(v / 100, ctx.currentTime, 0.05); 
     }
+    updateStatusDots();
 };
 
 document.getElementById('muteToggle').onchange = e => {
@@ -771,6 +783,7 @@ document.getElementById('muteToggle').onchange = e => {
         const targetVol = isMuted ? 0 : document.getElementById('volMaster').value / 100;
         masterGain.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.1); // Smooth 100ms fade
     }
+    updateStatusDots();
 };
 
 document.getElementById('nw').oninput=e=>{
@@ -787,6 +800,7 @@ document.getElementById('nw').oninput=e=>{
         updateQ(nodeNotchL, 'L'); updateQ(nodeNotchR, 'R');
         validateFilter(nodeNotchL);
     }
+    updateStatusDots();
 };
 ['L', 'R'].forEach(side => {
     document.getElementById(`vol${side}`).oninput = e => {
@@ -799,6 +813,7 @@ document.getElementById('nw').oninput=e=>{
         document.getElementById(`volVal${side}`).textContent = v + '%';
         saveSetting(`vol${side}`, v);
         if (playing) { (side === 'L' ? gainL : gainR).gain.setTargetAtTime(v / 100, ctx.currentTime, 0.05); }
+        updateStatusDots();
     };
 });
 
@@ -820,6 +835,7 @@ function updateLockVisuals() {
 document.getElementById('color').onchange=e=>{
     saveSetting('color', e.target.value);
     document.getElementById('customFile').style.display = (e.target.value === 'custom') ? 'block' : 'none';
+    updateStatusDots();
 };
 
 function resetToDefaults() {
@@ -913,6 +929,37 @@ window.addEventListener('tts-audio-recovery-triggered', () => {
         stop(); start();
     }
 });
+</script>
+<script>
+function updateStatusDots() {
+    // Step 1: Matching (Active if test tone is playing)
+    document.getElementById('step1Status').textContent = tonePlaying ? '✓' : '○';
+    document.getElementById('step1Status').classList.toggle('active', tonePlaying);
+
+    // Step 2: Notch (Active if modified from default 6000Hz or width adjusted)
+    const notchModified = parseInt(document.getElementById('notchL').value) !== 6000 || 
+                          parseInt(document.getElementById('notchR').value) !== 6000 || 
+                          parseFloat(document.getElementById('nw').value) !== 1.0;
+    document.getElementById('step2Status').textContent = notchModified ? '✓' : '○';
+    document.getElementById('step2Status').classList.toggle('active', notchModified);
+
+    // Step 3: EQ
+    const eqAdjusted = eqBands.some(f => parseFloat(loadSetting(`eqL_${f}`, 0)) !== 0 || parseFloat(loadSetting(`eqR_${f}`, 0)) !== 0);
+    document.getElementById('eqStatus').textContent = eqAdjusted ? '✓' : '○';
+    document.getElementById('eqStatus').classList.toggle('active', eqAdjusted);
+
+    // Source Status
+    document.getElementById('sourceStatus').textContent = playing ? '✓' : '○';
+    document.getElementById('sourceStatus').classList.toggle('active', playing);
+
+    // Volume Status
+    const volAdjusted = parseInt(document.getElementById('volMaster').value) !== 100 || 
+                        parseInt(document.getElementById('volL').value) !== 40 || 
+                        parseInt(document.getElementById('volR').value) !== 40 || 
+                        document.getElementById('muteToggle').checked;
+    document.getElementById('volMasterStatus').textContent = volAdjusted ? '✓' : '○';
+    document.getElementById('volMasterStatus').classList.toggle('active', volAdjusted);
+}
 </script>
 </body>
 </html>

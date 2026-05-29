@@ -15,14 +15,15 @@ const TINNITUS_MANAGEMENT_GUIDE = `
         <li><b>Phase 2: Pitch Matching.</b> Spend time in the <b>Notch Finder</b>. Accuracy is critical; if your pitch match is off by more than 5%, Notch and CR therapies lose effectiveness.</li>
         <li><b>Phase 3: The Mixing Point.</b> Set therapy volume so it is slightly <i>lower</i> than your tinnitus. Total masking (hiding the sound) prevents habituation. Your brain must hear both to learn the tinnitus is "neutral."</li>
         <li><b>Phase 4: Passive Use.</b> Do not focus on the therapy sound. Read, work, or relax. The goal is for the sound to become "wallpaper."</li>
-        <li><b>Phase 5: Insights & AI.</b> Review your "Personalized Insights" weekly. If you experience a spike, the AI de-escalator is your first line of defense.</li>
+        <li><b>Phase 5: Insights & AI.</b> Review your "Personalized Insights" weekly. If you experience a spike, the AI de-escalator is your first line of defense. <i>(AI features require your own Gemini API key)</i></li>
         <li><b>Phase 6: Clinical Review.</b> Every 30 days, generate a Clinical PDF and review your long-term THI trends.</li>
     </ol>
     <h3 style="color:var(--accent); margin-bottom:10px;">Using the Help Systems</h3>
     <ul style="padding-left:20px; margin-bottom:15px; font-size:0.9rem; line-height:1.4;">
         <li><b>The Guide:</b> Opens this panel for clinical protocols, the "Golden Rules," and general advice.</li>
-        <li><b>AI Assistant:</b> Integrated into the CBT & Wellness module, providing real-time support, sound recipes, and pattern analysis.</li>
+        <li><b>AI Assistant:</b> Integrated into the CBT & Wellness module, providing real-time support, sound recipes, and pattern analysis. <i>(Requires user-provided Gemini API key)</i></li>
         <li><b>Interactive Tutorials:</b> Click the "Tutorial" button on any therapy page for a narrated, step-by-step walkthrough of that specific tool's setup.</li>
+        <li><b>User Manual:</b> A comprehensive, printable PDF manual is available under <b>Settings</b> on the Home page.</li>
     </ul>
     <h3 style="color:var(--accent); margin-bottom:10px;">Hearing Health Monitoring</h3>
     <p style="font-size:0.9rem; margin-bottom:10px;">Changes in your hearing sensitivity can directly impact tinnitus perception. We recommend:</p>
@@ -36,13 +37,31 @@ const TINNITUS_MANAGEMENT_GUIDE = `
         <li><b>Avoid Silence:</b> Use low-level broadband noise (Sound Therapy) in your environment even when not in a formal session to reduce the "contrast" of the tinnitus.</li>
         <li><b>Mental Health:</b> If a "spike" causes high distress, switch from Sound Therapy to <b>CBT & Wellness</b>. Managing the emotional reaction is as important as the sound itself.</li>
     </ul>
+    <h3 style="color:var(--accent); margin-bottom:10px;">System Resilience (v2026.05.2)</h3>
+    <p style="font-size:0.9rem; margin-bottom:10px;">The suite includes an <b>Audio Watchdog</b> that monitors for stalls or browser-induced suspensions. If sound stops unexpectedly:</p>
+    <ul style="padding-left:20px; margin-bottom:15px; font-size:0.9rem; line-height:1.4;">
+        <li>Check the <b>Audio Status Indicator</b> in the top navigation bar.</li>
+        <li>If it indicates "Suspended," simply interact with the page (click any button) to resume playback.</li>
+    </ul>
     <h3 style="color:var(--accent); margin-bottom:10px;">Access & Updates</h3>
     <p style="font-size:0.9rem; margin-bottom:15px;">
         The latest version of this suite is always available at <a href="https://tinnitus.trahreg.com" style="color:var(--accent); text-decoration:underline;">tinnitus.trahreg.com</a>.
     </p>
-
+`;
 
 function initNav(helpHtml) {
+    // Aggressively clean up all legacy back buttons/home links on the left side
+    document.querySelectorAll('a.back, .back-btn').forEach(el => {
+        el.style.setProperty('display', 'none', 'important');
+    });
+    
+    // Also find any legacy "Home" links specifically and hide them if they aren't part of our new nav
+    document.querySelectorAll('a').forEach(a => {
+        if (a.textContent.trim() === 'Home' && !a.closest('.unified-nav')) {
+            a.style.display = 'none';
+        }
+    });
+
     const isDocs = window.location.pathname.toLowerCase().includes('/docs/');
     const homePath = isDocs ? '../index.html' : 'index.html';
     
@@ -55,14 +74,17 @@ function initNav(helpHtml) {
     const tutorialKey = supportedTutorials.includes(filename) ? filename : null;
 
     const navHTML = `
-        <a class="back" href="${homePath}" style="color:var(--accent)">Home</a>
-        <div style="position:fixed; top:1rem; right:1rem; display:flex; gap:10px; z-index:100; align-items: center;">
-            <div id="audioStatusIndicator" style="font-size: 0.65rem; font-weight: bold; color: var(--text-dim); background: var(--card-bg); padding: 4px 10px; border-radius: 15px; border: 1px solid var(--border); display: none; white-space: nowrap;">○ Audio Off</div>
-            <button class="help-btn" style="position:static; padding: 8px 10px; border-color:var(--accent); color:var(--accent);" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌓</button>
-            <button class="help-btn" style="position:static; border-color:var(--accent); color:var(--accent);" onclick="startModuleTutorial(${tutorialKey ? `'${tutorialKey}'` : 'null'})">
-                ${tutorialKey ? 'Tutorial' : 'Quick Start'}
-            </button>
-            <button class="help-btn" style="position:static; border-color:var(--accent); color:var(--accent);" onclick="openHelp()">Guide</button>
+        <div class="unified-nav" style="position:fixed; top:1rem; left:1rem; right:1rem; display:flex; justify-content: space-between; z-index:99999; align-items: center; pointer-events: none;">
+            <div style="display:flex; gap:10px; pointer-events: auto;">
+                <a class="help-btn" href="${homePath}" style="position:static; padding: 8px 12px; background: var(--success); color: white; border-color: var(--success); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; border-width: 2px; box-shadow: 0 0 10px rgba(56, 142, 60, 0.4);">Home</a>
+                <button class="help-btn" style="position:static; padding: 8px 10px; border-color:var(--accent); color:var(--accent);" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌓</button>
+            </div>
+            <div style="display:flex; gap:10px; align-items: center; pointer-events: auto;">
+                <div id="audioStatusIndicator" style="font-size: 0.65rem; font-weight: bold; color: var(--text-dim); background: var(--card-bg); padding: 4px 10px; border-radius: 15px; border: 1px solid var(--border); display: none; white-space: nowrap;">○ Audio Off</div>
+                <button class="help-btn" style="position:static; border-color:var(--accent); color:var(--accent);" onclick="showQuickStartGuide()">Quick Guide</button>
+                <button class="help-btn" style="position:static; border-color:var(--accent); color:var(--accent);" onclick="startModuleTutorial('${tutorialKey || 'welcome'}')">Tutorial</button>
+                <button class="help-btn" style="position:static; border-color:var(--accent); color:var(--accent);" onclick="openHelp()">Clinical Guide</button>
+            </div>
         </div>
     `;
     document.body.insertAdjacentHTML('afterbegin', navHTML);
@@ -171,28 +193,7 @@ window.toggleUIInteraction = (locked) => {
             // Ensure the global reference always points to the most recently created context
             window.audioCtx = this;
 
-        // Automatically attach the high-precision generator to the context
-            this.generator = new NoiseGenerator(this);
-            this._isRecovering = false;
-            this._expectingSoundVal = false;
-            this._healthAnalyser = null;
-            this._glitchCount = 0;
-            this._peakDetected = 0;
-
         let watchdogInterval = null;
-
-        // Closure-safe reference to updateUI for the setter
-        this._refreshUI = () => updateUI();
-
-        // Apply preferred output device (Sink ID) if supported
-        const applyOutputSink = async () => {
-            if (this.setSinkId) {
-                const sinkId = localStorage.getItem('tts_preferred_output_device') || '';
-                if (sinkId) {
-                    this.setSinkId(sinkId).catch(e => console.warn("[Routing] Sink error:", e));
-                }
-            }
-        };
 
         const updateUI = () => {
             const el = document.getElementById('audioStatusIndicator');
@@ -201,7 +202,11 @@ window.toggleUIInteraction = (locked) => {
             const state = this.state;
             
             if (state === 'running') {
-                if (this._expectingSoundVal) {
+                this._startWatchdog();
+            }
+
+            if (el) {
+                if (state === 'running' && this._expectingSoundVal) {
                     el.style.display = 'block';
                     el.innerHTML = '<span style="color: var(--accent)">●</span> Audio Active';
                     el.style.borderColor = 'var(--accent)';
@@ -209,14 +214,21 @@ window.toggleUIInteraction = (locked) => {
                 } else {
                     el.style.display = 'none';
                 }
-                applyOutputSink();
-                this._startWatchdog();
-            } else if (state === 'suspended') {
+            }
+
+            if (state === 'suspended') {
+                if (!el) return;
                 el.style.display = 'block';
                 el.innerHTML = '<span style="color: #ff9800">●</span> Audio Suspended';
                 el.style.borderColor = '#ff9800';
                 el.title = "Audio is suspended by the browser. Interaction (like clicking Start) is required.";
                 this._stopWatchdog();
+
+                // Auto-recovery: If we expect sound but the browser suspended us, try to resume
+                if (this._expectingSoundVal && !this._isRecovering) {
+                    console.warn("[AudioEngine] Context suspended while therapy active. Attempting auto-resume...");
+                    this.resume().catch(() => {});
+                }
             } else if (state === 'closed') {
                 el.style.display = 'block';
                 el.innerHTML = '○ Audio Closed';
@@ -225,6 +237,17 @@ window.toggleUIInteraction = (locked) => {
                 this._stopWatchdog();
             }
         };
+
+        // Closure-safe reference to updateUI for the setter
+        this._refreshUI = () => updateUI();
+
+        // Automatically attach the high-precision generator to the context
+        this.generator = new NoiseGenerator(this);
+        this._isRecovering = false;
+        this._expectingSoundVal = false;
+        this._healthAnalyser = null;
+        this._glitchCount = 0;
+        this._peakDetected = 0;
 
         this._startWatchdog = () => {
             if (watchdogInterval) return;
@@ -251,7 +274,7 @@ window.toggleUIInteraction = (locked) => {
                     if (drift > 0.1) this._glitchCount++; // Drift > 100ms indicates a frame dropout
                 }
 
-                // 2. Silence Detection: Is the clock moving but the output is silent?
+                // 3. Silence / Error Detection: Is the clock moving but the output is silent or invalid?
                 if (state === 'running' && this._expectingSound && this._healthAnalyser && time > lastTime) {
                     try {
                         this._healthAnalyser.getFloatTimeDomainData(buffer);
@@ -266,13 +289,17 @@ window.toggleUIInteraction = (locked) => {
                         }
                         if (this._peakDetected > 0.98) console.warn("[Safety] Digital clipping detected in output graph.");
 
-                        if (rms < silenceThreshold) {
+                        // Catch silence OR NaN (NaN indicates a filter has exploded)
+                        if (rms < silenceThreshold || isNaN(rms)) {
                             silenceCount++;
-                            if (silenceCount >= 3) { // ~9 seconds of sustained silence while 'running'
-                                console.warn("[Watchdog] Sustained silence detected. Attempting engine recovery...");
+                            if (silenceCount >= 3) { 
+                                console.warn(`[Watchdog] ${isNaN(rms) ? 'Engine Crash (NaN)' : 'Silence'} detected. Triggering recovery...`);
                                 silenceCount = 0;
                                 this._isRecovering = true;
-                                this.resume().catch(() => {});
+                                
+                                // Hard reset state if NaN detected to clear the signal path, otherwise just resume.
+                                if (isNaN(rms)) this.suspend().then(() => this.resume()).catch(() => {});
+                                else this.resume().catch(() => {});
                                 
                                 // Telemetry: Report the failure to the host
                                 if (typeof sendClinicalTelemetry === 'function') {

@@ -21,21 +21,21 @@
         color: var(--text-dim);
     }
     .tone-box.active { 
-        background: var(--accent); color: white; border-color: white; 
-        transform: scale(1.05); box-shadow: 0 0 10px var(--accent);
+        background: var(--success); color: white; border-color: white; 
+        transform: scale(1.05); box-shadow: 0 0 10px var(--success);
     }
 
-    .bal-slider-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-top: 5px; } /* Default to 4 columns */
+    .bal-slider-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-top: 5px; }
     .bal-slider { width: 100%; accent-color: var(--accent); cursor: pointer; }
     .bal-label { font-size: 0.65rem; color: var(--text-dim); text-align: center; margin-top: 2px; }
 
     .cycle-grid { display: flex; justify-content: center; gap: 12px; margin-top: 20px; }
     .cycle-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); position: relative; }
-    .cycle-dot.active { background: var(--accent); border-color: white; box-shadow: 0 0 10px var(--accent); }
+    .cycle-dot.active { background: var(--success); border-color: white; box-shadow: 0 0 10px var(--success); }
     .cycle-dot.silence { border-style: dashed; }
     .cycle-dot.active.silence { background: var(--text-dim); box-shadow: none; }
 
-    #cycleLabel { font-weight: bold; color: var(--accent); }
+    #cycleLabel { font-weight: bold; color: var(--success); }
 </style>
 </head>
 <body>
@@ -59,7 +59,7 @@
             </div>
         </div>
         <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <button class="button" style="flex: 1;" id="playBracketBtn" onclick="toggleBracketTone()">Play Test Tone</button>
+            <button class="button play-btn" style="flex: 1;" id="playBracketBtn" onclick="toggleBracketTone()">Play Test Tone</button>
             <button class="button" style="flex: 1; background: var(--accent); color: white;" onclick="saveBracketToBaseFreq()">Use as Base Frequency</button>
         </div>
         <p class="info" style="text-align: center; margin-top: 10px;">
@@ -254,10 +254,6 @@ async function toggle() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     stopBracketTone(); // Stop bracketing tone if playing
 
-    if (audioCtx.audioWorklet && !workletLoaded) {
-        try { await audioCtx.audioWorklet.addModule('noise-processor.js'); workletLoaded = true; } catch (e) {}
-    }
-
     // Background Noise Setup
     const noiseColor = document.getElementById('noiseColor').value;
     const noiseVol = document.getElementById('noiseVolSlider').value / 100;
@@ -273,6 +269,14 @@ async function toggle() {
     masterGain = audioCtx.createGain();
     masterGain.gain.value = document.getElementById('volSlider').value / 100;
     masterGain.connect(audioCtx.destination);
+
+    // Add an analyser for the watchdog's silence/error detection
+    const watchdogAnalyser = audioCtx.createAnalyser();
+    watchdogAnalyser.fftSize = 256; // Sufficient for RMS calculation
+    masterGain.disconnect(audioCtx.destination); // Disconnect existing
+    masterGain.connect(watchdogAnalyser); // Connect to analyser
+    watchdogAnalyser.connect(audioCtx.destination); // Connect analyser to destination
+    audioCtx._healthAnalyser = watchdogAnalyser; // Assign to the context for the watchdog
     audioCtx._expectingSound = true;
 
     playing = true;
@@ -411,14 +415,16 @@ function playBracketTone() {
     bracketGain = bracketAudioCtx.createGain(); bracketGain.gain.value = 0.1; // Fixed low volume for test tone
     bracketOsc.connect(bracketGain).connect(bracketAudioCtx.destination);
     bracketOsc.start(); bracketPlaying = true;
-    document.getElementById('playBracketBtn').textContent = "Stop Test Tone";
+    const btn = document.getElementById('playBracketBtn');
+    btn.textContent = "Stop Test Tone"; btn.classList.replace('play-btn', 'stop-btn');
 }
 
 function stopBracketTone() {
     if (bracketOsc) { try { bracketOsc.stop(); } catch(e) {} bracketOsc = null; }
     if (bracketAudioCtx) { try { bracketAudioCtx.close(); } catch(e) {} bracketAudioCtx = null; }
     bracketPlaying = false;
-    document.getElementById('playBracketBtn').textContent = "Play Test Tone";
+    const btn = document.getElementById('playBracketBtn');
+    btn.textContent = "Play Test Tone"; btn.classList.replace('stop-btn', 'play-btn');
 }
 
 function toggleZenMode() {
