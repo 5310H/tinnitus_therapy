@@ -22,8 +22,8 @@ const TINNITUS_MANAGEMENT_GUIDE = `
     <ul style="padding-left:20px; margin-bottom:15px; font-size:0.9rem; line-height:1.4;">
         <li><b>The Guide:</b> Opens this panel for clinical protocols, the "Golden Rules," and general advice.</li>
         <li><b>AI Assistant:</b> Integrated into the CBT & Wellness module, providing real-time support, sound recipes, and pattern analysis. <i>(Requires user-provided Gemini API key)</i></li>
-        <li><b>Interactive Tutorials:</b> Click the <b>Manual</b> button and select "🎬 Start Tutorial" for a narrated, step-by-step walkthrough.</li>
-        <li><b>User Manual:</b> A comprehensive, printable PDF manual is available via the <b>Manual</b> button at the top of the screen.</li>
+        <li><b>Interactive Tutorials:</b> Click the <b>Help</b> button and select "🎬 Start Tutorial" for a narrated, step-by-step walkthrough.</li>
+        <li><b>User Manual:</b> A comprehensive, printable PDF manual is available via the <b>Help</b> button at the top of the screen.</li>
     </ul>
     <h3 style="color:var(--accent); margin-bottom:10px;">Hearing Health Monitoring</h3>
     <p style="font-size:0.9rem; margin-bottom:10px;">Changes in your hearing sensitivity can directly impact tinnitus perception. We recommend:</p>
@@ -34,7 +34,7 @@ const TINNITUS_MANAGEMENT_GUIDE = `
     <h3 style="color:var(--accent); margin-bottom:10px;">Reporting & Documentation</h3>
     <p style="font-size:0.9rem; margin-bottom:10px;">The suite provides several ways to document your progress for professional review:</p>
     <ul style="padding-left:20px; margin-bottom:15px; font-size:0.9rem; line-height:1.4;">
-        <li><b>Global Progress Report:</b> A comprehensive PDF summary of all therapy logs, THI trends, and diagnostic results. Generate this from the <b>Manual</b> hub.</li>
+        <li><b>Global Progress Report:</b> A comprehensive PDF summary of all therapy logs, THI trends, and diagnostic results. Generate this from the <b>Help</b> hub.</li>
         <li><b>Doctor's Summary:</b> A specialized technical document explaining the suite's clinical protocols and scientific citations.</li>
         <li><b>Module Exports:</b> Individual diagnostic tools (TMC, LG, RI) allow exporting raw psychoacoustic data via the <b>Clinical Export (.txt)</b> buttons.</li>
     </ul>
@@ -88,7 +88,7 @@ function initNav(helpHtml) {
             </div>
             <div style="display:flex; gap:10px; align-items: center; pointer-events: auto;">
                 <div id="audioStatusIndicator" style="font-size: 0.65rem; font-weight: bold; color: var(--text-dim); background: var(--card-bg); padding: 4px 10px; border-radius: 15px; border: 1px solid var(--border); display: none; white-space: nowrap;">○ Audio Off</div>
-                <button class="help-btn" style="position:static; background: var(--accent); color: white; border-color: var(--accent); font-weight: bold; box-shadow: 0 0 10px rgba(0, 191, 165, 0.3);" onclick="openHelp()">Manual</button>
+                <button class="help-btn" style="position:static; background: var(--accent); color: white; border-color: var(--accent); font-weight: bold; box-shadow: 0 0 10px rgba(0, 191, 165, 0.3);" onclick="openHelp()">Help</button>
             </div>
         </div>
     `;
