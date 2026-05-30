@@ -12,15 +12,24 @@
 <body>
 <div class="panel">
 <h1>Spectrogram Visualizer</h1>
-<p class="info">Shows real‑time frequency content of any sound</p>
+<p class="info">Analyze real-time frequency distribution to verify Notches or CR tone alignment.</p>
+
+<div class="match-section" style="margin-bottom: 20px;">
+    <h3>Visual Verification Guide</h3>
+    <ul>
+        <li style="font-size: 0.8rem; color: var(--muted); margin-bottom: 5px;"><b>Notch Verification:</b> Look for a distinct "valley" or hole in the spectrum at your target frequency.</li>
+        <li style="font-size: 0.8rem; color: var(--muted); margin-bottom: 5px;"><b>CR Alignment:</b> Look for four distinct vertical peaks corresponding to your calculated therapeutic tones.</li>
+    </ul>
+</div>
+
 <div class="card">
-    <canvas id="spec" style="height:300px"></canvas>
+    <canvas id="spec" style="height:350px; background: #000;"></canvas>
     <button class="button" onclick="start()">Start</button>
     <button class="button stop-btn" onclick="stop()" style="background: var(--error);">Stop</button>
 </div>
 </div>
 <script>
-window.onload = () => initNav();
+window.onload = () => initNav("The spectrogram allows you to see the 'shape' of sound. For Notch Therapy, the area of silence should appear as a dark gap in the colored visualization.");
 let ctx, analyser, source, raf, streamRef = null;
 let audioCtx=null;
 
@@ -51,19 +60,41 @@ function stop(){
 
 function draw(){
     const canvas=document.getElementById("spec");
+    const dpi = window.devicePixelRatio || 1;
+    canvas.width = canvas.offsetWidth * dpi;
+    canvas.height = canvas.offsetHeight * dpi;
     const c=canvas.getContext("2d");
+    c.scale(dpi, dpi);
+
     const data=new Uint8Array(analyser.frequencyBinCount);
+    const barWidth = (canvas.width / dpi) / data.length;
 
     function loop(){
         analyser.getByteFrequencyData(data);
-        c.fillStyle="black";
-        c.fillRect(0,0,canvas.width,canvas.height);
+        c.fillStyle="#000";
+        c.fillRect(0,0,canvas.width / dpi, canvas.height / dpi);
 
+        // Draw Grid and Labels
+        c.strokeStyle = "rgba(255,255,255,0.1)";
+        c.fillStyle = "rgba(255,255,255,0.5)";
+        c.font = "10px monospace";
+        const labels = [1000, 2000, 4000, 8000, 12000, 16000];
+        labels.forEach(f => {
+            const x = (f / (audioCtx.sampleRate / 2)) * (canvas.width / dpi);
+            c.beginPath();
+            c.moveTo(x, 0);
+            c.lineTo(x, canvas.height / dpi);
+            c.stroke();
+            c.fillText((f/1000) + 'k', x + 2, (canvas.height / dpi) - 5);
+        });
+
+        // Draw Spectrum
         for(let i=0;i<data.length;i++){
             const v=data[i];
-            const y=canvas.height - (v/255)*canvas.height;
+            const h = (v / 255) * (canvas.height / dpi);
+            const y = (canvas.height / dpi) - h;
             c.fillStyle=`hsl(${i/2},100%,50%)`;
-            c.fillRect(i, y, 2, canvas.height);
+            c.fillRect(i * barWidth, y, barWidth, h);
         }
         raf=requestAnimationFrame(loop);
     }

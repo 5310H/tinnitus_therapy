@@ -11,6 +11,8 @@
     import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
     window.GoogleGenerativeAI = GoogleGenerativeAI;
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script src="storage.js"></script>
 <script src="nav.js"></script>
 </head>
@@ -94,11 +96,12 @@
         <details>
             <summary>Show</summary>
             <a class="button" href="notchfinder.html">Notch Finder</a>
-            <a class="button" href="twotone.html">Two‑Tone</a>
+            <a class="button" href="twotone.html">Two-Tone Comparison</a>
             <a class="button" href="sweep.html">Frequency Sweep</a>
             <a class="button" href="tmc.html">Masking Curve (TMC)</a>
             <a class="button" href="lg.html">Loudness Growth</a>
-            <a class="button" href="hearingtest.html">Hearing Test</a>
+            <a class="button" href="audiogram.html">Hearing Profile (Audiogram)</a>
+            <a class="button" href="hearingtest.html">Hearing Range Test</a>
             <a class="button" href="ri.html">RI Suppression Test</a>
         </details>
     </div>
@@ -135,6 +138,8 @@
                 <button class="button" style="flex: 1;" onclick="document.getElementById('importFile').click()">Restore</button>
                 <input type="file" id="importFile" style="display:none" onchange="importAllData(this.files[0])" accept=".json">
             </div>
+            <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generateGlobalClinicalReportPDF()">Download Clinical Progress Report (PDF)</button>
+            <button id="certificateBtn" class="button" style="width:100%; margin-top:10px; background:var(--success); color:white; border-color:white; display:none;" onclick="generateMilestoneCertificatePDF()">🏆 Download Achievement Certificate</button>
             <div class="card" id="thiReminderCard" style="display:none; background: rgba(255, 165, 0, 0.1); border-color: #ff9800; margin-top: 15px;">
                 <h2 style="color: #ff9800; margin-bottom: 5px;">Monthly THI Assessment Due!</h2>
                 <p class="info" style="color: var(--text);">It's been over a month since your last Tinnitus Handicap Inventory. Regular assessments help track your progress.</p>
@@ -436,6 +441,7 @@ window.onload = () => {
 
     renderStats();
     checkTHIReminder();
+    checkMilestoneAchievement();
 
     // Detect iOS and show manual installation instructions
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -561,6 +567,24 @@ function updateStartPathStatus() {
     updateWStep('wstep-1', pitchSet, 'Pitch');
     updateWStep('wstep-2', volumeSet, 'Volume');
     updateWStep('wstep-3', nwSet, 'Notch');
+}
+
+function checkMilestoneAchievement() {
+    const progress = getMilestoneProgress();
+    if (progress && progress.state && progress.state[5]) {
+        const btn = document.getElementById('certificateBtn');
+        if (btn) {
+            const alreadyCelebrated = loadSetting('certificate_celebrated', 'false') === 'true';
+            btn.style.display = 'block';
+            if (!alreadyCelebrated) {
+                btn.classList.add('certificate-reveal');
+                saveSetting('certificate_celebrated', 'true');
+                if (window.confetti) {
+                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#00bfa5', '#388e3c', '#ffffff'] });
+                }
+            }
+        }
+    }
 }
 
 function showWhatsNew() {
@@ -1149,6 +1173,28 @@ async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalT
         <p class="info">Recent improvements to your therapy experience:</p>
         <div style="max-height: 400px; overflow-y: auto; text-align: left; padding-right: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
             <div id="dynamicWhatsNew"></div>
+
+            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.05.3 - Major Clinical Alignment</h3>
+            <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
+                <li><b>Manual Synchronization:</b> Standardized all terminology (e.g., 'Broadband Sound Therapy') and logic to match the User Manual.</li>
+                <li><b>Hearing Profile (Audiogram):</b> Added a new module to enter professional audiogram results with <b>Half‑Gain Rule</b> auto‑compensation for therapy modules.</li>
+                <li><b>Habituation Milestone Tracker:</b> Integrated automated detection for clinical habituation stages (Appendix E).</li>
+                <li><b>Community Integration:</b> Standardized 'Share Setup' feature across all modules for Tinnitus Talk/Reddit formatting.</li>
+                <li><b>Global Clinical Reports:</b> New dashboard tool to generate comprehensive PDF summaries covering all diagnostic and therapy history.</li>
+                <li><b>Visual Calibration:</b> Added frequency axis labels to Spectrogram and 45-60dB habituation range markers to the Audio Meter.</li>
+                <li><b>Q-factor Tracking:</b> Integrated a new trend chart in the <b>Stats page (stats.html)</b> to specifically monitor changes in tinnitus 'sharpness' (Q-factor) and tonality over time.</li>
+                <li><b>Universal Reporting:</b> Added PDF and Clinical Export (.txt) capabilities to all remaining diagnostic tools.</li>
+                <li><b>System Guidance:</b> Added a comprehensive interactive tutorial for the <b>System Validation</b> engine to ensure audio integrity.</li>
+                <li><b>Milestone Celebration:</b> Earn a printable <b>Achievement Certificate</b> and enjoy a celebratory confetti burst upon reaching Phase 6: Full Habituation.</li>
+            </ul>
+
+            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.05.2 - Engine Stability Update</h3>
+            <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
+                <li><b>Audio Engine Watchdog:</b> New background observer that detects and automatically recovers from browser-induced audio stalls.</li>
+                <li><b>Recovery Notifications:</b> Implemented floating orange/green popups to signal automatic audio restoration.</li>
+                <li><b>Precision Engine:</b> Fine-tuned digital filters and improved frequency matching accuracy for high-pitch therapies.</li>
+                <li><b>UI Resilience:</b> Resolved a lock-up issue where buttons became unresponsive during audio context transitions.</li>
+            </ul>
 
             <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.05.1 - May 2026</h3>
             <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">

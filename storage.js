@@ -98,7 +98,7 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2026.05.2";
+const APP_VERSION = "2026.05.3";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
@@ -766,6 +766,51 @@ function logThoughtRecordEntry(entry) {
     setJson('thought_records', records);
 }
 
+/**
+ * Returns the status of the patient's journey through clinical milestones.
+ * Aligned with Appendix E of the User Manual.
+ */
+function getMilestoneProgress() {
+    const labels = [
+        "1. Baseline",
+        "2. Technical Mastery",
+        "3. Psychological Shift",
+        "4. Early Habituation",
+        "5. Partial Habituation",
+        "6. Full Habituation"
+    ];
+    // Manual override state for the checkboxes in stats.html
+    const userState = getJson('milestone_state', [false, false, false, false, false, false]);
+    
+    // Auto-detect some milestones based on actual data
+    const log = getJson('usage_log', {});
+    const distress = getJson('distress_log', {});
+    const notch = loadSetting('notchL', null);
+    
+    const autoState = [...userState];
+    if (Object.keys(distress).length > 0) autoState[0] = true;
+    if (notch !== null && Object.values(log).some(v => v > 0)) autoState[1] = true;
+    
+    // Logic for Early/Partial/Full Habituation based on THI
+    const scores = Object.values(distress).map(Number);
+    if (scores.length >= 2) {
+        if (scores[0] - scores[scores.length-1] >= 7) autoState[3] = true; // Early: MCSD reduction
+        if (scores[scores.length-1] <= 16) autoState[5] = true; // Full: Grade 1
+    }
+
+    const percentage = Math.round((autoState.filter(Boolean).length / autoState.length) * 100);
+    return { labels, state: autoState, percentage };
+}
+window.getMilestoneProgress = getMilestoneProgress;
+
+function toggleMilestone(index) {
+    const data = getMilestoneProgress();
+    data.state[index] = !data.state[index];
+    setJson('milestone_state', data.state);
+    return getMilestoneProgress();
+}
+window.toggleMilestone = toggleMilestone;
+
 function resetModuleSettings(prefixArray) {
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -1187,6 +1232,57 @@ async function sendClinicalTelemetry(type, data) {
 }
 
 /**
+ * Calculates the therapeutic boost based on the stored hearing profile and the "Half-Gain Rule."
+ * This provides personalized compensation for users with hearing loss.
+ * @param {number} freq - The target frequency in Hz.
+ * @param {string} side - 'L' or 'R'.
+ * @returns {number} The boost in dB (capped at 20dB for digital safety).
+ */
+function getHearingBoost(freq, side) {
+    // Ensure the audiogram module is loaded and the function is available
+    if (typeof window.getJson !== 'function') return 0;
+
+    const profile = getJson('hearing_profile', null);
+    if (!profile || !profile[side]) return 0;
+
+    const freqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
+    const data = profile[side];
+
+    if (!Array.isArray(data)) return 0;
+
+    // Linear interpolation between audiogram points
+    let hl = 0;
+    if (freq <= freqs[0]) hl = data[0];
+    else if (freq >= freqs[freqs.length - 1]) hl = data[data.length - 1];
+    else {
+        for (let i = 0; i < freqs.length - 1; i++) {
+            if (freq >= freqs[i] && freq <= freqs[i+1]) {
+                const ratio = (freq - freqs[i]) / (freqs[i+1] - freqs[i]);
+                hl = data[i] + ratio * (data[i+1] - data[i]);
+                break;
+            }
+        }
+    }
+
+    // Half-Gain Rule: boost = Loss / 2
+    // Enforce a therapeutic ceiling of 20dB to prevent digital clipping/distortion
+    return Math.min(20, Math.max(0, hl * 0.5));
+}
+window.getHearingBoost = getHearingBoost;
+
+/**
+ * Returns a suggested L/R balance value (-1 to 1) based on the user's tinnitus side preference.
+ * Used to provide an intelligent default for therapy modules.
+ */
+function getBalancePreset() {
+    const side = loadSetting('tinnitus_side', 'Both');
+    if (side === 'L') return -0.5; // Default 50% shift to left
+    if (side === 'R') return 0.5;  // Default 50% shift to right
+    return 0; // Center
+}
+window.getBalancePreset = getBalancePreset;
+
+/**
  * Validates if a frequency is within safe bounds for the current audio context.
  */
 function isFrequencySafe(ctx, freq) {
@@ -1292,6 +1388,7 @@ function getClinicalReportData(modeName, settingsObj, techSpecsObj = {}) {
             thoughtRecordsCount: thoughtRecordsCount,
             recentThoughtSummary: recentThoughtSummary
         },
+        milestones: getMilestoneProgress(),
         recommendations: therapyRecs.status === 'complete' ? therapyRecs.recommendations : [],
         ri: {
             latestRIResult: riSummary
@@ -1305,6 +1402,7 @@ function getClinicalReportData(modeName, settingsObj, techSpecsObj = {}) {
         tmc: {
             latestQFactor: latestQFactor
         },
+        hearingProfile: getJson('hearing_profile', { L: [0,0,0,0,0,0,0,0,0], R: [0,0,0,0,0,0,0,0,0] }),
         branding: {
             name: loadSetting('clinic_name', ''),
             logo: loadSetting('clinic_logo', '') // Can be URL or Base64
@@ -1409,6 +1507,96 @@ function generateClinicalReportHtml(reportData) {
     html += `    <p style="margin: 3px 0; font-size: 14px;"><b>Exported:</b> ${reportData.exportDate}</p>`;
     html += `  </div>`;
     html += `</div>`;
+
+    // Milestone Progress Block
+    html += `<div style="background: #fdfdfd; border: 1px solid #ecf0f1; border-radius: 4px; padding: 15px; margin-bottom: 25px; page-break-inside: avoid;">`;
+    html += `  <p style="font-size: 11px; color: #95a5a6; margin: 0 0 10px 0; text-transform: uppercase; font-weight: bold;">Habituation Milestone Progress</p>`;
+    html += `  <div style="width: 100%; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; margin-bottom: 8px;">`;
+    html += `    <div style="width: ${reportData.milestones.percentage}%; height: 100%; background: #00bfa5;"></div>`;
+    html += `  </div>`;
+    const lastIdx = reportData.milestones.state.lastIndexOf(true);
+    const phase = lastIdx !== -1 ? reportData.milestones.labels[lastIdx] : "Initial Baseline";
+    html += `  <p style="font-size: 11pt; margin: 0; color: #1c1e21;">Current Phase: <b>${phase}</b> <span style="color: #7f8c8d; font-size: 10pt;">(${reportData.milestones.percentage}% Complete)</span></p>`;
+    html += `</div>`;
+
+    // Hearing Profile (Audiogram) Block
+    if (reportData.hearingProfile && (reportData.hearingProfile.L?.some(v => v > 0) || reportData.hearingProfile.R?.some(v => v > 0))) {
+        const hpFreqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
+        const width = 600, height = 180, pad = 35;
+        const gW = width - (pad * 2), gH = height - (pad * 2);
+        
+        html += `<div style="background: #fdfdfd; border: 1px solid #ecf0f1; border-radius: 4px; padding: 15px; margin-bottom: 25px; page-break-inside: avoid;">`;
+        html += `  <p style="font-size: 11px; color: #95a5a6; margin: 0 0 10px 0; text-transform: uppercase; font-weight: bold;">Clinical Hearing Profile (Audiogram)</p>`;
+        html += `  <div style="display: flex; gap: 20px; align-items: flex-start;">`;
+        
+        // SVG Graph
+        html += `    <div style="flex: 1.5; text-align: center;">`;
+        html += `      <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="max-width: 100%; height: auto; font-family: sans-serif;">`;
+        
+        // Grid Y-Axis (Clinical HL 0-110, Inverted)
+        for (let db = 0; db <= 110; db += 20) {
+            const y = pad + (db / 110) * gH;
+            html += `<line x1="${pad}" y1="${y}" x2="${width - pad}" y2="${y}" stroke="#f0f0f0" stroke-width="1" />`;
+            html += `<text x="${pad - 8}" y="${y + 3}" font-size="8" fill="#bdc3c7" text-anchor="end">${db}</text>`;
+        }
+        
+        // Grid X-Axis (Freqs)
+        hpFreqs.forEach((f, i) => {
+            const x = pad + (i / (hpFreqs.length - 1)) * gW;
+            html += `<line x1="${x}" y1="${pad}" x2="${x}" y2="${height - pad}" stroke="#f0f0f0" stroke-width="1" />`;
+            const label = f >= 1000 ? (f/1000)+'k' : f;
+            html += `<text x="${x}" y="${height - pad + 12}" font-size="8" fill="#bdc3c7" text-anchor="middle">${label}</text>`;
+        });
+
+        // Plot Curves
+        ['L', 'R'].forEach(side => {
+            const isL = side === 'L';
+            const color = isL ? '#42a5f5' : '#ef5350';
+            const data = reportData.hearingProfile[side];
+            if (!data || data.length === 0) return;
+            
+            let points = "";
+            data.forEach((db, i) => {
+                const x = pad + (i / (hpFreqs.length - 1)) * gW;
+                const y = pad + (db / 110) * gH;
+                points += `${x},${y} `;
+            });
+            html += `<polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="${isL ? '4,2' : ''}" />`;
+            
+            data.forEach((db, i) => {
+                const x = pad + (i / (hpFreqs.length - 1)) * gW;
+                const y = pad + (db / 110) * gH;
+                if (isL) {
+                    html += `<text x="${x}" y="${y+3}" font-size="10" fill="${color}" text-anchor="middle" font-weight="bold">✕</text>`;
+                } else {
+                    html += `<circle cx="${x}" cy="${y}" r="3" fill="none" stroke="${color}" stroke-width="1.5" />`;
+                }
+            });
+        });
+
+        html += `      </svg>`;
+        html += `      <div style="display: flex; justify-content: center; gap: 15px; font-size: 9px; color: #7f8c8d; margin-top: 5px;">
+                        <div style="display: flex; align-items: center; gap: 4px;"><span style="color: #ef5350; font-weight: bold;">○</span> Right Ear</div>
+                        <div style="display: flex; align-items: center; gap: 4px;"><span style="color: #42a5f5; font-weight: bold;">✕</span> Left Ear</div>
+                      </div>`;
+        html += `    </div>`;
+
+        // Data Table
+        html += `    <div style="flex: 1;">`;
+        html += `      <table style="width: 100%; border-collapse: collapse; font-size: 9px; text-align: center;">
+                        <thead><tr style="background: #f9f9f9;"><th style="padding: 4px; border: 1px solid #eee;">Hz</th><th style="padding: 4px; border: 1px solid #eee; color:#42a5f5;">L</th><th style="padding: 4px; border: 1px solid #eee; color:#ef5350;">R</th></tr></thead>
+                        <tbody>`;
+        hpFreqs.forEach((f, i) => {
+            const lVal = reportData.hearingProfile.L[i] ?? '-';
+            const rVal = reportData.hearingProfile.R[i] ?? '-';
+            html += `<tr><td style="padding: 3px; border: 1px solid #eee; font-weight: bold;">${f}</td><td style="padding: 3px; border: 1px solid #eee;">${lVal}</td><td style="padding: 3px; border: 1px solid #eee;">${rVal}</td></tr>`;
+        });
+        html += `      </tbody></table>`;
+        html += `    </div>`;
+        
+        html += `  </div>`;
+        html += `</div>`;
+    }
 
     if (reportData.aiSummary) {
         html += `<div style="background: #f9f9f9; border: 1px solid #ddd; padding: 20px; margin-bottom: 30px; border-radius: 4px; page-break-inside: avoid;">`;
@@ -1595,6 +1783,85 @@ function generateClinicalReportHtml(reportData) {
 }
 
 /**
+ * Generates a comprehensive clinical report covering all modules.
+ */
+async function generateGlobalClinicalReportPDF() {
+    const reportData = getClinicalReportData("Global Progress Review", {}, {});
+    const aiSummaryText = await getClinicalSummary();
+    reportData.aiSummary = aiSummaryText;
+    const htmlContent = generateClinicalReportHtml(reportData);
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    document.body.appendChild(tempDiv);
+
+    const isDark = document.documentElement.classList.contains('light-mode');
+    if (!isDark) document.documentElement.classList.add('light-mode');
+
+    const opt = {
+        margin: [20, 15], filename: 'tinnitus_global_progress_report.pdf', image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    await html2pdf().set(opt).from(tempDiv).save();
+
+    if (!isDark) document.documentElement.classList.remove('light-mode');
+    document.body.removeChild(tempDiv);
+}
+window.generateGlobalClinicalReportPDF = generateGlobalClinicalReportPDF;
+
+/**
+ * Generates a celebratory achievement certificate for users reaching Full Habituation.
+ */
+async function generateMilestoneCertificatePDF() {
+    const progress = getMilestoneProgress();
+    const today = new Date().toLocaleDateString();
+    
+    const html = `
+        <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 50px; text-align: center; border: 15px double #00bfa5; background: #fff; color: #1a1a1a; width: 10in; height: 7.5in; margin: auto; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; position: relative;">
+            <div style="position: absolute; top: 20px; right: 20px; font-size: 40pt; opacity: 0.1;">🏆</div>
+            <h1 style="font-size: 42pt; color: #00897b; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 2px; font-weight: bold;">Certificate of Achievement</h1>
+            <h2 style="font-size: 24pt; color: #333; margin: 0 0 40px 0; font-weight: normal;">Tinnitus Habituation Milestone</h2>
+            <p style="font-size: 18pt; margin: 0 0 10px 0;">This clinical record certifies that</p>
+            <h3 style="font-size: 32pt; border-bottom: 2px solid #333; display: inline-block; padding: 0 40px 10px 40px; margin: 10px 0 30px 0; font-style: italic;">Auditory Retraining Participant</h3>
+            <p style="font-size: 16pt; line-height: 1.6; max-width: 80%; margin: auto; color: #444;">
+                has successfully navigated the six clinical stages of habituation using the 
+                <strong>Trahreg Tinnitus Therapy Suite</strong>, successfully reaching the definitive stage of
+            </p>
+            <h4 style="font-size: 28pt; color: #00bfa5; margin: 25px 0 40px 0; font-weight: bold;">Phase 6: Full Habituation</h4>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; padding: 0 80px;">
+                <div style="text-align: left;">
+                    <p style="margin: 0; font-size: 12pt; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px;">Completion Date</p>
+                    <p style="margin: 5px 0 0 0; font-size: 16pt; font-weight: bold; color: #2c3e50;">${today}</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin: 0; font-size: 12pt; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px;">Protocol Version</p>
+                    <p style="margin: 5px 0 0 0; font-size: 16pt; font-weight: bold; color: #2c3e50;">Suite v${APP_VERSION}</p>
+                </div>
+            </div>
+            <p style="font-size: 9pt; color: #bdc3c7; margin-top: 60px;">tinnitus.trahreg.com | Open-Source Auditory Research & Habituation Platform</p>
+        </div>
+    `;
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    document.body.appendChild(tempDiv);
+
+    const opt = {
+        margin: 0, filename: 'tinnitus_habituation_achievement.pdf', image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+    };
+
+    try {
+        await html2pdf().set(opt).from(tempDiv).save();
+    } finally {
+        document.body.removeChild(tempDiv);
+    }
+}
+window.generateMilestoneCertificatePDF = generateMilestoneCertificatePDF;
+
+/**
  * Generates personalized therapy recommendations based on THI and MML scores.
  */
 function getTherapyRecommendations() {
@@ -1606,6 +1873,9 @@ function getTherapyRecommendations() {
         ? latestMML.data.slice(-1)[0] 
         : (latestMML ? latestMML.data : null);
 
+    const latestQF = getLatestLogData('q_factor_log');
+    const lastQFactor = (latestQF && latestQF.data) ? latestQF.data : null;
+
     if (thiScore === null) {
         return { status: 'incomplete', message: 'Please complete the THI Assessment in CBT & Wellness to get personalized recommendations.' };
     }
@@ -1613,57 +1883,67 @@ function getTherapyRecommendations() {
     const recs = [];
     const reportsSleepIssues = loadSetting('reports_sleep_issues', 'false') === 'true';
 
-    // Prioritize CBT for High distress
-    if (thiScore >= 58) {
+    // 1. Psychological Priority (High Distress / Spikes)
+    if (thiScore >= 58) { // Severe or Catastrophic
         recs.push({
             mode: "CBT & Wellness",
             url: "cbt.html",
-            reason: "Your score indicates significant distress. CBT is the clinical gold standard for managing the psychological impact and handicap of tinnitus."
+            reason: "Your score indicates significant handicap. Prioritizing psychological tools and relaxation is the most effective clinical path during high-distress phases."
         });
     }
 
-    // Neuromodulation for Moderate/High
+    // 2. Neuromodulation Strategy (Moderate and Above)
     if (thiScore >= 38) {
-        recs.push({
-            mode: "CR Neuromodulation",
-            url: "cr.html",
-            reason: "Acoustic Coordinated Reset is designed for moderate-to-severe cases to disrupt synchronized neural firing in the auditory cortex."
-        });
+        if (lastQFactor !== null && lastQFactor > 2.5) {
+            recs.push({
+                mode: "CR Neuromodulation",
+                url: "cr.html",
+                reason: "Because your tinnitus is highly tonal (High Q-factor), Acoustic CR is recommended to disrupt specific neural synchrony."
+            });
+        }
         recs.push({
             mode: "Dual-Stimulus",
             url: "lenire.html",
-            reason: "Dual-Stimulus pairing (like the Lenire method) can help drive neuroplasticity when simple broadband masking is insufficient."
-        });
-    } else {
-        // Mild cases
-        recs.push({
-            mode: "Notch Therapy",
-            url: "notch.html",
-            reason: "Targeted Notch Therapy is ideal for mild-to-moderate tonal tinnitus, encouraging long-term cortical reorganization."
+            reason: "Bimodal stimulation is suggested for moderate symptoms to engage multiple sensory pathways for neuroplastic change."
         });
     }
 
-    // Binaural Beats for Sleep or Low Distress
-    if (thiScore < 38 || reportsSleepIssues) {
+    // 3. Notch Therapy (Mild-Moderate Tonal)
+    if (thiScore < 58 && (lastQFactor === null || lastQFactor > 1.5)) {
+        recs.push({
+            mode: "Notch Therapy",
+            url: "notch.html",
+            reason: "Targeted energy removal is effective for tonal tinnitus when distress levels are managed, encouraging lateral inhibition."
+        });
+    }
+
+    // 4. Sound Enrichment & Decorrelation
+    if (lastMMLValue !== null && lastMMLValue > 50 || (lastQFactor !== null && lastQFactor <= 1.5)) {
+        recs.push({
+            mode: "Decorrelated Noise",
+            url: "decorrelated.html",
+            reason: "For noise-like tinnitus or high masking thresholds, decorrelated signals provide superior relief by widening the soundstage."
+        });
+    } else {
+        recs.push({
+            mode: "Broadband Sound Therapy",
+            url: "soundtherapy.html",
+            reason: "Passive enrichment with Pink or Brown noise is the foundation for reducing the contrast of the tinnitus signal."
+        });
+    }
+
+    // 5. Wellness & Sleep Support
+    if (reportsSleepIssues || thiScore < 38) {
         recs.push({
             mode: "Binaural Beats",
             url: "binaural.html",
             reason: reportsSleepIssues 
-                ? "Delta and Theta binaural beats are specifically designed to help transition the brain into deep sleep states and reduce nighttime anxiety."
-                : "Since your distress level is low, Binaural Beat entrainment can help maintain relaxation and prevent stress-related spikes."
+                ? "Delta-wave entrainment can help bypass auditory focus and facilitate the transition into restorative sleep."
+                : "Binaural relaxation tools help maintain low autonomic arousal, preventing future stress spikes."
         });
     }
 
-    // MML specific
-    if (lastMMLValue !== null && lastMMLValue > 50) {
-        recs.push({
-            mode: "Decorrelated Noise",
-            url: "decorrelated.html",
-            reason: "Since your masking level is high, decorrelated noise can provide effective relief by presenting independent signals to each ear."
-        });
-    }
-
-    return { status: 'complete', thi: thiScore, mml: lastMMLValue, recommendations: recs };
+    return { status: 'complete', thi: thiScore, mml: lastMMLValue, qFactor: lastQFactor, recommendations: recs };
 }
 
 /**
@@ -1959,10 +2239,14 @@ function showWalkthrough(slides, startIndex = 0) {
  */
 function showWhatsNew() {
     showWalkthrough([
-        { title: "Version 2026.05.2 - What's New", content: "This maintenance update focuses on engine stability and UI reliability to ensure uninterrupted therapy sessions." },
-        { title: "Audio Engine Watchdog", content: "A new background observer detects and automatically recovers from audio 'stalls' or browser-induced suspensions, particularly common on mobile devices." },
-        { title: "Critical Bug Fixes", content: "Resolved a UI lock-up issue where buttons became unresponsive due to missing status indicators, and added recovery logic for digital filter instability." },
-        { title: "System Resilience", content: "The suite is now better protected against background tab throttling, ensuring your sound therapy continues even when the screen is off." }
+        { title: "Version 2026.05.3 - Clinical Alignment", content: "This major update ensures the suite is 100% technically aligned with the User Manual, standardizing terminology like 'Broadband Sound Therapy'." },
+        { title: "Hearing Profile (Audiogram)", content: "You can now enter your professional audiogram results. The engine uses the <b>Half-Gain Rule</b> to automatically compensate for hearing loss in your therapy sessions." },
+        { title: "Habituation Milestones", content: "We've integrated an automated tracker to monitor your journey through the six clinical stages of habituation (Appendix E)." },
+        { title: "Global Reporting", content: "You can now generate a comprehensive multi-module Progress Report (PDF) from the dashboard to share with your audiologist." },
+        { title: "Q-factor & Tonality", content: "A new trend chart in the Stats page (stats.html) now tracks changes in your tinnitus 'sharpness' (Q-factor) to better visualize progress." },
+        { title: "Standardized Sharing", content: "Every therapy module now includes a 'Share Setup' tool formatted for community forums like Tinnitus Talk and Reddit." },
+        { title: "Technical Validation", content: "A new interactive tutorial for the <b>System Validation</b> engine ensures your hardware is perfectly calibrated for clinical-grade therapy." },
+        { title: "Achievement Unlocked", content: "Stay motivated! Reaching <b>Full Habituation</b> now triggers a celebratory confetti burst and unlocks a downloadable <b>Achievement Certificate</b> to mark your success. This professional record should be shared with your healthcare provider as part of your clinical history." }
     ]);
 }
 
@@ -2033,14 +2317,24 @@ function startModuleTutorial(key, startIndex = 0) {
             { title: "Matching Difficulty?", content: "If you cannot find a match, you may have hearing loss in that frequency region. Use the <b>Hearing Test</b> tool to check your audibility levels.", selector: "h1" }
         ],
         'tmc': [
-            { title: "Point Calibration", content: "For each frequency, find the 'Minimum Masking Level'—the quietest volume that just hides your tinnitus.", selector: "#freqSlider" },
-            { title: "Mapping the Curve", content: "Save multiple points across the spectrum to visualize your auditory filter shape.", selector: "button[onclick='savePoint()']" },
-            { title: "Tuning Analysis", content: "The Q-factor indicates how 'sharp' your tinnitus signal is. A higher number suggests a more tonal perception.", selector: "#tmcChart" }
+            { title: "Tinnitus Masking Curve", content: "The TMC maps your auditory filter shape by measuring the Minimum Masking Level (MML) at multiple frequencies. This helps determine if your tinnitus is tonal or noise-like.", selector: "h1" },
+            { title: "Frequency Selection", content: "Select a frequency to test. We recommend testing frequencies above and below your matched tinnitus pitch to see the shape of the filter.", selector: "#freqSlider" },
+            { title: "Volume Calibration", content: "Adjust the volume until the tone just barely masks your tinnitus. This is your Minimum Masking Level for this specific frequency.", selector: "#volSlider" },
+            { title: "Recording Data", content: "Click 'Save Point' to add this measurement to your chart. You should collect at least 5-7 points across the spectrum for an accurate curve.", selector: "button[onclick='savePoint()']" },
+            { title: "Quick Start", content: "If you have already matched your pitch in the Notch Finder, you can import it here to set your baseline center frequency.", selector: "button[onclick='importNotchFreq()']" },
+            { title: "Tuning Reference", content: "Enable the Reference Overlay to compare your curve against a standard clinical auditory filter. A steeper curve indicates higher 'tonality' (High Q-factor).", selector: "#showRef" },
+            { title: "Therapy Alignment", content: "Show the Notch Region to see how your current Notch Therapy settings align with the peak of your masking curve.", selector: "#showNotch" },
+            { title: "Q-factor Interpretation", content: "The calculated Q-factor represents the sharpness of your tinnitus 'signature'. This value is used by the suite to provide personalized therapy recommendations.", selector: "#qFactorDisplay" }
         ],
         'lg': [
-            { title: "Objective vs Subjective", content: "Play a tone and increase the volume. We are measuring how your brain perceives loudness growth.", selector: "#volSlider" },
-            { title: "Rating Scale", content: "Rate the sound from 'Very Soft' to 'Uncomfortable'. This helps identify hyperacusis (loudness sensitivity).", selector: ".btn-grid" },
-            { title: "The Curve", content: "A steep line on this chart can indicate the presence of recruitment or hyperacusis.", selector: "canvas" }
+            { title: "Loudness Growth Test", content: "This test maps your subjective perception of loudness against objective volume increases. It is used to identify hyperacusis (sound sensitivity) and auditory recruitment.", selector: "h1" },
+            { title: "Frequency Selection", content: "Choose a frequency to test. Testing at 1kHz is standard, but you should also test frequencies where you feel most sensitive.", selector: "#freqSlider" },
+            { title: "Volume Safety", content: "Start with the volume at 0% or a very low level. You will gradually increase this to find your thresholds.", selector: "#volSlider" },
+            { title: "Activating the Tone", content: "Click 'Start Tone' to begin the test. You can adjust frequency and volume in real-time while the tone is active.", selector: "#toggleBtn" },
+            { title: "Rating Your Perception", content: "For each volume level, click the button that matches how loud the sound feels. Each click saves a point and updates your growth curve.", selector: ".btn-grid" },
+            { title: "Understanding the Curve", content: "The chart plots your subjective ratings. A 'normal' response is a gradual slope. A very steep slope indicates that loudness perception is growing too quickly.", selector: "#lgChart" },
+            { title: "Clinical Significance", content: "Clinicians use these curves to track 'Loudness Discomfort Levels' (LDLs). Improvement is shown when the curve becomes flatter over time.", selector: "#lgChart" },
+            { title: "Exporting Results", content: "Generate a PDF or text report once you have completed your mapping. This objective data is crucial for professional clinical review.", selector: ".zen-keep" }
         ],
         'ri': [
             { title: "Suppression Setup", content: "Choose a noise color. We will play this for 60 seconds at a level that completely hides your tinnitus.", selector: "#noiseColor" },
@@ -2059,6 +2353,21 @@ function startModuleTutorial(key, startIndex = 0) {
         'sweep': [
             { title: "Range Test", content: "This sweep moves from 20Hz to 20kHz. It helps identify 'dead zones' or frequency triggers.", selector: "h2" },
             { title: "Volume Safety", content: "Always start at a low volume (10% or less) before beginning a high-frequency sweep.", selector: "#volSlider" }
+        ],
+        'audiogram': [
+            { title: "Hearing Profile", content: "Enter your thresholds from a professional clinical audiogram (0-110dB HL).", selector: "h1" },
+            { title: "Red Circles, Blue X", content: "Switch between ears to map your specific thresholds. Right ear uses circles (Red), Left ear uses X (Blue).", selector: ".ear-tabs" },
+            { title: "Half-Gain Rule", content: "The dashed line shows the 'Target Compensation'. The suite automatically calculates a safe therapeutic boost to reduce listening effort.", selector: ".audiogram-container" },
+            { title: "Digital Safety", content: "The compensation is capped at 20dB to prevent digital distortion and ensure acoustic safety.", selector: ".legend" },
+            { title: "Tinnitus Location", content: "Set your tinnitus side here. This provides an intelligent L/R volume balance default for all therapy modules.", selector: ".card:last-of-type" }
+        ],
+        'clinical_summary': [
+            { title: "Doctor's Summary", content: "This document is designed to help you communicate your progress and the suite's protocols to your healthcare provider.", selector: "h1" },
+            { title: "Research Summary", content: "It summarizes the clinical research parameters for Notch, CR, and Bimodal therapies used in this suite.", selector: "h2:first-of-type" },
+            { title: "Your Metrics", content: "This section automatically populates with your THI scores, MML levels, and adherence logs.", selector: "h2:nth-of-type(2)" },
+            { title: "The Habituation Model", content: "Crucial information explaining the 'Mixing Point' philosophy and our focus on habituation over masking.", selector: ".highlight-box" },
+            { title: "Technical Rigor", content: "Verification data showing the suite meets clinical DSP standards (attenuation and precision).", selector: "h2:nth-of-type(3)" },
+            { title: "Download & Print", content: "Click here to generate a clean PDF summary. You can print it for your next appointment or upload it to your patient portal. <b>Note:</b> If you have reached Phase 6: Full Habituation, you can also attach your Achievement Certificate for a complete record.", selector: ".no-print .button" }
         ],
         'hearingtest': [
             { title: "Exploration", content: "Tap each button to check your audibility thresholds across the spectrum.", selector: ".section-title" },

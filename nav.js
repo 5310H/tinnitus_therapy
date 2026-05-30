@@ -22,14 +22,21 @@ const TINNITUS_MANAGEMENT_GUIDE = `
     <ul style="padding-left:20px; margin-bottom:15px; font-size:0.9rem; line-height:1.4;">
         <li><b>The Guide:</b> Opens this panel for clinical protocols, the "Golden Rules," and general advice.</li>
         <li><b>AI Assistant:</b> Integrated into the CBT & Wellness module, providing real-time support, sound recipes, and pattern analysis. <i>(Requires user-provided Gemini API key)</i></li>
-        <li><b>Interactive Tutorials:</b> Click the "Tutorial" button on any therapy page for a narrated, step-by-step walkthrough of that specific tool's setup.</li>
-        <li><b>User Manual:</b> A comprehensive, printable PDF manual is available under <b>Settings</b> on the Home page.</li>
+        <li><b>Interactive Tutorials:</b> Click the <b>Manual</b> button and select "🎬 Start Tutorial" for a narrated, step-by-step walkthrough.</li>
+        <li><b>User Manual:</b> A comprehensive, printable PDF manual is available via the <b>Manual</b> button at the top of the screen.</li>
     </ul>
     <h3 style="color:var(--accent); margin-bottom:10px;">Hearing Health Monitoring</h3>
     <p style="font-size:0.9rem; margin-bottom:10px;">Changes in your hearing sensitivity can directly impact tinnitus perception. We recommend:</p>
     <ul style="padding-left:20px; margin-bottom:15px; font-size:0.9rem; line-height:1.4;">
-        <li><b>Regular Checks:</b> Use the <b>Hearing Test</b> bi-weekly to verify your audibility thresholds.</li>
+        <li><b>Regular Checks:</b> Use the <b>Hearing Profile (Audiogram)</b> tool bi-weekly to verify your audibility thresholds.</li>
         <li><b>Recalibration:</b> If your hearing shifts, revisit the <b>Notch Finder</b> to ensure your therapy remains precisely calibrated.</li>
+    </ul>
+    <h3 style="color:var(--accent); margin-bottom:10px;">Reporting & Documentation</h3>
+    <p style="font-size:0.9rem; margin-bottom:10px;">The suite provides several ways to document your progress for professional review:</p>
+    <ul style="padding-left:20px; margin-bottom:15px; font-size:0.9rem; line-height:1.4;">
+        <li><b>Global Progress Report:</b> A comprehensive PDF summary of all therapy logs, THI trends, and diagnostic results. Generate this from the <b>Manual</b> hub.</li>
+        <li><b>Doctor's Summary:</b> A specialized technical document explaining the suite's clinical protocols and scientific citations.</li>
+        <li><b>Module Exports:</b> Individual diagnostic tools (TMC, LG, RI) allow exporting raw psychoacoustic data via the <b>Clinical Export (.txt)</b> buttons.</li>
     </ul>
     <h3 style="color:var(--accent); margin-bottom:10px;">Important Setup Tips</h3>
     <ul style="padding-left:20px; margin-bottom:15px; font-size:0.9rem; line-height:1.4;">
@@ -37,7 +44,7 @@ const TINNITUS_MANAGEMENT_GUIDE = `
         <li><b>Avoid Silence:</b> Use low-level broadband noise (Sound Therapy) in your environment even when not in a formal session to reduce the "contrast" of the tinnitus.</li>
         <li><b>Mental Health:</b> If a "spike" causes high distress, switch from Sound Therapy to <b>CBT & Wellness</b>. Managing the emotional reaction is as important as the sound itself.</li>
     </ul>
-    <h3 style="color:var(--accent); margin-bottom:10px;">System Resilience (v2026.05.2)</h3>
+    <h3 style="color:var(--accent); margin-bottom:10px;">System Resilience (v2026.05.3)</h3>
     <p style="font-size:0.9rem; margin-bottom:10px;">The suite includes an <b>Audio Watchdog</b> that monitors for stalls or browser-induced suspensions. If sound stops unexpectedly:</p>
     <ul style="padding-left:20px; margin-bottom:15px; font-size:0.9rem; line-height:1.4;">
         <li>Check the <b>Audio Status Indicator</b> in the top navigation bar.</li>
@@ -69,7 +76,7 @@ function initNav(helpHtml) {
     const filename = window.location.pathname.split('/').pop().replace('.html', '').toLowerCase() || 'index';
     const supportedTutorials = [
         'decorrelated', 'notch', 'cr', 'lenire', 'soundtherapy', 
-        'notchfinder', 'twotone', 'sweep', 'tmc', 'lg', 'hearingtest', 'ri', 'validation'
+        'notchfinder', 'twotone', 'sweep', 'tmc', 'lg', 'hearingtest', 'audiogram', 'ri', 'validation', 'clinical_summary'
     ];
     const tutorialKey = supportedTutorials.includes(filename) ? filename : null;
 
@@ -81,9 +88,7 @@ function initNav(helpHtml) {
             </div>
             <div style="display:flex; gap:10px; align-items: center; pointer-events: auto;">
                 <div id="audioStatusIndicator" style="font-size: 0.65rem; font-weight: bold; color: var(--text-dim); background: var(--card-bg); padding: 4px 10px; border-radius: 15px; border: 1px solid var(--border); display: none; white-space: nowrap;">○ Audio Off</div>
-                <button class="help-btn" style="position:static; border-color:var(--accent); color:var(--accent);" onclick="showQuickStartGuide()">Quick Guide</button>
-                <button class="help-btn" style="position:static; border-color:var(--accent); color:var(--accent);" onclick="startModuleTutorial('${tutorialKey || 'welcome'}')">Tutorial</button>
-                <button class="help-btn" style="position:static; border-color:var(--accent); color:var(--accent);" onclick="openHelp()">Clinical Guide</button>
+                <button class="help-btn" style="position:static; background: var(--accent); color: white; border-color: var(--accent); font-weight: bold; box-shadow: 0 0 10px rgba(0, 191, 165, 0.3);" onclick="openHelp()">Manual</button>
             </div>
         </div>
     `;
@@ -91,8 +96,36 @@ function initNav(helpHtml) {
 
     const modalHTML = `
         <div id="helpModal" class="modal-overlay">
-            <div class="modal-card">
+            <div class="modal-card" style="max-width: 600px;">
                 <h2 style="color:var(--accent); margin-top:0;">Help & Guidance</h2>
+
+                <!-- System Status Hub -->
+                <div id="systemStatusHub" style="display: flex; gap: 15px; margin-bottom: 20px; padding: 10px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); font-size: 0.75rem; justify-content: center; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <span id="hubAudioStatusDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim);"></span>
+                        <span style="color: var(--text-dim);">Audio Engine:</span> <b id="hubAudioStatusText">Offline</b>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px; border-left: 1px solid var(--border); padding-left: 15px;">
+                        <span id="hubValidStatusDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim);"></span>
+                        <span style="color: var(--text-dim);">System Validation:</span> <b id="hubValidStatusText">Pending</b>
+                    </div>
+                </div>
+
+                <p class="info" style="margin-bottom: 15px;">Select a guide or tutorial to help you calibrate your therapy correctly.</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <button class="button" onclick="closeHelp(); startModuleTutorial('${tutorialKey || 'welcome'}')" style="margin:0; font-size:0.8rem; display: flex; align-items: center; justify-content: center; gap: 5px;">🎬 <span>Tutorial</span></button>
+                    <button class="button" onclick="closeHelp(); showQuickStartGuide()" style="margin:0; font-size:0.8rem; display: flex; align-items: center; justify-content: center; gap: 5px;">🚀 <span>Quick Start</span></button>
+                    <a href="${isDocs ? '../user_manual.html' : 'user_manual.html'}" target="_blank" class="button" style="margin:0; font-size:0.8rem; border-color:var(--success); color:var(--success); text-decoration:none; display: flex; align-items: center; justify-content: center; gap: 5px;">📄 <span>PDF Manual</span></a>
+                    <button class="button" onclick="if(typeof generateGlobalClinicalReportPDF === 'function') { closeHelp(); generateGlobalClinicalReportPDF(); } else { alert('The PDF engine is not loaded on this specific utility page. Please return to the Dashboard or a Therapy module to generate your full report.'); }" style="margin:0; font-size:0.8rem; border-color:var(--accent); color:var(--accent); display: flex; align-items: center; justify-content: center; gap: 5px;">📊 <span>Global Report</span></button>
+                    <button class="button" onclick="closeHelp(); window.location.href='${isDocs ? '../clinical_summary.html' : 'clinical_summary.html'}'" style="margin:0; font-size:0.8rem; border-color:var(--accent); color:var(--accent); display: flex; align-items: center; justify-content: center; gap: 5px;">🩺 <span>Doctor Summary</span></button>
+                    <button class="button" onclick="closeHelp(); window.location.href='${isDocs ? '../feedback.html' : 'feedback.html'}'" style="margin:0; font-size:0.8rem; border-color:var(--accent); color:var(--accent); display: flex; align-items: center; justify-content: center; gap: 5px;">💬 <span>Feedback</span></button>
+                </div>
+                <hr style="border: 0; border-top: 1px dashed var(--border); margin-bottom: 20px;">
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="helpSearch" placeholder="Search guide topics..." 
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; transition: border-color 0.2s;"
+                        oninput="filterHelp(this.value)">
+                </div>
                 <div id="helpContent" style="font-size:0.95rem; line-height:1.6; margin:15px 0;"></div>
                 <button onclick="closeHelp()" class="modal-close-btn">Close</button>
             </div>
@@ -102,12 +135,82 @@ function initNav(helpHtml) {
     
     // Combine page-specific help with the universal guide
     let guide = TINNITUS_MANAGEMENT_GUIDE;
-    const hearingTestPath = isDocs ? '../hearingtest.html' : 'hearingtest.html';
-    guide = guide.replace('<b>Hearing Test</b>', `<a href="${hearingTestPath}" style="color:var(--accent); text-decoration:underline;">Hearing Test</a>`);
+    const hearingTestPath = isDocs ? '../audiogram.html' : 'audiogram.html';
+    guide = guide.replace('<b>Hearing Profile (Audiogram)</b>', `<a href="${hearingTestPath}" style="color:var(--accent); text-decoration:underline;">Hearing Profile (Audiogram)</a>`);
     document.getElementById('helpContent').innerHTML = (helpHtml || '') + guide;
 }
-window.openHelp = () => document.getElementById("helpModal").style.display = "block";
-window.closeHelp = () => document.getElementById("helpModal").style.display = "none";
+
+/**
+ * Updates the system status indicators inside the help hub modal.
+ */
+window.updateHubStatus = () => {
+    const audioDot = document.getElementById('hubAudioStatusDot');
+    const audioText = document.getElementById('hubAudioStatusText');
+    const validDot = document.getElementById('hubValidStatusDot');
+    const validText = document.getElementById('hubValidStatusText');
+
+    if (!audioDot || !audioText || !validDot || !validText) return;
+
+    // 1. Audio Engine Status
+    const ctx = window.audioCtx;
+    const state = ctx ? ctx.state : 'offline';
+    
+    audioDot.style.background = state === 'running' ? 'var(--accent)' : (state === 'suspended' ? '#ff9800' : 'var(--text-dim)');
+    audioText.textContent = state === 'running' ? 'Active' : (state === 'suspended' ? 'Suspended' : (state === 'closed' ? 'Closed' : 'Offline'));
+    audioText.style.color = audioDot.style.background;
+
+    // 2. Validation Status
+    if (typeof getUnifiedValidationStatus === 'function') {
+        const status = getUnifiedValidationStatus();
+        if (status.isValid) {
+            validDot.style.background = 'var(--success)';
+            validText.textContent = 'Verified';
+            validText.style.color = 'var(--success)';
+        } else {
+            validDot.style.background = '#ef5350';
+            validText.textContent = 'Pending';
+            validText.style.color = '#ef5350';
+        }
+    }
+};
+
+window.openHelp = () => {
+    document.getElementById("helpModal").style.display = "block";
+    window.updateHubStatus();
+};
+window.closeHelp = () => {
+    document.getElementById("helpModal").style.display = "none";
+    // Reset search state on close to ensure the full guide is visible next time
+    const searchInput = document.getElementById('helpSearch');
+    if (searchInput) {
+        searchInput.value = '';
+        filterHelp('');
+    }
+};
+
+/**
+ * Filters the help content based on the search query.
+ * Hides blocks that don't match and provides granular list-item filtering.
+ */
+window.filterHelp = (query) => {
+    const term = query.toLowerCase().trim();
+    const content = document.getElementById('helpContent');
+    if (!content) return;
+
+    const blocks = Array.from(content.children);
+    blocks.forEach(block => {
+        const text = block.textContent.toLowerCase();
+        const isMatch = text.includes(term);
+        block.style.display = isMatch ? '' : 'none';
+
+        // If the block is a list, filter the individual items for better UX
+        if (isMatch && (block.tagName === 'UL' || block.tagName === 'OL')) {
+            block.querySelectorAll('li').forEach(li => {
+                li.style.display = li.textContent.toLowerCase().includes(term) ? '' : 'none';
+            });
+        }
+    });
+};
 
 window.showPreFlight = (onConfirm) => {
     if (loadSetting('skip_preflight', 'false') === 'true') {
@@ -196,6 +299,9 @@ window.toggleUIInteraction = (locked) => {
         let watchdogInterval = null;
 
         const updateUI = () => {
+            // Refresh Hub Status if the modal is currently visible
+            if (typeof window.updateHubStatus === 'function') window.updateHubStatus();
+
             const el = document.getElementById('audioStatusIndicator');
             if (!el) return;
             

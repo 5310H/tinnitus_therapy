@@ -76,12 +76,12 @@ All therapy modules now support three primary input methods:
 ## 📊 Clinical Validation & Reporting
 The suite includes an automated validation engine to ensure therapy integrity:
 - **Real-time DSP Checks:** Verifies notch depth (target >40dB) and frequency alignment.
-- **Automated Audio Watchdog (v2026.05.2):** Background observer that detects and recovers from audio stalls, browser-induced suspensions, or digital filter crashes to ensure uninterrupted sessions.
+- **Automated Audio Watchdog (v2026.05.3):** Background observer that detects and recovers from audio stalls, browser-induced suspensions, or digital filter crashes to ensure uninterrupted sessions.
 - **Detailed Clinical Export:** Generates reports including THI/Distress history, Minimum Masking Levels (MML), Loudness Growth (LG) data, and Residual Inhibition (RI) results.
 - **Actionable Recommendations:** Provides automated troubleshooting for common system issues (e.g., detecting "Shallow Notch" errors caused by browser audio enhancers).
  
 ## 📖 User Documentation
-### **Comprehensive User Manual (v2026.05.2)**
+### **Comprehensive User Manual (v2026.05.3)**
 The suite includes a dynamic PDF generation engine (accessible under Settings) that compiles all module documentation into a single, printable reference guide. The manual includes:
 - **Getting Started:** Quick Start Guide, Clinical Protocols, and the "Path to Relief" workflow.
 - **Detailed Protocols:** In-depth setup for the "Mixing Point," 24/7 Enrichment, and lateral inhibition strategies.
@@ -127,6 +127,9 @@ Evaluates hyperacusis by mapping subjective loudness against objective volume in
 
 ### **Suppression Test (RI)**
 Measures the duration of Residual Inhibition (temporary silence) after sound stimulation.
+
+### **Hearing Profile (Audiogram)**
+Enables users to enter professional audiogram results (0–110dB HL) to trigger the **Half‑Gain Rule** auto‑compensation logic across all therapy modules.
 
 ### **Hearing Range Test**
 Simple hearing threshold exploration (non‑clinical).

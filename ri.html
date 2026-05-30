@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Residual Inhibition Test</title>
+<title>Suppression Test (RI) - Tinnitus Therapy Suite</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="stylesheet" href="style.css">
@@ -12,8 +12,8 @@
 </head>
 <body>
 <div class="panel">
-    <h1>Residual Inhibition (RI) Test</h1>
-    <p class="info">Test if your tinnitus can be suppressed by sound.</p>
+    <h1>Suppression Test (RI)</h1>
+    <p class="info">Test if your tinnitus can be suppressed by high-level sound (Residual Inhibition).</p>
 
     <div class="card" id="testArea">
         <div id="step1">
@@ -54,15 +54,16 @@
     <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
         <button class="button" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
         <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+        <a class="button" style="border-color: var(--text-dim); color: var(--text-dim);" href="user_manual.html#sec-17" target="_blank">Open Manual for this Tool</a>
     </div>
 </div>
 
 <script>
-let audioCtx, noise, gain, startTime, measureInterval, maskingTimeout;
+let audioCtx, noise, gain, startTime, measureInterval, maskingTimeout, isMasking = false;
 
 window.onload = () => {
     initNav(`
-        Residual Inhibition (RI) is the temporary suppression of tinnitus following auditory stimulation. Approximately 70-90% of sufferers experience some form of RI.<br><br>
+        <b>Residual Inhibition (RI):</b> The temporary suppression of tinnitus following auditory stimulation. Approximately 70-90% of sufferers experience some form of RI.<br><br>
         <b>Noise Selection Guide:</b><br>
         • <b>Pink/White:</b> Generally most effective for broad-spectrum RI testing.<br>
         • <b>Brown:</b> Best if you have significant sensitivity to high frequencies.<br>
@@ -72,20 +73,30 @@ window.onload = () => {
 };
 
 async function startMasking() {
+    if (isMasking) return;
     const color = document.getElementById('noiseColor').value;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
 
+    // Audio Watchdog Support
+    const watchdogAnalyser = audioCtx.createAnalyser();
+    watchdogAnalyser.fftSize = 256;
+    audioCtx._healthAnalyser = watchdogAnalyser;
+    audioCtx._expectingSound = true;
+
     // Use the robust noise generator attached to the context (setup in nav.js)
     noise = await audioCtx.generator.createSafeNoiseNode(color);
     if (!noise) return;
-    noise.start(); // Works for both Buffer and Worklet
+
     document.getElementById('startMaskingBtn').classList.replace('play-btn', 'stop-btn');
     document.getElementById('startMaskingBtn').textContent = 'Masking...';
 
     gain = audioCtx.createGain();
     gain.gain.value = 0.3; // Calibrated comfort level
-    noise.connect(gain).connect(audioCtx.destination);
+    noise.connect(gain).connect(watchdogAnalyser).connect(audioCtx.destination);
+    
+    noise.start(); 
+    isMasking = true;
     
     document.getElementById('step1').style.display = 'none';
     document.getElementById('step2').style.display = 'block';
@@ -105,6 +116,8 @@ async function startMasking() {
 }
 
 function startMeasurement() {
+    isMasking = false;
+    if (audioCtx) audioCtx._expectingSound = false;
     if (noise.stop) noise.stop(); else noise.disconnect();
     document.getElementById('step2').style.display = 'none';
     document.getElementById('step3').style.display = 'block';
@@ -122,6 +135,15 @@ function stopMeasurement() {
     alert("Result saved: " + finalTime.toFixed(1) + " seconds of suppression.");
     location.reload();
 }
+
+// Audio Recovery: Automatically restart masking if the global watchdog detects silence
+window.addEventListener('tts-audio-recovery-triggered', () => {
+    if (isMasking) {
+        console.warn("[AudioRecovery] Masking interrupted. Attempting restart...");
+        isMasking = false; 
+        startMasking();
+    }
+});
 
 function renderHistory() {
     const log = getRIResults();

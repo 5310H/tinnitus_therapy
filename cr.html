@@ -161,6 +161,8 @@
     <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start CR Therapy</button>
     <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
     <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+    <button class="button" style="width:100%; margin-top:10px; border-color: #ff9800; color: #ff9800;" onclick="shareToCommunity()">💬 Share Setup to Community (BBCode/MD)</button>
+    <a class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" href="user_manual.html#sec-6" target="_blank">Open Manual for this Tool</a>
     <a class="button" href="ri.html" style="width:100%; margin-top:10px; background:var(--surface);">Test Suppression (RI)</a>
     
     <div class="usage-progress">
@@ -325,7 +327,12 @@ function scheduleTone() {
 
         const osc = audioCtx.createOscillator();
         const g = audioCtx.createGain();
-        const b = toneBalFactors[toneIdx];
+        
+        // Apply Global Hearing Profile boost + Manual Balance
+        const hpBoostDb = (getHearingBoost(freq, 'L') + getHearingBoost(freq, 'R')) / 2; // Average compensation for mono sequence
+        const hpGain = Math.pow(10, hpBoostDb / 20);
+        const b = toneBalFactors[toneIdx] * hpGain;
+
         osc.frequency.value = freq;
         
         g.gain.setValueAtTime(0, schedTime);

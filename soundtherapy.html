@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="icon-192.png" type="image/png">
-<title>Sound Therapy</title>
+<title>Broadband Sound Therapy - Tinnitus Therapy Suite</title>
 <script type="module">
     import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
     window.GoogleGenerativeAI = GoogleGenerativeAI;
@@ -27,7 +27,7 @@
 </style>
 <body>
 <div class="panel">
-    <h1>Sound Therapy</h1>
+    <h1>Broadband Sound Therapy</h1>
     <p class="info">Nature sounds and calibrated broadband noise.</p>
 
     <div class="match-section" style="margin-bottom: 20px;">
@@ -63,7 +63,11 @@
     </div>
 
     <div class="match-section" id="eqSection" title="Boosting frequencies where you have hearing loss reduces 'neural gain' and listening effort.">
-        <h3 style="display: flex; align-items: center;">Hearing Compensation (EQ) <span class="status-dot">○</span> <span class="info-icon">?</span></h3>
+        <h3 style="display: flex; align-items: center;">Hearing Compensation (EQ) <span class="status-dot">○</span> <span class="info-icon">?</span>
+            <label style="margin-left: auto; font-size: 0.8rem; color: var(--accent); cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                <input type="checkbox" id="useHearingProfile" style="width: 16px; height: 16px;"> Auto-Compensate
+            </label>
+        </h3>
         <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div id="eqControlsL"></div>
@@ -115,6 +119,7 @@
             <button class="button-step" data-delta="-0.1">-0.1</button>
             <button class="button-step" data-delta="0.1">+0.1</button>
         </div>
+        <button class="button" style="width:100%; margin-top:10px;" onclick="syncBalanceToPreset()">Sync Balance to Preset</button>
         <div class="bal-viz">
             <div class="bal-track"><div id="balMarker" class="bal-marker"></div></div>
             <div class="bal-labels"><span>Left</span><span>Center</span><span>Right</span></div>
@@ -132,6 +137,7 @@
         <button class="big-btn zen-keep" onclick="startTimer()">Start Timer</button>
         <button class="button zen-keep" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
         <button class="button zen-keep" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+        <button class="button zen-keep" style="width:100%; margin-top:10px; border-color: #ff9800; color: #ff9800;" onclick="shareToCommunity()">💬 Share Setup to Community (BBCode/MD)</button>
         <button class="button email-audiologist-btn zen-keep" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
         <p id="timerDisplay" style="margin-top:10px;color:#ab47bc;font-weight:700" class="zen-keep"></p>
         <div class="usage-progress zen-keep">
@@ -167,7 +173,7 @@ window.onload = () => {
     `);
 
     const v = loadSetting('st_vol', 30);
-    const b = loadSetting('st_bal', 0);
+    const b = loadSetting('st_bal', getBalancePreset());
     document.getElementById('volume').value = v;
     document.getElementById('balance').value = b;
     createEqUI();
@@ -177,6 +183,11 @@ window.onload = () => {
     if (loadSetting('st_zen_mode', 'false') === 'true') {
         toggleZenMode();
     }
+    document.getElementById('useHearingProfile').checked = loadSetting('st_use_hp', 'false') === 'true';
+    document.getElementById('useHearingProfile').onchange = (e) => {
+        saveSetting('st_use_hp', e.target.checked);
+        if (audioCtx) stopAll(); // Restart required to rebuild graph
+    };
     refreshUsageUI();
 };
 
@@ -269,6 +280,9 @@ async function initAudio() {
         gainNode.channelCount = 2;
         gainNode.channelCountMode = 'explicit';
 
+        const useHP = document.getElementById('useHearingProfile').checked;
+        const hpFreqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
+
         const splitter = audioCtx.createChannelSplitter(2);
         const merger = audioCtx.createChannelMerger(2);
         gainNode.connect(splitter);
@@ -276,6 +290,21 @@ async function initAudio() {
         ['L', 'R'].forEach((side, idx) => {
             let head = audioCtx.createGain();
             splitter.connect(head, idx);
+
+            // 1. Inject Hearing Profile Compensation (if enabled)
+            if (useHP) {
+                hpFreqs.forEach(f => {
+                    const boost = getHearingBoost(f, side);
+                    if (boost > 0 && isFrequencySafe(audioCtx, f)) {
+                        const filter = audioCtx.createBiquadFilter();
+                        filter.type = 'peaking'; filter.frequency.value = f; filter.Q.value = 1;
+                        filter.gain.value = boost;
+                        head.connect(filter); head = filter;
+                    }
+                });
+            }
+
+            // 2. Manual EQ Layers
             const nodes = eqBands.map(freq => {
                 const f = audioCtx.createBiquadFilter();
                 f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1;
@@ -300,6 +329,12 @@ async function initAudio() {
     updateStatusDots(); // Call after audio init
 }
 function syncAudioNodes() { if(gainNode) setVolume(document.getElementById('volume').value); if(pannerNode) setBalance(document.getElementById('balance').value); }
+
+function syncBalanceToPreset() {
+    const bal = getBalancePreset();
+    setBalance(bal);
+    alert("Balance adjusted to global tinnitus side preset.");
+}
 
 function handlePlayNoise(type, btn) {
     showPreFlight(() => playNoise(type, btn));
@@ -590,6 +625,10 @@ function emailToAudiologist() {
         window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
         alert("Email client opened. Please review and send the clinical report draft.");
     });
+}
+
+function shareToCommunity() {
+    shareSetup("Broadband Sound Therapy", getReportData());
 }
 
 // Audio Recovery: Automatically restart noise/ambient if the global watchdog detects silence

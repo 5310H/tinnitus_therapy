@@ -589,3 +589,30 @@ body.session-running .breathing-wave-bar {
     50% { opacity: 0.6; transform: scale(1.25); }
     100% { opacity: 1; transform: scale(1); }
 }
+
+/* Milestone Tracking UI */
+.milestone-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.milestone-item:hover { border-color: var(--accent); background: rgba(0, 191, 165, 0.05); }
+.milestone-item.checked { border-color: var(--accent); color: var(--accent); font-weight: bold; }
+.milestone-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+
+/* Celebratory Reveal Animation */
+.certificate-reveal {
+    animation: certificate-pop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes certificate-pop {
+    0% { transform: scale(0.5); opacity: 0; filter: brightness(2); }
+    100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+}

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="icon-192.png" type="image/png">
-<title>Dual‑Stimulus Neuromodulation</title>
+<title>Dual-Stimulus Neuromodulation - Tinnitus Therapy Suite</title>
 <script src="storage.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="nav.js"></script>
@@ -12,7 +12,7 @@
 </head>
 <body>
 <div class="panel">
-    <h1>Dual‑Stimulus [WIP]</h1>
+    <h1>Dual-Stimulus Neuromodulation</h1>
     <p class="info">Experimental auditory and smartphone-based tactile sensory pairing. <b>Note: This module is currently a work in progress.</b></p>
     <div class="match-section" style="margin-bottom: 20px;">
         <h3>Clinical Significance</h3>
@@ -93,6 +93,7 @@
     </div>
     <div style="display: flex; gap: 10px; margin-bottom: 20px;">
         <button class="tone-btn" style="flex: 1;" onclick="syncFreqToR()">Sync Freq L &rarr; R</button>
+        <button class="tone-btn" style="flex: 1;" onclick="syncBalanceToPreset()">Sync Balance to Preset</button>
     </div>
 
     <div class="ctrl"><label>Session Length</label><select id="session"><option value="600">10 min</option><option value="900">15 min</option><option value="1200" selected>20 min</option></select></div>
@@ -131,6 +132,22 @@
     </div>
     <div style="display: flex; gap: 10px; margin-bottom: 20px;">
         <button class="tone-btn" style="flex: 1;" onclick="syncVolToR()">Sync Volume L &rarr; R</button>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="tone-btn" style="flex: 1;" onclick="syncBalanceToPreset()">Sync Volume Balance to Preset</button>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="tone-btn" style="flex: 1;" onclick="syncMixToR()">Sync Mix L &rarr; R</button>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="tone-btn" style="flex: 1;" onclick="syncModToR()">Sync Noise Mod L &rarr; R</button>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="tone-btn" style="flex: 1;" onclick="syncBurstToR()">Sync Burst L &rarr; R</button>
     </div>
 
     <div class="responsive-grid">
@@ -224,7 +241,11 @@
     </div>
 
     <div class="match-section">
-        <h3>Hearing Compensation (EQ)</h3>
+        <h3 style="display: flex; align-items: center;">Hearing Compensation (EQ) <span class="status-dot">○</span> <span class="info-icon">?</span>
+            <label style="margin-left: auto; font-size: 0.8rem; color: var(--accent); cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                <input type="checkbox" id="useHearingProfile" style="width: 16px; height: 16px;"> Auto-Compensate
+            </label>
+        </h3>
         <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
         <div class="responsive-grid">
             <div id="eqControlsL"></div>
@@ -300,8 +321,10 @@ window.onload = () => {
 
     document.getElementById('freqL').value = loadSetting('len_freqL', loadSetting('len_freq', 8000));
     document.getElementById('freqR').value = loadSetting('len_freqR', loadSetting('len_freq', 8000));
-    document.getElementById('volL').value = loadSetting('len_volL', loadSetting('len_vol', 30));
-    document.getElementById('volR').value = loadSetting('len_volR', loadSetting('len_vol', 30));
+
+    const bal = getBalancePreset();
+    document.getElementById('volL').value = loadSetting('len_volL', loadSetting('len_vol', bal <= 0 ? 30 : Math.round(30 * (1 - bal))));
+    document.getElementById('volR').value = loadSetting('len_volR', loadSetting('len_vol', bal >= 0 ? 30 : Math.round(30 * (1 + bal))));
     document.getElementById('volMaster').value = loadSetting('len_volMaster', 100);
     document.getElementById('muteToggle').checked = loadSetting('len_volMuted', 'false') === 'true';
     document.getElementById('mixL').value = loadSetting('len_mixL', loadSetting('len_mix', 0.5));
@@ -353,6 +376,12 @@ window.onload = () => {
     setupStepButtons();
     refreshUsageUI();
     updatePulseDuration();
+
+    document.getElementById('useHearingProfile').checked = loadSetting('len_use_hp', 'false') === 'true';
+    document.getElementById('useHearingProfile').onchange = (e) => {
+        saveSetting('len_use_hp', e.target.checked);
+        if (running) stopSession(); // Restart required to rebuild graph
+    };
 
     if (loadSetting('lenire_zen_mode', 'false') === 'true') {
         toggleZenMode(true);
@@ -468,6 +497,16 @@ function performGlobalSync() {
     syncMixToR();
     syncModToR();
     syncBurstToR();
+}
+
+function syncBalanceToPreset() {
+    const bal = getBalancePreset();
+    const baseVol = 30; // Default volume for Lenire therapy
+    document.getElementById('volL').value = bal <= 0 ? baseVol : Math.round(baseVol * (1 - bal));
+    document.getElementById('volR').value = bal >= 0 ? baseVol : Math.round(baseVol * (1 + bal));
+    document.getElementById('volL').dispatchEvent(new Event('input'));
+    document.getElementById('volR').dispatchEvent(new Event('input'));
+    alert("Volume balance adjusted to global tinnitus side preset.");
 }
 
 function updateLabels(){
@@ -669,8 +708,24 @@ async function setupAudio(){
 
       const masterGain = audioCtx.createGain();
 
-      // Build EQ Chain
+      // 1. Inject Hearing Profile Compensation (if enabled)
+      const useHP = document.getElementById('useHearingProfile').checked;
+      const hpFreqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
       let head = masterGain;
+
+      if (useHP) {
+          hpFreqs.forEach(f => {
+              const boost = getHearingBoost(f, side);
+              if (boost > 0 && isFrequencySafe(audioCtx, f)) {
+                  const filter = audioCtx.createBiquadFilter();
+                  filter.type = 'peaking'; filter.frequency.value = f; filter.Q.value = 1;
+                  filter.gain.value = boost;
+                  head.connect(filter); head = filter;
+              }
+          });
+      }
+
+      // 2. Build Manual EQ Chain
       const eqNodes = eqBands.map(freq => {
           const f = audioCtx.createBiquadFilter();
           f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1;
@@ -836,6 +891,7 @@ document.getElementById('muteToggle').onchange = (e) => {
 function getReportData() {
     const colorSelect = document.getElementById('noiseColor');
     let bgSource = "Internal " + colorSelect.options[colorSelect.selectedIndex].text;
+    const useHP = document.getElementById('useHearingProfile').checked;
     if (document.getElementById('useLiveAudio').checked) {
         bgSource = "Live System Audio (Browser/App Capture)"; // Live audio takes precedence
     } else {
@@ -843,6 +899,7 @@ function getReportData() {
         if (file) bgSource = `Custom File: ${file.name}`;
     }
     const data = {
+        "Hearing Profile Active": useHP ? 'Yes' : 'No',
         "Carrier Source": bgSource,
         "Carrier Frequency L": freqLEl.value + " Hz",
         "Carrier Frequency R": freqREl.value + " Hz",

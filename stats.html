@@ -9,6 +9,7 @@
     import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
     window.GoogleGenerativeAI = GoogleGenerativeAI;
 </script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script src="storage.js"></script>
 <script src="nav.js"></script>
 <link rel="stylesheet" href="style.css">
@@ -83,6 +84,17 @@
     <h1>Progress & Statistics</h1>
     <p class="info">Track your Tinnitus Handicap Inventory (THI) scores over time.</p>
 
+    <div class="chart-container" style="margin-bottom: 30px;">
+        <h2>Habituation Journey</h2>
+        <p class="info">Check off milestones as you progress through the stages of habituation.</p>
+        <div class="usage-progress" style="height: 14px; margin: 15px 0; background: var(--surface);">
+            <div id="milestoneBar" class="usage-bar" style="width: 0%; background: var(--accent); box-shadow: 0 0 15px var(--accent);"></div>
+        </div>
+        <div id="milestoneGrid" style="text-align: left; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 20px;">
+            <!-- Milestones injected via JS -->
+        </div>
+    </div>
+
     <div class="chart-container">
         <h2>Loudness Growth Trend</h2>
         <p class="info">Objective volume (%) at which sound is perceived as "Loud". Lower values may indicate hyperacusis.</p>
@@ -155,7 +167,57 @@ window.onload = () => {
     drawMMLChart();
     drawQFactorChart();
     drawRiChart();
+    renderMilestones();
 };
+
+function renderMilestones() {
+    const grid = document.getElementById('milestoneGrid');
+    const bar = document.getElementById('milestoneBar');
+    const data = getMilestoneProgress();
+
+    bar.style.width = data.percentage + '%';
+    grid.innerHTML = data.labels.map((label, i) => `
+        <div class="milestone-item ${data.state[i] ? 'checked' : ''}" onclick="handleMilestoneToggle(${i})">
+            <input type="checkbox" ${data.state[i] ? 'checked' : ''} style="pointer-events: none;">
+            <span>${label}</span>
+        </div>
+    `).join('');
+}
+
+function handleMilestoneToggle(index) {
+    const dataBefore = getMilestoneProgress();
+    const wasChecked = dataBefore.state[index];
+    
+    const dataAfter = toggleMilestone(index);
+    
+    if (dataAfter.state[index] && !wasChecked) {
+        showMilestoneAchievement(dataAfter.labels[index]);
+        
+        // Celebrate with confetti if the final habituation milestone is achieved
+        if (index === 5 && window.confetti) {
+            saveSetting('certificate_celebrated', 'true'); // Sync flag for dashboard
+            confetti({
+                particleCount: 200, spread: 80, origin: { y: 0.6 },
+                colors: ['#00bfa5', '#388e3c', '#ffffff']
+            });
+        }
+    }
+    renderMilestones();
+}
+
+function showMilestoneAchievement(label) {
+    let el = document.getElementById('milestoneAchieveNotice');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'milestoneAchieveNotice';
+        el.className = 'recovery-notification recovery-success';
+        document.body.appendChild(el);
+    }
+    el.innerHTML = `🎉 Milestone Achieved!<br><span style="font-size: 0.8rem; font-weight: normal;">${label}</span>`;
+    el.classList.remove('recovery-active');
+    void el.offsetWidth; // Trigger reflow to restart animation
+    el.classList.add('recovery-active');
+}
 
 async function triggerHabituationForecast() {
     const box = document.getElementById('forecastResponse');

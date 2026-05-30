@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tinnitus Suite – Site vs Manual Comparison Checklist</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+      margin: 2rem;
+      max-width: 900px;
+    }
+    h1, h2 {
+      margin-top: 1.5rem;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      margin: 0.25rem 0;
+    }
+    input[type="checkbox"] {
+      margin-right: 0.5rem;
+    }
+    hr {
+      margin: 1.5rem 0;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Tinnitus Therapy Suite – Site vs Manual Comparison Checklist</h1>
+
+<h2>1. Terminology Alignment</h2>
+<ul>
+  <li><label><input type="checkbox" checked>Standardize “Dual‑Stimulus Neuromodulation” across manual and UI</label></li>
+  <li><label><input type="checkbox" checked>Standardize “Broadband Sound Therapy” across manual and UI</label></li>
+  <li><label><input type="checkbox" checked>Standardize “Acoustic CR” vs “CR” naming across UI and manual</label></li>
+  <li><label><input type="checkbox" checked>Standardize “Two‑Tone Comparison” across manual and UI</label></li>
+  <li><label><input type="checkbox" checked>Ensure “CBT &amp; Wellness” in manual matches CBT page naming in UI</label></li>
+</ul>
+
+<hr>
+
+<h2>2. Features Present on Site but Missing in Manual</h2>
+<ul>
+  <li><label><input type="checkbox" checked>Document the “Lenire‑style” / bimodal therapy page explicitly in the manual</label></li>
+  <li><label><input type="checkbox" checked>Add a section for “Presentation Materials (CHSC)” if this is a supported feature</label></li>
+  <li><label><input type="checkbox" checked>Add a section for “Hardware &amp; Testing (Dev)” or mark it as developer‑only</label></li>
+  <li><label><input type="checkbox" checked>Add a “Research” page description to the manual</label></li>
+  <li><label><input type="checkbox" checked>Document the standalone “Clinical Summary for Doctors” page</label></li>
+  <li><label><input type="checkbox" checked>Document the onboarding wizard flow (steps, purpose, where it appears)</label></li>
+</ul>
+
+<hr>
+
+<h2>3. Features in Manual but Not Fully Implemented in Site</h2>
+<ul>
+  <li><label><input type="checkbox" checked>Verify Cognitive Restructuring (Thought Records, Balanced Thoughts, AI reframing) exists as described</label></li>
+  <li><label><input type="checkbox" checked>Verify Relaxation Training (PMR + 4‑7‑8) has its own clear UI</label></li>
+  <li><label><input type="checkbox" checked>Ensure Personalized Recommendations logic matches manual (THI + MML + Q‑factor driven)</label></li>
+  <li><label><input type="checkbox" checked>Add “Generate Clinical Progress Report (PDF)” button if manual promises it</label></li>
+  <li><label><input type="checkbox" checked>Implement standardized “Share Setup” feature across all therapeutic modules</label></li>
+</ul>
+
+<hr>
+
+<h2>4. System Validation & Audio Watchdog</h2>
+<ul>
+  <li><label><input type="checkbox" checked>Confirm System Validation page performs: Notch depth check, phase test, sample rate check as described</label></li>
+  <li><label><input type="checkbox" checked>Expose validation results in UI in a way that matches manual wording</label></li>
+  <li><label><input type="checkbox" checked>Implement visible Audio Status Indicator (Audio Active / Audio Suspended) in top navigation as described</label></li>
+  <li><label><input type="checkbox" checked>Ensure Audio Watchdog behavior (auto‑resume) is clearly surfaced in the manual</label></li>
+</ul>
+
+<hr>
+
+<h2>5. Spectrogram & Level Meter</h2>
+<ul>
+  <li><label><input type="checkbox" checked>Ensure Spectrogram page can visually confirm Notch “hole” and CR tone alignment</label></li>
+  <li><label><input type="checkbox" checked>Add labels or overlays to match manual examples</label></li>
+  <li><label><input type="checkbox" checked>Ensure Audio Meter page explains 45–60 dB habituation range in UI text</label></li>
+</ul>
+
+<hr>
+
+<h2>6. AI Features</h2>
+<ul>
+  <li><label><input type="checkbox" checked>Implement or surface “Spike De‑escalator” AI tool as a distinct UI element</label></li>
+  <li><label><input type="checkbox" checked>Implement or surface “Soundscape Designer” (natural language → sound recipe)</label></li>
+  <li><label><input type="checkbox" checked>Implement or surface “Pattern Correlation” (sleep, usage, distress trends)</label></li>
+  <li><label><input type="checkbox" checked>Implement or surface “Clinical Report Translator” (doctor‑friendly summary)</label></li>
+  <li><label><input type="checkbox" checked>Ensure CBT page exposes AI‑generated Balanced Thoughts as described</label></li>
+  <li><label><input type="checkbox" checked>Add clear “AI is not clinical advice” banner or callout in AI‑related pages</label></li>
+</ul>
+
+<hr>
+
+<h2>7. Documentation & Appendices</h2>
+<ul>
+  <li><label><input type="checkbox" checked>Add Appendix A: Technical Appendix content to the manual</label></li>
+  <li><label><input type="checkbox" checked>Add Appendix B: Quick Reference for Clinicians to the manual</label></li>
+  <li><label><input type="checkbox" checked>Add Appendix C: Troubleshooting Guide to the manual</label></li>
+  <li><label><input type="checkbox" checked>Add Appendix D: Patient Intake Form to the manual</label></li>
+  <li><label><input type="checkbox" checked>Add Appendix E: Habituation Milestone Tracker to the manual</label></li>
+</ul>
+
+<hr>
+
+<h2>8. Clinical Reporting & Exports</h2>
+<ul>
+  <li><label><input type="checkbox" checked>Add explicit “Clinical Progress Report (PDF)” generator if not present</label></li>
+  <li><label><input type="checkbox" checked>Ensure “Email to Clinician” flow matches manual (pre‑formatted metrics)</label></li>
+  <li><label><input type="checkbox" checked>Expose module‑specific exports (.txt) for TMC, RI, LG as described</label></li>
+  <li><label><input type="checkbox" checked>Add legends and labels to THI, MML, Q‑factor, RI charts to match manual examples</label></li>
+</ul>
+
+<hr>
+
+<h2>9. Navigation & UX Consistency</h2>
+<ul>
+  <li><label><input type="checkbox" checked>Ensure all modules listed in the manual appear in navigation with standardized naming</label></li>
+  <li><label><input type="checkbox" checked>Ensure dashboard sections map 1:1 to manual sections (names and order)</label></li>
+  <li><label><input type="checkbox" checked>Add links from each module to relevant manual section (e.g., “Open Manual for this Tool”)</label></li>
+</ul>
+
+<hr>
+
+<h2>10. Latest Engine Updates (v2026.05.3)</h2>
+<ul>
+  <li><label><input type="checkbox" checked>Ensure “Half‑Gain Rule” logic is clearly surfaced in Audiogram UI</label></li>
+  <li><label><input type="checkbox" checked>Verify Audio Watchdog recovery notifications appear as floating orange popups</label></li>
+  <li><label><input type="checkbox" checked>Standardize Narrator Speed/Volume controls across all tutorial cards</label></li>
+</ul>
+
+</body>
+</html>

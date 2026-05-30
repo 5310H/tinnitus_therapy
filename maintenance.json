@@ -1,8 +1,15 @@
 {
   "enabled": false,
   "whatsNew": [
-    "<b>Update Orchestration:</b> Automated version synchronization across all system manifests and configuration files."
+    "<b>Full Clinical Alignment:</b> Standardized terminology and logic across the entire suite and User Manual.",
+    "<b>Hearing Profile (Audiogram):</b> Enter your professional results to enable <b>Half‑Gain Rule</b> auto‑compensation across therapy modules.",
+    "<b>Habituation Milestone Tracker:</b> Automated progress tracking through clinical stages of habituation.",
+    "<b>Standardized Community Sharing:</b> New 'Share Setup' feature added to all therapeutic modules.",
+    "<b>Global Clinical Reporting:</b> Generate comprehensive multi-module progress reports (PDF) from the dashboard.",
+    "<b>Q-factor Tracking:</b> Integrated a dedicated trend chart in <b>stats.html</b> to specifically monitor changes in tinnitus tonality and 'sharpness' (Q-factor) over time.",
+    "<b>Technical Guidance:</b> Added an interactive tutorial for the System Validation engine.",
+    "<b>Milestone Achievement:</b> Earn a professional certificate and celebratory feedback upon reaching full habituation."
   ],
   "date": "May 2026", 
-  "version": "2026.05.2"
+  "version": "2026.05.3"
 }

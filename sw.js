@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trahreg-tinnitus-suite-v2026.05.2';
+const CACHE_NAME = 'trahreg-tinnitus-suite-v2026.05.3';
 const ASSETS = [
     './',
     './index.html',
@@ -47,6 +47,7 @@ const ASSETS = [
     './favicon.ico',
     './icon-192.png',
     './icon-512.png',
+    'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js',
     './hardware/haptic_mount.glb', // Updated to professional GLB format
     './hardware/saddle.glb',
     'https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js', // Model Viewer for 3D hardware preview

@@ -32,6 +32,7 @@
 
 <div class="no-print" style="text-align: center; margin-bottom: 20px; display: flex; gap: 10px; justify-content: center;">
     <button onclick="generatePDF()" class="button" style="background: var(--accent); color: white;">📄 Download Summary PDF</button>
+    <button id="certificateBtn" class="button" style="background: var(--success); color: white; border-color: white; display: none;" onclick="generateMilestoneCertificatePDF()">🏆 Download Achievement Certificate</button>
     <a href="index.html" class="button">Back to Dashboard</a>
 </div>
 
@@ -100,6 +101,12 @@
 <script>
 window.onload = () => {
     initNav("This summary provides clinicians with a scientific overview of the protocols implemented in the suite.");
+
+    // Conditional display of the Achievement Certificate for Phase 6 users
+    const progress = getMilestoneProgress();
+    if (progress && progress.state && progress.state[5]) {
+        document.getElementById('certificateBtn').style.display = 'inline-block';
+    }
 };
 async function generatePDF() {
     const element = document.getElementById('pdfContent');

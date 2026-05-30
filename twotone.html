@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="icon-192.png" type="image/png">
 <title>Two-Tone Comparison</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <link rel="stylesheet" href="style.css">
 <script src="storage.js"></script>
 <script src="nav.js"></script>
@@ -69,6 +70,7 @@
         <div class="zen-keep" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
             <button class="button zen-keep" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
             <button class="button zen-keep" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+            <button class="button zen-keep" style="border-color: #ff9800; color: #ff9800;" onclick="shareToCommunity()">💬 Share Setup to Community</button>
             <button class="button email-audiologist-btn zen-keep" style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
             <button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
             <button class="button zen-keep" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetToDefaults()">Reset to Defaults</button>
@@ -220,6 +222,10 @@
                 const report = generateClinicalReportText(reportData);
                 window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
             });
+        }
+
+        function shareToCommunity() {
+            shareSetup("Two-Tone Comparison", getReportData());
         }
 
         document.getElementById('freqASlider').oninput = updateUI;

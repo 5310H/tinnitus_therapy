@@ -184,6 +184,7 @@
 </div>
 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
   <button class="tone-btn" id="syncVolBtn" style="flex: 1;" onclick="syncVolToR()">Sync Volume L &rarr; R</button>
+  <button class="tone-btn" style="flex: 1;" onclick="syncBalanceToPreset()">Sync Balance to Preset</button>
 </div>
 <canvas id="volumeViz" class="volume-meter-canvas"></canvas>
 
@@ -191,6 +192,8 @@
 <button class="big-btn play-btn" id="toggleBtn" onclick="handleToggle()">Start Notch Therapy</button>
 <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
 <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+<button class="button" style="width:100%; margin-top:10px; border-color: #ff9800; color: #ff9800;" onclick="shareToCommunity()">💬 Share Setup to Community (BBCode/MD)</button>
+<a class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" href="user_manual.html#sec-3" target="_blank">Open Manual for this Tool</a>
 <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetToDefaults()">Reset to Defaults</button>
 <button class="button email-audiologist-btn" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
 <div class="status" id="status"></div>
@@ -201,7 +204,7 @@
 <canvas id="viz"></canvas>
 </div>
 <script>
-let ctx,playing=false,src,analyser,analyserL,analyserR,gainL,gainR,masterGain,toneCtx,toneOscL,toneOscR,tonePlaying=false,timerInterval=null,rafVolViz,nodeNotchL,nodeNotchR,eqNodesL=[],eqNodesR=[],zenActive=false,advancedSettingsOpen=false;
+let ctx,playing=false,src,analyser,analyserL,analyserR,gainL,gainR,masterGain,toneCtx,toneOscL,toneOscR,tonePlaying=false,timerInterval=null,rafVolViz,nodeNotchL,nodeNotchR,eqNodesL=[],eqNodesR=[],hpEqNodesL=[],hpEqNodesR=[],zenActive=false,advancedSettingsOpen=false;
 window.lastValidationStatus = "Not Validated";
 const BUF_SIZE=2*44100;
 const eqBands = [2000, 4000, 8000, 12000];
@@ -228,8 +231,10 @@ window.onload = () => {
     document.getElementById('notchL').value = loadSetting('notchL', loadSetting('notch', 6000));
     document.getElementById('notchR').value = loadSetting('notchR', loadSetting('notch', 6000));
     document.getElementById('nw').value = loadSetting('nw', 1);
-    document.getElementById('volL').value = loadSetting('volL', loadSetting('vol', 40));
-    document.getElementById('volR').value = loadSetting('volR', loadSetting('vol', 40));
+
+    const bal = getBalancePreset();
+    document.getElementById('volL').value = loadSetting('volL', loadSetting('vol', bal <= 0 ? 40 : Math.round(40 * (1 - bal))));
+    document.getElementById('volR').value = loadSetting('volR', loadSetting('vol', bal >= 0 ? 40 : Math.round(40 * (1 + bal))));
     document.getElementById('volMaster').value = loadSetting('volMaster', 100);
     document.getElementById('muteToggle').checked = loadSetting('volMuted', 'false') === 'true';
     document.getElementById('color').value = loadSetting('color', 'pink');
@@ -329,6 +334,16 @@ function syncFrequencies() {
     document.getElementById('notchR').dispatchEvent(new Event('input'));
 }
 
+function syncBalanceToPreset() {
+    const bal = getBalancePreset();
+    const baseVol = 40; // Default volume for Notch therapy
+    document.getElementById('volL').value = bal <= 0 ? baseVol : Math.round(baseVol * (1 - bal));
+    document.getElementById('volR').value = bal >= 0 ? baseVol : Math.round(baseVol * (1 + bal));
+    document.getElementById('volL').dispatchEvent(new Event('input'));
+    document.getElementById('volR').dispatchEvent(new Event('input'));
+    alert("Volume balance adjusted to global tinnitus side preset.");
+}
+
 function performGlobalSync() {
     if (!document.getElementById('lockLR').checked) return;
     syncFrequencies();
@@ -363,7 +378,7 @@ function performGlobalSync() {
 });
 
 let liveStream;
-function handleToggle(){ if(playing) stop(); else showPreFlight(() => start()); }
+function handleToggle(){ if(playing) stop(); else showPreFlight(() => start()); } // Ensure pre-flight check is always run
 async function toggle(){if(!playing) await start();else stop()}
 async function start() {
   toggleUIInteraction(true);
@@ -402,8 +417,92 @@ async function start() {
     const merger = ctx.createChannelMerger(2);
     analyser = ctx.createAnalyser(); analyser.fftSize = 2048;
 
+    // Define frequencies for hearing profile compensation
+    const hpFreqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
+
+    // Create Hearing Profile EQ Chains (L)
+    hpEqNodesL = hpFreqs.map(freq => {
+        if (!isFrequencySafe(ctx, freq)) return null;
+        const f = ctx.createBiquadFilter(); f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1;
+        f.gain.value = getHearingBoost(freq, 'L'); // Apply half-gain boost
+        return f;
+    }).filter(n => n !== null);
+
+    // Create Hearing Profile EQ Chains (R)
+    hpEqNodesR = hpFreqs.map(freq => {
+        if (!isFrequencySafe(ctx, freq)) return null;
+        const f = ctx.createBiquadFilter(); f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1;
+        f.gain.value = getHearingBoost(freq, 'R'); // Apply half-gain boost
+        return f;
+    }).filter(n => n !== null);
+
+    // --- Source Node Setup ---
+    let sourceNode; // This will be the node that feeds into the splitter
+    const natureMap = { rain: 'audio/rain.mp3', ocean: 'audio/ocean.mp3', stream: 'audio/stream.mp3', wind: 'audio/wind.mp3' };
+
     // Build EQ Chains
-    let headL = nodeNotchL;
+    if (color === 'live') {
+      try {
+        liveStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        if (!liveStream.getAudioTracks().length) {
+          alert("No audio track found. Please ensure 'Share Audio' is checked in the capture dialog.");
+          stop(); return;
+        }
+        sourceNode = ctx.createMediaStreamSource(liveStream);
+      } catch (err) { console.error(err); stop(); return; }
+    } else if (color === 'custom') {
+      const file = document.getElementById('customFile').files[0];
+      if (file) {
+        const audio = new Audio(URL.createObjectURL(file));
+        audio.loop = true;
+        src = audio; // Keep reference for stopping
+        sourceNode = ctx.createMediaElementSource(audio);
+        audio.play();
+      } else { alert("Please select a file."); stop(); return; }
+    } else if (natureMap[color]) {
+      const audio = new Audio(natureMap[color]);
+      audio.loop = true;
+      src = audio; // Keep reference for stopping
+      sourceNode = ctx.createMediaElementSource(audio);
+      audio.play();
+    } else {
+      // Internal noise generator
+      src = await (ctx.generator ? ctx.generator.createSafeNoiseNode(color) : null);
+      if (!src) { stop(); return; }
+      sourceNode = src;
+      src.start();
+    }
+
+    const splitter = ctx.createChannelSplitter(2);
+    sourceNode.connect(splitter);
+
+    // --- Connect Audio Graph ---
+    // Connect HP EQ nodes (L)
+    let currentChainL = splitter;
+    if (hpEqNodesL.length > 0) {
+        currentChainL.connect(hpEqNodesL[0], 0); // Connect splitter's left output to first HP EQ node
+        for (let i = 0; i < hpEqNodesL.length - 1; i++) {
+            hpEqNodesL[i].connect(hpEqNodesL[i+1]);
+        }
+        hpEqNodesL[hpEqNodesL.length - 1].connect(nodeNotchL); // Last HP EQ node connects to Notch
+    } else {
+        currentChainL.connect(nodeNotchL, 0); // If no HP EQ, splitter connects directly to Notch
+    }
+
+    // Connect HP EQ nodes (R)
+    let currentChainR = splitter;
+    if (hpEqNodesR.length > 0) {
+        currentChainR.connect(hpEqNodesR[0], 1); // Connect splitter's right output to first HP EQ node
+        for (let i = 0; i < hpEqNodesR.length - 1; i++) {
+            hpEqNodesR[i].connect(hpEqNodesR[i+1]);
+        }
+        hpEqNodesR[hpEqNodesR.length - 1].connect(nodeNotchR); // Last HP EQ node connects to Notch
+    } else {
+        currentChainR.connect(nodeNotchR, 1); // If no HP EQ, splitter connects directly to Notch
+    }
+
+    // Now connect the rest of the chain from the notch filters
+    let headL = nodeNotchL; // Start of manual EQ chain is now the notch filter
     eqNodesL = eqBands.map(freq => {
       if (!isFrequencySafe(ctx, freq)) return null;
       const f = ctx.createBiquadFilter();
@@ -415,7 +514,7 @@ async function start() {
     }).filter(n => n !== null);
     headL.connect(gainL).connect(analyserL).connect(merger, 0, 0);
 
-    let headR = nodeNotchR;
+    let headR = nodeNotchR; // Start of manual EQ chain is now the notch filter
     eqNodesR = eqBands.map(freq => {
       if (!isFrequencySafe(ctx, freq)) return null;
       const f = ctx.createBiquadFilter();
@@ -594,7 +693,13 @@ function stop(){
   }
   if(ctx){ ctx._expectingSound = false; ctx.close(); ctx=null; }
   playing=false;document.getElementById('toggleBtn').textContent='Start Notch Therapy';document.getElementById('toggleBtn').className='big-btn play-btn';document.getElementById('status').textContent='Stopped'
+  // Disconnect and clear all EQ nodes, including hearing profile ones
+  eqNodesL.forEach(node => { try { node.disconnect(); } catch(e){} });
+  eqNodesR.forEach(node => { try { node.disconnect(); } catch(e){} });
+  hpEqNodesL.forEach(node => { try { node.disconnect(); } catch(e){} });
+  hpEqNodesR.forEach(node => { try { node.disconnect(); } catch(e){} });
   eqNodesL = []; eqNodesR = [];
+  hpEqNodesL = []; hpEqNodesR = [];
   if(rafVolViz) cancelAnimationFrame(rafVolViz);
   updateStatusDots();
   const canvas = document.getElementById('volumeViz');
@@ -920,6 +1025,10 @@ function emailToAudiologist() {
         window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
         alert("Email client opened. Please review and send the clinical report draft.");
     });
+}
+
+function shareToCommunity() {
+    shareSetup("Notch Therapy (TMNMT)", getReportData());
 }
 
 // Audio Recovery: Automatically restart therapy if the global watchdog detects silence
