@@ -9,12 +9,12 @@ let _memStorage = {};
 let _memSessionActive = false;
 
 const isStorageAvailable = () => {
-    try { localStorage.setItem('tts_t', '1'); localStorage.removeItem('tts_t'); return true; } 
+    try { localStorage.setItem('tts_t', '1'); localStorage.removeItem('tts_t'); return true; }
     catch (e) { return false; }
 };
 
-const _safeGet = (k) => { try { return localStorage.getItem(k); } catch(e) { return _memStorage[k]; } };
-const _safeSet = (k, v) => { try { localStorage.setItem(k, v); } catch(e) { _memStorage[k] = v; } };
+const _safeGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return _memStorage[k]; } };
+const _safeSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { _memStorage[k] = v; } };
 
 const getJson = (key, defaultVal = []) => {
     const val = _safeGet('tts_' + key);
@@ -47,7 +47,7 @@ function completeOnboarding() {
     try {
         saveSetting('onboarding_step', '1');
         saveSetting('last_seen_version', APP_VERSION);
-        try { sessionStorage.setItem('tts_session_active', 'true'); } catch(e) {}
+        try { sessionStorage.setItem('tts_session_active', 'true'); } catch (e) { }
         _memSessionActive = true;
     } catch (e) { console.error("TTS: Failed to save onboarding state.", e); }
     console.log("TTS: Onboarding completed.");
@@ -98,7 +98,7 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2026.05.3";
+const APP_VERSION = "2026.05.4";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
@@ -110,7 +110,7 @@ let activeSessionKey = null; // Tracks the unlocked key for the current session
  * Telemetry Configuration
  * Point this to your proxy or a webhook to monitor suite health and usage.
  */
-const TELEMETRY_ENDPOINT = "YOUR_DISCORD_WEBHOOK_URL_HERE"; 
+const TELEMETRY_ENDPOINT = "YOUR_DISCORD_WEBHOOK_URL_HERE";
 
 /**
  * Manages state and interactions for the Google Gemini AI integration.
@@ -132,7 +132,7 @@ class TinnitusAIManager {
         try {
             // Common global paths for various CDN builds (UMD/Browser bundles)
             const check = (p) => typeof p === 'function' ? p : null;
-            
+
             const attempts = [
                 check(window.GoogleGenerativeAI),
                 check(window.google?.generativeai?.GoogleGenerativeAI),
@@ -175,13 +175,13 @@ class TinnitusAIManager {
             this.decryptedKey = key;
             // Sync back to session variable for cross-module availability
             activeSessionKey = key;
-            try { sessionStorage.setItem('tts_gemini_key_session', key); } catch(e) {}
+            try { sessionStorage.setItem('tts_gemini_key_session', key); } catch (e) { }
         } else {
             // Attempt to load from session memory (variable or sessionStorage) or plain-text storage
-            this.decryptedKey = activeSessionKey || 
-                                (function() { try { return sessionStorage.getItem('tts_gemini_key_session'); } catch(e) { return null; } })() || 
-                                loadSetting('gemini_api_key', null);
-            
+            this.decryptedKey = activeSessionKey ||
+                (function () { try { return sessionStorage.getItem('tts_gemini_key_session'); } catch (e) { return null; } })() ||
+                loadSetting('gemini_api_key', null);
+
             if (this.decryptedKey) activeSessionKey = this.decryptedKey;
         }
 
@@ -213,7 +213,7 @@ class TinnitusAIManager {
             if (!key || key === "ENCRYPTED_KEY_LOCKED") return { success: false, message: "API key not available." };
             const response = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${key}`);
             const data = await response.json();
-            
+
             if (data.error) {
                 return { success: false, error: `${data.error.code}: ${data.error.message}` };
             }
@@ -246,17 +246,17 @@ class TinnitusAIManager {
             let diag = "Global variable 'GoogleGenerativeAI' not found.";
             if (!scriptTag) diag = "SDK script tag missing from HTML.";
             else diag = "Script tag present but global namespace is empty. This usually indicates an ESM/UMD conflict.";
-            
+
             return { success: false, message: `AI SDK failed to load (${diag}). Check connection or disable ad-blockers (allow unpkg.com and cdn.jsdelivr.net).` };
         }
-        
+
         if (!this.genAI) {
             return { success: false, message: "AI Engine not initialized. Please provide a valid API key from Google AI Studio." };
         }
-        
+
         try {
             let result;
-            
+
             // Ensure we have a list of authorized models for this key first
             if (this.detectedModels.length === 0) {
                 const diag = await this.listAvailableModels();
@@ -301,15 +301,15 @@ class TinnitusAIManager {
                 throw e;
             }
 
-            return text ? { success: true, message: `Connection successful! Gemini responded using ${this.modelName}.` } 
-                        : { success: false, message: "Connection successful, but Gemini gave an empty response." };
+            return text ? { success: true, message: `Connection successful! Gemini responded using ${this.modelName}.` }
+                : { success: false, message: "Connection successful, but Gemini gave an empty response." };
         } catch (error) {
             console.error("Gemini test connection error:", error);
-            
+
             // Specific check for transport-level failures (offline or blocked by firewall)
             // We check navigator.onLine first; we don't treat 404/403 (fetch errors) as transport errors
             const isTransportError = !navigator.onLine ||
-                                    (error.message.includes("NetworkError") && !error.message.includes("status"));
+                (error.message.includes("NetworkError") && !error.message.includes("status"));
 
             if (isTransportError) {
                 return { success: false, message: "Network connection error. Gemini requires an active internet connection to reach Google's servers." };
@@ -347,7 +347,7 @@ class TinnitusAIManager {
         }
 
         const runRequest = async (modelName, version = 'v1') => {
-            const model = this.genAI.getGenerativeModel({ 
+            const model = this.genAI.getGenerativeModel({
                 model: modelName,
                 safetySettings: [ // Force stable v1 for production reliability
                     { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
@@ -380,7 +380,7 @@ class TinnitusAIManager {
         try {
             let responseText;
             let attempts = [];
-            
+
             // Auto-discover models if not yet detected (e.g. on first automatic dashboard request)
             if (this.detectedModels.length === 0) {
                 await this.listAvailableModels();
@@ -405,7 +405,7 @@ class TinnitusAIManager {
             for (let i = 0; i < attempts.length; i++) {
                 try {
                     responseText = await runRequest(attempts[i].model, attempts[i].version);
-                    this.modelName = attempts[i].model; 
+                    this.modelName = attempts[i].model;
                     break;
                 } catch (err) {
                     if (err.message.includes("API key not valid") || !navigator.onLine || i === attempts.length - 1) throw err;
@@ -415,7 +415,7 @@ class TinnitusAIManager {
             return `${responseText}\n\n<i>${this.disclaimer}</i>`;
         } catch (error) {
             console.error(`AI Integration Error [${taskType}]:`, error);
-            
+
             // Specific error categorization
             if (error.message.includes("API key not valid") || error.message.includes("403")) return "Configuration Error: The provided API key is invalid or unauthorized.";
             if (error.message.includes("quota")) return "The AI service is currently at capacity. Please try again in a few minutes.";
@@ -483,8 +483,8 @@ class TinnitusAIManager {
         const reportData = getClinicalReportData("AI Summary Generation", {}, {});
         const prompt = {
             system_instruction: "Summarize the user's progress for an audiologist. Focus on trends in distress, adherence, and reported sleep issues. Write one professional paragraph. This is a Professional Summary for a clinical report. Conclude by explicitly stating that the full therapeutic suite is available for professional use and patient tracking at https://tinnitus.trahreg.com.",
-            input: { 
-                distress: reportData.psychological.lastTHIScore, 
+            input: {
+                distress: reportData.psychological.lastTHIScore,
                 usage: reportData.usage.todayMinutes,
                 reports_sleep_issues: loadSetting('reports_sleep_issues', 'false') === 'true'
             }
@@ -521,8 +521,8 @@ class TinnitusAIManager {
         if (data.length < 3) return "Insufficient data for a forecast.";
         const prompt = {
             system_instruction: "Predict future habituation progress and provide one tip based on distress trends and reported sleep issues. State this is an AI projection.",
-            input: { 
-                thi_history: data, 
+            input: {
+                thi_history: data,
                 reports_sleep_issues: loadSetting('reports_sleep_issues', 'false') === 'true'
             }
         };
@@ -533,9 +533,9 @@ class TinnitusAIManager {
         const report = getClinicalReportData("Insight Generation", {}, {});
         const prompt = {
             system_instruction: "Analyze the data for positive trends and consider reported sleep issues. Provide one paragraph of encouragement and one actionable tip.",
-            input: { 
-                thi: report.psychological.lastTHIScore, 
-                usage: report.usage, 
+            input: {
+                thi: report.psychological.lastTHIScore,
+                usage: report.usage,
                 ri: report.ri.latestRIResult,
                 reports_sleep_issues: loadSetting('reports_sleep_issues', 'false') === 'true'
             }
@@ -668,7 +668,7 @@ function resetOnboarding(dryRun = false) {
             if (!dryRun) {
                 keysToRemove.forEach(k => localStorage.removeItem(k));
             }
-            
+
             // Clear Service Workers to prevent stale state persistence
             if ('serviceWorker' in navigator) {
                 const regs = await navigator.serviceWorker.getRegistrations();
@@ -677,8 +677,8 @@ function resetOnboarding(dryRun = false) {
                     if (!dryRun) await r.unregister();
                 }
             }
-        } catch(e) { console.warn("TTS: Partial reset during onboarding clear."); }
-        
+        } catch (e) { console.warn("TTS: Partial reset during onboarding clear."); }
+
         if (dryRun) {
             console.log("[DryRun] Would clear internal _memStorage and _memSessionActive.");
             console.log("[DryRun] Would clear sessionStorage.");
@@ -781,21 +781,21 @@ function getMilestoneProgress() {
     ];
     // Manual override state for the checkboxes in stats.html
     const userState = getJson('milestone_state', [false, false, false, false, false, false]);
-    
+
     // Auto-detect some milestones based on actual data
     const log = getJson('usage_log', {});
     const distress = getJson('distress_log', {});
     const notch = loadSetting('notchL', null);
-    
+
     const autoState = [...userState];
     if (Object.keys(distress).length > 0) autoState[0] = true;
     if (notch !== null && Object.values(log).some(v => v > 0)) autoState[1] = true;
-    
+
     // Logic for Early/Partial/Full Habituation based on THI
     const scores = Object.values(distress).map(Number);
     if (scores.length >= 2) {
-        if (scores[0] - scores[scores.length-1] >= 7) autoState[3] = true; // Early: MCSD reduction
-        if (scores[scores.length-1] <= 16) autoState[5] = true; // Full: Grade 1
+        if (scores[0] - scores[scores.length - 1] >= 7) autoState[3] = true; // Early: MCSD reduction
+        if (scores[scores.length - 1] <= 16) autoState[5] = true; // Full: Grade 1
     }
 
     const percentage = Math.round((autoState.filter(Boolean).length / autoState.length) * 100);
@@ -860,7 +860,7 @@ function getUnifiedValidationStatus() {
         isValid = false;
         recommendations.push("- Automated Engine Validation is missing or failed. Please run the 'System Validation' tool on the home page.");
     }
-    
+
     if (phaseStatus === 'Not Verified') {
         isValid = false;
         recommendations.push("- Hardware Phase is unverified. Use the 'Phase Test' in System Validation to confirm headphone wiring.");
@@ -914,21 +914,21 @@ class ClinicalSafetyAudit {
      */
     async runSpectralAudit() {
         if (!this.generator || !this.generator.ctx) return { success: false, error: "No context" };
-        
+
         const colors = ['white', 'pink', 'brown'];
         const results = {};
-        
+
         for (const color of colors) {
             const buf = this.generator.generate(color, 4096);
             if (!buf) { results[color] = "FAILED: No Buffer"; continue; }
-            
+
             const data = buf.getChannelData(0);
             let peak = 0;
             for (let i = 0; i < data.length; i++) {
                 const abs = Math.abs(data[i]);
                 if (abs > peak) peak = abs;
             }
-            
+
             // Check for silence or clipping
             if (peak === 0) results[color] = "FAILED: Silent";
             else if (peak > 1.0) results[color] = "FAILED: Clipping";
@@ -943,14 +943,14 @@ class ClinicalSafetyAudit {
     validateSettingsIntegrity() {
         const criticalKeys = ['st_vol', 'dec_vol', 'len_vol', 'cr_baseFreq', 'notchL'];
         const issues = [];
-        
+
         criticalKeys.forEach(key => {
             const val = parseFloat(loadSetting(key, null));
             if (val === null) return;
             if (key.includes('vol') && (val < 0 || val > 100)) issues.push(`Unsafe volume on ${key}: ${val}`);
             if (key.includes('Freq') && (val < 20 || val > 20000)) issues.push(`Unsafe frequency on ${key}: ${val}`);
         });
-        
+
         return issues.length === 0 ? { valid: true } : { valid: false, issues };
     }
 }
@@ -994,7 +994,7 @@ class NoiseGenerator {
         const targetColor = (color || 'white').toLowerCase().trim().replace(/(_noise| noise)/g, '');
         const sampleRate = this.ctx.sampleRate;
         const size = (typeof bufferSize === 'number' && bufferSize > 0) ? bufferSize : sampleRate * 2;
-        
+
         let buffer;
         try {
             buffer = this.ctx.createBuffer(2, size, sampleRate);
@@ -1002,7 +1002,7 @@ class NoiseGenerator {
             console.error("NoiseGenerator: Failed to create AudioBuffer.", e);
             return null;
         }
-        
+
         const dL = buffer.getChannelData(0);
         const dR = buffer.getChannelData(1);
         const sr = this.ctx.sampleRate;
@@ -1119,24 +1119,24 @@ class NoiseGenerator {
                     }
                 };
 
-                if (typeof node.start !== 'function') node.start = () => {};
-                if (typeof node.stop !== 'function') node.stop = () => {};
+                if (typeof node.start !== 'function') node.start = () => { };
+                if (typeof node.stop !== 'function') node.stop = () => { };
 
                 return node;
             } catch (e) {
                 console.warn("NoiseGenerator: AudioWorklet failed (noise-processor.js may be missing). Falling back to pre-rendered buffer.", e);
             }
         }
-        
+
         const buffer = this.generate(targetColor, bufferSize);
         if (!buffer) {
             console.error("NoiseGenerator: Failed to create AudioBuffer for fallback. No noise will be generated.");
             return null;
         }
-        
+
         const source = this.ctx.createBufferSource();
         source.buffer = buffer;
-        source.engineType = 'buffer'; 
+        source.engineType = 'buffer';
         source.loop = loop;
         return source;
     }
@@ -1197,7 +1197,7 @@ function getTherapyErrorLog() { return getJson('error_log', []); }
  */
 async function sendClinicalTelemetry(type, data) {
     if (!TELEMETRY_ENDPOINT || !navigator.onLine) return;
-    
+
     const isDiscord = TELEMETRY_ENDPOINT.includes('discord.com/api/webhooks');
     let body;
 
@@ -1256,9 +1256,9 @@ function getHearingBoost(freq, side) {
     else if (freq >= freqs[freqs.length - 1]) hl = data[data.length - 1];
     else {
         for (let i = 0; i < freqs.length - 1; i++) {
-            if (freq >= freqs[i] && freq <= freqs[i+1]) {
-                const ratio = (freq - freqs[i]) / (freqs[i+1] - freqs[i]);
-                hl = data[i] + ratio * (data[i+1] - data[i]);
+            if (freq >= freqs[i] && freq <= freqs[i + 1]) {
+                const ratio = (freq - freqs[i]) / (freqs[i + 1] - freqs[i]);
+                hl = data[i] + ratio * (data[i + 1] - data[i]);
                 break;
             }
         }
@@ -1349,8 +1349,8 @@ function getClinicalReportData(modeName, settingsObj, techSpecsObj = {}) {
     const latestRI = getLatestLogData('ri_log');
     let riSummary = "N/A";
     if (latestRI) {
-        const riVal = Array.isArray(latestRI.data) 
-            ? latestRI.data.join('s, ') + 's' 
+        const riVal = Array.isArray(latestRI.data)
+            ? latestRI.data.join('s, ') + 's'
             : latestRI.data + 's';
         riSummary = `Date: ${latestRI.date} | Suppression Results: ${riVal}`;
     }
@@ -1358,7 +1358,7 @@ function getClinicalReportData(modeName, settingsObj, techSpecsObj = {}) {
     const latestTHI = getLatestLogData('distress_log');
     const lastScore = latestTHI ? `${latestTHI.data}/100` : 'Not Performed';
     const lastTHIDateDisplay = latestTHI ? new Date(latestTHI.date).toLocaleDateString() : 'N/A';
-    
+
     const thoughtRecords = getThoughtRecords();
     const thoughtRecordsCount = thoughtRecords.length;
     let recentThoughtSummary = "N/A";
@@ -1402,7 +1402,7 @@ function getClinicalReportData(modeName, settingsObj, techSpecsObj = {}) {
         tmc: {
             latestQFactor: latestQFactor
         },
-        hearingProfile: getJson('hearing_profile', { L: [0,0,0,0,0,0,0,0,0], R: [0,0,0,0,0,0,0,0,0] }),
+        hearingProfile: getJson('hearing_profile', { L: [0, 0, 0, 0, 0, 0, 0, 0, 0], R: [0, 0, 0, 0, 0, 0, 0, 0, 0] }),
         branding: {
             name: loadSetting('clinic_name', ''),
             logo: loadSetting('clinic_logo', '') // Can be URL or Base64
@@ -1424,9 +1424,9 @@ function generateClinicalReportText(reportData) {
     text += `Export Date: ${reportData.exportDate}\n`;
     text += `Access: https://tinnitus.trahreg.com\n`;
     text += `-------------------------------------------\n`;
-    
+
     text += `\nTHERAPY SETTINGS:\n`;
-    
+
     if (reportData.aiSummary) {
         text += `\nPROFESSIONAL SUMMARY:\n`;
         text += `${reportData.aiSummary}\n`;
@@ -1441,7 +1441,7 @@ function generateClinicalReportText(reportData) {
             text += `${label}: ${value}\n`;
         }
     }
-    
+
     text += `\nUSAGE & STATUS:\n`;
     text += `Today's Usage: ${reportData.usage.todayMinutes} minutes\n`;
 
@@ -1474,7 +1474,7 @@ function generateClinicalReportText(reportData) {
     text += `\nSYSTEM STATUS:\n`;
     text += `Hardware Phase Status: ${reportData.systemStatus.hardwarePhase}\n`;
     text += `\nAUTOMATED ENGINE VALIDATION:\n${reportData.systemStatus.engineValidation}\n`;
-    
+
     if (reportData.systemStatus.dspValidation !== 'Not Performed') {
         text += `\nINTERNAL DSP VALIDATION:\nStatus: ${reportData.systemStatus.dspValidation}\n`;
     }
@@ -1489,7 +1489,7 @@ function generateClinicalReportText(reportData) {
 
 function generateClinicalReportHtml(reportData) {
     let html = `<div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1a1a1a; padding: 1in; max-width: 8.5in; margin: auto; background: #fff; line-height: 1.6; font-size: 12pt; box-sizing: border-box;">`;
-    
+
     // Dynamic Clinic Branding Header
     html += `<div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 30px;">`;
     html += `  <div style="flex: 1;">`;
@@ -1524,27 +1524,27 @@ function generateClinicalReportHtml(reportData) {
         const hpFreqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
         const width = 600, height = 180, pad = 35;
         const gW = width - (pad * 2), gH = height - (pad * 2);
-        
+
         html += `<div style="background: #fdfdfd; border: 1px solid #ecf0f1; border-radius: 4px; padding: 15px; margin-bottom: 25px; page-break-inside: avoid;">`;
         html += `  <p style="font-size: 11px; color: #95a5a6; margin: 0 0 10px 0; text-transform: uppercase; font-weight: bold;">Clinical Hearing Profile (Audiogram)</p>`;
         html += `  <div style="display: flex; gap: 20px; align-items: flex-start;">`;
-        
+
         // SVG Graph
         html += `    <div style="flex: 1.5; text-align: center;">`;
         html += `      <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="max-width: 100%; height: auto; font-family: sans-serif;">`;
-        
+
         // Grid Y-Axis (Clinical HL 0-110, Inverted)
         for (let db = 0; db <= 110; db += 20) {
             const y = pad + (db / 110) * gH;
             html += `<line x1="${pad}" y1="${y}" x2="${width - pad}" y2="${y}" stroke="#f0f0f0" stroke-width="1" />`;
             html += `<text x="${pad - 8}" y="${y + 3}" font-size="8" fill="#bdc3c7" text-anchor="end">${db}</text>`;
         }
-        
+
         // Grid X-Axis (Freqs)
         hpFreqs.forEach((f, i) => {
             const x = pad + (i / (hpFreqs.length - 1)) * gW;
             html += `<line x1="${x}" y1="${pad}" x2="${x}" y2="${height - pad}" stroke="#f0f0f0" stroke-width="1" />`;
-            const label = f >= 1000 ? (f/1000)+'k' : f;
+            const label = f >= 1000 ? (f / 1000) + 'k' : f;
             html += `<text x="${x}" y="${height - pad + 12}" font-size="8" fill="#bdc3c7" text-anchor="middle">${label}</text>`;
         });
 
@@ -1554,7 +1554,7 @@ function generateClinicalReportHtml(reportData) {
             const color = isL ? '#42a5f5' : '#ef5350';
             const data = reportData.hearingProfile[side];
             if (!data || data.length === 0) return;
-            
+
             let points = "";
             data.forEach((db, i) => {
                 const x = pad + (i / (hpFreqs.length - 1)) * gW;
@@ -1562,12 +1562,12 @@ function generateClinicalReportHtml(reportData) {
                 points += `${x},${y} `;
             });
             html += `<polyline points="${points}" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="${isL ? '4,2' : ''}" />`;
-            
+
             data.forEach((db, i) => {
                 const x = pad + (i / (hpFreqs.length - 1)) * gW;
                 const y = pad + (db / 110) * gH;
                 if (isL) {
-                    html += `<text x="${x}" y="${y+3}" font-size="10" fill="${color}" text-anchor="middle" font-weight="bold">✕</text>`;
+                    html += `<text x="${x}" y="${y + 3}" font-size="10" fill="${color}" text-anchor="middle" font-weight="bold">✕</text>`;
                 } else {
                     html += `<circle cx="${x}" cy="${y}" r="3" fill="none" stroke="${color}" stroke-width="1.5" />`;
                 }
@@ -1593,7 +1593,7 @@ function generateClinicalReportHtml(reportData) {
         });
         html += `      </tbody></table>`;
         html += `    </div>`;
-        
+
         html += `  </div>`;
         html += `</div>`;
     }
@@ -1651,7 +1651,7 @@ function generateClinicalReportHtml(reportData) {
 
         let points = "";
         const step = chartWidth / (history.length - 1);
-        
+
         history.forEach((entry, i) => {
             const x = padding + (i * step);
             const y = padding + (chartHeight - (entry[1] / 100 * chartHeight));
@@ -1697,7 +1697,7 @@ function generateClinicalReportHtml(reportData) {
         html += `<div style="background: #fdfdfd; border: 1px solid #ecf0f1; border-radius: 4px; padding: 15px 15px 25px 15px; text-align: center; margin-bottom: 25px;">`;
         html += `  <p style="font-size: 11px; color: #95a5a6; margin: 0 0 15px 0; text-transform: uppercase; text-align: left;">Adherence Trend (Last 30 Days Usage)</p>`;
         html += `  <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="max-width: 100%; height: auto; font-family: sans-serif;" shape-rendering="geometricPrecision">`;
-        
+
         [0, 0.5, 1].forEach(tick => {
             const val = Math.round(maxUsage * tick);
             const y = padding + (chartHeight - (tick * chartHeight));
@@ -1710,10 +1710,10 @@ function generateClinicalReportHtml(reportData) {
             const x = padding + (i * (barWidth + spacing));
             const y = padding + (chartHeight - h);
             html += `<rect x="${x}" y="${y}" width="${barWidth}" height="${h}" fill="#3498db" rx="1" />`;
-            
-            if (i === 0 || i === history.length - 1 || (history.length > 7 && i % Math.floor(history.length/4) === 0)) {
+
+            if (i === 0 || i === history.length - 1 || (history.length > 7 && i % Math.floor(history.length / 4) === 0)) {
                 const dateStr = new Date(entry[0]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                html += `<text x="${x + barWidth/2}" y="${height - 5}" font-size="8" fill="#95a5a6" text-anchor="middle">${dateStr}</text>`;
+                html += `<text x="${x + barWidth / 2}" y="${height - 5}" font-size="8" fill="#95a5a6" text-anchor="middle">${dateStr}</text>`;
             }
         });
         html += `  </svg>`;
@@ -1816,7 +1816,7 @@ window.generateGlobalClinicalReportPDF = generateGlobalClinicalReportPDF;
 async function generateMilestoneCertificatePDF() {
     const progress = getMilestoneProgress();
     const today = new Date().toLocaleDateString();
-    
+
     const html = `
         <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 50px; text-align: center; border: 15px double #00bfa5; background: #fff; color: #1a1a1a; width: 10in; height: 7.5in; margin: auto; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; position: relative;">
             <div style="position: absolute; top: 20px; right: 20px; font-size: 40pt; opacity: 0.1;">🏆</div>
@@ -1869,8 +1869,8 @@ function getTherapyRecommendations() {
     const thiScore = latestTHI ? latestTHI.data : null;
 
     const latestMML = getLatestLogData('mml_log');
-    const lastMMLValue = (latestMML && Array.isArray(latestMML.data)) 
-        ? latestMML.data.slice(-1)[0] 
+    const lastMMLValue = (latestMML && Array.isArray(latestMML.data))
+        ? latestMML.data.slice(-1)[0]
         : (latestMML ? latestMML.data : null);
 
     const latestQF = getLatestLogData('q_factor_log');
@@ -1937,7 +1937,7 @@ function getTherapyRecommendations() {
         recs.push({
             mode: "Binaural Beats",
             url: "binaural.html",
-            reason: reportsSleepIssues 
+            reason: reportsSleepIssues
                 ? "Delta-wave entrainment can help bypass auditory focus and facilitate the transition into restorative sleep."
                 : "Binaural relaxation tools help maintain low autonomic arousal, preventing future stress spikes."
         });
@@ -1952,14 +1952,14 @@ function getTherapyRecommendations() {
 function shareSetup(modeName, reportData) {
     const validation = getUnifiedValidationStatus();
     const thi = getLatestLogData('distress_log');
-    
+
     let text = `[b]Trahreg Tinnitus Suite - ${modeName} Setup[/b]\n`;
     text += `[i]Mode: ${modeName}[/i]\n\n`;
-    
+
     for (const [key, val] of Object.entries(reportData)) {
         text += `* ${key}: ${val}\n`;
     }
-    
+
     if (thi) text += `\n[b]Latest THI Score:[/b] ${thi.data}/100 (${new Date(thi.date).toLocaleDateString()})\n`;
     text += `[b]System Validation:[/b] ${validation.isValid ? "Verified" : "Pending"}\n\n`;
     text += `Generated via Trahreg Tinnitus Therapy Suite (v${APP_VERSION})\n`;
@@ -2036,12 +2036,12 @@ function showWalkthrough(slides, startIndex = 0) {
 
     document.body.classList.add('tutorial-active');
 
-    const closeWalkthrough = () => { 
+    const closeWalkthrough = () => {
         document.body.classList.remove('tutorial-active');
-        stopAuto(); 
-        clearHighlights(); 
-        const el = document.getElementById('walkthroughModal'); 
-        if (el) el.remove(); 
+        stopAuto();
+        clearHighlights();
+        const el = document.getElementById('walkthroughModal');
+        if (el) el.remove();
     };
     window.closeWalkthrough = closeWalkthrough;
 
@@ -2083,7 +2083,7 @@ function showWalkthrough(slides, startIndex = 0) {
                     const bQuality = bName.includes('natural') || bName.includes('neural');
                     return bQuality - aQuality;
                 })[0];
-            
+
             if (selectedVoice) speechUtterance.voice = selectedVoice;
 
             // Chained auto-advance: move to next slide after speech ends
@@ -2143,7 +2143,7 @@ function showWalkthrough(slides, startIndex = 0) {
         document.getElementById('narratorToggle').onchange = (e) => {
             narratorEnabled = e.target.checked;
             saveSetting('narrator_enabled', narratorEnabled);
-            if (!narratorEnabled) stopSpeaking(); 
+            if (!narratorEnabled) stopSpeaking();
         };
 
         // Set initial state of speed slider
@@ -2182,7 +2182,7 @@ function showWalkthrough(slides, startIndex = 0) {
 
     const update = () => {
         if (!slides || !slides[currentSlide]) return closeWalkthrough();
-        
+
         clearHighlights();
         const s = slides[currentSlide];
         if (document.getElementById('wTitle')) document.getElementById('wTitle').textContent = s.title;
@@ -2214,13 +2214,13 @@ function showWalkthrough(slides, startIndex = 0) {
         }
     };
 
-    document.getElementById('wNext').onclick = () => { 
+    document.getElementById('wNext').onclick = () => {
         stopAuto();
-        if (currentSlide < slides.length - 1) { currentSlide++; update(); } 
-        else closeWalkthrough(); 
+        if (currentSlide < slides.length - 1) { currentSlide++; update(); }
+        else closeWalkthrough();
     };
     document.getElementById('wBack').onclick = () => { stopAuto(); if (currentSlide > 0) { currentSlide--; update(); } };
-    
+
     document.getElementById('wAuto').onclick = () => {
         if (isAutoPlaying) {
             stopAuto();
@@ -2440,24 +2440,24 @@ function syncUIVersion() {
 }
 
 // Immediate application to prevent flash of unstyled content
-(function() {
+(function () {
     const theme = localStorage.getItem('tts_theme');
     if (theme === 'light') {
         document.documentElement.classList.add('light-mode');
     }
-    
+
     const compact = localStorage.getItem('tts_compact_mode');
     if (compact === 'true') {
         document.documentElement.classList.add('compact-mode');
     }
-    
+
     const layout = localStorage.getItem('tts_dashboard_layout');
     if (layout === '1-column') {
         document.documentElement.classList.add('single-column-layout');
     }
-    
+
     // --- Trahreg Gatekeeper Logic ---
-    (async function() {
+    (async function () {
         const fullPath = decodeURIComponent(window.location.pathname).toLowerCase();
         const pageName = fullPath.split('/').pop() || 'index.html';
         const isDocs = fullPath.includes('/docs/');
@@ -2468,7 +2468,7 @@ function syncUIVersion() {
                 const response = await fetch(configPath, { cache: 'no-store' });
                 if (response.ok) {
                     const config = await response.json();
-                    
+
                     // 1. Version Force Refresh: Detect if server code is newer than client session
                     if (config.version && config.version !== APP_VERSION && !window.location.search.includes('v=' + config.version)) {
                         console.info(`[Gatekeeper] Remote update detected (${config.version}). Forcing refresh...`);
@@ -2507,16 +2507,16 @@ function syncUIVersion() {
         try {
             // Set session active if we are on the home page or a public page to avoid immediate redirect
             if (isHome || isDocs) _memSessionActive = true;
-        } catch(e) { /* Private mode protection */ }
+        } catch (e) { /* Private mode protection */ }
 
         // 2. Identify Whitelisted (Public) pages
         const publicPages = ['index.html', 'disclaimer.html', 'license.html', 'about.html', 'research.html', 'feedback.html', 'presentation.html', 'handout.html', 'clinical_summary.html', 'stats.html'];
         const isPublicPage = isHome || publicPages.some(p => pageName === p);
 
         const onboardingStep = parseInt(loadSetting('onboarding_step', '0'));
-        const sessionActive = _memSessionActive || (function() {
-            try { return sessionStorage.getItem('tts_session_active') === 'true'; } 
-            catch(e) { return false; }
+        const sessionActive = _memSessionActive || (function () {
+            try { return sessionStorage.getItem('tts_session_active') === 'true'; }
+            catch (e) { return false; }
         })();
 
         if (!isStorageAvailable()) {

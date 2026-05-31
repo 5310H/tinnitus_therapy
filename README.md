@@ -61,7 +61,7 @@ Leveraging Google Gemini for enhanced therapeutic support and insights. All AI p
 Simple broadband noise generator with adjustable parameters.
 
 ### **11. Interactive Walkthroughs & Professional Narrator (v2026.05.2)**
-Every therapy module features a dedicated, step-by-step interactive tutorial to ensure clinical accuracy. 
+Every therapy module features a dedicated, step-by-step interactive tutorial to ensure clinical accuracy. (v2026.05.4)
 - **Professional Male Narrator:** High-quality neural voice synthesis provides audio guidance for all tutorial steps.
 - **Visual Guidance:** Real-time highlighting of UI elements during the setup process.
 
@@ -81,7 +81,7 @@ The suite includes an automated validation engine to ensure therapy integrity:
 - **Actionable Recommendations:** Provides automated troubleshooting for common system issues (e.g., detecting "Shallow Notch" errors caused by browser audio enhancers).
  
 ## 📖 User Documentation
-### **Comprehensive User Manual (v2026.05.3)**
+### **Comprehensive User Manual (v2026.05.4)**
 The suite includes a dynamic PDF generation engine (accessible under Settings) that compiles all module documentation into a single, printable reference guide. The manual includes:
 - **Getting Started:** Quick Start Guide, Clinical Protocols, and the "Path to Relief" workflow.
 - **Detailed Protocols:** In-depth setup for the "Mixing Point," 24/7 Enrichment, and lateral inhibition strategies.

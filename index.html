@@ -1,277 +1,457 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Trahreg Tinnitus Therapy Suite</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="stylesheet" href="style.css">
-<link rel="manifest" href="manifest.json">
-<script type="module">
-    import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
-    window.GoogleGenerativeAI = GoogleGenerativeAI;
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-<script src="storage.js"></script>
-<script src="nav.js"></script>
+    <meta charset="UTF-8">
+    <title>Trahreg Tinnitus Therapy Suite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <script type="module">
+        import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
+        window.GoogleGenerativeAI = GoogleGenerativeAI;
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script src="storage.js"></script>
+    <script src="nav.js"></script>
+    <script>
+        if (sessionStorage.getItem('tts_splash_shown')) {
+            document.write('<style>#appSplashScreen { display: none !important; }</style>');
+        }
+    </script>
 </head>
+
 <body>
-<header class="main-header">
-    <h1>Trahreg Tinnitus Therapy Suite</h1>
-    <p class="info" style="margin-bottom: 0.5rem;">Open‑source auditory research & therapy tools</p>
-    <p style="font-size: 0.75rem; color: var(--text-dim); opacity: 0.8;">Version <span class="app-version-label"></span></p>
-</header>
+    <!-- Startup Splash Screen -->
+    <div id="appSplashScreen"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 100000; display: flex; align-items: center; justify-content: center; opacity: 1; transform: scale(1); filter: blur(0px); transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), filter 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;">
+        <div style="text-align: center; max-width: 400px; padding: 20px;">
+            <h1
+                style="font-size: 3.2rem; margin-bottom: 5px; color: var(--accent); border: none; font-family: 'Segoe UI', system-ui, sans-serif; font-weight: 700;">
+                Trahreg</h1>
+            <p
+                style="color: var(--accent); margin-top: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 4px; font-weight: bold;">
+                Tinnitus Therapy Suite</p>
 
-<div class="grid">
-    <div id="card-path" class="card grid-wide" draggable="true" style="border: 2px solid var(--accent); background: rgba(0, 191, 165, 0.05);">
-        <div class="drag-handle">⠿</div>
-        <h2 style="color: var(--accent);"><span style="font-size:1.4rem;">🎯</span> Start Here: The Path to Relief</h2>
-        <p class="info" style="color: var(--text); font-weight: 500; margin-bottom: 15px;">New to the suite? Follow this clinical sequence for the best results:</p>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-            <button class="button" onclick="showQuickStartGuide()" style="text-align: left; padding: 10px; border-style: dashed;">
-                <b style="color:var(--accent)">0. Quick Start Guide:</b> Visual overview of the method.
-            </button>
-            <a class="button" href="cbt.html" id="step-thi" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <span><b style="color:var(--accent)">1. Assessment:</b> Take the THI baseline.</span> <span class="step-status"></span>
-            </a>
-            <div id="assessment-steps" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: -4px; margin-bottom: 8px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
-                <div id="astep-1">○ THI</div><div id="astep-2">○ Sleep</div><div id="astep-3">○ Mindset</div>
+            <div style="margin: 40px auto; width: 280px; height: 175px; position: relative;">
+                <svg viewBox="0 0 400 250" style="width: 100%; height: 100%; color: var(--accent);">
+                    <!-- Stylized Outer Ear -->
+                    <path d="M140,50 C200,35 245,70 245,135 C245,200 200,225 170,225 C145,225 130,210 130,185"
+                        fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" opacity="0.8" />
+                    <!-- Inner Ear Structures -->
+                    <path d="M150,90 C185,85 210,110 210,135 C210,165 180,185 155,185" fill="none" stroke="currentColor"
+                        stroke-width="6" stroke-linecap="round" opacity="0.4" />
+
+                    <!-- Central Logo Cross -->
+                    <path d="M185 125 H215 M200 125 V155" fill="none" stroke="currentColor" stroke-width="10"
+                        stroke-linecap="round" opacity="0.9" />
+
+                    <defs>
+                        <!-- Detailed Bee Definition -->
+                        <g id="splash-bee-symbol">
+                            <path d="M-5,-5 Q-15,-25 -25,-10 Q-30,5 -15,15 Z" fill="rgba(200,200,255,0.4)" />
+                            <path d="M5,-5 Q15,-25 25,-10 Q30,5 15,15 Z" fill="rgba(200,200,255,0.4)" />
+                            <path d="M-15,0 Q-15,-12 0,-12 Q15,-12 15,0 Q15,12 0,12 Q-15,12 -15,0 Z"
+                                fill="currentColor" />
+                            <path d="M-5,-11 L-5,11 M2,-12 L2,12 M9,-11 L9,11" stroke="#000" stroke-width="2"
+                                opacity="0.8" />
+                            <circle cx="-15" cy="0" r="6" fill="#000" />
+                            <circle cx="-17" cy="-2" r="1" fill="#fff" />
+                        </g>
+                    </defs>
+
+                    <!-- The Swarm (Tinnitus Metaphor) -->
+                    <g class="bee-swarm">
+                        <use class="bee-instance" href="#splash-bee-symbol"
+                            transform="translate(290, 70) rotate(-10) scale(0.8)" />
+                    </g>
+                    <g class="bee-swarm">
+                        <use class="bee-instance" href="#splash-bee-symbol"
+                            transform="translate(320, 130) rotate(15) scale(0.6)" />
+                    </g>
+                    <g class="bee-swarm">
+                        <use class="bee-instance" href="#splash-bee-symbol"
+                            transform="translate(260, 195) rotate(40) scale(0.7)" />
+                    </g>
+                    <g class="bee-swarm">
+                        <use class="bee-instance" href="#splash-bee-symbol"
+                            transform="translate(70, 75) rotate(-45) scale(0.5)" />
+                    </g>
+                    <g class="bee-swarm">
+                        <use class="bee-instance" href="#splash-bee-symbol"
+                            transform="translate(95, 160) rotate(-160) scale(0.6)" />
+                    </g>
+                </svg>
             </div>
 
-            <a class="button" href="validation.html" id="step-valid" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <span><b style="color:var(--accent)">2. Validation:</b> Verify your hardware.</span> <span class="step-status"></span>
-            </a>
-            <div id="validation-steps" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-top: -4px; margin-bottom: 8px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
-                <div id="vstep-1">○ Phase</div><div id="vstep-2">○ Engine</div>
-            </div>
+            <p class="info" style="font-style: italic; margin-bottom: 45px; color: var(--text-dim); font-size: 1rem;">
+                Evidence-Based Auditory Research & Habituation</p>
 
-            <a class="button" href="notchfinder.html" id="step-pitch" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <span><b style="color:var(--accent)">3. Calibration:</b> Pitch-match your tinnitus.</span> <span class="step-status"></span>
-            </a>
-            <a class="button" href="recommended.html" id="step-plan" style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center; background: var(--success); color: white;">
-                <span><b style="color:white">4. Your Plan:</b> View personalized recommendations.</span> <span class="step-status"></span>
-            </a>
-            <!-- Functional Calibration Wizard Status -->
-            <div id="wizard-progress-wrap" style="margin-top: 10px; padding: 12px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); font-size: 0.8rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <span style="font-weight: bold; color: var(--accent);">Wizard Progress</span>
-                    <span id="wizard-percent" style="color: var(--text-dim); font-weight: bold;">0%</span>
-                </div>
-                <div class="usage-progress" style="margin: 0; height: 6px; background: rgba(255,255,255,0.1);">
-                    <div id="wizard-bar" class="usage-bar" style="width: 0%; box-shadow: 0 0 10px var(--accent);"></div>
-                </div>
-                <div id="wizard-steps" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
-                    <div id="wstep-1">○ Pitch</div><div id="wstep-2">○ Volume</div><div id="wstep-3">○ Notch</div>
-                </div>
+            <div id="splashTimer" onclick="dismissSplashScreen()"
+                style="margin: 0 auto; padding: 12px 30px; width: fit-content; min-width: 120px; color: var(--accent); font-size: 0.9rem; font-weight: bold; border: 1px solid var(--accent); border-radius: 50px; background: rgba(0, 191, 165, 0.05); cursor: pointer; transition: all 0.3s ease; opacity: 0.7;">
+                Skip</div>
+
+            <div style="margin-top: 40px; font-size: 0.75rem; color: var(--text-dim); opacity: 0.6;">
+                <span class="app-version-label" data-version-prefix="System Version "></span>
             </div>
         </div>
     </div>
-    <div id="card-ai-insights" class="card grid-wide" draggable="true">
-        <div class="drag-handle">⠿</div>
-        <h2>✨ AI Insights </h2>
-        <p class="info">Your daily dose of motivation and personalized tips from your AI coach.</p>
-        <div id="dailyMotivationDisplay" style="margin-top: 15px; padding: 15px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); min-height: 80px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic; color: var(--text-dim);">
-            Loading your daily motivation...
+
+    <header class="main-header">
+        <h1>Trahreg Tinnitus Therapy Suite</h1>
+        <p class="info" style="margin-bottom: 0.5rem;">Open‑source auditory research & therapy tools</p>
+        <p style="font-size: 0.75rem; color: var(--text-dim); opacity: 0.8;">Version <span
+                class="app-version-label"></span></p>
+    </header>
+
+    <div class="grid">
+        <div id="card-path" class="card grid-wide" draggable="true"
+            style="border: 2px solid var(--accent); background: rgba(0, 191, 165, 0.05);">
+            <div class="drag-handle">⠿</div>
+            <h2 style="color: var(--accent);"><span style="font-size:1.4rem;">🎯</span> Start Here: The Path to Relief
+            </h2>
+            <p class="info" style="color: var(--text); font-weight: 500; margin-bottom: 15px;">New to the suite? Follow
+                this clinical sequence for the best results:</p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="button" onclick="showQuickStartGuide()"
+                    style="text-align: left; padding: 10px; border-style: dashed;">
+                    <b style="color:var(--accent)">0. Quick Start Guide:</b> Visual overview of the method.
+                </button>
+                <a class="button" href="cbt.html" id="step-thi"
+                    style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <span><b style="color:var(--accent)">1. Assessment:</b> Take the THI baseline.</span> <span
+                        class="step-status"></span>
+                </a>
+                <div id="assessment-steps"
+                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: -4px; margin-bottom: 8px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
+                    <div id="astep-1">○ THI</div>
+                    <div id="astep-2">○ Sleep</div>
+                    <div id="astep-3">○ Mindset</div>
+                </div>
+
+                <a class="button" href="validation.html" id="step-valid"
+                    style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <span><b style="color:var(--accent)">2. Validation:</b> Verify your hardware.</span> <span
+                        class="step-status"></span>
+                </a>
+                <div id="validation-steps"
+                    style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-top: -4px; margin-bottom: 8px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
+                    <div id="vstep-1">○ Phase</div>
+                    <div id="vstep-2">○ Engine</div>
+                </div>
+
+                <a class="button" href="notchfinder.html" id="step-pitch"
+                    style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <span><b style="color:var(--accent)">3. Calibration:</b> Pitch-match your tinnitus.</span> <span
+                        class="step-status"></span>
+                </a>
+                <a class="button" href="recommended.html" id="step-plan"
+                    style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center; background: var(--success); color: white;">
+                    <span><b style="color:white">4. Your Plan:</b> View personalized recommendations.</span> <span
+                        class="step-status"></span>
+                </a>
+                <!-- Functional Calibration Wizard Status -->
+                <div id="wizard-progress-wrap"
+                    style="margin-top: 10px; padding: 12px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); font-size: 0.8rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: bold; color: var(--accent);">Wizard Progress</span>
+                        <span id="wizard-percent" style="color: var(--text-dim); font-weight: bold;">0%</span>
+                    </div>
+                    <div class="usage-progress" style="margin: 0; height: 6px; background: rgba(255,255,255,0.1);">
+                        <div id="wizard-bar" class="usage-bar" style="width: 0%; box-shadow: 0 0 10px var(--accent);">
+                        </div>
+                    </div>
+                    <div id="wizard-steps"
+                        style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
+                        <div id="wstep-1">○ Pitch</div>
+                        <div id="wstep-2">○ Volume</div>
+                        <div id="wstep-3">○ Notch</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="card-ai-insights" class="card grid-wide" draggable="true">
+            <div class="drag-handle">⠿</div>
+            <h2>✨ AI Insights </h2>
+            <p class="info">Your daily dose of motivation and personalized tips from your AI coach.</p>
+            <div id="dailyMotivationDisplay"
+                style="margin-top: 15px; padding: 15px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); min-height: 80px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic; color: var(--text-dim);">
+                Loading your daily motivation...
+            </div>
+        </div>
+
+        <div id="card-modes" class="card" draggable="true">
+            <div class="drag-handle">⠿</div>
+            <h2>Therapy Modes</h2>
+            <details>
+                <summary>Show</summary>
+                <a class="button" href="decorrelated.html">Decorrelated</a>
+                <a class="button" href="notch.html">Notch</a>
+                <a class="button" href="lenire.html">Lenire‑style</a>
+                <a class="button" href="soundtherapy.html">Sound</a>
+                <a class="button" href="cr.html">CR (Acoustic Coordinated Reset)</a>
+                <a class="button" href="binaural.html">Binaural Beats</a>
+                <a class="button" href="cbt.html">CBT & Wellness</a>
+            </details>
+        </div>
+        <div id="card-tests" class="card" draggable="true">
+            <div class="drag-handle">⠿</div>
+            <h2>Support Tools</h2>
+            <details>
+                <summary>Show</summary>
+                <a class="button" href="notchfinder.html">Notch Finder</a>
+                <a class="button" href="twotone.html">Two-Tone Comparison</a>
+                <a class="button" href="sweep.html">Frequency Sweep</a>
+                <a class="button" href="tmc.html">Masking Curve (TMC)</a>
+                <a class="button" href="lg.html">Loudness Growth</a>
+                <a class="button" href="audiogram.html">Hearing Profile (Audiogram)</a>
+                <a class="button" href="hearingtest.html">Hearing Range Test</a>
+                <a class="button" href="ri.html">RI Suppression Test</a>
+            </details>
+        </div>
+        <div id="card-utils" class="card" draggable="true">
+            <div class="drag-handle">⠿</div>
+            <h2>Suite Tools</h2>
+            <details>
+                <summary>Show</summary>
+                <a class="button" href="spectrogram.html">Spectrogram</a>
+                <a class="button" href="meter.html">Audio Meter</a>
+                <a class="button" href="validation.html" id="validationBtn">System Validation</a>
+                <button class="button btn-accent" id="installPwaBtn" onclick="installPwa()">Install App
+                    (Offline)</button>
+                <p id="pwaNote" class="hidden"
+                    style="font-size:0.75rem; color:var(--text-dim); margin-top:5px; text-align:center;">Follow the
+                    browser prompt to install for full offline use.</p>
+                <p id="iosInstallNote" class="hidden"
+                    style="font-size:0.75rem; color:var(--accent); margin-top:5px; text-align:center;">iOS Users: Tap
+                    the Share icon and <b>'Add to Home Screen'</b> for offline use.</p>
+                <p id="otherInstallNote" class="hidden"
+                    style="font-size:0.75rem; color:var(--text-dim); margin-top:5px; text-align:center;">Manual Install:
+                    Open browser menu and look for <b>"Install"</b> or <b>"Add to Home Screen"</b>.</p>
+                <button class="button" style="border-color: var(--text-dim); color: var(--text-dim);"
+                    onclick="checkForUpdates()">Check for Updates</button>
+                <button class="button" style="border-color: #ff9800; color: #ff9800;"
+                    onclick="purgeCacheAndReload()">Force Purge Cache</button>
+            </details>
+        </div>
+        <div id="card-progress" class="card" draggable="true">
+            <div class="drag-handle">⠿</div>
+            <h2>Progress</h2>
+            <details>
+                <summary>Show</summary>
+                <div class="ctrl" style="margin-top:15px">
+                    <label>Daily Goal (mins) <input type="number" id="goalInput" class="val-input" min="1" max="240"
+                            value="20"></label>
+                </div>
+                <div class="stats-container" id="statsContainer" style="margin-top:15px">
+                    <!-- Bars injected by JS -->
+                </div>
+                <p class="usage-text" id="weeklyTotal">Total: 0 mins this week</p>
+                <div style="display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap;">
+                    <button class="button" style="flex: 1;" onclick="exportAllData()">Backup Data</button>
+                    <button class="button" style="flex: 1;"
+                        onclick="document.getElementById('importFile').click()">Restore</button>
+                    <input type="file" id="importFile" style="display:none" onchange="importAllData(this.files[0])"
+                        accept=".json">
+                </div>
+                <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;"
+                    onclick="generateGlobalClinicalReportPDF()">Download Clinical Progress Report (PDF)</button>
+                <button id="certificateBtn" class="button"
+                    style="width:100%; margin-top:10px; background:var(--success); color:white; border-color:white; display:none;"
+                    onclick="generateMilestoneCertificatePDF()">🏆 Download Achievement Certificate</button>
+                <div class="card" id="thiReminderCard"
+                    style="display:none; background: rgba(255, 165, 0, 0.1); border-color: #ff9800; margin-top: 15px;">
+                    <h2 style="color: #ff9800; margin-bottom: 5px;">Monthly THI Assessment Due!</h2>
+                    <p class="info" style="color: var(--text);">It's been over a month since your last Tinnitus Handicap
+                        Inventory. Regular assessments help track your progress.</p>
+                    <a href="cbt.html" class="big-btn play-btn" style="margin-top: 10px;">Take THI Assessment Now</a>
+                </div>
+                <a class="button" href="recommended.html"
+                    style="width:100%; margin-top:10px; background:var(--accent); color:white;">Personalized
+                    Recommendations</a>
+                <a class="button" href="stats.html" style="width:100%; margin-top:10px;">View Progress History</a>
+            </details>
+        </div>
+        <div id="card-community" class="card" draggable="true" style="border-color: #9c27b0;">
+            <div class="drag-handle">⠿</div>
+            <h2 style="color: #9c27b0;">Help the Project</h2>
+            <p class="info">This suite is free and open-source. Help us reach more researchers and users.</p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="button"
+                    onclick="navigator.clipboard.writeText('Check out this open-source Tinnitus Therapy Suite: ' + window.location.href); alert('Link copied to clipboard!');"
+                    style="border-color: #9c27b0; color: #9c27b0;">🔗 Copy Suite Link to Share</button>
+                <a class="button" href="https://github.com/5310H/tinnitus_therapy" target="_blank"
+                    style="border-color: #9c27b0; color: #9c27b0;">⭐ Star on GitHub</a>
+                <p style="font-size: 0.7rem; color: var(--text-dim); text-align: center;">Sharing in forums like
+                    Tinnitus Talk helps fund future research.</p>
+            </div>
+        </div>
+        <div id="card-settings" class="card" draggable="true">
+            <div class="drag-handle">⠿</div>
+            <h2>Project & Settings</h2>
+            <details>
+                <summary>Show</summary>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                    <a class="button" style="margin:0;" href="about.html">About</a>
+                    <a class="button" style="margin:0;" href="docs/index.html">Docs</a>
+                    <a class="button" style="margin:0;" href="disclaimer.html">Legal</a>
+                    <a class="button" style="margin:0;" href="feedback.html">Feedback</a>
+                    <a class="button" style="margin:0;" href="research.html">Research</a>
+                    <a class="button" style="margin:0;" href="license.html">License</a>
+                </div>
+                <a class="button"
+                    style="width:100%; margin-top:10px; border-color: var(--accent); color: var(--accent);"
+                    href="hardware.html">🛠️ Hardware & Testing (Dev)</a>
+                <a class="button"
+                    style="width:100%; margin-top:10px; border-color: #2196f3; color: #2196f3; font-weight:bold;"
+                    href="presentation.html">📊 Presentation Materials (CHSC)</a>
+                <a class="button"
+                    style="width:100%; margin-top:10px; border-color:var(--accent); color:var(--accent); font-weight:bold;"
+                    href="clinical_summary.html">🩺 Clinical Summary for Doctors</a>
+                <div class="ctrl" style="margin-top:15px; border-top:1px dashed var(--border); padding-top:10px;">
+                    <label>Audiologist Email</label>
+                    <input type="email" id="audioEmail" placeholder="clinician@example.com"
+                        style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
+                </div>
+                <div class="ctrl" style="margin-top:10px;">
+                    <label>Clinic/Institution Name (For Reports)</label>
+                    <input type="text" id="clinicName" placeholder="e.g. NEOMED Tinnitus Clinic"
+                        style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
+                </div>
+                <div class="ctrl" style="margin-top:10px;">
+                    <label>Clinic Logo URL</label>
+                    <input type="text" id="clinicLogo" placeholder="https://example.com/logo.png"
+                        style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
+                </div>
+                <!-- AI Security Controls -->
+                <div style="margin-top:15px; border-top:1px dashed var(--border); padding-top:10px;">
+                    <h3 style="color:var(--accent); font-size:0.9rem; margin-bottom:10px;">✨ AI Security & Encryption
+                    </h3>
+                    <div class="info"
+                        style="font-size: 0.75rem; line-height: 1.4; margin-bottom: 15px; border-left: 2px solid var(--accent); padding-left: 10px;">
+                        <b>Security Note:</b> This suite does <u>not</u> provide an internal Gemini API key. You must
+                        obtain your own private key from
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                            style="color:var(--accent); text-decoration:underline;">Google AI Studio</a> to enable these
+                        features.
+                    </div>
+                    <div class="ctrl">
+                        <label>Gemini API Key</label>
+                        <input type="password" id="geminiKey" placeholder="Paste Key Here"
+                            style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
+                    </div>
+                    <div class="ctrl">
+                        <label>Security PIN / Recovery Code</label>
+                        <input type="password" id="geminiPin" placeholder="Enter PIN to Lock/Unlock"
+                            style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:10px;">
+                        <button class="button" style="flex:1;" onclick="setGeminiKeyWithPIN()">Encrypt & Lock</button>
+                        <button class="button" style="flex:1;" onclick="unlockGeminiKeyWithPIN()">Unlock AI</button>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button class="button" style="flex:1;" onclick="testGeminiConnectionUI()">Test
+                            Connection</button>
+                        <button class="button" style="flex:1; border-color:#ef5350; color:#ef5350;"
+                            onclick="resetAISettings()">Clear Key</button>
+                    </div>
+                    <div id="geminiTestStatus" style="margin-top:10px; font-size:0.75rem; text-align:center;"></div>
+                </div>
+                <button class="button"
+                    style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
+                    onclick="restartOnboarding()">Restart Onboarding</button>
+                <button class="button"
+                    style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
+                    onclick="toggleCompactMode()">Toggle Compact Mode</button>
+                <button class="button"
+                    style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
+                    onclick="resetLayout()">Reset Layout</button>
+                <button class="button"
+                    style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
+                    onclick="toggleDashboardLayout()">Toggle 1/2 Column Layout</button>
+                <button class="button"
+                    style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
+                    onclick="resetPreferences()">Reset All Warnings</button>
+                <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;"
+                    onclick="window.location.href='user_manual.html'">Generate User Manual (PDF)</button>
+                <button class="button" style="width:100%; margin-top:10px; border-color: #ef5350; color: #ef5350;"
+                    onclick="factoryReset()">Clear All Data (Factory Reset)</button>
+            </details>
+        </div>
+        <div id="card-support" class="card" draggable="true">
+            <div class="drag-handle">⠿</div>
+            <h2>Support Tinnitus Research</h2>
+            <p style="font-size: 0.85rem; line-height: 1.4; color: var(--muted);">Support organizations like the ATA or
+                the <a href="https://www.chsc.org/donate" target="_blank"
+                    style="color:var(--accent); text-decoration:underline;">Cleveland Hearing and Speech Center</a> to
+                help fund future research initiatives.</p>
         </div>
     </div>
 
-    <div id="card-modes" class="card" draggable="true">
-        <div class="drag-handle">⠿</div>
-        <h2>Therapy Modes</h2>
-        <details>
-            <summary>Show</summary>
-            <a class="button" href="decorrelated.html">Decorrelated</a>
-            <a class="button" href="notch.html">Notch</a>
-            <a class="button" href="lenire.html">Lenire‑style</a>
-            <a class="button" href="soundtherapy.html">Sound</a>
-            <a class="button" href="cr.html">CR (Acoustic Coordinated Reset)</a>
-            <a class="button" href="binaural.html">Binaural Beats</a>
-            <a class="button" href="cbt.html">CBT & Wellness</a>
-        </details>
-    </div>
-    <div id="card-tests" class="card" draggable="true">
-        <div class="drag-handle">⠿</div>
-        <h2>Support Tools</h2>
-        <details>
-            <summary>Show</summary>
-            <a class="button" href="notchfinder.html">Notch Finder</a>
-            <a class="button" href="twotone.html">Two-Tone Comparison</a>
-            <a class="button" href="sweep.html">Frequency Sweep</a>
-            <a class="button" href="tmc.html">Masking Curve (TMC)</a>
-            <a class="button" href="lg.html">Loudness Growth</a>
-            <a class="button" href="audiogram.html">Hearing Profile (Audiogram)</a>
-            <a class="button" href="hearingtest.html">Hearing Range Test</a>
-            <a class="button" href="ri.html">RI Suppression Test</a>
-        </details>
-    </div>
-    <div id="card-utils" class="card" draggable="true">
-        <div class="drag-handle">⠿</div>
-        <h2>Suite Tools</h2>
-        <details>
-            <summary>Show</summary>
-            <a class="button" href="spectrogram.html">Spectrogram</a>
-            <a class="button" href="meter.html">Audio Meter</a>
-            <a class="button" href="validation.html" id="validationBtn">System Validation</a>
-            <button class="button btn-accent" id="installPwaBtn" onclick="installPwa()">Install App (Offline)</button>
-            <p id="pwaNote" class="hidden" style="font-size:0.75rem; color:var(--text-dim); margin-top:5px; text-align:center;">Follow the browser prompt to install for full offline use.</p>
-            <p id="iosInstallNote" class="hidden" style="font-size:0.75rem; color:var(--accent); margin-top:5px; text-align:center;">iOS Users: Tap the Share icon and <b>'Add to Home Screen'</b> for offline use.</p>
-            <p id="otherInstallNote" class="hidden" style="font-size:0.75rem; color:var(--text-dim); margin-top:5px; text-align:center;">Manual Install: Open browser menu and look for <b>"Install"</b> or <b>"Add to Home Screen"</b>.</p>
-            <button class="button" style="border-color: var(--text-dim); color: var(--text-dim);" onclick="checkForUpdates()">Check for Updates</button>
-            <button class="button" style="border-color: #ff9800; color: #ff9800;" onclick="purgeCacheAndReload()">Force Purge Cache</button>
-        </details>
-    </div>
-    <div id="card-progress" class="card" draggable="true">
-        <div class="drag-handle">⠿</div>
-        <h2>Progress</h2>
-        <details>
-            <summary>Show</summary>
-            <div class="ctrl" style="margin-top:15px">
-                <label>Daily Goal (mins) <input type="number" id="goalInput" class="val-input" min="1" max="240" value="20"></label>
-            </div>
-            <div class="stats-container" id="statsContainer" style="margin-top:15px">
-                <!-- Bars injected by JS -->
-            </div>
-            <p class="usage-text" id="weeklyTotal">Total: 0 mins this week</p>
-            <div style="display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap;">
-                <button class="button" style="flex: 1;" onclick="exportAllData()">Backup Data</button>
-                <button class="button" style="flex: 1;" onclick="document.getElementById('importFile').click()">Restore</button>
-                <input type="file" id="importFile" style="display:none" onchange="importAllData(this.files[0])" accept=".json">
-            </div>
-            <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generateGlobalClinicalReportPDF()">Download Clinical Progress Report (PDF)</button>
-            <button id="certificateBtn" class="button" style="width:100%; margin-top:10px; background:var(--success); color:white; border-color:white; display:none;" onclick="generateMilestoneCertificatePDF()">🏆 Download Achievement Certificate</button>
-            <div class="card" id="thiReminderCard" style="display:none; background: rgba(255, 165, 0, 0.1); border-color: #ff9800; margin-top: 15px;">
-                <h2 style="color: #ff9800; margin-bottom: 5px;">Monthly THI Assessment Due!</h2>
-                <p class="info" style="color: var(--text);">It's been over a month since your last Tinnitus Handicap Inventory. Regular assessments help track your progress.</p>
-                <a href="cbt.html" class="big-btn play-btn" style="margin-top: 10px;">Take THI Assessment Now</a>
-            </div>
-            <a class="button" href="recommended.html" style="width:100%; margin-top:10px; background:var(--accent); color:white;">Personalized Recommendations</a>
-            <a class="button" href="stats.html" style="width:100%; margin-top:10px;">View Progress History</a>
-        </details>
-    </div>
-    <div id="card-community" class="card" draggable="true" style="border-color: #9c27b0;">
-        <div class="drag-handle">⠿</div>
-        <h2 style="color: #9c27b0;">Help the Project</h2>
-        <p class="info">This suite is free and open-source. Help us reach more researchers and users.</p>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-            <button class="button" onclick="navigator.clipboard.writeText('Check out this open-source Tinnitus Therapy Suite: ' + window.location.href); alert('Link copied to clipboard!');" style="border-color: #9c27b0; color: #9c27b0;">🔗 Copy Suite Link to Share</button>
-            <a class="button" href="https://github.com/5310H/tinnitus_therapy" target="_blank" style="border-color: #9c27b0; color: #9c27b0;">⭐ Star on GitHub</a>
-            <p style="font-size: 0.7rem; color: var(--text-dim); text-align: center;">Sharing in forums like Tinnitus Talk helps fund future research.</p>
-        </div>
-    </div>
-    <div id="card-settings" class="card" draggable="true">
-        <div class="drag-handle">⠿</div>
-        <h2>Project & Settings</h2>
-        <details>
-            <summary>Show</summary>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
-                <a class="button" style="margin:0;" href="about.html">About</a>
-                <a class="button" style="margin:0;" href="docs/index.html">Docs</a>
-                <a class="button" style="margin:0;" href="disclaimer.html">Legal</a>
-                <a class="button" style="margin:0;" href="feedback.html">Feedback</a>
-                <a class="button" style="margin:0;" href="research.html">Research</a>
-                <a class="button" style="margin:0;" href="license.html">License</a>
-            </div>
-            <a class="button" style="width:100%; margin-top:10px; border-color: var(--accent); color: var(--accent);" href="hardware.html">🛠️ Hardware & Testing (Dev)</a>
-            <a class="button" style="width:100%; margin-top:10px; border-color: #2196f3; color: #2196f3; font-weight:bold;" href="presentation.html">📊 Presentation Materials (CHSC)</a>
-            <a class="button" style="width:100%; margin-top:10px; border-color:var(--accent); color:var(--accent); font-weight:bold;" href="clinical_summary.html">🩺 Clinical Summary for Doctors</a>
-            <div class="ctrl" style="margin-top:15px; border-top:1px dashed var(--border); padding-top:10px;">
-                <label>Audiologist Email</label>
-                <input type="email" id="audioEmail" placeholder="clinician@example.com" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
-            </div>
-            <div class="ctrl" style="margin-top:10px;">
-                <label>Clinic/Institution Name (For Reports)</label>
-                <input type="text" id="clinicName" placeholder="e.g. NEOMED Tinnitus Clinic" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
-            </div>
-            <div class="ctrl" style="margin-top:10px;">
-                <label>Clinic Logo URL</label>
-                <input type="text" id="clinicLogo" placeholder="https://example.com/logo.png" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
-            </div>
-            <!-- AI Security Controls -->
-            <div style="margin-top:15px; border-top:1px dashed var(--border); padding-top:10px;">
-                <h3 style="color:var(--accent); font-size:0.9rem; margin-bottom:10px;">✨ AI Security & Encryption</h3>
-                <div class="info" style="font-size: 0.75rem; line-height: 1.4; margin-bottom: 15px; border-left: 2px solid var(--accent); padding-left: 10px;">
-                    <b>Security Note:</b> This suite does <u>not</u> provide an internal Gemini API key. You must obtain your own private key from 
-                    <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent); text-decoration:underline;">Google AI Studio</a> to enable these features.
-                </div>
-                <div class="ctrl">
-                    <label>Gemini API Key</label>
-                    <input type="password" id="geminiKey" placeholder="Paste Key Here" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
-                </div>
-                <div class="ctrl">
-                    <label>Security PIN / Recovery Code</label>
-                    <input type="password" id="geminiPin" placeholder="Enter PIN to Lock/Unlock" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--card-bg); color:var(--text);">
-                </div>
-                <div style="display:flex; gap:8px; margin-top:10px;">
-                    <button class="button" style="flex:1;" onclick="setGeminiKeyWithPIN()">Encrypt & Lock</button>
-                    <button class="button" style="flex:1;" onclick="unlockGeminiKeyWithPIN()">Unlock AI</button>
-                </div>
-                <div style="display:flex; gap:8px; margin-top:8px;">
-                    <button class="button" style="flex:1;" onclick="testGeminiConnectionUI()">Test Connection</button>
-                    <button class="button" style="flex:1; border-color:#ef5350; color:#ef5350;" onclick="resetAISettings()">Clear Key</button>
-                </div>
-                <div id="geminiTestStatus" style="margin-top:10px; font-size:0.75rem; text-align:center;"></div>
-            </div>
-            <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="restartOnboarding()">Restart Onboarding</button>
-            <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="toggleCompactMode()">Toggle Compact Mode</button>
-            <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetLayout()">Reset Layout</button>
-            <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="toggleDashboardLayout()">Toggle 1/2 Column Layout</button>
-            <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetPreferences()">Reset All Warnings</button>
-            <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="window.location.href='user_manual.html'">Generate User Manual (PDF)</button>
-            <button class="button" style="width:100%; margin-top:10px; border-color: #ef5350; color: #ef5350;" onclick="factoryReset()">Clear All Data (Factory Reset)</button>
-        </details>
-    </div>
-    <div id="card-support" class="card" draggable="true">
-        <div class="drag-handle">⠿</div>
-        <h2>Support Tinnitus Research</h2>
-        <p style="font-size: 0.85rem; line-height: 1.4; color: var(--muted);">Support organizations like the ATA or the <a href="https://www.chsc.org/donate" target="_blank" style="color:var(--accent); text-decoration:underline;">Cleveland Hearing and Speech Center</a> to help fund future research initiatives.</p>
-    </div>
-</div>
+    <script>
+        let splashInterval = null;
+        window.dismissSplashScreen = () => {
+            if (splashInterval) clearInterval(splashInterval);
+            const splash = document.getElementById('appSplashScreen');
+            if (splash) {
+                sessionStorage.setItem('tts_splash_shown', 'true');
+                splash.style.opacity = '0';
+                splash.style.transform = 'scale(1.1)';
+                splash.style.filter = 'blur(10px)';
+                splash.style.visibility = 'hidden';
+                setTimeout(() => splash.remove(), 800);
+            }
+            if (window.audioCtx && window.audioCtx.state === 'suspended') {
+                window.audioCtx.resume();
+            }
+        };
 
-<script>
-let deferredPrompt = null;
+        let deferredPrompt = null;
 
-/** --- Global AI UI Helpers --- **/
-function openAISetup() {
-    const modal = document.getElementById('aiSetupModal');
-    if (modal) modal.style.display = 'block';
-    else console.error("TTS: AI Setup Modal not found in DOM.");
-}
-window.openAISetup = openAISetup;
+        /** --- Global AI UI Helpers --- **/
+        function openAISetup() {
+            const modal = document.getElementById('aiSetupModal');
+            if (modal) modal.style.display = 'block';
+            else console.error("TTS: AI Setup Modal not found in DOM.");
+        }
+        window.openAISetup = openAISetup;
 
-function closeAISetup() {
-    const modal = document.getElementById('aiSetupModal');
-    if (modal) modal.style.display = 'none';
-    const status = document.getElementById('modalTestStatus');
-    if (status) status.textContent = '';
-    const meter = document.getElementById('modalMeter');
-    if (meter) meter.style.display = 'none';
-}
-window.closeAISetup = closeAISetup;
+        function closeAISetup() {
+            const modal = document.getElementById('aiSetupModal');
+            if (modal) modal.style.display = 'none';
+            const status = document.getElementById('modalTestStatus');
+            if (status) status.textContent = '';
+            const meter = document.getElementById('modalMeter');
+            if (meter) meter.style.display = 'none';
+        }
+        window.closeAISetup = closeAISetup;
 
-// Register the PWA listener immediately to catch early events
-window.addEventListener('beforeinstallprompt', (e) => {
-    console.log('PWA: beforeinstallprompt event fired');
-    e.preventDefault();
-    deferredPrompt = e;
-    
-    // Only show the UI if we aren't already running as an installed app
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-    if (!isStandalone) {
-        showInstallUI();
-    }
-});
+        // Register the PWA listener immediately to catch early events
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('PWA: beforeinstallprompt event fired');
+            e.preventDefault();
+            deferredPrompt = e;
 
-async function loadDailyMotivation() {
-    const displayEl = document.getElementById('dailyMotivationDisplay');
-    if (!displayEl) return;
+            // Only show the UI if we aren't already running as an installed app
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+            if (!isStandalone) {
+                showInstallUI();
+            }
+        });
 
-    const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
-    const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
-    const isConfigured = !!currentKey;
+        async function loadDailyMotivation() {
+            const displayEl = document.getElementById('dailyMotivationDisplay');
+            if (!displayEl) return;
 
-    if (encryptedKeyExists && !activeSessionKey) {
-        displayEl.innerHTML = `
+            const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
+            const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
+            const isConfigured = !!currentKey;
+
+            if (encryptedKeyExists && !activeSessionKey) {
+                displayEl.innerHTML = `
             <div style="color: #ff9800; font-weight: bold;">🔒 AI Features Locked</div>
             <p style="font-size: 0.8rem; margin: 8px 0; color: var(--text-dim); font-style: normal;">Your Gemini API key is encrypted. Enter your PIN or Recovery Code in Settings to unlock AI features.</p>
             <button class="button" style="font-size: 0.75rem; padding: 5px 12px;" onclick="const s = document.getElementById('card-settings'); s.querySelector('details').open = true; document.getElementById('geminiPin').scrollIntoView({behavior:'smooth'}); document.getElementById('geminiPin').focus();">Unlock AI</button>
@@ -279,970 +459,1098 @@ async function loadDailyMotivation() {
                 <a href="#" style="font-size: 0.7rem; color: var(--text-dim);" onclick="forgotPin()">Forgot PIN?</a>
             </div>
         `;
-        displayEl.style.flexDirection = 'column';
-        displayEl.style.fontStyle = 'normal';
-    } else if (!isConfigured) {
-        displayEl.innerHTML = `
+                displayEl.style.flexDirection = 'column';
+                displayEl.style.fontStyle = 'normal';
+            } else if (!isConfigured) {
+                displayEl.innerHTML = `
             <div style="color: #ef5350; font-weight: bold;">⚠️ AI Features Unconfigured</div>
             <p style="font-size: 0.8rem; margin: 8px 0; color: var(--text-dim); font-style: normal;">This program does <u>not</u> provide an API key. Add your own private key from Google AI Studio to enable personalized insights.</p>
             <button class="button" style="font-size: 0.75rem; padding: 5px 12px;" onclick="openAISetup()">Setup Gemini Key</button>
         `;
-        displayEl.style.flexDirection = 'column';
-        displayEl.style.fontStyle = 'normal';
-        return;
-    }
+                displayEl.style.flexDirection = 'column';
+                displayEl.style.fontStyle = 'normal';
+                return;
+            }
 
-    displayEl.innerHTML = 'Consulting your AI coach...';
-    displayEl.style.flexDirection = 'row';
-    displayEl.style.fontStyle = 'italic'; // Reset style
+            displayEl.innerHTML = 'Consulting your AI coach...';
+            displayEl.style.flexDirection = 'row';
+            displayEl.style.fontStyle = 'italic'; // Reset style
 
-    try {
-        const motivation = await getDailyMotivation();
-        // Validate response content
-        if (!motivation || motivation.includes("Could not connect") || motivation.includes("unconfigured")) {
-            throw new Error("API_UNREACHABLE");
-        }
-        displayEl.innerHTML = motivation.replace(/\n/g, '<br>');
-    } catch (error) {
-        console.error("AI Dashboard Error:", error);
-        displayEl.innerHTML = `
+            try {
+                const motivation = await getDailyMotivation();
+                // Validate response content
+                if (!motivation || motivation.includes("Could not connect") || motivation.includes("unconfigured")) {
+                    throw new Error("API_UNREACHABLE");
+                }
+                displayEl.innerHTML = motivation.replace(/\n/g, '<br>');
+            } catch (error) {
+                console.error("AI Dashboard Error:", error);
+                displayEl.innerHTML = `
             <div style="color: #ef5350; font-weight: bold;">⚠️ AI Connectivity Issue</div>
             <p style="font-size: 0.8rem; margin: 5px 0; color: var(--text-dim); font-style: normal;">The system could not reach Gemini. Verify your API key in settings and ensure your internet connection is active.</p>
             <button class="button" style="font-size: 0.75rem; padding: 5px 12px; margin-top: 8px;" onclick="openAISetup()">Update Setup</button>
         `;
-        displayEl.style.flexDirection = 'column';
-        displayEl.style.fontStyle = 'normal';
-    }
-}
-
-/** Global UI Actions - Moved outside onload for immediate availability **/
-window.restartOnboarding = () => {
-    const msg = "This will reset your setup progress and all therapy calibrations. Your dashboard will return to the welcome screen. Continue?";
-    if (confirm(msg)) {
-        if (typeof resetOnboarding === 'function') resetOnboarding();
-        else location.reload();
-    }
-};
-
-window.finishOnboarding = () => {
-    console.log("TTS: Finalizing setup...");
-    try {
-        saveSetting('onboarding_step', 7);
-        saveSetting('last_seen_version', APP_VERSION); 
-        try { sessionStorage.setItem('tts_session_active', 'true'); } catch(e) {}
-        
-        const modal = document.getElementById('onboardingModal');
-        if (modal) {
-            modal.style.display = 'none';
-            modal.remove(); 
-        }
-        
-        window.location.href = 'index.html?setup=complete'; // Definitive redirection to bypass stuck state
-    } catch (e) { 
-        console.error("TTS: Error finishing onboarding:", e);
-        // Fallback: just hide the modal if reload fails
-        document.getElementById('onboardingModal').style.display = 'none';
-    }
-};
-
-window.purgeCacheAndReload = async () => {
-    if (confirm("This will clear the application cache and force a fresh download of the latest version. Your saved therapy settings will not be affected. Proceed?")) {
-        if ('serviceWorker' in navigator) {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            for (let registration of registrations) {
-                await registration.unregister();
+                displayEl.style.flexDirection = 'column';
+                displayEl.style.fontStyle = 'normal';
             }
         }
-        if ('caches' in window) {
-            const names = await caches.keys();
-            for (let name of names) {
-                await caches.delete(name);
+
+        /** Global UI Actions - Moved outside onload for immediate availability **/
+        window.restartOnboarding = () => {
+            const msg = "This will reset your setup progress and all therapy calibrations. Your dashboard will return to the welcome screen. Continue?";
+            if (confirm(msg)) {
+                if (typeof resetOnboarding === 'function') resetOnboarding();
+                else location.reload();
             }
-        }
-        window.location.reload(true);
-    }
-};
+        };
 
-window.onload = () => {
-    loadCardOrder();
-    initNav();
-    initDragAndDrop();
+        window.finishOnboarding = () => {
+            console.log("TTS: Finalizing setup...");
+            try {
+                saveSetting('onboarding_step', 7);
+                saveSetting('last_seen_version', APP_VERSION);
+                try { sessionStorage.setItem('tts_session_active', 'true'); } catch (e) { }
 
-    // Initialize dashboard input listeners
-    const goalEl = document.getElementById('goalInput');
-    if (goalEl) goalEl.oninput = (e) => {
-        saveSetting('daily_goal', e.target.value);
-        renderStats();
-    };
-
-    const emailEl = document.getElementById('audioEmail');
-    if (emailEl) emailEl.oninput = (e) => {
-        saveSetting('audiologist_email', e.target.value);
-        applyEmailVisibility();
-    };
-
-    const clinicNameEl = document.getElementById('clinicName');
-    if (clinicNameEl) clinicNameEl.oninput = (e) => {
-        saveSetting('clinic_name', e.target.value);
-    };
-
-    const clinicLogoEl = document.getElementById('clinicLogo');
-    if (clinicLogoEl) clinicLogoEl.oninput = (e) => {
-        saveSetting('clinic_logo', e.target.value);
-    };
-
-    const keyEl = document.getElementById('geminiKey');
-    if (keyEl) keyEl.oninput = (e) => {
-        localStorage.removeItem('tts_gemini_api_key_encrypted');
-        localStorage.removeItem('tts_gemini_api_key_salt');
-        saveSetting('gemini_api_key', e.target.value);
-        activeSessionKey = e.target.value;
-        initAI();
-        loadDailyMotivation();
-    };
-
-    tinnitusAI.init(); // Initialize AI manager after DOM is ready and SDK script is loaded
-    updateStartPathStatus();
-
-    // Register Service Worker for PWA functionality
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-            .catch(err => console.error('PWA: ServiceWorker registration failed', err));
-
-        // Handle automatic reload when a new service worker takes over
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            window.location.reload();
-        });
-    }
-
-    // Onboarding Wizard Initialization
-    const step = parseInt(loadSetting('onboarding_step', 0));
-    if (step < 7) {
-        showOnboardingStep(step);
-    } else {
-        // Version tracking for returning users
-        const lastSeen = loadSetting('last_seen_version', '0.0.0');
-        if (lastSeen !== APP_VERSION) {
-            showWhatsNew();
-        }
-    }
-
-    loadDailyMotivation(); // Load daily motivation on page load
-    document.getElementById('goalInput').value = loadSetting('daily_goal', 20);
-    document.getElementById('audioEmail').value = loadSetting('audiologist_email', '');
-    document.getElementById('clinicName').value = loadSetting('clinic_name', '');
-    document.getElementById('clinicLogo').value = loadSetting('clinic_logo', '');
-
-    // Highlight validation button if calibration was completed
-    const phaseStatus = loadSetting('phase_status', 'Not Verified');
-    if (phaseStatus !== 'Not Verified' || needsValidation()) {
-        document.getElementById('validationBtn').classList.add('highlight-btn');
-    }
-
-    renderStats();
-    checkTHIReminder();
-    checkMilestoneAchievement();
-
-    // Detect iOS and show manual installation instructions
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-    if (isIOS && !isStandalone) {
-        document.getElementById('iosInstallNote').classList.remove('hidden');
-    }
-
-    // Fallback for browsers that don't support the automated prompt - wait a few seconds to avoid jitter
-    // This explains to the user how to "download" the app manually if the button doesn't appear.
-    setTimeout(() => {
-        if (!isIOS && !isStandalone && !deferredPrompt) {
-            document.getElementById('otherInstallNote').classList.remove('hidden');
-        }
-    }, 4000);
-};
-
-function showInstallUI() {
-    const installBtn = document.getElementById('installPwaBtn');
-    if (installBtn) installBtn.classList.remove('hidden');
-    const installNote = document.getElementById('pwaNote');
-    if (installNote) installNote.classList.remove('hidden');
-    // Hide the manual fallbacks if the automated prompt is available
-    const otherNote = document.getElementById('otherInstallNote');
-    if (otherNote) otherNote.classList.add('hidden');
-}
-
-window.addEventListener('appinstalled', (e) => {
-    deferredPrompt = null;
-    document.getElementById('installPwaBtn')?.classList.add('hidden');
-    document.getElementById('pwaNote')?.classList.add('hidden');
-    document.getElementById('otherInstallNote')?.classList.add('hidden');
-});
-
-async function installPwa() {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    document.getElementById('installPwaBtn').classList.add('hidden');
-}
-
-function updateStartPathStatus() {
-    const hasThi = getLatestLogData('distress_log') !== null;
-    const hasValid = loadSetting('last_validation_date', null) !== null;
-
-    // Expanded Step 1 Logic (Assessment)
-    const sleepSet = loadSetting('reports_sleep_issues', null) !== null;
-    const thoughtSet = getJson('thought_records', []).length > 0;
-    const assessmentComplete = hasThi && sleepSet && thoughtSet;
-
-    // Expanded Step 2 Logic (Validation)
-    const phaseStatus = loadSetting('phase_status', 'Not Verified');
-    const phaseSet = phaseStatus !== 'Not Verified' && !phaseStatus.includes('Error');
-    const engineResults = loadSetting('engine_validation_results', 'Not Performed');
-    const engineSet = engineResults !== 'Not Performed' && !engineResults.includes('[FAIL]');
-    const validationComplete = hasValid && phaseSet && engineSet;
-
-    // Functional Wizard Tracking (Check for saved calibration parameters in localStorage)
-    const pitchSet = loadSetting('notchL', null) !== null;
-    const volumeSet = loadSetting('volL', null) !== null || loadSetting('volMaster', null) !== null;
-    const nwSet = loadSetting('nw', null) !== null;
-
-    const wizardComplete = pitchSet && volumeSet && nwSet;
-    
-    const recommendationsViewed = loadSetting('recommendations_viewed', 'false') === 'true';
-    
-    // Check if any therapy session has been completed (any logged usage minutes > 0)
-    const usageLog = getJson('usage_log', {});
-    const hasCompletedTherapy = Object.values(usageLog).some(minutes => minutes > 0);
-
-    const planViewed = recommendationsViewed && hasCompletedTherapy;
-
-    const setStatus = (id, complete) => {
-        const el = document.querySelector(`#${id} .step-status`);
-        if (el) {
-            el.innerHTML = complete ? '✅' : '○';
-            if (complete) document.getElementById(id).style.borderColor = 'var(--accent)';
-        }
-    };
-
-    setStatus('step-thi', assessmentComplete);
-    setStatus('step-valid', validationComplete);
-    setStatus('step-pitch', wizardComplete);
-    setStatus('step-plan', planViewed);
-
-    // Update Granular Indicators
-    const updateSubStep = (id, set, label) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.style.display = 'flex';
-            el.style.alignItems = 'center';
-            el.style.justifyContent = 'center';
-            el.style.color = set ? 'var(--success)' : 'var(--text-dim)';
-            el.style.fontWeight = set ? 'bold' : 'normal';
-            el.style.opacity = set ? '1' : '0.6';
-            el.innerHTML = `<span style="font-family: monospace; font-size: 1.25em; margin-right: 6px; line-height: 1;">${set ? '✓' : '○'}</span>${label}`;
-        }
-    };
-
-    updateSubStep('astep-1', hasThi, 'THI');
-    updateSubStep('astep-2', sleepSet, 'Sleep');
-    updateSubStep('astep-3', thoughtSet, 'Thought');
-
-    updateSubStep('vstep-1', phaseSet, 'Phase');
-    updateSubStep('vstep-2', engineSet, 'Engine');
-
-    // Update Wizard UI Indicator
-    const steps = [pitchSet, volumeSet, nwSet];
-    const completedCount = steps.filter(Boolean).length;
-    const percent = Math.round((completedCount / steps.length) * 100);
-
-    if (document.getElementById('wizard-bar')) document.getElementById('wizard-bar').style.width = percent + '%';
-    if (document.getElementById('wizard-percent')) document.getElementById('wizard-percent').textContent = percent + '%';
-    
-    const updateWStep = (id, set, label) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.style.color = set ? 'var(--accent)' : 'var(--text-dim)';
-            el.innerHTML = (set ? '✓' : '○') + ' ' + label;
-        }
-    };
-    updateWStep('wstep-1', pitchSet, 'Pitch');
-    updateWStep('wstep-2', volumeSet, 'Volume');
-    updateWStep('wstep-3', nwSet, 'Notch');
-}
-
-function checkMilestoneAchievement() {
-    const progress = getMilestoneProgress();
-    if (progress && progress.state && progress.state[5]) {
-        const btn = document.getElementById('certificateBtn');
-        if (btn) {
-            const alreadyCelebrated = loadSetting('certificate_celebrated', 'false') === 'true';
-            btn.style.display = 'block';
-            if (!alreadyCelebrated) {
-                btn.classList.add('certificate-reveal');
-                saveSetting('certificate_celebrated', 'true');
-                if (window.confetti) {
-                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#00bfa5', '#388e3c', '#ffffff'] });
+                const modal = document.getElementById('onboardingModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.remove();
                 }
+
+                window.location.href = 'index.html?setup=complete'; // Definitive redirection to bypass stuck state
+            } catch (e) {
+                console.error("TTS: Error finishing onboarding:", e);
+                // Fallback: just hide the modal if reload fails
+                document.getElementById('onboardingModal').style.display = 'none';
             }
-        }
-    }
-}
+        };
 
-function showWhatsNew() {
-    const container = document.getElementById('dynamicWhatsNew');
-    if (container && window.REMOTE_CONFIG && window.REMOTE_CONFIG.whatsNew) {
-        let html = `<h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px;">Latest (v${window.REMOTE_CONFIG.version}) - ${window.REMOTE_CONFIG.date || ''}</h3>`;
-        html += `<ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem;">`;
-        window.REMOTE_CONFIG.whatsNew.forEach(item => {
-            html += `<li>${item}</li>`;
-        });
-        html += `</ul>`;
-        container.innerHTML = html;
-    }
-    document.getElementById('whatsNewModal').style.display = 'block';
-}
-
-window.closeWhatsNew = () => {
-    saveSetting('last_seen_version', APP_VERSION);
-    document.getElementById('whatsNewModal').style.display = 'none';
-    
-    // If validation is needed, highlight it after they close the news
-    if (needsValidation()) {
-        document.getElementById('validationBtn').classList.add('highlight-btn');
-    }
-};
-
-window.purgeCacheAndReload = async () => {
-    if (confirm("This will clear the application cache and force a fresh download of the latest version. Your saved therapy settings will not be affected. Proceed?")) {
-        if ('serviceWorker' in navigator) {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            for (let registration of registrations) {
-                await registration.unregister();
+        window.purgeCacheAndReload = async () => {
+            if (confirm("This will clear the application cache and force a fresh download of the latest version. Your saved therapy settings will not be affected. Proceed?")) {
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                    }
+                }
+                if ('caches' in window) {
+                    const names = await caches.keys();
+                    for (let name of names) {
+                        await caches.delete(name);
+                    }
+                }
+                window.location.reload(true);
             }
-        }
-        if ('caches' in window) {
-            const names = await caches.keys();
-            for (let name of names) {
-                await caches.delete(name);
-            }
-        }
-        window.location.reload(true);
-    }
-};
+        };
 
-async function checkForUpdates() {
-    if ('serviceWorker' in navigator) {
-        try {
-            const registration = await navigator.serviceWorker.getRegistration();
-            if (registration) {
-                alert("Checking for updates...");
-                await registration.update();
-                // Give the browser a moment to check for changes
-                setTimeout(() => {
-                    if (!registration.installing && !registration.waiting) {
-                        alert("The suite is up to date (v" + APP_VERSION + ").");
+        window.onload = () => {
+            if (sessionStorage.getItem('tts_splash_shown')) {
+                const splash = document.getElementById('appSplashScreen');
+                if (splash) {
+                    splash.style.display = 'none';
+                    splash.remove();
+                }
+            } else {
+                // Start automatic countdown
+                let timeLeft = 10;
+                const timerEl = document.getElementById('splashTimer');
+                splashInterval = setInterval(() => {
+                    timeLeft--;
+                    if (timeLeft <= 0) {
+                        dismissSplashScreen();
                     }
                 }, 1000);
             }
-        } catch (err) {
-            alert("Update check failed. Please ensure you are online.");
+
+            loadCardOrder();
+            initNav();
+            initDragAndDrop();
+
+            // Initialize dashboard input listeners
+            const goalEl = document.getElementById('goalInput');
+            if (goalEl) goalEl.oninput = (e) => {
+                saveSetting('daily_goal', e.target.value);
+                renderStats();
+            };
+
+            const emailEl = document.getElementById('audioEmail');
+            if (emailEl) emailEl.oninput = (e) => {
+                saveSetting('audiologist_email', e.target.value);
+                applyEmailVisibility();
+            };
+
+            const clinicNameEl = document.getElementById('clinicName');
+            if (clinicNameEl) clinicNameEl.oninput = (e) => {
+                saveSetting('clinic_name', e.target.value);
+            };
+
+            const clinicLogoEl = document.getElementById('clinicLogo');
+            if (clinicLogoEl) clinicLogoEl.oninput = (e) => {
+                saveSetting('clinic_logo', e.target.value);
+            };
+
+            const keyEl = document.getElementById('geminiKey');
+            if (keyEl) keyEl.oninput = (e) => {
+                localStorage.removeItem('tts_gemini_api_key_encrypted');
+                localStorage.removeItem('tts_gemini_api_key_salt');
+                saveSetting('gemini_api_key', e.target.value);
+                activeSessionKey = e.target.value;
+                initAI();
+                loadDailyMotivation();
+            };
+
+            tinnitusAI.init(); // Initialize AI manager after DOM is ready and SDK script is loaded
+            updateStartPathStatus();
+
+            // Register Service Worker for PWA functionality
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js')
+                    .catch(err => console.error('PWA: ServiceWorker registration failed', err));
+
+                // Handle automatic reload when a new service worker takes over
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    window.location.reload();
+                });
+            }
+
+            // Onboarding Wizard Initialization
+            const step = parseInt(loadSetting('onboarding_step', 0));
+            if (step < 7) {
+                showOnboardingStep(step);
+            } else {
+                // Version tracking for returning users
+                const lastSeen = loadSetting('last_seen_version', '0.0.0');
+                if (lastSeen !== APP_VERSION) {
+                    showWhatsNew();
+                }
+            }
+
+            loadDailyMotivation(); // Load daily motivation on page load
+            document.getElementById('goalInput').value = loadSetting('daily_goal', 20);
+            document.getElementById('audioEmail').value = loadSetting('audiologist_email', '');
+            document.getElementById('clinicName').value = loadSetting('clinic_name', '');
+            document.getElementById('clinicLogo').value = loadSetting('clinic_logo', '');
+
+            // Highlight validation button if calibration was completed
+            const phaseStatus = loadSetting('phase_status', 'Not Verified');
+            if (phaseStatus !== 'Not Verified' || needsValidation()) {
+                document.getElementById('validationBtn').classList.add('highlight-btn');
+            }
+
+            renderStats();
+            checkTHIReminder();
+            checkMilestoneAchievement();
+
+            // Detect iOS and show manual installation instructions
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+            if (isIOS && !isStandalone) {
+                document.getElementById('iosInstallNote').classList.remove('hidden');
+            }
+
+            // Fallback for browsers that don't support the automated prompt - wait a few seconds to avoid jitter
+            // This explains to the user how to "download" the app manually if the button doesn't appear.
+            setTimeout(() => {
+                if (!isIOS && !isStandalone && !deferredPrompt) {
+                    document.getElementById('otherInstallNote').classList.remove('hidden');
+                }
+            }, 4000);
+        };
+
+        function showInstallUI() {
+            const installBtn = document.getElementById('installPwaBtn');
+            if (installBtn) installBtn.classList.remove('hidden');
+            const installNote = document.getElementById('pwaNote');
+            if (installNote) installNote.classList.remove('hidden');
+            // Hide the manual fallbacks if the automated prompt is available
+            const otherNote = document.getElementById('otherInstallNote');
+            if (otherNote) otherNote.classList.add('hidden');
         }
-    }
-}
 
-async function setGeminiKeyWithPIN() {
-    const keyInput = document.getElementById('geminiKey');
-    const pinInput = document.getElementById('geminiPin');
-    const statusEl = document.getElementById('geminiTestStatus');
+        window.addEventListener('appinstalled', (e) => {
+            deferredPrompt = null;
+            document.getElementById('installPwaBtn')?.classList.add('hidden');
+            document.getElementById('pwaNote')?.classList.add('hidden');
+            document.getElementById('otherInstallNote')?.classList.add('hidden');
+        });
 
-    const apiKey = keyInput.value.trim();
-    const pin = pinInput.value.trim();
-
-    if (!apiKey) {
-        statusEl.textContent = 'Please enter your Gemini API key first.';
-        statusEl.style.color = '#ff9800';
-        return;
-    }
-    if (!pin) {
-        statusEl.textContent = 'Please enter a PIN to encrypt your key.';
-        statusEl.style.color = '#ff9800';
-        return;
-    }
-    if (pin.length < 4) {
-        statusEl.textContent = 'PIN should be at least 4 characters long.';
-        statusEl.style.color = '#ff9800';
-        return;
-    }
-
-    statusEl.textContent = 'Encrypting key...';
-    statusEl.style.color = 'var(--text-dim)';
-
-    try {
-        const { pinPath, rcPath, recoveryCode } = await encryptGeminiKey(apiKey, pin);
-        
-        // Save standard PIN metadata
-        saveSetting('gemini_api_key_encrypted', pinPath.encryptedKey);
-        saveSetting('gemini_api_key_salt', pinPath.salt);
-        saveSetting('gemini_api_key_iv', pinPath.iv);
-
-        // Save Recovery Code metadata
-        saveSetting('gemini_api_key_rc_encrypted', rcPath.encryptedKey);
-        saveSetting('gemini_api_key_rc_salt', rcPath.salt);
-        saveSetting('gemini_api_key_rc_iv', rcPath.iv);
-        
-        // Clear plain text key and PIN from UI and localStorage
-        localStorage.removeItem('tts_gemini_api_key'); // Remove plain text key
-        keyInput.value = '';
-        pinInput.value = '';
-        decryptedGeminiKey = null; // Clear in-memory key
-        initAI(); // Re-initialize AI to reflect locked state
-
-        statusEl.textContent = '✅ Key encrypted! AI features are now locked.';
-        statusEl.style.color = '#4CAF50';
-
-        alert("🔑 SECURITY SETUP COMPLETE\n\nYour API key is now encrypted locally.\n\nYOUR RECOVERY CODE: " + recoveryCode + "\n\nStore this code safely! If you forget your PIN, you can enter this code in the PIN field to regain access.");
-
-        loadDailyMotivation(); // Update dashboard card
-    } catch (error) {
-        console.error("Encryption failed:", error);
-        statusEl.textContent = '❌ Encryption failed. Check console for details.';
-        statusEl.style.color = '#f44336';
-    }
-}
-
-async function unlockGeminiKeyWithPIN() {
-    const pinInput = document.getElementById('geminiPin');
-    const statusEl = document.getElementById('geminiTestStatus');
-    const pin = pinInput.value.trim();
-
-    if (!pin) {
-        statusEl.textContent = 'Please enter your PIN to unlock AI features.';
-        statusEl.style.color = '#ff9800';
-        return;
-    }
-
-    statusEl.textContent = 'Attempting to unlock AI...';
-    statusEl.style.color = 'var(--text-dim)';
-
-    try {
-        const key = await decryptGeminiKey(pin);
-        if (key) {
-            statusEl.textContent = '✅ AI features unlocked for this session!';
-            statusEl.style.color = '#4CAF50';
-            document.getElementById('geminiKey').value = key; // Show decrypted key in field
-            loadDailyMotivation(); // Update dashboard card
-        } else {
-            statusEl.textContent = '❌ Incorrect PIN or decryption failed.';
-            statusEl.style.color = '#f44336';
-            activeSessionKey = null; // Ensure key is cleared if decryption fails
-            initAI();
+        async function installPwa() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            document.getElementById('installPwaBtn').classList.add('hidden');
         }
-    } catch (error) {
-        console.error("Unlock failed:", error);
-        statusEl.textContent = '❌ An error occurred during unlock. Check console.';
-        statusEl.style.color = '#f44336';
-        activeSessionKey = null;
-        initAI();
-    }
-}
-// Note: Ensure all oninput listeners are inside the window.onload block above.
 
-window.resetAISettings = () => {
-    const msg = "FORGOT PIN RECOVERY\n\n" +
+        function updateStartPathStatus() {
+            const hasThi = getLatestLogData('distress_log') !== null;
+            const hasValid = loadSetting('last_validation_date', null) !== null;
+
+            // Expanded Step 1 Logic (Assessment)
+            const sleepSet = loadSetting('reports_sleep_issues', null) !== null;
+            const thoughtSet = getJson('thought_records', []).length > 0;
+            const assessmentComplete = hasThi && sleepSet && thoughtSet;
+
+            // Expanded Step 2 Logic (Validation)
+            const phaseStatus = loadSetting('phase_status', 'Not Verified');
+            const phaseSet = phaseStatus !== 'Not Verified' && !phaseStatus.includes('Error');
+            const engineResults = loadSetting('engine_validation_results', 'Not Performed');
+            const engineSet = engineResults !== 'Not Performed' && !engineResults.includes('[FAIL]');
+            const validationComplete = hasValid && phaseSet && engineSet;
+
+            // Functional Wizard Tracking (Check for saved calibration parameters in localStorage)
+            const pitchSet = loadSetting('notchL', null) !== null;
+            const volumeSet = loadSetting('volL', null) !== null || loadSetting('volMaster', null) !== null;
+            const nwSet = loadSetting('nw', null) !== null;
+
+            const wizardComplete = pitchSet && volumeSet && nwSet;
+
+            const recommendationsViewed = loadSetting('recommendations_viewed', 'false') === 'true';
+
+            // Check if any therapy session has been completed (any logged usage minutes > 0)
+            const usageLog = getJson('usage_log', {});
+            const hasCompletedTherapy = Object.values(usageLog).some(minutes => minutes > 0);
+
+            const planViewed = recommendationsViewed && hasCompletedTherapy;
+
+            const setStatus = (id, complete) => {
+                const el = document.querySelector(`#${id} .step-status`);
+                if (el) {
+                    el.innerHTML = complete ? '✅' : '○';
+                    if (complete) document.getElementById(id).style.borderColor = 'var(--accent)';
+                }
+            };
+
+            setStatus('step-thi', assessmentComplete);
+            setStatus('step-valid', validationComplete);
+            setStatus('step-pitch', wizardComplete);
+            setStatus('step-plan', planViewed);
+
+            // Update Granular Indicators
+            const updateSubStep = (id, set, label) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = 'flex';
+                    el.style.alignItems = 'center';
+                    el.style.justifyContent = 'center';
+                    el.style.color = set ? 'var(--success)' : 'var(--text-dim)';
+                    el.style.fontWeight = set ? 'bold' : 'normal';
+                    el.style.opacity = set ? '1' : '0.6';
+                    el.innerHTML = `<span style="font-family: monospace; font-size: 1.25em; margin-right: 6px; line-height: 1;">${set ? '✓' : '○'}</span>${label}`;
+                }
+            };
+
+            updateSubStep('astep-1', hasThi, 'THI');
+            updateSubStep('astep-2', sleepSet, 'Sleep');
+            updateSubStep('astep-3', thoughtSet, 'Thought');
+
+            updateSubStep('vstep-1', phaseSet, 'Phase');
+            updateSubStep('vstep-2', engineSet, 'Engine');
+
+            // Update Wizard UI Indicator
+            const steps = [pitchSet, volumeSet, nwSet];
+            const completedCount = steps.filter(Boolean).length;
+            const percent = Math.round((completedCount / steps.length) * 100);
+
+            if (document.getElementById('wizard-bar')) document.getElementById('wizard-bar').style.width = percent + '%';
+            if (document.getElementById('wizard-percent')) document.getElementById('wizard-percent').textContent = percent + '%';
+
+            const updateWStep = (id, set, label) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.color = set ? 'var(--accent)' : 'var(--text-dim)';
+                    el.innerHTML = (set ? '✓' : '○') + ' ' + label;
+                }
+            };
+            updateWStep('wstep-1', pitchSet, 'Pitch');
+            updateWStep('wstep-2', volumeSet, 'Volume');
+            updateWStep('wstep-3', nwSet, 'Notch');
+        }
+
+        function checkMilestoneAchievement() {
+            const progress = getMilestoneProgress();
+            if (progress && progress.state && progress.state[5]) {
+                const btn = document.getElementById('certificateBtn');
+                if (btn) {
+                    const alreadyCelebrated = loadSetting('certificate_celebrated', 'false') === 'true';
+                    btn.style.display = 'block';
+                    if (!alreadyCelebrated) {
+                        btn.classList.add('certificate-reveal');
+                        saveSetting('certificate_celebrated', 'true');
+                        if (window.confetti) {
+                            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#00bfa5', '#388e3c', '#ffffff'] });
+                        }
+                    }
+                }
+            }
+        }
+
+        function showWhatsNew() {
+            const container = document.getElementById('dynamicWhatsNew');
+            if (container && window.REMOTE_CONFIG && window.REMOTE_CONFIG.whatsNew) {
+                let html = `<h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px;">Latest (v${window.REMOTE_CONFIG.version}) - ${window.REMOTE_CONFIG.date || ''}</h3>`;
+                html += `<ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem;">`;
+                window.REMOTE_CONFIG.whatsNew.forEach(item => {
+                    html += `<li>${item}</li>`;
+                });
+                html += `</ul>`;
+                container.innerHTML = html;
+            }
+            document.getElementById('whatsNewModal').style.display = 'block';
+        }
+
+        window.closeWhatsNew = () => {
+            saveSetting('last_seen_version', APP_VERSION);
+            document.getElementById('whatsNewModal').style.display = 'none';
+
+            // If validation is needed, highlight it after they close the news
+            if (needsValidation()) {
+                document.getElementById('validationBtn').classList.add('highlight-btn');
+            }
+        };
+
+        window.purgeCacheAndReload = async () => {
+            if (confirm("This will clear the application cache and force a fresh download of the latest version. Your saved therapy settings will not be affected. Proceed?")) {
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                    }
+                }
+                if ('caches' in window) {
+                    const names = await caches.keys();
+                    for (let name of names) {
+                        await caches.delete(name);
+                    }
+                }
+                window.location.reload(true);
+            }
+        };
+
+        async function checkForUpdates() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        alert("Checking for updates...");
+                        await registration.update();
+                        // Give the browser a moment to check for changes
+                        setTimeout(() => {
+                            if (!registration.installing && !registration.waiting) {
+                                alert("The suite is up to date (v" + APP_VERSION + ").");
+                            }
+                        }, 1000);
+                    }
+                } catch (err) {
+                    alert("Update check failed. Please ensure you are online.");
+                }
+            }
+        }
+
+        async function setGeminiKeyWithPIN() {
+            const keyInput = document.getElementById('geminiKey');
+            const pinInput = document.getElementById('geminiPin');
+            const statusEl = document.getElementById('geminiTestStatus');
+
+            const apiKey = keyInput.value.trim();
+            const pin = pinInput.value.trim();
+
+            if (!apiKey) {
+                statusEl.textContent = 'Please enter your Gemini API key first.';
+                statusEl.style.color = '#ff9800';
+                return;
+            }
+            if (!pin) {
+                statusEl.textContent = 'Please enter a PIN to encrypt your key.';
+                statusEl.style.color = '#ff9800';
+                return;
+            }
+            if (pin.length < 4) {
+                statusEl.textContent = 'PIN should be at least 4 characters long.';
+                statusEl.style.color = '#ff9800';
+                return;
+            }
+
+            statusEl.textContent = 'Encrypting key...';
+            statusEl.style.color = 'var(--text-dim)';
+
+            try {
+                const { pinPath, rcPath, recoveryCode } = await encryptGeminiKey(apiKey, pin);
+
+                // Save standard PIN metadata
+                saveSetting('gemini_api_key_encrypted', pinPath.encryptedKey);
+                saveSetting('gemini_api_key_salt', pinPath.salt);
+                saveSetting('gemini_api_key_iv', pinPath.iv);
+
+                // Save Recovery Code metadata
+                saveSetting('gemini_api_key_rc_encrypted', rcPath.encryptedKey);
+                saveSetting('gemini_api_key_rc_salt', rcPath.salt);
+                saveSetting('gemini_api_key_rc_iv', rcPath.iv);
+
+                // Clear plain text key and PIN from UI and localStorage
+                localStorage.removeItem('tts_gemini_api_key'); // Remove plain text key
+                keyInput.value = '';
+                pinInput.value = '';
+                decryptedGeminiKey = null; // Clear in-memory key
+                initAI(); // Re-initialize AI to reflect locked state
+
+                statusEl.textContent = '✅ Key encrypted! AI features are now locked.';
+                statusEl.style.color = '#4CAF50';
+
+                alert("🔑 SECURITY SETUP COMPLETE\n\nYour API key is now encrypted locally.\n\nYOUR RECOVERY CODE: " + recoveryCode + "\n\nStore this code safely! If you forget your PIN, you can enter this code in the PIN field to regain access.");
+
+                loadDailyMotivation(); // Update dashboard card
+            } catch (error) {
+                console.error("Encryption failed:", error);
+                statusEl.textContent = '❌ Encryption failed. Check console for details.';
+                statusEl.style.color = '#f44336';
+            }
+        }
+
+        async function unlockGeminiKeyWithPIN() {
+            const pinInput = document.getElementById('geminiPin');
+            const statusEl = document.getElementById('geminiTestStatus');
+            const pin = pinInput.value.trim();
+
+            if (!pin) {
+                statusEl.textContent = 'Please enter your PIN to unlock AI features.';
+                statusEl.style.color = '#ff9800';
+                return;
+            }
+
+            statusEl.textContent = 'Attempting to unlock AI...';
+            statusEl.style.color = 'var(--text-dim)';
+
+            try {
+                const key = await decryptGeminiKey(pin);
+                if (key) {
+                    statusEl.textContent = '✅ AI features unlocked for this session!';
+                    statusEl.style.color = '#4CAF50';
+                    document.getElementById('geminiKey').value = key; // Show decrypted key in field
+                    loadDailyMotivation(); // Update dashboard card
+                } else {
+                    statusEl.textContent = '❌ Incorrect PIN or decryption failed.';
+                    statusEl.style.color = '#f44336';
+                    activeSessionKey = null; // Ensure key is cleared if decryption fails
+                    initAI();
+                }
+            } catch (error) {
+                console.error("Unlock failed:", error);
+                statusEl.textContent = '❌ An error occurred during unlock. Check console.';
+                statusEl.style.color = '#f44336';
+                activeSessionKey = null;
+                initAI();
+            }
+        }
+        // Note: Ensure all oninput listeners are inside the window.onload block above.
+
+        window.resetAISettings = () => {
+            const msg = "FORGOT PIN RECOVERY\n\n" +
                 "Without your PIN, you can only unlock AI features using your hexadecimal Recovery Code.\n\n" +
                 "If you also lost your Recovery Code, the encrypted API key is permanently lost. " +
                 "You will need to clear your AI settings and re-enter your key from Google AI Studio.\n\n" +
                 "Would you like to reset your AI settings now?";
-    
-    if (confirm(msg)) {
-        resetAISettings();
-    }
-};
-window.resetAISettings = () => {
-    if (confirm("Clear your Gemini API key? This will disable AI features until a new key is provided.")) {
-        localStorage.removeItem('tts_gemini_api_key');
-        localStorage.removeItem('tts_gemini_api_key_encrypted');
-        localStorage.removeItem('tts_gemini_api_key_salt');
-        localStorage.removeItem('tts_gemini_api_key_iv');
-        localStorage.removeItem('tts_gemini_api_key_rc_encrypted');
-        localStorage.removeItem('tts_gemini_api_key_rc_salt');
-        localStorage.removeItem('tts_gemini_api_key_rc_iv');
-        const keyInput = document.getElementById('geminiKey');
-        if (keyInput) keyInput.value = '';
-        const pinInput = document.getElementById('geminiPin');
-        if (pinInput) pinInput.value = '';
-        
-        activeSessionKey = null; // Clear in-memory key
-        initAI();
-        loadDailyMotivation();
-        
-        const statusEl = document.getElementById('geminiTestStatus');
-        if (statusEl) {
-            statusEl.textContent = 'API Key cleared.';
+
+            if (confirm(msg)) {
+                resetAISettings();
+            }
+        };
+        window.resetAISettings = () => {
+            if (confirm("Clear your Gemini API key? This will disable AI features until a new key is provided.")) {
+                localStorage.removeItem('tts_gemini_api_key');
+                localStorage.removeItem('tts_gemini_api_key_encrypted');
+                localStorage.removeItem('tts_gemini_api_key_salt');
+                localStorage.removeItem('tts_gemini_api_key_iv');
+                localStorage.removeItem('tts_gemini_api_key_rc_encrypted');
+                localStorage.removeItem('tts_gemini_api_key_rc_salt');
+                localStorage.removeItem('tts_gemini_api_key_rc_iv');
+                const keyInput = document.getElementById('geminiKey');
+                if (keyInput) keyInput.value = '';
+                const pinInput = document.getElementById('geminiPin');
+                if (pinInput) pinInput.value = '';
+
+                activeSessionKey = null; // Clear in-memory key
+                initAI();
+                loadDailyMotivation();
+
+                const statusEl = document.getElementById('geminiTestStatus');
+                if (statusEl) {
+                    statusEl.textContent = 'API Key cleared.';
+                    statusEl.style.color = 'var(--text-dim)';
+                }
+            }
+        };
+
+        async function testGeminiConnectionUI() {
+            const statusEl = document.getElementById('geminiTestStatus');
+            const testBtn = document.querySelector('#card-settings button[onclick="testGeminiConnectionUI()"]');
+
+            statusEl.textContent = 'Testing connection...';
             statusEl.style.color = 'var(--text-dim)';
+            testBtn.disabled = true;
+
+            // Ensure AI is initialized with the latest key from the input field
+            // initAI() is called by decryptGeminiKey or geminiKey.oninput
+
+            const result = await performGeminiTest(); // Call the function from storage.js
+
+            statusEl.textContent = (result.success ? '✅ ' : '❌ ') + result.message;
+            statusEl.style.color = result.success ? '#4CAF50' : '#f44336'; // Green for success, Red for failure
+
+            testBtn.disabled = false;
         }
-    }
-};
 
-async function testGeminiConnectionUI() {
-    const statusEl = document.getElementById('geminiTestStatus');
-    const testBtn = document.querySelector('#card-settings button[onclick="testGeminiConnectionUI()"]');
-    
-    statusEl.textContent = 'Testing connection...';
-    statusEl.style.color = 'var(--text-dim)';
-    testBtn.disabled = true;
+        window.resetPreferences = () => {
+            if (confirm("This will re-enable all clinical pre-flight checks and feature highlights. Continue?")) {
+                localStorage.removeItem('tts_skip_preflight');
+                localStorage.removeItem('tts_last_seen_version');
+                alert("Warnings and preferences reset.");
+                location.reload();
+            }
+        };
 
-    // Ensure AI is initialized with the latest key from the input field
-    // initAI() is called by decryptGeminiKey or geminiKey.oninput
-
-    const result = await performGeminiTest(); // Call the function from storage.js
-
-    statusEl.textContent = (result.success ? '✅ ' : '❌ ') + result.message;
-    statusEl.style.color = result.success ? '#4CAF50' : '#f44336'; // Green for success, Red for failure
-    
-    testBtn.disabled = false;
-}
-
-window.resetPreferences = () => {
-    if (confirm("This will re-enable all clinical pre-flight checks and feature highlights. Continue?")) {
-        localStorage.removeItem('tts_skip_preflight');
-        localStorage.removeItem('tts_last_seen_version');
-        alert("Warnings and preferences reset.");
-        location.reload();
-    }
-};
-
-window.factoryReset = (dryRun = false) => {
-    const actionDesc = dryRun ? "[DRY RUN] Simulate deleting" : "permanently delete";
-    if (confirm(`DANGER: This will ${actionDesc} ALL data including assessment history, therapy logs, and settings. This action is irreversible. Proceed?`)) {
-        if (confirm("FINAL WARNING: All clinical progress and AI configuration will be lost. Ensure you have a 'Backup Data' JSON file if you wish to keep your records. Continue?")) {
-            const input = prompt(`Final Safety Check: Type 'RESET' (all caps) to confirm ${dryRun ? 'dry run simulation' : 'factory reset'}.`);
-            if (input === 'RESET') {
-                (async () => {
-                    console.log(`TTS: Initiating ${dryRun ? 'Dry Run' : 'exhaustive'} Factory Reset...`);
-                    try {
-                        // 1. Unregister Service Workers to stop background sync/caching
-                        if ('serviceWorker' in navigator) {
-                            const registrations = await navigator.serviceWorker.getRegistrations();
-                            for (let reg of registrations) {
-                                console.log(`[DryRun] Would unregister SW: ${reg.active ? reg.active.scriptURL : 'unknown'}`);
-                                if (!dryRun) await reg.unregister();
+        window.factoryReset = (dryRun = false) => {
+            const actionDesc = dryRun ? "[DRY RUN] Simulate deleting" : "permanently delete";
+            if (confirm(`DANGER: This will ${actionDesc} ALL data including assessment history, therapy logs, and settings. This action is irreversible. Proceed?`)) {
+                if (confirm("FINAL WARNING: All clinical progress and AI configuration will be lost. Ensure you have a 'Backup Data' JSON file if you wish to keep your records. Continue?")) {
+                    const input = prompt(`Final Safety Check: Type 'RESET' (all caps) to confirm ${dryRun ? 'dry run simulation' : 'factory reset'}.`);
+                    if (input === 'RESET') {
+                        (async () => {
+                            console.log(`TTS: Initiating ${dryRun ? 'Dry Run' : 'exhaustive'} Factory Reset...`);
+                            try {
+                                // 1. Unregister Service Workers to stop background sync/caching
+                                if ('serviceWorker' in navigator) {
+                                    const registrations = await navigator.serviceWorker.getRegistrations();
+                                    for (let reg of registrations) {
+                                        console.log(`[DryRun] Would unregister SW: ${reg.active ? reg.active.scriptURL : 'unknown'}`);
+                                        if (!dryRun) await reg.unregister();
+                                    }
+                                }
+                                // 2. Clear all Cache Storage (PWA Assets)
+                                if ('caches' in window) {
+                                    const names = await caches.keys();
+                                    for (let name of names) {
+                                        console.log(`[DryRun] Would delete cache bucket: ${name}`);
+                                        if (!dryRun) await caches.delete(name);
+                                    }
+                                }
+                                // 3. Clear Browser Storage
+                                if (dryRun) {
+                                    console.log(`[DryRun] Would clear localStorage (${localStorage.length} items)`);
+                                    console.log(`[DryRun] Would clear sessionStorage (${sessionStorage.length} items)`);
+                                } else {
+                                    localStorage.clear();
+                                    sessionStorage.clear();
+                                    console.log("TTS: Storage and caches purged.");
+                                }
+                            } catch (e) {
+                                console.error("TTS: Factory Reset error:", e);
                             }
-                        }
-                        // 2. Clear all Cache Storage (PWA Assets)
-                        if ('caches' in window) {
-                            const names = await caches.keys();
-                            for (let name of names) {
-                                console.log(`[DryRun] Would delete cache bucket: ${name}`);
-                                if (!dryRun) await caches.delete(name);
+
+                            if (dryRun) {
+                                alert("Dry run complete. Check console for details. No data was changed.");
+                            } else {
+                                alert("System has been fully reset. The suite will now restart.");
+                                // Definitive redirection with cache-buster to root
+                                window.location.replace('index.html?freset=' + Date.now());
                             }
-                        }
-                        // 3. Clear Browser Storage
-                        if (dryRun) {
-                            console.log(`[DryRun] Would clear localStorage (${localStorage.length} items)`);
-                            console.log(`[DryRun] Would clear sessionStorage (${sessionStorage.length} items)`);
-                        } else {
-                            localStorage.clear();
-                            sessionStorage.clear();
-                            console.log("TTS: Storage and caches purged.");
-                        }
-                    } catch (e) {
-                        console.error("TTS: Factory Reset error:", e);
-                    }
-                    
-                    if (dryRun) {
-                        alert("Dry run complete. Check console for details. No data was changed.");
+                        })();
                     } else {
-                        alert("System has been fully reset. The suite will now restart.");
-                        // Definitive redirection with cache-buster to root
-                        window.location.replace('index.html?freset=' + Date.now());
+                        alert("Reset cancelled. No data was changed.");
                     }
-                })();
-            } else {
-                alert("Reset cancelled. No data was changed.");
+                }
+            }
+        };
+
+        window.resetLayout = () => {
+            if (confirm("This will reset the dashboard card order to its default layout. Continue?")) {
+                localStorage.removeItem('tts_card_order');
+                alert("Layout reset. Reloading...");
+                location.reload();
+            }
+        };
+
+        function initDragAndDrop() {
+            const grid = document.querySelector('.grid');
+            const cards = grid.querySelectorAll('.card');
+
+            cards.forEach(card => {
+                card.addEventListener('dragstart', () => card.classList.add('dragging'));
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging');
+                    saveCardOrder();
+                });
+            });
+
+            grid.addEventListener('dragover', e => {
+                e.preventDefault();
+                const dragging = document.querySelector('.dragging');
+                const afterElement = getDragAfterElement(grid, e.clientX, e.clientY);
+                if (afterElement == null) {
+                    grid.appendChild(dragging);
+                } else {
+                    grid.insertBefore(dragging, afterElement);
+                }
+            });
+        }
+
+        function getDragAfterElement(container, x, y) {
+            const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function saveCardOrder() {
+            const order = [...document.querySelectorAll('.grid .card')].map(c => c.id);
+            saveSetting('card_order', JSON.stringify(order));
+        }
+
+        function loadCardOrder() {
+            const saved = loadSetting('card_order', null);
+            if (!saved) return;
+            const order = JSON.parse(saved);
+            const grid = document.querySelector('.grid');
+            order.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) grid.appendChild(el);
+            });
+        }
+
+        function showOnboardingStep(step) {
+            document.getElementById('onboardingModal').style.display = 'block';
+
+            // Update progress bar
+            const progress = ((step + 1) / 7) * 100;
+            const progressBar = document.getElementById('onboardingProgressBar');
+            if (progressBar) progressBar.style.width = progress + '%';
+
+            for (let i = 0; i <= 6; i++) {
+                const el = document.getElementById(`onboarding-${i}`);
+                if (el) el.style.display = (i === step) ? 'block' : 'none';
             }
         }
-    }
-};
 
-window.resetLayout = () => {
-    if (confirm("This will reset the dashboard card order to its default layout. Continue?")) {
-        localStorage.removeItem('tts_card_order');
-        alert("Layout reset. Reloading...");
-        location.reload();
-    }
-};
+        window.nextOnboardingStep = (step) => {
+            saveSetting('onboarding_step', step);
+            showOnboardingStep(step);
+        };
 
-function initDragAndDrop() {
-    const grid = document.querySelector('.grid');
-    const cards = grid.querySelectorAll('.card');
+        function renderStats() {
+            const container = document.getElementById('statsContainer');
+            container.innerHTML = '';
+            const log = JSON.parse(localStorage.getItem('tts_usage_log') || '{}');
+            const goal = loadSetting('daily_goal', 20);
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const now = new Date();
+            let total = 0;
 
-    cards.forEach(card => {
-        card.addEventListener('dragstart', () => card.classList.add('dragging'));
-        card.addEventListener('dragend', () => {
-            card.classList.remove('dragging');
-            saveCardOrder();
-        });
-    });
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(now.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                const mins = log[dateStr] || 0;
+                total += mins;
 
-    grid.addEventListener('dragover', e => {
-        e.preventDefault();
-        const dragging = document.querySelector('.dragging');
-        const afterElement = getDragAfterElement(grid, e.clientX, e.clientY);
-        if (afterElement == null) {
-            grid.appendChild(dragging);
-        } else {
-            grid.insertBefore(dragging, afterElement);
-        }
-    });
-}
-
-function getDragAfterElement(container, x, y) {
-    const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
-    return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-        if (offset < 0 && offset > closest.offset) {
-            return { offset: offset, element: child };
-        } else {
-            return closest;
-        }
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
-}
-
-function saveCardOrder() {
-    const order = [...document.querySelectorAll('.grid .card')].map(c => c.id);
-    saveSetting('card_order', JSON.stringify(order));
-}
-
-function loadCardOrder() {
-    const saved = loadSetting('card_order', null);
-    if (!saved) return;
-    const order = JSON.parse(saved);
-    const grid = document.querySelector('.grid');
-    order.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) grid.appendChild(el);
-    });
-}
-
-function showOnboardingStep(step) {
-    document.getElementById('onboardingModal').style.display = 'block';
-
-    // Update progress bar
-    const progress = ((step + 1) / 7) * 100;
-    const progressBar = document.getElementById('onboardingProgressBar');
-    if (progressBar) progressBar.style.width = progress + '%';
-
-    for (let i = 0; i <= 6; i++) {
-        const el = document.getElementById(`onboarding-${i}`);
-        if (el) el.style.display = (i === step) ? 'block' : 'none';
-    }
-}
-
-window.nextOnboardingStep = (step) => {
-    saveSetting('onboarding_step', step);
-    showOnboardingStep(step);
-};
-
-function renderStats() {
-    const container = document.getElementById('statsContainer');
-    container.innerHTML = '';
-    const log = JSON.parse(localStorage.getItem('tts_usage_log') || '{}');
-    const goal = loadSetting('daily_goal', 20);
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const now = new Date();
-    let total = 0;
-
-    for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(now.getDate() - i);
-        const dateStr = d.toISOString().split('T')[0];
-        const mins = log[dateStr] || 0;
-        total += mins;
-
-        const height = Math.min(100, (mins / goal) * 100);
-        container.innerHTML += `
+                const height = Math.min(100, (mins / goal) * 100);
+                container.innerHTML += `
             <div class="stat-col">
                 <div class="stat-bar-wrap"><div class="stat-bar" style="height:${height}%"></div></div>
                 <div class="stat-day">${days[d.getDay()]}</div>
             </div>`;
-    }
-    document.getElementById('weeklyTotal').textContent = `Total: ${Math.round(total)} mins this week`;
-}
-
-function checkTHIReminder() {
-    const lastDate = getLastTHIAssessmentDate();
-    if (!lastDate) return;
-    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-    if (Date.now() - lastDate.getTime() > thirtyDays) {
-        const card = document.getElementById('thiReminderCard');
-        if (card) card.style.display = 'block';
-    }
-}
-
-async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalTestStatus', meterId = 'modalMeter') {
-    const keyInput = document.getElementById(inputId);
-    const key = keyInput ? keyInput.value.trim() : '';
-    const status = document.getElementById(statusId);
-    const meter = document.getElementById(meterId);
-    const bar = document.getElementById(meterId + 'Bar');
-
-    if (!key) {
-        if (status) {
-            status.textContent = "Please paste a key.";
-            status.style.color = "#ef5350";
-        }
-        return false;
-    }
-
-    if (status) {
-        status.textContent = "Testing connection...";
-        status.style.color = "var(--text-dim)";
-    }
-    
-    if (meter) {
-        meter.style.display = 'block';
-        if (bar) {
-            bar.style.width = '20%';
-            bar.style.backgroundColor = 'var(--text-dim)';
-        }
-    }
-
-    // Clear any lingering encrypted state to ensure the new plain-text key takes precedence
-    localStorage.removeItem('tts_gemini_api_key_encrypted');
-    localStorage.removeItem('tts_gemini_api_key_salt');
-    localStorage.removeItem('tts_gemini_api_key_iv');
-    localStorage.removeItem('tts_gemini_api_key_rc_encrypted');
-    localStorage.removeItem('tts_gemini_api_key_rc_salt');
-    localStorage.removeItem('tts_gemini_api_key_rc_iv');
-
-    saveSetting('gemini_api_key', key);
-    activeSessionKey = key; // Update session memory immediately
-    initAI();
-    
-    const startTime = performance.now();
-    const result = await performGeminiTest();
-    const duration = performance.now() - startTime;
-
-    if (result.success) {
-        let width = '15%', color = '#ef5350', label = "Poor";
-        if (duration < 1200) { width = '100%'; color = '#4CAF50'; label = "Excellent"; }
-        else if (duration < 2500) { width = '66%'; color = '#8bc34a'; label = "Good"; }
-        else if (duration < 5000) { width = '40%'; color = '#ff9800'; label = "Fair"; }
-
-        if (bar) {
-            bar.style.width = width;
-            bar.style.backgroundColor = color;
+            }
+            document.getElementById('weeklyTotal').textContent = `Total: ${Math.round(total)} mins this week`;
         }
 
-        if (status) {
-            status.textContent = `✅ Connection: ${label} (${Math.round(duration)}ms)`;
-            status.style.color = "#4CAF50";
+        function checkTHIReminder() {
+            const lastDate = getLastTHIAssessmentDate();
+            if (!lastDate) return;
+            const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+            if (Date.now() - lastDate.getTime() > thirtyDays) {
+                const card = document.getElementById('thiReminderCard');
+                if (card) card.style.display = 'block';
+            }
         }
 
-        setTimeout(() => { closeAISetup(); if(typeof loadDailyMotivation === 'function') loadDailyMotivation(); }, 1500);
-        return true;
-    } else {
-        if (status) {
-            status.textContent = "❌ " + result.message;
-            status.style.color = "#ef5350";
+        async function saveAIKeyFromModal(inputId = 'modalGeminiKey', statusId = 'modalTestStatus', meterId = 'modalMeter') {
+            const keyInput = document.getElementById(inputId);
+            const key = keyInput ? keyInput.value.trim() : '';
+            const status = document.getElementById(statusId);
+            const meter = document.getElementById(meterId);
+            const bar = document.getElementById(meterId + 'Bar');
+
+            if (!key) {
+                if (status) {
+                    status.textContent = "Please paste a key.";
+                    status.style.color = "#ef5350";
+                }
+                return false;
+            }
+
+            if (status) {
+                status.textContent = "Testing connection...";
+                status.style.color = "var(--text-dim)";
+            }
+
+            if (meter) {
+                meter.style.display = 'block';
+                if (bar) {
+                    bar.style.width = '20%';
+                    bar.style.backgroundColor = 'var(--text-dim)';
+                }
+            }
+
+            // Clear any lingering encrypted state to ensure the new plain-text key takes precedence
+            localStorage.removeItem('tts_gemini_api_key_encrypted');
+            localStorage.removeItem('tts_gemini_api_key_salt');
+            localStorage.removeItem('tts_gemini_api_key_iv');
+            localStorage.removeItem('tts_gemini_api_key_rc_encrypted');
+            localStorage.removeItem('tts_gemini_api_key_rc_salt');
+            localStorage.removeItem('tts_gemini_api_key_rc_iv');
+
+            saveSetting('gemini_api_key', key);
+            activeSessionKey = key; // Update session memory immediately
+            initAI();
+
+            const startTime = performance.now();
+            const result = await performGeminiTest();
+            const duration = performance.now() - startTime;
+
+            if (result.success) {
+                let width = '15%', color = '#ef5350', label = "Poor";
+                if (duration < 1200) { width = '100%'; color = '#4CAF50'; label = "Excellent"; }
+                else if (duration < 2500) { width = '66%'; color = '#8bc34a'; label = "Good"; }
+                else if (duration < 5000) { width = '40%'; color = '#ff9800'; label = "Fair"; }
+
+                if (bar) {
+                    bar.style.width = width;
+                    bar.style.backgroundColor = color;
+                }
+
+                if (status) {
+                    status.textContent = `✅ Connection: ${label} (${Math.round(duration)}ms)`;
+                    status.style.color = "#4CAF50";
+                }
+
+                setTimeout(() => { closeAISetup(); if (typeof loadDailyMotivation === 'function') loadDailyMotivation(); }, 1500);
+                return true;
+            } else {
+                if (status) {
+                    status.textContent = "❌ " + result.message;
+                    status.style.color = "#ef5350";
+                }
+                if (bar) bar.style.width = '5%';
+                localStorage.removeItem('tts_gemini_api_key');
+                activeSessionKey = null; // Clear from memory session variable
+                initAI(); // Re-sync manager to empty/locked state
+                return false;
+            }
         }
-        if (bar) bar.style.width = '5%';
-        localStorage.removeItem('tts_gemini_api_key');
-        activeSessionKey = null; // Clear from memory session variable
-        initAI(); // Re-sync manager to empty/locked state
-        return false;
-    }
-}
-</script>
+    </script>
 
-<div id="onboardingModal" class="modal-overlay">
-    <div class="modal-card" style="text-align: center;">
-        <!-- Progress Bar -->
-        <div class="usage-progress" style="margin-top: 0; margin-bottom: 20px;">
-            <div id="onboardingProgressBar" class="usage-bar" style="width: 0%"></div>
-        </div>
+    <div id="onboardingModal" class="modal-overlay">
+        <div class="modal-card" style="text-align: center;">
+            <!-- Progress Bar -->
+            <div class="usage-progress" style="margin-top: 0; margin-bottom: 20px;">
+                <div id="onboardingProgressBar" class="usage-bar" style="width: 0%"></div>
+            </div>
 
-        <div id="onboarding-0">
-             <h2>Welcome</h2>
-             <p>This open‑source suite provides research‑based tinnitus tools. For your safety, please accept our disclaimer to begin.</p>
-             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <a href="disclaimer.html" class="button" target="_blank" style="flex: 1;">Legal Policy</a>
-                <button onclick="showQuickStartGuide()" class="button" style="flex: 1; border-color: var(--accent);">Quick Start Guide</button>
-             </div>
-             <button onclick="completeOnboarding(); nextOnboardingStep(1)" class="big-btn play-btn">I Accept & Understand</button>
-             <a href="#" onclick="completeOnboarding(); finishOnboarding()" style="display: block; margin-top: 15px; font-size: 0.85rem; color: var(--text-dim); text-decoration: none;">Skip Setup & Go to Dashboard</a>
-             <a href="#" onclick="purgeCacheAndReload()" style="display: block; margin-top: 15px; font-size: 0.75rem; color: #ef5350; text-decoration: underline;">Stuck? Click here to Force Update & Clear Cache</a>
-        </div>
-        <div id="onboarding-1" style="display:none;">
-             <h2>Step 1: Initial Assessment</h2>
-             <p>Before starting, it's helpful to establish a baseline of how tinnitus affects your daily life using the THI assessment.</p>
-             <a href="cbt.html" class="big-btn play-btn" onclick="nextOnboardingStep(2)">Take THI Assessment</a>
-             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button onclick="nextOnboardingStep(0)" class="button" style="flex: 1;">Back</button>
-                <button onclick="nextOnboardingStep(2)" class="button" style="flex: 1;">Skip for now</button>
-             </div>
-        </div>
-        <div id="onboarding-2" style="display:none;">
-             <h2>Step 2: System Calibration</h2>
-             <p>Ensure your audio engine and hardware are functioning correctly before starting therapy.</p>
-             <a href="validation.html" class="big-btn play-btn" onclick="nextOnboardingStep(3)">Run System Validation</a>
-             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button onclick="nextOnboardingStep(1)" class="button" style="flex: 1;">Back</button>
-                <button onclick="nextOnboardingStep(3)" class="button" style="flex: 1;">Skip for now</button>
-             </div>
-        </div>
-        <div id="onboarding-3" style="display:none;">
-             <h2>Step 3: Hearing Check</h2>
-             <p>It's vital to check your hearing thresholds before using high-frequency noise therapy.</p>
-             <a href="hearingtest.html" class="big-btn play-btn" onclick="nextOnboardingStep(4)">Go to Hearing Test</a>
-             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button onclick="nextOnboardingStep(2)" class="button" style="flex: 1;">Back</button>
-                <button onclick="nextOnboardingStep(4)" class="button" style="flex: 1;">Skip for now</button>
-             </div>
-        </div>
-        <div id="onboarding-4" style="display:none;">
-             <h2>Step 4: Pitch Matching</h2>
-             <p>To use Notch Therapy effectively, you should identify your specific tinnitus frequency.</p>
-             <a href="notchfinder.html" class="big-btn play-btn" onclick="nextOnboardingStep(5)">Go to Notch Finder</a>
-             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button onclick="nextOnboardingStep(3)" class="button" style="flex: 1;">Back</button>
-                <button onclick="nextOnboardingStep(5)" class="button" style="flex: 1;">Skip for now</button>
-             </div>
-        </div>
-        <div id="onboarding-5" style="display:none;">
-             <h2>Step 5: Enable AI Assistant</h2>
-             <p>Enable personalized progress analysis and crisis support by adding a Gemini API Key.</p>
-             <p class="info" style="font-size: 0.8rem; border-left: 2px solid var(--accent); padding-left: 10px;"><b>Note:</b> This program does <u>not</u> provide an API key. You must get your own from Google.</p>
-             <div style="background: var(--surface); padding: 12px; border-radius: 8px; margin-top: 10px; margin-bottom: 15px; font-size: 0.85rem; text-align: left;">
-                1. <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--accent);">Get Key from Google</a><br>
-                2. Copy the key and paste it below.
-             </div>
-             <input type="password" id="onboardGeminiKey" placeholder="Paste Key Here" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);">
-             <div id="onboardMeter" class="usage-progress" style="display: none; margin-top: 15px;">
-                <div id="onboardMeterBar" class="usage-bar" style="width: 0%; transition: width 0.6s ease, background-color 0.5s ease;"></div>
-             </div>
-             <button onclick="saveAIKeyFromModal('onboardGeminiKey', 'onboardAIStatus', 'onboardMeter').then(success => { if(success) nextOnboardingStep(6); })" class="big-btn play-btn">Test & Continue</button>
-             <div id="onboardAIStatus" style="margin-top:10px; font-size:0.8rem;"></div>
-             <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button onclick="nextOnboardingStep(4)" class="button" style="flex: 1;">Back</button>
-                <button onclick="nextOnboardingStep(6)" class="button" style="flex: 1;">Skip AI for now</button>
-             </div>
-        </div>
-        <div id="onboarding-6" style="display:none;">
-             <h2>Setup Complete!</h2>
-             <p>You're ready to start your journey. You can access all tools from the main dashboard.</p>
-             <button onclick="finishOnboarding()" class="big-btn play-btn">Start Exploring</button>
-             <button onclick="nextOnboardingStep(5)" class="button" style="width:100%; margin-top:10px;">Back</button>
-        </div>
+            <div id="onboarding-0">
+                <h2>Welcome</h2>
+                <p>This open‑source suite provides research‑based tinnitus tools. For your safety, please accept our
+                    disclaimer to begin.</p>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <a href="disclaimer.html" class="button" target="_blank" style="flex: 1;">Legal Policy</a>
+                    <button onclick="showQuickStartGuide()" class="button"
+                        style="flex: 1; border-color: var(--accent);">Quick Start Guide</button>
+                </div>
+                <button onclick="completeOnboarding(); nextOnboardingStep(1)" class="big-btn play-btn">I Accept &
+                    Understand</button>
+                <a href="#" onclick="completeOnboarding(); finishOnboarding()"
+                    style="display: block; margin-top: 15px; font-size: 0.85rem; color: var(--text-dim); text-decoration: none;">Skip
+                    Setup & Go to Dashboard</a>
+                <a href="#" onclick="purgeCacheAndReload()"
+                    style="display: block; margin-top: 15px; font-size: 0.75rem; color: #ef5350; text-decoration: underline;">Stuck?
+                    Click here to Force Update & Clear Cache</a>
+            </div>
+            <div id="onboarding-1" style="display:none;">
+                <h2>Step 1: Initial Assessment</h2>
+                <p>Before starting, it's helpful to establish a baseline of how tinnitus affects your daily life using
+                    the THI assessment.</p>
+                <a href="cbt.html" class="big-btn play-btn" onclick="nextOnboardingStep(2)">Take THI Assessment</a>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button onclick="nextOnboardingStep(0)" class="button" style="flex: 1;">Back</button>
+                    <button onclick="nextOnboardingStep(2)" class="button" style="flex: 1;">Skip for now</button>
+                </div>
+            </div>
+            <div id="onboarding-2" style="display:none;">
+                <h2>Step 2: System Calibration</h2>
+                <p>Ensure your audio engine and hardware are functioning correctly before starting therapy.</p>
+                <a href="validation.html" class="big-btn play-btn" onclick="nextOnboardingStep(3)">Run System
+                    Validation</a>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button onclick="nextOnboardingStep(1)" class="button" style="flex: 1;">Back</button>
+                    <button onclick="nextOnboardingStep(3)" class="button" style="flex: 1;">Skip for now</button>
+                </div>
+            </div>
+            <div id="onboarding-3" style="display:none;">
+                <h2>Step 3: Hearing Check</h2>
+                <p>It's vital to check your hearing thresholds before using high-frequency noise therapy.</p>
+                <a href="hearingtest.html" class="big-btn play-btn" onclick="nextOnboardingStep(4)">Go to Hearing
+                    Test</a>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button onclick="nextOnboardingStep(2)" class="button" style="flex: 1;">Back</button>
+                    <button onclick="nextOnboardingStep(4)" class="button" style="flex: 1;">Skip for now</button>
+                </div>
+            </div>
+            <div id="onboarding-4" style="display:none;">
+                <h2>Step 4: Pitch Matching</h2>
+                <p>To use Notch Therapy effectively, you should identify your specific tinnitus frequency.</p>
+                <a href="notchfinder.html" class="big-btn play-btn" onclick="nextOnboardingStep(5)">Go to Notch
+                    Finder</a>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button onclick="nextOnboardingStep(3)" class="button" style="flex: 1;">Back</button>
+                    <button onclick="nextOnboardingStep(5)" class="button" style="flex: 1;">Skip for now</button>
+                </div>
+            </div>
+            <div id="onboarding-5" style="display:none;">
+                <h2>Step 5: Enable AI Assistant</h2>
+                <p>Enable personalized progress analysis and crisis support by adding a Gemini API Key.</p>
+                <p class="info" style="font-size: 0.8rem; border-left: 2px solid var(--accent); padding-left: 10px;">
+                    <b>Note:</b> This program does <u>not</u> provide an API key. You must get your own from Google.
+                </p>
+                <div
+                    style="background: var(--surface); padding: 12px; border-radius: 8px; margin-top: 10px; margin-bottom: 15px; font-size: 0.85rem; text-align: left;">
+                    1. <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                        style="color: var(--accent);">Get Key from Google</a><br>
+                    2. Copy the key and paste it below.
+                </div>
+                <input type="password" id="onboardGeminiKey" placeholder="Paste Key Here"
+                    style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);">
+                <div id="onboardMeter" class="usage-progress" style="display: none; margin-top: 15px;">
+                    <div id="onboardMeterBar" class="usage-bar"
+                        style="width: 0%; transition: width 0.6s ease, background-color 0.5s ease;"></div>
+                </div>
+                <button
+                    onclick="saveAIKeyFromModal('onboardGeminiKey', 'onboardAIStatus', 'onboardMeter').then(success => { if(success) nextOnboardingStep(6); })"
+                    class="big-btn play-btn">Test & Continue</button>
+                <div id="onboardAIStatus" style="margin-top:10px; font-size:0.8rem;"></div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button onclick="nextOnboardingStep(4)" class="button" style="flex: 1;">Back</button>
+                    <button onclick="nextOnboardingStep(6)" class="button" style="flex: 1;">Skip AI for now</button>
+                </div>
+            </div>
+            <div id="onboarding-6" style="display:none;">
+                <h2>Setup Complete!</h2>
+                <p>You're ready to start your journey. You can access all tools from the main dashboard.</p>
+                <button onclick="finishOnboarding()" class="big-btn play-btn">Start Exploring</button>
+                <button onclick="nextOnboardingStep(5)" class="button"
+                    style="width:100%; margin-top:10px;">Back</button>
+            </div>
 
-        <button onclick="finishOnboarding()" class="button" style="width:100%; margin-top:20px; border-color: var(--text-dim); color: var(--text-dim); font-weight: normal;">Exit Wizard</button>
+            <button onclick="finishOnboarding()" class="button"
+                style="width:100%; margin-top:20px; border-color: var(--text-dim); color: var(--text-dim); font-weight: normal;">Exit
+                Wizard</button>
+        </div>
     </div>
-</div>
 
-<div id="aiSetupModal" class="modal-overlay">
-    <div class="modal-card">
-        <h2 style="color: var(--accent); margin-top: 0;">✨ AI Assistant Setup</h2>
-        <div class="info" style="font-size: 0.8rem; margin-bottom: 15px; border-left: 2px solid var(--accent); padding-left: 10px;">
-            <b>Privacy Note:</b> This program does <u>not</u> provide an API key. You must use your own private key from 
-            <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent); text-decoration:underline;">Google AI Studio</a>.
-        </div>
-        <p class="info" style="color: var(--text);">Enable personalized motivation and crisis support in 3 easy steps:</p>
-        
-        <div style="background: var(--surface); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.6;">
-            <div><b style="color: var(--accent);">1. Get Key:</b> <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #2196f3; text-decoration: underline;">Open Google AI Studio</a></div>
-            <div><b style="color: var(--accent);">2. Create:</b> Click <b>"Create API key in new project"</b></div>
-            <div><b style="color: var(--accent);">3. Copy:</b> Copy the string and paste it below</div>
-        </div>
+    <div id="aiSetupModal" class="modal-overlay">
+        <div class="modal-card">
+            <h2 style="color: var(--accent); margin-top: 0;">✨ AI Assistant Setup</h2>
+            <div class="info"
+                style="font-size: 0.8rem; margin-bottom: 15px; border-left: 2px solid var(--accent); padding-left: 10px;">
+                <b>Privacy Note:</b> This program does <u>not</u> provide an API key. You must use your own private key
+                from
+                <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                    style="color:var(--accent); text-decoration:underline;">Google AI Studio</a>.
+            </div>
+            <p class="info" style="color: var(--text);">Enable personalized motivation and crisis support in 3 easy
+                steps:</p>
 
-        <input type="password" id="modalGeminiKey" placeholder="Paste API Key here..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text);">
-        <div id="modalMeter" class="usage-progress" style="display: none; margin-top: 15px;">
-            <div id="modalMeterBar" class="usage-bar" style="width: 0%; transition: width 0.6s ease, background-color 0.5s ease;"></div>
+            <div
+                style="background: var(--surface); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.6;">
+                <div><b style="color: var(--accent);">1. Get Key:</b> <a href="https://aistudio.google.com/app/apikey"
+                        target="_blank" style="color: #2196f3; text-decoration: underline;">Open Google AI Studio</a>
+                </div>
+                <div><b style="color: var(--accent);">2. Create:</b> Click <b>"Create API key in new project"</b></div>
+                <div><b style="color: var(--accent);">3. Copy:</b> Copy the string and paste it below</div>
+            </div>
+
+            <input type="password" id="modalGeminiKey" placeholder="Paste API Key here..."
+                style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text);">
+            <div id="modalMeter" class="usage-progress" style="display: none; margin-top: 15px;">
+                <div id="modalMeterBar" class="usage-bar"
+                    style="width: 0%; transition: width 0.6s ease, background-color 0.5s ease;"></div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="big-btn play-btn" style="margin-top: 0; flex: 2;" onclick="saveAIKeyFromModal()">Activate
+                    AI</button>
+                <button class="button" style="margin-top: 0; flex: 1;" onclick="closeAISetup()">Cancel</button>
+            </div>
+            <div id="modalTestStatus"
+                style="text-align: center; margin-top: 15px; font-size: 0.85rem; min-height: 1.2rem;"></div>
         </div>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button class="big-btn play-btn" style="margin-top: 0; flex: 2;" onclick="saveAIKeyFromModal()">Activate AI</button>
-            <button class="button" style="margin-top: 0; flex: 1;" onclick="closeAISetup()">Cancel</button>
-        </div>
-        <div id="modalTestStatus" style="text-align: center; margin-top: 15px; font-size: 0.85rem; min-height: 1.2rem;"></div>
     </div>
-</div>
 
-<div id="whatsNewModal" class="modal-overlay">
-    <div class="modal-card">
-        <h2 style="color: var(--accent); margin-top: 0;">What's New in v<span class="app-version-label"></span></h2>
-        <p class="info">Recent improvements to your therapy experience:</p>
-        <div style="max-height: 400px; overflow-y: auto; text-align: left; padding-right: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
-            <div id="dynamicWhatsNew"></div>
+    <div id="whatsNewModal" class="modal-overlay">
+        <div class="modal-card">
+            <h2 style="color: var(--accent); margin-top: 0;">What's New in v<span class="app-version-label"></span></h2>
+            <p class="info">Recent improvements to your therapy experience:</p>
+            <div
+                style="max-height: 400px; overflow-y: auto; text-align: left; padding-right: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
+                <div id="dynamicWhatsNew"></div>
 
-            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.05.3 - Major Clinical Alignment</h3>
-            <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
-                <li><b>Manual Synchronization:</b> Standardized all terminology (e.g., 'Broadband Sound Therapy') and logic to match the User Manual.</li>
-                <li><b>Hearing Profile (Audiogram):</b> Added a new module to enter professional audiogram results with <b>Half‑Gain Rule</b> auto‑compensation for therapy modules.</li>
-                <li><b>Habituation Milestone Tracker:</b> Integrated automated detection for clinical habituation stages (Appendix E).</li>
-                <li><b>Community Integration:</b> Standardized 'Share Setup' feature across all modules for Tinnitus Talk/Reddit formatting.</li>
-                <li><b>Global Clinical Reports:</b> New dashboard tool to generate comprehensive PDF summaries covering all diagnostic and therapy history.</li>
-                <li><b>Visual Calibration:</b> Added frequency axis labels to Spectrogram and 45-60dB habituation range markers to the Audio Meter.</li>
-                <li><b>Q-factor Tracking:</b> Integrated a new trend chart in the <b>Stats page (stats.html)</b> to specifically monitor changes in tinnitus 'sharpness' (Q-factor) and tonality over time.</li>
-                <li><b>Universal Reporting:</b> Added PDF and Clinical Export (.txt) capabilities to all remaining diagnostic tools.</li>
-                <li><b>System Guidance:</b> Added a comprehensive interactive tutorial for the <b>System Validation</b> engine to ensure audio integrity.</li>
-                <li><b>Milestone Celebration:</b> Earn a printable <b>Achievement Certificate</b> and enjoy a celebratory confetti burst upon reaching Phase 6: Full Habituation.</li>
-            </ul>
+                <h3
+                    style="color: var(--accent); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
+                    v2026.05.4 - Branding & Session Entry</h3>
+                <ul
+                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
+                    <li><b>Branded Splash Screen:</b> Integrated a new cinematic entry sequence featuring an animated
+                        swarm of 'tinnitus bees' orbiting a stylized ear logo.</li>
+                    <li><b>Dramatic Exit Transitions:</b> Added motion blur and scaling effects to the splash screen
+                        dismissal for a more professional user experience.</li>
+                    <li><b>Session Intelligence:</b> Integrated <code>sessionStorage</code> logic to track the
+                        session-level display state. This optimization ensures the cinematic entry sequence only plays
+                        at the start of a browsing session, preventing redundant animations during internal navigation
+                        or page refreshes.</li>
+                    <li><b>Visual Synchronization:</b> Unified branding elements between the startup splash and the User
+                        Manual cover graphic.</li>
+                </ul>
 
-            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.05.2 - Engine Stability Update</h3>
-            <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
-                <li><b>Audio Engine Watchdog:</b> New background observer that detects and automatically recovers from browser-induced audio stalls.</li>
-                <li><b>Recovery Notifications:</b> Implemented floating orange/green popups to signal automatic audio restoration.</li>
-                <li><b>Precision Engine:</b> Fine-tuned digital filters and improved frequency matching accuracy for high-pitch therapies.</li>
-                <li><b>UI Resilience:</b> Resolved a lock-up issue where buttons became unresponsive during audio context transitions.</li>
-            </ul>
+                <h3
+                    style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
+                    v2026.05.3 - Major Clinical Alignment</h3>
+                <ul
+                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
+                    <li><b>Manual Synchronization:</b> Standardized all terminology (e.g., 'Broadband Sound Therapy')
+                        and logic to match the User Manual.</li>
+                    <li><b>Hearing Profile (Audiogram):</b> Added a new module to enter professional audiogram results
+                        with <b>Half‑Gain Rule</b> auto‑compensation for therapy modules.</li>
+                    <li><b>Habituation Milestone Tracker:</b> Integrated automated detection for clinical habituation
+                        stages (Appendix E).</li>
+                    <li><b>Community Integration:</b> Standardized 'Share Setup' feature across all modules for Tinnitus
+                        Talk/Reddit formatting.</li>
+                    <li><b>Global Clinical Reports:</b> New dashboard tool to generate comprehensive PDF summaries
+                        covering all diagnostic and therapy history.</li>
+                    <li><b>Visual Calibration:</b> Added frequency axis labels to Spectrogram and 45-60dB habituation
+                        range markers to the Audio Meter.</li>
+                    <li><b>Q-factor Tracking:</b> Integrated a new trend chart in the <b>Stats page (stats.html)</b> to
+                        specifically monitor changes in tinnitus 'sharpness' (Q-factor) and tonality over time.</li>
+                    <li><b>Universal Reporting:</b> Added PDF and Clinical Export (.txt) capabilities to all remaining
+                        diagnostic tools.</li>
+                    <li><b>System Guidance:</b> Added a comprehensive interactive tutorial for the <b>System
+                            Validation</b> engine to ensure audio integrity.</li>
+                    <li><b>Milestone Celebration:</b> Earn a printable <b>Achievement Certificate</b> and enjoy a
+                        celebratory confetti burst upon reaching Phase 6: Full Habituation.</li>
+                </ul>
 
-            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.05.1 - May 2026</h3>
-            <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
-                <li><b>Audio Reliability:</b> Fixed a critical bug where the AudioContext was not correctly resumed on therapy start.</li>
-                <li><b>Versioning:</b> Migrated to yyyy.mm.counter format as per project requirements.</li>
-                <li><b>AI Connectivity:</b> Finalized dynamic model auto-discovery to resolve 404 errors with newer Gemini 2.0/2.5 keys.</li>
-                <li><b>AI Milestone:</b> Successfully resolved Gemini SDK connectivity and model authorization issues for high-precision therapeutic insights.</li>
-                <li><b>404 File Fix:</b> Added missing system files (maintenance.json and docs/index.html) to resolve server errors.</li>
-                <li><b>AI Skypack Bridge:</b> Switched to Skypack CDN for better ESM compatibility and to resolve 'exports is not defined' errors on Chromebooks.</li>
-                <li><b>AI Stability Fix:</b> Resolved global namespace conflicts for the Gemini SDK on Chromebooks and Chrome browsers.</li>
-                <li><b>UI Restoration:</b> Added missing AI security fields to the main settings card and resolved a crash in the dashboard initialization.</li>
-                <li><b>AI SDK Stability:</b> Switched to UMD browser bundle to resolve global namespace conflicts.</li> 
-                <li><b>AI Debugger:</b> Improved SDK detection logic and diagnostic error messages for connectivity issues.</li>
-                <li><b>AI Reliability:</b> Enhanced SDK detection and synchronized Gemini libraries across all modules to resolve loading failures.</li>
-                <li><b>Critical Engine Fix:</b> Resolved a syntax error that prevented the app version from displaying and blocked AI features.</li>
-                <li><b>AI Reliability:</b> Upgraded to Gemini SDK v0.12.0 and improved resolution logic for restricted network environments.</li>
-                <li><b>AI Reliability:</b> Improved resolution logic for the Gemini SDK to resolve race conditions and blockages.</li>
-                <li><b>AI Refinements:</b> Enhanced chat interface with typing indicators and improved context for Pattern Finder analysis.</li>
-                <li><b>Wellness Tools:</b> Integrated AI-generated mindfulness scripts into the Thought Record workflow to assist in grounding.</li> 
-                <li><b>Dashboard Performance:</b> Optimized loading of AI insights and improved real-time connectivity validation for Gemini keys.</li>
-            </ul>
+                <h3
+                    style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
+                    v2026.05.2 - Engine Stability Update</h3>
+                <ul
+                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
+                    <li><b>Audio Engine Watchdog:</b> New background observer that detects and automatically recovers
+                        from browser-induced audio stalls.</li>
+                    <li><b>Recovery Notifications:</b> Implemented floating orange/green popups to signal automatic
+                        audio restoration.</li>
+                    <li><b>Precision Engine:</b> Fine-tuned digital filters and improved frequency matching accuracy for
+                        high-pitch therapies.</li>
+                    <li><b>UI Resilience:</b> Resolved a lock-up issue where buttons became unresponsive during audio
+                        context transitions.</li>
+                </ul>
 
-            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.05.0: Major AI Integration - May 2026</h3>
-            <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
-                <li><b>Clinical Pilot Program:</b> New inquiry system for professional partners.</li>
-                <li><b>AI-Powered Features (Google Gemini):</b> Integrated 5 new AI-driven tools for crisis support, personalized soundscapes, pattern analysis, TRT education, and clinical report summaries.</li>
-            </ul>
+                <h3
+                    style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
+                    v2026.05.1 - May 2026</h3>
+                <ul
+                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
+                    <li><b>Audio Reliability:</b> Fixed a critical bug where the AudioContext was not correctly resumed
+                        on therapy start.</li>
+                    <li><b>Versioning:</b> Migrated to yyyy.mm.counter format as per project requirements.</li>
+                    <li><b>AI Connectivity:</b> Finalized dynamic model auto-discovery to resolve 404 errors with newer
+                        Gemini 2.0/2.5 keys.</li>
+                    <li><b>AI Milestone:</b> Successfully resolved Gemini SDK connectivity and model authorization
+                        issues for high-precision therapeutic insights.</li>
+                    <li><b>404 File Fix:</b> Added missing system files (maintenance.json and docs/index.html) to
+                        resolve server errors.</li>
+                    <li><b>AI Skypack Bridge:</b> Switched to Skypack CDN for better ESM compatibility and to resolve
+                        'exports is not defined' errors on Chromebooks.</li>
+                    <li><b>AI Stability Fix:</b> Resolved global namespace conflicts for the Gemini SDK on Chromebooks
+                        and Chrome browsers.</li>
+                    <li><b>UI Restoration:</b> Added missing AI security fields to the main settings card and resolved a
+                        crash in the dashboard initialization.</li>
+                    <li><b>AI SDK Stability:</b> Switched to UMD browser bundle to resolve global namespace conflicts.
+                    </li>
+                    <li><b>AI Debugger:</b> Improved SDK detection logic and diagnostic error messages for connectivity
+                        issues.</li>
+                    <li><b>AI Reliability:</b> Enhanced SDK detection and synchronized Gemini libraries across all
+                        modules to resolve loading failures.</li>
+                    <li><b>Critical Engine Fix:</b> Resolved a syntax error that prevented the app version from
+                        displaying and blocked AI features.</li>
+                    <li><b>AI Reliability:</b> Upgraded to Gemini SDK v0.12.0 and improved resolution logic for
+                        restricted network environments.</li>
+                    <li><b>AI Reliability:</b> Improved resolution logic for the Gemini SDK to resolve race conditions
+                        and blockages.</li>
+                    <li><b>AI Refinements:</b> Enhanced chat interface with typing indicators and improved context for
+                        Pattern Finder analysis.</li>
+                    <li><b>Wellness Tools:</b> Integrated AI-generated mindfulness scripts into the Thought Record
+                        workflow to assist in grounding.</li>
+                    <li><b>Dashboard Performance:</b> Optimized loading of AI insights and improved real-time
+                        connectivity validation for Gemini keys.</li>
+                </ul>
 
-            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.04.5: Professional Integration - May 2026</h3>
-            <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
-                <li><b>Dual-Stimulus (Bimodal) Support:</b> Synchronize auditory bursts with wireless tactile pulses using the new <b>Finger Pacer</b> hardware or mobile haptics.</li>
-                <li><b>Clinical Summary for Doctors:</b> Generate professional technical PDFs and handouts summarizing protocols and citations to share with audiologists.</li>
-                <li><b>Community Sharing:</b> Use the "Share Setup" tool to copy settings formatted for forums like Tinnitus Talk and Reddit.</li>
-                <li><b>Breathing Wave Pacer:</b> Integrated visual and auditory pacing for resonance breathing during therapeutic sessions.</li>
-            </ul>
+                <h3
+                    style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
+                    v2026.05.0: Major AI Integration - May 2026</h3>
+                <ul
+                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
+                    <li><b>Clinical Pilot Program:</b> New inquiry system for professional partners.</li>
+                    <li><b>AI-Powered Features (Google Gemini):</b> Integrated 5 new AI-driven tools for crisis support,
+                        personalized soundscapes, pattern analysis, TRT education, and clinical report summaries.</li>
+                </ul>
 
-            <h3 style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">v2026.04.4: Interface & Guidance - April 2026</h3>
-            <ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 10px; font-size: 0.9rem; color: var(--text-dim);">
-                <li><b>Interactive Tutorials:</b> Voice-narrated UI walkthroughs and visual highlights for every therapy and tool.</li>
-                <li><b>Guided Onboarding:</b> A visual "Path to Relief" sequence on the dashboard to help you complete your clinical setup.</li>
-                <li><b>PMR Support:</b> Guided relaxation sequence in <b>CBT & Wellness</b> with auditory cues to help manage distress.</li>
-                <li><b>Better Organization:</b> Dashboard tools are now split into "Support Tools" and "System Utilities" for more intuitive navigation.</li>
-                <li><b>Performance & Safety:</b> Improved DSP validation and new options for data backup or factory reset.</li>
-            </ul>
+                <h3
+                    style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
+                    v2026.04.5: Professional Integration - May 2026</h3>
+                <ul
+                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
+                    <li><b>Dual-Stimulus (Bimodal) Support:</b> Synchronize auditory bursts with wireless tactile pulses
+                        using the new <b>Finger Pacer</b> hardware or mobile haptics.</li>
+                    <li><b>Clinical Summary for Doctors:</b> Generate professional technical PDFs and handouts
+                        summarizing protocols and citations to share with audiologists.</li>
+                    <li><b>Community Sharing:</b> Use the "Share Setup" tool to copy settings formatted for forums like
+                        Tinnitus Talk and Reddit.</li>
+                    <li><b>Breathing Wave Pacer:</b> Integrated visual and auditory pacing for resonance breathing
+                        during therapeutic sessions.</li>
+                </ul>
+
+                <h3
+                    style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
+                    v2026.04.4: Interface & Guidance - April 2026</h3>
+                <ul
+                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 10px; font-size: 0.9rem; color: var(--text-dim);">
+                    <li><b>Interactive Tutorials:</b> Voice-narrated UI walkthroughs and visual highlights for every
+                        therapy and tool.</li>
+                    <li><b>Guided Onboarding:</b> A visual "Path to Relief" sequence on the dashboard to help you
+                        complete your clinical setup.</li>
+                    <li><b>PMR Support:</b> Guided relaxation sequence in <b>CBT & Wellness</b> with auditory cues to
+                        help manage distress.</li>
+                    <li><b>Better Organization:</b> Dashboard tools are now split into "Support Tools" and "System
+                        Utilities" for more intuitive navigation.</li>
+                    <li><b>Performance & Safety:</b> Improved DSP validation and new options for data backup or factory
+                        reset.</li>
+                </ul>
+            </div>
+            <button onclick="closeWhatsNew()" class="big-btn play-btn">Let's Go</button>
         </div>
-        <button onclick="closeWhatsNew()" class="big-btn play-btn">Let's Go</button>
     </div>
-</div>
 
 </body>
+
 </html>

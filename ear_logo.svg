@@ -1,0 +1,46 @@
+<svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+    <!-- Stylized Outer Ear -->
+    <path d="M140,50 C200,35 245,70 245,135 C245,200 200,225 170,225 C145,225 130,210 130,185"
+        fill="none" stroke="#00bfa5" stroke-width="8" stroke-linecap="round" opacity="0.8" />
+    <!-- Inner Ear Structures -->
+    <path d="M150,90 C185,85 210,110 210,135 C210,165 180,185 155,185" fill="none" stroke="#00bfa5"
+        stroke-width="6" stroke-linecap="round" opacity="0.4" />
+
+    <!-- Central Logo Cross -->
+    <path d="M185 125 H215 M200 125 V155" fill="none" stroke="#00bfa5" stroke-width="10"
+        stroke-linecap="round" opacity="0.9" />
+
+    <defs>
+        <!-- Detailed Bee Definition -->
+        <g id="bee-symbol">
+            <path d="M-5,-5 Q-15,-25 -25,-10 Q-30,5 -15,15 Z" fill="rgba(200,200,255,0.4)" />
+            <path d="M5,-5 Q15,-25 25,-10 Q30,5 15,15 Z" fill="rgba(200,200,255,0.4)" />
+            <path d="M-15,0 Q-15,-12 0,-12 Q15,-12 15,0 Q15,12 0,12 Q-15,12 -15,0 Z" fill="#FFD700"
+                 />
+            <path d="M-5,-11 L-5,11 M2,-12 L2,12 M9,-11 L9,11" stroke="#000" stroke-width="2"
+                opacity="0.8" />
+            <circle cx="-15" cy="0" r="6" fill="#000" />
+            <circle cx="-17" cy="-2" r="1" fill="#fff" />
+        </g>
+    </defs>
+
+    <!-- The Swarm -->
+    <g>
+        <use href="#bee-symbol" transform="translate(290, 70) rotate(-10) scale(0.8)" />
+    </g>
+    <g>
+        <use href="#bee-symbol" transform="translate(320, 130) rotate(15) scale(0.6)" />
+    </g>
+    <g>
+        <use href="#bee-symbol" transform="translate(260, 195) rotate(40) scale(0.7)" />
+    </g>
+    <g>
+        <use href="#bee-symbol" transform="translate(70, 75) rotate(-45) scale(0.5)" />
+    </g>
+    <g>
+        <use href="#bee-symbol" transform="translate(95, 160) rotate(-160) scale(0.6)" />
+    </g>
+    
+    <!-- Stylized Text Subtitle -->
+    <text x="200" y="245" font-family="sans-serif" font-size="10" font-weight="bold" fill="#00bfa5" text-anchor="middle" letter-spacing="2" opacity="0.6">TRAHREG TINNITUS SUITE</text>
+</svg>
