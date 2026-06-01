@@ -1,310 +1,326 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="icon-192.png" type="image/png">
-<title>Dual-Stimulus Neuromodulation - Tinnitus Therapy Suite</title>
-<script src="storage.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="nav.js"></script>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <title>Dual-Stimulus Neuromodulation - Tinnitus Therapy Suite</title>
+    <script src="storage.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="nav.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-<div class="panel">
-    <h1>Dual-Stimulus Neuromodulation</h1>
-    <p class="info">Experimental auditory and smartphone-based tactile sensory pairing. <b>Note: This module is currently a work in progress.</b></p>
-    <div class="match-section" style="margin-bottom: 20px;">
-        <h3>Clinical Significance</h3>
-        <p>Inspired by the <b>TENT-A Clinical Trial (2020)</b>, these structured auditory patterns (tone bursts and modulated noise) are designed to engage neuroplasticity and disrupt tinnitus-related brain activity.</p>
-    </div>
+    <div class="panel">
+        <h1>Dual-Stimulus Neuromodulation</h1>
+        <p class="info">Experimental auditory and smartphone-based tactile sensory pairing. <b>Note: This module is
+                currently a work in progress.</b></p>
+        <div class="match-section" style="margin-bottom: 20px;">
+            <h3>Clinical Significance</h3>
+            <p>Inspired by the <b>TENT-A Clinical Trial (2020)</b>, these structured auditory patterns (tone bursts and
+                modulated noise) are designed to engage neuroplasticity and disrupt tinnitus-related brain activity.</p>
+        </div>
 
-    <div class="card" style="margin-bottom: 20px; border-color: var(--accent);">
-        <div class="ctrl">
+        <div class="card" style="margin-bottom: 20px; border-color: var(--accent);">
+            <div class="ctrl">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="visualPulse" style="width: 20px; height: 20px; margin-top: 0;">
+                    <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Enable Visual Bimodal
+                        Pulse</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px;">
+                    <input type="checkbox" id="pacerAudio" style="width: 20px; height: 20px; margin-top: 0;">
+                    <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Enable Auditory Pacer
+                        Cues</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px;">
+                    <input type="checkbox" id="hapticPulse" style="width: 20px; height: 20px; margin-top: 0;">
+                    <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Enable Tactile Haptic Pulse
+                        (Mobile)</span>
+                </label>
+                <div class="ctrl" id="hapticStrengthCtrl"
+                    style="margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
+                    <label>Vibration Intensity <span class="val" id="hapticStrengthVal">128</span></label>
+                    <input id="hapticStrength" type="range" min="50" max="255" value="128" step="1">
+                </div>
+                <div class="ctrl" id="hapticSensCtrl"
+                    style="margin-top: 5px; border-bottom: 1px dashed var(--border); padding-bottom: 10px;">
+                    <label>Trigger Sensitivity <span class="val" id="hapticSensVal">0.08</span></label>
+                    <input id="hapticSens" type="range" min="0.01" max="0.3" value="0.08" step="0.01">
+                </div>
+            </div>
+            <div class="ctrl">
+                <label>Pulse Rate (Breaths Per Min) <span class="val" id="pulseRateVal">6</span></label>
+                <input id="pulseRate" type="range" min="3" max="15" value="6" step="0.5">
+            </div>
+        </div>
+
+        <div class="ctrl" style="border-bottom: 1px dashed var(--border); padding-bottom: 15px; margin-bottom: 20px;">
             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                <input type="checkbox" id="visualPulse" style="width: 20px; height: 20px; margin-top: 0;">
-                <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Enable Visual Bimodal Pulse</span>
+                <input type="checkbox" id="lockLR" style="width: 20px; height: 20px; margin-top: 0;">
+                <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Lock Left & Right
+                    Parameters</span>
             </label>
-            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px;">
-                <input type="checkbox" id="pacerAudio" style="width: 20px; height: 20px; margin-top: 0;">
-                <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Enable Auditory Pacer Cues</span>
-            </label>
-            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px;">
-                <input type="checkbox" id="hapticPulse" style="width: 20px; height: 20px; margin-top: 0;">
-                <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Enable Tactile Haptic Pulse (Mobile)</span>
-            </label>
-            <div class="ctrl" id="hapticStrengthCtrl" style="margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
-                <label>Vibration Intensity <span class="val" id="hapticStrengthVal">128</span></label>
-                <input id="hapticStrength" type="range" min="50" max="255" value="128" step="1">
-            </div>
-            <div class="ctrl" id="hapticSensCtrl" style="margin-top: 5px; border-bottom: 1px dashed var(--border); padding-bottom: 10px;">
-                <label>Trigger Sensitivity <span class="val" id="hapticSensVal">0.08</span></label>
-                <input id="hapticSens" type="range" min="0.01" max="0.3" value="0.08" step="0.01">
-            </div>
         </div>
-        <div class="ctrl">
-            <label>Pulse Rate (Breaths Per Min) <span class="val" id="pulseRateVal">6</span></label>
-            <input id="pulseRate" type="range" min="3" max="15" value="6" step="0.5">
-        </div>
-    </div>
 
-    <div class="ctrl" style="border-bottom: 1px dashed var(--border); padding-bottom: 15px; margin-bottom: 20px;">
-        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-            <input type="checkbox" id="lockLR" style="width: 20px; height: 20px; margin-top: 0;">
-            <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Lock Left & Right Parameters</span>
-        </label>
-    </div>
-
-    <div class="responsive-grid">
-        <div class="ctrl" title="Sets the central frequency of the tone bursts and the noise filter for the left ear.">
-            <label>Carrier Freq L (Hz)
-                <div class="input-with-buttons">
-                    <input type="number" id="freqL" class="val-input" min="200" max="12000" value="8000">
-                    <div class="fine-tune-group" data-target="freqL">
-                        <button class="fine-tune-btn" data-delta="-5">-5</button>
-                        <button class="fine-tune-btn" data-delta="-1">-1</button>
-                        <button class="fine-tune-btn" data-delta="1">+1</button>
-                        <button class="fine-tune-btn" data-delta="5">+5</button>
-                    </div>
-                </div>
-            </label>
-            <div class="btn-group" data-target="freqL">
-                <button class="button-step" data-delta="-100">-100</button>
-                <button class="button-step" data-delta="100">+100</button>
-            </div>
-        </div>
-        <div class="ctrl" title="Sets the central frequency of the tone bursts and the noise filter for the right ear.">
-            <label>Carrier Freq R (Hz)
-                <div class="input-with-buttons">
-                    <input type="number" id="freqR" class="val-input" min="200" max="12000" value="8000">
-                    <div class="fine-tune-group" data-target="freqR">
-                        <button class="fine-tune-btn" data-delta="-5">-5</button>
-                        <button class="fine-tune-btn" data-delta="-1">-1</button>
-                        <button class="fine-tune-btn" data-delta="1">+1</button>
-                        <button class="fine-tune-btn" data-delta="5">+5</button>
-                    </div>
-                </div>
-            </label>
-            <div class="btn-group" data-target="freqR">
-                <button class="button-step" data-delta="-100">-100</button>
-                <button class="button-step" data-delta="100">+100</button>
-            </div>
-        </div>
-    </div>
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button class="tone-btn" style="flex: 1;" onclick="syncFreqToR()">Sync Freq L &rarr; R</button>
-        <button class="tone-btn" style="flex: 1;" onclick="syncBalanceToPreset()">Sync Balance to Preset</button>
-    </div>
-
-    <div class="ctrl"><label>Session Length</label><select id="session"><option value="600">10 min</option><option value="900">15 min</option><option value="1200" selected>20 min</option></select></div>
-
-    <div class="ctrl">
-        <label style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Master Volume <span class="val" id="volValMaster" style="float:none; margin-left:10px;">100%</span></span>
-            <label style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; color: var(--accent);">
-                <input type="checkbox" id="muteToggle" style="width: 16px; height: 16px; margin: 0;"> Mute
-            </label>
-        </label>
-        <input id="volMaster" type="range" min="0" max="100" step="1" value="100">
-        <div class="btn-group" data-target="volMaster">
-            <button class="button-step" data-delta="-5">-5</button>
-            <button class="button-step" data-delta="5">+5</button>
-        </div>
-    </div>
-
-    <div class="zen-keep" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div class="ctrl">
-            <label>Volume L <span class="val" id="volValL">30%</span></label>
-            <input id="volL" type="range" min="0" max="100" step="1" value="30">
-            <div class="btn-group" data-target="volL">
-                <button class="button-step" data-delta="-5">-5</button>
-                <button class="button-step" data-delta="5">+5</button>
-            </div>
-        </div>
-        <div class="ctrl">
-            <label>Volume R <span class="val" id="volValR">30%</span></label>
-            <input id="volR" type="range" min="0" max="100" step="1" value="30">
-            <div class="btn-group" data-target="volR">
-                <button class="button-step" data-delta="-5">-5</button>
-                <button class="button-step" data-delta="5">+5</button>
-            </div>
-        </div>
-    </div>
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button class="tone-btn" style="flex: 1;" onclick="syncVolToR()">Sync Volume L &rarr; R</button>
-    </div>
-
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button class="tone-btn" style="flex: 1;" onclick="syncBalanceToPreset()">Sync Volume Balance to Preset</button>
-    </div>
-
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button class="tone-btn" style="flex: 1;" onclick="syncMixToR()">Sync Mix L &rarr; R</button>
-    </div>
-
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button class="tone-btn" style="flex: 1;" onclick="syncModToR()">Sync Noise Mod L &rarr; R</button>
-    </div>
-
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button class="tone-btn" style="flex: 1;" onclick="syncBurstToR()">Sync Burst L &rarr; R</button>
-    </div>
-
-    <div class="responsive-grid">
-        <div class="ctrl" title="Adjusts the balance between the tone bursts and the modulated noise for the left ear. 0 = all noise, 1 = all tone.">
-            <label>Tone/Noise Mix L <span class="val" id="mixValL">50%</span></label>
-            <input id="mixL" type="range" min="0" max="1" step="0.01" value="0.5">
-            <div class="btn-group" data-target="mixL">
-                <button class="button-step" data-delta="-0.1">-0.1</button>
-                <button class="button-step" data-delta="0.1">+0.1</button>
-            </div>
-        </div>
-        <div class="ctrl" title="Adjusts the balance between the tone bursts and the modulated noise for the right ear. 0 = all noise, 1 = all tone.">
-            <label>Tone/Noise Mix R <span class="val" id="mixValR">50%</span></label>
-            <input id="mixR" type="range" min="0" max="1" step="0.01" value="0.5">
-            <div class="btn-group" data-target="mixR">
-                <button class="button-step" data-delta="-0.1">-0.1</button>
-                <button class="button-step" data-delta="0.1">+0.1</button>
-            </div>
-        </div>
-    </div>
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button class="tone-btn" style="flex: 1;" onclick="syncMixToR()">Sync Mix L &rarr; R</button>
-    </div>
-
-    <div class="responsive-grid">
-        <div class="ctrl" title="Sets the frequency at which the background noise is amplitude-modulated for the left ear.">
-            <label>Noise Mod L (Hz)
-                <div class="input-with-buttons">
-                    <input type="number" id="modRateL" class="val-input" min="0.1" max="10" step="0.1" value="2.0">
-                    <div class="fine-tune-group" data-target="modRateL">
-                        <button class="fine-tune-btn" data-delta="-0.5">-0.5</button>
-                        <button class="fine-tune-btn" data-delta="-0.1">-0.1</button>
-                        <button class="fine-tune-btn" data-delta="0.1">+0.1</button>
-                        <button class="fine-tune-btn" data-delta="0.5">+0.5</button>
-                    </div>
-                </div>
-            </label>
-            <div class="btn-group" data-target="modRateL"><button class="button-step" data-delta="-0.1">-0.1</button><button class="button-step" data-delta="0.1">+0.1</button></div>
-        </div>
-        <div class="ctrl" title="Sets the frequency at which the background noise is amplitude-modulated for the right ear.">
-            <label>Noise Mod R (Hz)
-                <div class="input-with-buttons">
-                    <input type="number" id="modRateR" class="val-input" min="0.1" max="10" step="0.1" value="2.0">
-                    <div class="fine-tune-group" data-target="modRateR">
-                        <button class="fine-tune-btn" data-delta="-0.5">-0.5</button>
-                        <button class="fine-tune-btn" data-delta="-0.1">-0.1</button>
-                        <button class="fine-tune-btn" data-delta="0.1">+0.1</button>
-                        <button class="fine-tune-btn" data-delta="0.5">+0.5</button>
-                    </div>
-                </div>
-            </label>
-            <div class="btn-group" data-target="modRateR"><button class="button-step" data-delta="-0.1">-0.1</button><button class="button-step" data-delta="0.1">+0.1</button></div>
-        </div>
-    </div>
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button class="tone-btn" style="flex: 1;" onclick="syncModToR()">Sync Noise Mod L &rarr; R</button>
-    </div>
-
-    <div class="responsive-grid">
-        <div class="ctrl" title="Sets the repetition rate of the tone bursts for the left ear.">
-            <label>Burst Rate L (Hz)
-                <div class="input-with-buttons">
-                    <input type="number" id="burstRateL" class="val-input" min="0.2" max="10" step="0.1" value="1.5">
-                    <div class="fine-tune-group" data-target="burstRateL">
-                        <button class="fine-tune-btn" data-delta="-0.5">-0.5</button>
-                        <button class="fine-tune-btn" data-delta="-0.1">-0.1</button>
-                        <button class="fine-tune-btn" data-delta="0.1">+0.1</button>
-                        <button class="fine-tune-btn" data-delta="0.5">+0.5</button>
-                    </div>
-                </div>
-            </label>
-            <div class="btn-group" data-target="burstRateL"><button class="button-step" data-delta="-0.1">-0.1</button><button class="button-step" data-delta="0.1">+0.1</button></div>
-        </div>
-        <div class="ctrl" title="Sets the repetition rate of the tone bursts for the right ear.">
-            <label>Burst Rate R (Hz)
-                <div class="input-with-buttons">
-                    <input type="number" id="burstRateR" class="val-input" min="0.2" max="10" step="0.1" value="1.5">
-                    <div class="fine-tune-group" data-target="burstRateR">
-                        <button class="fine-tune-btn" data-delta="-0.5">-0.5</button>
-                        <button class="fine-tune-btn" data-delta="-0.1">-0.1</button>
-                        <button class="fine-tune-btn" data-delta="0.1">+0.1</button>
-                        <button class="fine-tune-btn" data-delta="0.5">+0.5</button>
-                    </div>
-                </div>
-            </label>
-            <div class="btn-group" data-target="burstRateR"><button class="button-step" data-delta="-0.1">-0.1</button><button class="button-step" data-delta="0.1">+0.1</button></div>
-        </div>
-    </div>
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button class="tone-btn" style="flex: 1;" onclick="syncBurstToR()">Sync Burst L &rarr; R</button>
-    </div>
-
-    <div class="match-section">
-        <h3 style="display: flex; align-items: center;">Hearing Compensation (EQ) <span class="status-dot">○</span> <span class="info-icon">?</span>
-            <label style="margin-left: auto; font-size: 0.8rem; color: var(--accent); cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                <input type="checkbox" id="useHearingProfile" style="width: 16px; height: 16px;"> Auto-Compensate
-            </label>
-        </h3>
-        <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
         <div class="responsive-grid">
-            <div id="eqControlsL"></div>
-            <div id="eqControlsR"></div>
+            <div class="ctrl"
+                title="Sets the central frequency of the tone bursts and the noise filter for the left ear.">
+                <label>Carrier Freq L (Hz)
+                    <div class="input-with-buttons">
+                        <input type="number" id="freqL" class="val-input" min="200" max="12000" value="8000">
+                        <div class="fine-tune-group" data-target="freqL">
+                            <button class="fine-tune-btn" data-delta="-5">-5</button>
+                            <button class="fine-tune-btn" data-delta="-1">-1</button>
+                            <button class="fine-tune-btn" data-delta="1">+1</button>
+                            <button class="fine-tune-btn" data-delta="5">+5</button>
+                        </div>
+                    </div>
+                </label>
+                <div class="btn-group" data-target="freqL">
+                    <button class="button-step" data-delta="-100">-100</button>
+                    <button class="button-step" data-delta="100">+100</button>
+                </div>
+            </div>
+            <div class="ctrl"
+                title="Sets the central frequency of the tone bursts and the noise filter for the right ear.">
+                <label>Carrier Freq R (Hz)
+                    <div class="input-with-buttons">
+                        <input type="number" id="freqR" class="val-input" min="200" max="12000" value="8000">
+                        <div class="fine-tune-group" data-target="freqR">
+                            <button class="fine-tune-btn" data-delta="-5">-5</button>
+                            <button class="fine-tune-btn" data-delta="-1">-1</button>
+                            <button class="fine-tune-btn" data-delta="1">+1</button>
+                            <button class="fine-tune-btn" data-delta="5">+5</button>
+                        </div>
+                    </div>
+                </label>
+                <div class="btn-group" data-target="freqR">
+                    <button class="button-step" data-delta="-100">-100</button>
+                    <button class="button-step" data-delta="100">+100</button>
+                </div>
+            </div>
         </div>
-    </div>
-
-    <div class="ctrl">
-        <label>Noise Carrier Color</label>
-        <select id="noiseColor">
-            <option value="white" title="Flat spectrum; effective for broadband masking.">White Noise</option>
-            <option value="pink" selected title="Balanced power; research standard for comfort.">Pink Noise</option>
-            <option value="brown" title="Low-frequency focus; best for low-pitched tinnitus.">Brown Noise</option>
-            <option value="blue" title="High-frequency focus; useful for high-pitched tinnitus.">Blue Noise (+3dB/oct)</option>
-            <option value="violet" title="Strong high-frequency focus; best for piercing tones.">Violet Noise (High-Tone)</option>
-        </select>
-    </div>
-
-    <div class="ctrl">
-        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 10px;">
-            <input type="checkbox" id="useLiveAudio" style="width: 20px; height: 20px;">
-            <span style="color: var(--accent); font-weight: bold;">Use Live System Audio (Spotify/YouTube)</span>
-        </label>
-        <label>Or Upload Custom File</label>
-        <input type="file" id="customFile" accept="audio/*">
-    </div>
-
-    <button id="startBtn" class="big-btn play-btn zen-keep" onclick="startSession()">Start Session</button>
-    <button id="stopBtn" class="big-btn stop-btn zen-keep" style="display:none" onclick="stopSession()">Stop Session</button>
-    <button id="stopBtn" class="big-btn stop-btn zen-keep" style="display:none; background: var(--error);" onclick="stopSession()">Stop Session</button>
-    <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-    <button class="button zen-keep" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
-    <button class="button" style="width:100%; margin-top:10px; border-color: #ff9800; color: #ff9800;" onclick="shareToCommunity()">💬 Share Setup to Community (BBCode/MD)</button>
-    <button class="button email-audiologist-btn" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
-    <div class="timer zen-keep" id="timer" style="margin-top: 15px;">Session: 00:00 / 20:00</div>
-    <div id="usageText" class="usage-text zen-keep">Today's Progress: 0 / 20 mins</div>
-    <div class="breathing-pacer-wrap zen-keep">
-        <div class="breathing-wave-label-container">
-            <div class="breathing-label inhale">Inhale</div>
-            <div class="breathing-label exhale">Exhale</div>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="tone-btn" style="flex: 1;" onclick="syncFreqToR()">Sync Freq L &rarr; R</button>
+            <button class="tone-btn" style="flex: 1;" onclick="syncBalanceToPreset()">Sync Balance to Preset</button>
         </div>
-        <div class="breathing-wave-container">
-            <div class="breathing-wave-bar"></div>
-        </div>
-    </div>
-    <div class="usage-progress zen-keep">
-        <div id="usageBar" class="usage-bar" style="width: 0%"></div>
-    </div>
-    <button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
-    <button class="button zen-keep" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetToDefaults()">Reset to Defaults</button>
-    <canvas id="viz" class="zen-keep"></canvas>
-</div>
-<script>
-let audioCtx,merger,analyserL,analyserR,rafViz,rafPulse,pacerTimer,nodesL,nodesR,bgSrc,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[],noiseBuf,nextChimeTime=0,lastVibrateTime=0;
-let running=false,remaining=0,timerId=null,sessionSeconds=1200;
-const eqBands = [2000, 4000, 8000, 12000];
 
-window.onload = () => {
-    initNav(`
+        <div class="ctrl"><label>Session Length</label><select id="session">
+                <option value="600">10 min</option>
+                <option value="900">15 min</option>
+                <option value="1200" selected>20 min</option>
+            </select></div>
+
+        <div class="ctrl">
+            <label style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Master Volume <span class="val" id="volValMaster"
+                        style="float:none; margin-left:10px;">100%</span></span>
+                <label
+                    style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; color: var(--accent);">
+                    <input type="checkbox" id="muteToggle" style="width: 16px; height: 16px; margin: 0;"> Mute
+                </label>
+            </label>
+            <input id="volMaster" type="range" min="0" max="100" step="1" value="100">
+            <div class="btn-group" data-target="volMaster">
+                <button class="button-step" data-delta="-5">-5</button>
+                <button class="button-step" data-delta="5">+5</button>
+            </div>
+        </div>
+
+        <div class="zen-keep" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="ctrl">
+                <label>Volume L <span class="val" id="volValL">30%</span></label>
+                <input id="volL" type="range" min="0" max="100" step="1" value="30">
+                <div class="btn-group" data-target="volL">
+                    <button class="button-step" data-delta="-5">-5</button>
+                    <button class="button-step" data-delta="5">+5</button>
+                </div>
+            </div>
+            <div class="ctrl">
+                <label>Volume R <span class="val" id="volValR">30%</span></label>
+                <input id="volR" type="range" min="0" max="100" step="1" value="30">
+                <div class="btn-group" data-target="volR">
+                    <button class="button-step" data-delta="-5">-5</button>
+                    <button class="button-step" data-delta="5">+5</button>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="tone-btn" style="flex: 1;" onclick="syncVolToR()">Sync Volume L &rarr; R</button>
+        </div>
+
+        <div class="responsive-grid">
+            <div class="ctrl"
+                title="Adjusts the balance between the tone bursts and the modulated noise for the left ear. 0 = all noise, 1 = all tone.">
+                <label>Tone/Noise Mix L <span class="val" id="mixValL">50%</span></label>
+                <input id="mixL" type="range" min="0" max="1" step="0.01" value="0.5">
+                <div class="btn-group" data-target="mixL">
+                    <button class="button-step" data-delta="-0.1">-0.1</button>
+                    <button class="button-step" data-delta="0.1">+0.1</button>
+                </div>
+            </div>
+            <div class="ctrl"
+                title="Adjusts the balance between the tone bursts and the modulated noise for the right ear. 0 = all noise, 1 = all tone.">
+                <label>Tone/Noise Mix R <span class="val" id="mixValR">50%</span></label>
+                <input id="mixR" type="range" min="0" max="1" step="0.01" value="0.5">
+                <div class="btn-group" data-target="mixR">
+                    <button class="button-step" data-delta="-0.1">-0.1</button>
+                    <button class="button-step" data-delta="0.1">+0.1</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="responsive-grid">
+            <div class="ctrl"
+                title="Sets the frequency at which the background noise is amplitude-modulated for the left ear.">
+                <label>Noise Mod L (Hz)
+                    <div class="input-with-buttons">
+                        <input type="number" id="modRateL" class="val-input" min="0.1" max="10" step="0.1" value="2.0">
+                        <div class="fine-tune-group" data-target="modRateL">
+                            <button class="fine-tune-btn" data-delta="-0.5">-0.5</button>
+                            <button class="fine-tune-btn" data-delta="-0.1">-0.1</button>
+                            <button class="fine-tune-btn" data-delta="0.1">+0.1</button>
+                            <button class="fine-tune-btn" data-delta="0.5">+0.5</button>
+                        </div>
+                    </div>
+                </label>
+                <div class="btn-group" data-target="modRateL"><button class="button-step"
+                        data-delta="-0.1">-0.1</button><button class="button-step" data-delta="0.1">+0.1</button></div>
+            </div>
+            <div class="ctrl"
+                title="Sets the frequency at which the background noise is amplitude-modulated for the right ear.">
+                <label>Noise Mod R (Hz)
+                    <div class="input-with-buttons">
+                        <input type="number" id="modRateR" class="val-input" min="0.1" max="10" step="0.1" value="2.0">
+                        <div class="fine-tune-group" data-target="modRateR">
+                            <button class="fine-tune-btn" data-delta="-0.5">-0.5</button>
+                            <button class="fine-tune-btn" data-delta="-0.1">-0.1</button>
+                            <button class="fine-tune-btn" data-delta="0.1">+0.1</button>
+                            <button class="fine-tune-btn" data-delta="0.5">+0.5</button>
+                        </div>
+                    </div>
+                </label>
+                <div class="btn-group" data-target="modRateR"><button class="button-step"
+                        data-delta="-0.1">-0.1</button><button class="button-step" data-delta="0.1">+0.1</button></div>
+            </div>
+        </div>
+
+        <div class="responsive-grid">
+            <div class="ctrl" title="Sets the repetition rate of the tone bursts for the left ear.">
+                <label>Burst Rate L (Hz)
+                    <div class="input-with-buttons">
+                        <input type="number" id="burstRateL" class="val-input" min="0.2" max="10" step="0.1"
+                            value="1.5">
+                        <div class="fine-tune-group" data-target="burstRateL">
+                            <button class="fine-tune-btn" data-delta="-0.5">-0.5</button>
+                            <button class="fine-tune-btn" data-delta="-0.1">-0.1</button>
+                            <button class="fine-tune-btn" data-delta="0.1">+0.1</button>
+                            <button class="fine-tune-btn" data-delta="0.5">+0.5</button>
+                        </div>
+                    </div>
+                </label>
+                <div class="btn-group" data-target="burstRateL"><button class="button-step"
+                        data-delta="-0.1">-0.1</button><button class="button-step" data-delta="0.1">+0.1</button></div>
+            </div>
+            <div class="ctrl" title="Sets the repetition rate of the tone bursts for the right ear.">
+                <label>Burst Rate R (Hz)
+                    <div class="input-with-buttons">
+                        <input type="number" id="burstRateR" class="val-input" min="0.2" max="10" step="0.1"
+                            value="1.5">
+                        <div class="fine-tune-group" data-target="burstRateR">
+                            <button class="fine-tune-btn" data-delta="-0.5">-0.5</button>
+                            <button class="fine-tune-btn" data-delta="-0.1">-0.1</button>
+                            <button class="fine-tune-btn" data-delta="0.1">+0.1</button>
+                            <button class="fine-tune-btn" data-delta="0.5">+0.5</button>
+                        </div>
+                    </div>
+                </label>
+                <div class="btn-group" data-target="burstRateR"><button class="button-step"
+                        data-delta="-0.1">-0.1</button><button class="button-step" data-delta="0.1">+0.1</button></div>
+            </div>
+        </div>
+
+        <div class="match-section">
+            <h3 style="display: flex; align-items: center;">Hearing Compensation (EQ) <span class="status-dot">○</span>
+                <span class="info-icon">?</span>
+                <label
+                    style="margin-left: auto; font-size: 0.8rem; color: var(--accent); cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="useHearingProfile" style="width: 16px; height: 16px;"> Auto-Compensate
+                </label>
+            </h3>
+            <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
+            <div class="responsive-grid">
+                <div id="eqControlsL"></div>
+                <div id="eqControlsR"></div>
+            </div>
+        </div>
+
+        <div class="ctrl">
+            <label>Noise Carrier Color</label>
+            <select id="noiseColor">
+                <option value="white" title="Flat spectrum; effective for broadband masking.">White Noise</option>
+                <option value="pink" selected title="Balanced power; research standard for comfort.">Pink Noise</option>
+                <option value="brown" title="Low-frequency focus; best for low-pitched tinnitus.">Brown Noise</option>
+                <option value="blue" title="High-frequency focus; useful for high-pitched tinnitus.">Blue Noise
+                    (+3dB/oct)</option>
+                <option value="violet" title="Strong high-frequency focus; best for piercing tones.">Violet Noise
+                    (High-Tone)</option>
+            </select>
+        </div>
+
+        <div class="ctrl">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 10px;">
+                <input type="checkbox" id="useLiveAudio" style="width: 20px; height: 20px;">
+                <span style="color: var(--accent); font-weight: bold;">Use Live System Audio (Spotify/YouTube)</span>
+            </label>
+            <label>Or Upload Custom File</label>
+            <input type="file" id="customFile" accept="audio/*">
+        </div>
+
+        <button id="startBtn" class="big-btn play-btn zen-keep" onclick="startSession()">Start Session</button>
+        <button id="stopBtn" class="big-btn stop-btn zen-keep" style="display:none" onclick="stopSession()">Stop
+            Session</button>
+        <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;"
+            onclick="generatePDFReport()">Download PDF Report</button>
+        <button class="button zen-keep" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical
+            Export (.txt)</button>
+        <button class="button" style="width:100%; margin-top:10px; border-color: #ff9800; color: #ff9800;"
+            onclick="shareToCommunity()">💬 Share Setup to Community (BBCode/MD)</button>
+        <button class="button email-audiologist-btn"
+            style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;"
+            onclick="emailToAudiologist()">Email to Audiologist</button>
+        <div class="timer zen-keep" id="timer" style="margin-top: 15px;">Session: 00:00 / 20:00</div>
+        <div id="usageText" class="usage-text zen-keep">Today's Progress: 0 / 20 mins</div>
+        <div class="breathing-pacer-wrap zen-keep">
+            <div class="breathing-wave-label-container">
+                <div class="breathing-label inhale">Inhale</div>
+                <div class="breathing-label exhale">Exhale</div>
+            </div>
+            <div class="breathing-wave-container">
+                <div class="breathing-wave-bar"></div>
+            </div>
+        </div>
+        <div class="usage-progress zen-keep">
+            <div id="usageBar" class="usage-bar" style="width: 0%"></div>
+        </div>
+        <button id="zenBtn" class="button zen-keep"
+            style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter
+            Zen Mode</button>
+        <button class="button zen-keep"
+            style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
+            onclick="resetToDefaults()">Reset to Defaults</button>
+        <canvas id="viz" class="zen-keep"></canvas>
+    </div>
+    <script>
+        let audioCtx, merger, analyserL, analyserR, rafViz, rafPulse, pacerTimer, nodesL, nodesR, bgSrc, globalMasterGain, liveStream, eqNodesL = [], eqNodesR = [], noiseBuf, nextChimeTime = 0, lastVibrateTime = 0;
+        let running = false, remaining = 0, timerId = null, sessionSeconds = 1200;
+        const eqBands = [2000, 4000, 8000, 12000];
+
+        window.onload = () => {
+            initNav(`
         <b>Hearing Compensation (EQ):</b> Allows you to boost specific frequency bands to compensate for hearing loss. Researchers suggest that correcting for hearing loss can help lower tinnitus perception by reducing the brain's "internal gain."<br><br>
         <b>Purpose:</b> Simulates the sound‑only component of Lenire therapy using tone bursts and modulated noise.<br><br>
         <b>Technical Accuracy:</b> The module utilizes independent oscillators for tone bursting and noise modulation, ensuring precise delivery of rhythmic auditory stimuli used in neuromodulation research.<br><br>
@@ -319,674 +335,671 @@ window.onload = () => {
         Conlon B, et al. "Bimodal neuromodulation combining sound and tongue stimulation reduces tinnitus symptoms in a large randomized clinical study." <i>Science Translational Medicine</i>. 2020 Oct 7;12(564):eabb2830. doi: 10.1126/scitranslmed.abb2830.
     `);
 
-    document.getElementById('freqL').value = loadSetting('len_freqL', loadSetting('len_freq', 8000));
-    document.getElementById('freqR').value = loadSetting('len_freqR', loadSetting('len_freq', 8000));
+            document.getElementById('freqL').value = loadSetting('len_freqL', loadSetting('len_freq', 8000));
+            document.getElementById('freqR').value = loadSetting('len_freqR', loadSetting('len_freq', 8000));
 
-    const bal = getBalancePreset();
-    document.getElementById('volL').value = loadSetting('len_volL', loadSetting('len_vol', bal <= 0 ? 30 : Math.round(30 * (1 - bal))));
-    document.getElementById('volR').value = loadSetting('len_volR', loadSetting('len_vol', bal >= 0 ? 30 : Math.round(30 * (1 + bal))));
-    document.getElementById('volMaster').value = loadSetting('len_volMaster', 100);
-    document.getElementById('muteToggle').checked = loadSetting('len_volMuted', 'false') === 'true';
-    document.getElementById('mixL').value = loadSetting('len_mixL', loadSetting('len_mix', 0.5));
-    document.getElementById('mixR').value = loadSetting('len_mixR', loadSetting('len_mix', 0.5));
-    document.getElementById('modRateL').value = loadSetting('len_modL', loadSetting('len_mod', 2.0));
-    document.getElementById('modRateR').value = loadSetting('len_modR', loadSetting('len_mod', 2.0));
-    document.getElementById('burstRateL').value = loadSetting('len_burstL', loadSetting('len_burst', 1.5));
-    document.getElementById('burstRateR').value = loadSetting('len_burstR', loadSetting('len_burst', 1.5));
+            const bal = getBalancePreset();
+            document.getElementById('volL').value = loadSetting('len_volL', loadSetting('len_vol', bal <= 0 ? 30 : Math.round(30 * (1 - bal))));
+            document.getElementById('volR').value = loadSetting('len_volR', loadSetting('len_vol', bal >= 0 ? 30 : Math.round(30 * (1 + bal))));
+            document.getElementById('volMaster').value = loadSetting('len_volMaster', 100);
+            document.getElementById('muteToggle').checked = loadSetting('len_volMuted', 'false') === 'true';
+            document.getElementById('mixL').value = loadSetting('len_mixL', loadSetting('len_mix', 0.5));
+            document.getElementById('mixR').value = loadSetting('len_mixR', loadSetting('len_mix', 0.5));
+            document.getElementById('modRateL').value = loadSetting('len_modL', loadSetting('len_mod', 2.0));
+            document.getElementById('modRateR').value = loadSetting('len_modR', loadSetting('len_mod', 2.0));
+            document.getElementById('burstRateL').value = loadSetting('len_burstL', loadSetting('len_burst', 1.5));
+            document.getElementById('burstRateR').value = loadSetting('len_burstR', loadSetting('len_burst', 1.5));
 
-    const updatePulseDuration = () => {
-        const bpm = parseFloat(document.getElementById('pulseRate').value);
-        const duration = 60 / bpm;
-        document.documentElement.style.setProperty('--pulse-duration', `${duration}s`);
-    };
+            const updatePulseDuration = () => {
+                const bpm = parseFloat(document.getElementById('pulseRate').value);
+                const duration = 60 / bpm;
+                document.documentElement.style.setProperty('--pulse-duration', `${duration}s`);
+            };
 
-    document.getElementById('pulseRate').value = loadSetting('len_pulse_bpm', 6);
-    document.getElementById('pulseRateVal').textContent = document.getElementById('pulseRate').value;
-    document.getElementById('pulseRate').oninput = e => {
-        document.getElementById('pulseRateVal').textContent = e.target.value;
-        saveSetting('len_pulse_bpm', e.target.value);
-        updatePulseDuration();
-    };
-    document.getElementById('noiseColor').value = loadSetting('len_noiseColor', 'pink');
-    
-    document.getElementById('lockLR').checked = loadSetting('len_lock_lr', 'false') === 'true';
-    document.getElementById('visualPulse').checked = loadSetting('len_visual_pulse', 'false') === 'true';
-    document.getElementById('pacerAudio').checked = loadSetting('len_pacer_audio', 'false') === 'true';
-    document.getElementById('hapticPulse').checked = loadSetting('len_haptic_pulse', 'false') === 'true';
+            document.getElementById('pulseRate').value = loadSetting('len_pulse_bpm', 6);
+            document.getElementById('pulseRateVal').textContent = document.getElementById('pulseRate').value;
+            document.getElementById('pulseRate').oninput = e => {
+                document.getElementById('pulseRateVal').textContent = e.target.value;
+                saveSetting('len_pulse_bpm', e.target.value);
+                updatePulseDuration();
+            };
+            document.getElementById('noiseColor').value = loadSetting('len_noiseColor', 'pink');
 
-    const hStrength = document.getElementById('hapticStrength');
-    hStrength.value = loadSetting('len_haptic_strength', 128);
-    document.getElementById('hapticStrengthVal').textContent = hStrength.value;
-    hStrength.oninput = (e) => {
-        document.getElementById('hapticStrengthVal').textContent = e.target.value;
-        saveSetting('len_haptic_strength', e.target.value);
-    };
+            document.getElementById('lockLR').checked = loadSetting('len_lock_lr', 'false') === 'true';
+            document.getElementById('visualPulse').checked = loadSetting('len_visual_pulse', 'false') === 'true';
+            document.getElementById('pacerAudio').checked = loadSetting('len_pacer_audio', 'false') === 'true';
+            document.getElementById('hapticPulse').checked = loadSetting('len_haptic_pulse', 'false') === 'true';
 
-    const hSens = document.getElementById('hapticSens');
-    hSens.value = loadSetting('len_haptic_sens', 0.08);
-    document.getElementById('hapticSensVal').textContent = hSens.value;
-    hSens.oninput = (e) => {
-        document.getElementById('hapticSensVal').textContent = e.target.value;
-        saveSetting('len_haptic_sens', e.target.value);
-    };
+            const hStrength = document.getElementById('hapticStrength');
+            hStrength.value = loadSetting('len_haptic_strength', 128);
+            document.getElementById('hapticStrengthVal').textContent = hStrength.value;
+            hStrength.oninput = (e) => {
+                document.getElementById('hapticStrengthVal').textContent = e.target.value;
+                saveSetting('len_haptic_strength', e.target.value);
+            };
 
-    createEqUI();
-    updateLockVisuals();
-    updateLabels();
-    setupStepButtons();
-    refreshUsageUI();
-    updatePulseDuration();
+            const hSens = document.getElementById('hapticSens');
+            hSens.value = loadSetting('len_haptic_sens', 0.08);
+            document.getElementById('hapticSensVal').textContent = hSens.value;
+            hSens.oninput = (e) => {
+                document.getElementById('hapticSensVal').textContent = e.target.value;
+                saveSetting('len_haptic_sens', e.target.value);
+            };
 
-    document.getElementById('useHearingProfile').checked = loadSetting('len_use_hp', 'false') === 'true';
-    document.getElementById('useHearingProfile').onchange = (e) => {
-        saveSetting('len_use_hp', e.target.checked);
-        if (running) stopSession(); // Restart required to rebuild graph
-    };
+            createEqUI();
+            updateLockVisuals();
+            updateLabels();
+            setupStepButtons();
+            refreshUsageUI();
+            updatePulseDuration();
 
-    if (loadSetting('lenire_zen_mode', 'false') === 'true') {
-        toggleZenMode(true);
-    }
-};
+            document.getElementById('useHearingProfile').checked = loadSetting('len_use_hp', 'false') === 'true';
+            document.getElementById('useHearingProfile').onchange = (e) => {
+                saveSetting('len_use_hp', e.target.checked);
+                if (running) stopSession(); // Restart required to rebuild graph
+            };
 
-function resetToDefaults() {
-    if (confirm("Reset all settings for Lenire-style therapy to their defaults?")) {
-        resetModuleSettings(['len_', 'eq_len_']);
-    }
-};
+            if (loadSetting('lenire_zen_mode', 'false') === 'true') {
+                toggleZenMode(true);
+            }
+        };
 
-function createEqUI() {
-    ['L', 'R'].forEach(side => {
-        const container = document.getElementById(`eqControls${side}`);
-        container.innerHTML = `<h4 style="color:var(--accent); font-size:0.8rem; margin-bottom:10px;">${side === 'L' ? 'Left' : 'Right'} Ear</h4>`;
-        eqBands.forEach(freq => {
-            const val = loadSetting(`eq_len_${side}_${freq}`, 0);
-            const div = document.createElement('div');
-            div.className = 'ctrl';
-            div.innerHTML = `
-                <label>${freq >= 1000 ? (freq/1000)+'k' : freq} Hz Boost <span class="val" id="eqVal_len_${side}_${freq}">${val} dB</span></label>
+        function resetToDefaults() {
+            if (confirm("Reset all settings for Lenire-style therapy to their defaults?")) {
+                resetModuleSettings(['len_', 'eq_len_']);
+            }
+        };
+
+        function createEqUI() {
+            ['L', 'R'].forEach(side => {
+                const container = document.getElementById(`eqControls${side}`);
+                container.innerHTML = `<h4 style="color:var(--accent); font-size:0.8rem; margin-bottom:10px;">${side === 'L' ? 'Left' : 'Right'} Ear</h4>`;
+                eqBands.forEach(freq => {
+                    const val = loadSetting(`eq_len_${side}_${freq}`, 0);
+                    const div = document.createElement('div');
+                    div.className = 'ctrl';
+                    div.innerHTML = `
+                <label>${freq >= 1000 ? (freq / 1000) + 'k' : freq} Hz Boost <span class="val" id="eqVal_len_${side}_${freq}">${val} dB</span></label>
                 <input type="range" id="eq_len_${side}_${freq}" min="-12" max="12" value="${val}" step="1">
             `;
-            container.appendChild(div);
-            const slider = div.querySelector('input');
-            slider.oninput = (e) => {
-                const v = e.target.value;
-                document.getElementById(`eqVal_len_${side}_${freq}`).textContent = v + ' dB';
-                saveSetting(`eq_len_${side}_${freq}`, v);
-                if (document.getElementById('lockLR').checked && side === 'L') {
-                    const rSlider = document.getElementById(`eq_len_R_${freq}`);
-                    if (rSlider) { rSlider.value = v; rSlider.dispatchEvent(new Event('input')); }
-                }
-                if (audioCtx) {
-                    const nodes = side === 'L' ? eqNodesL : eqNodesR;
-                    const node = nodes.find(n => n.frequency.value === freq);
-                    if (node) node.gain.setTargetAtTime(v, audioCtx.currentTime, 0.05);
-                }
-            };
-        });
-    });
-}
-
-document.getElementById('lockLR').onchange = (e) => {
-    saveSetting('len_lock_lr', e.target.checked);
-    updateLockVisuals();
-};
-
-function refreshUsageUI() {
-    const goal = loadSetting('daily_goal', 20);
-    const current = getDailyUsage();
-    document.getElementById('usageBar').style.width = Math.min(100, (current / goal) * 100) + '%';
-    document.getElementById('usageText').textContent = `Today's Progress: ${Math.round(current)} / ${goal} mins`;
-}
-
-let repeatTimeout, repeatInterval;
-function setupStepButtons() {
-    document.querySelectorAll('.btn-group .button-step, .fine-tune-btn').forEach(btn => {
-        const delta = parseFloat(btn.dataset.delta);
-        let targetParent = btn.closest('[data-target]');
-        if (!targetParent) return;
-        
-        const targetId = targetParent.dataset.target;
-        const target = document.getElementById(targetId);
-        
-        const step = () => {
-            let val = (parseFloat(target.value) + delta);
-            if (target.step.includes('.')) val = parseFloat(val.toFixed(1));
-            target.value = Math.min(target.max, Math.max(target.min, val));
-            target.dispatchEvent(new Event('input'));
-        };
-        btn.onmousedown = btn.ontouchstart = (e) => {
-            e.preventDefault(); step();
-            repeatTimeout = setTimeout(() => { repeatInterval = setInterval(step, 80); }, 500);
-        };
-        btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => {
-            clearInterval(repeatInterval); clearTimeout(repeatTimeout); repeatInterval = null;
-        };
-        btn.onclick = () => { if(!repeatInterval) step(); };
-    });
-}
-
-function syncFreqToR() {
-    document.getElementById('freqR').value = document.getElementById('freqL').value;
-    document.getElementById('freqR').dispatchEvent(new Event('input'));
-}
-
-function syncVolToR() {
-    document.getElementById('volR').value = document.getElementById('volL').value;
-    document.getElementById('volR').dispatchEvent(new Event('input'));
-}
-
-function syncMixToR() {
-    document.getElementById('mixR').value = document.getElementById('mixL').value;
-    document.getElementById('mixR').dispatchEvent(new Event('input'));
-}
-
-function syncModToR() {
-    document.getElementById('modRateR').value = document.getElementById('modRateL').value;
-    document.getElementById('modRateR').dispatchEvent(new Event('input'));
-}
-
-function syncBurstToR() {
-    document.getElementById('burstRateR').value = document.getElementById('burstRateL').value;
-    document.getElementById('burstRateR').dispatchEvent(new Event('input'));
-}
-
-function performGlobalSync() {
-    if (!document.getElementById('lockLR').checked) return;
-    syncFreqToR();
-    syncVolToR();
-    syncMixToR();
-    syncModToR();
-    syncBurstToR();
-}
-
-function syncBalanceToPreset() {
-    const bal = getBalancePreset();
-    const baseVol = 30; // Default volume for Lenire therapy
-    document.getElementById('volL').value = bal <= 0 ? baseVol : Math.round(baseVol * (1 - bal));
-    document.getElementById('volR').value = bal >= 0 ? baseVol : Math.round(baseVol * (1 + bal));
-    document.getElementById('volL').dispatchEvent(new Event('input'));
-    document.getElementById('volR').dispatchEvent(new Event('input'));
-    alert("Volume balance adjusted to global tinnitus side preset.");
-}
-
-function updateLabels(){
-    document.getElementById('volValL').textContent = document.getElementById('volL').value + '%';
-    document.getElementById('volValR').textContent = document.getElementById('volR').value + '%';
-    document.getElementById('volValMaster').textContent = document.getElementById('volMaster').value + '%';
-    document.getElementById('mixValL').textContent = Math.round(document.getElementById('mixL').value*100) + '%';
-    document.getElementById('mixValR').textContent = Math.round(document.getElementById('mixR').value*100) + '%';
-}
-
-function updateLockVisuals() {
-    const isLocked = document.getElementById('lockLR').checked;
-    const ids = ['freqR', 'volR', 'mixR', 'modRateR', 'burstRateR', 'eqControlsR'];
-    ids.forEach(id => {
-        const el = document.getElementById(id)?.closest('.ctrl');
-        if (el) el.classList.toggle('locked-ui', isLocked);
-    });
-    if (isLocked) performGlobalSync();
-}
-
-function runVisualPulse() {
-    if (!running || !document.getElementById('visualPulse').checked) {
-        document.body.style.background = '';
-        return;
-    }
-    
-    // Detect signal peaks from the analyzer to drive the visual flicker
-    const data = new Uint8Array(analyserL.frequencyBinCount);
-    analyserL.getByteTimeDomainData(data);
-    let sum = 0;
-    for(let i=0; i<data.length; i++) {
-        const s = (data[i]-128)/128;
-        sum += s*s;
-    }
-    const rms = Math.sqrt(sum/data.length);
-    
-    // High-contrast flicker synchronized to the auditory bursts
-    const hapticEnabled = document.getElementById('hapticPulse').checked;
-    const threshold = parseFloat(document.getElementById('hapticSens').value);
-
-    if (rms > threshold && Date.now() - lastVibrateTime > 200) {
-        document.body.style.background = 'rgba(0, 191, 165, 0.15)';
-        lastVibrateTime = Date.now();
-        
-        if (hapticEnabled && "vibrate" in navigator) navigator.vibrate(40);
-    } else if (rms <= threshold) {
-        document.body.style.background = '';
-    }
-    rafPulse = requestAnimationFrame(runVisualPulse);
-}
-
-function playPacerChime(time, freq) {
-    if (!document.getElementById('pacerAudio').checked) return;
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, time);
-    
-    g.gain.setValueAtTime(0, time);
-    g.gain.linearRampToValueAtTime(0.04, time + 0.02); // Very soft
-    g.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
-    
-    osc.connect(g).connect(audioCtx.destination);
-    osc.start(time);
-    osc.stop(time + 1.0);
-}
-
-function schedulePacerAudio() {
-    if (!running) return;
-    const bpm = parseFloat(document.getElementById('pulseRate').value);
-    const duration = 60 / bpm;
-    
-    // Schedule slightly ahead of current time to avoid jitter
-    while (nextChimeTime < audioCtx.currentTime + 0.1) {
-        // Inhale: High chime (880Hz)
-        playPacerChime(nextChimeTime, 880);
-        // Exhale: Lower chime (440Hz) scheduled at the midpoint of the cycle
-        playPacerChime(nextChimeTime + (duration / 2), 440);
-        nextChimeTime += duration;
-    }
-    pacerTimer = setTimeout(schedulePacerAudio, 50);
-}
-
-document.getElementById('visualPulse').onchange = (e) => {
-    saveSetting('len_visual_pulse', e.target.checked);
-};
-
-document.getElementById('pacerAudio').onchange = (e) => {
-    saveSetting('len_pacer_audio', e.target.checked);
-};
-
-document.getElementById('hapticPulse').onchange = (e) => {
-    saveSetting('len_haptic_pulse', e.target.checked);
-};
-
-function toggleZenMode() {
-    document.body.classList.toggle('zen-mode');
-    const isZen = document.body.classList.contains('zen-mode');
-    saveSetting('lenire_zen_mode', isZen);
-    document.getElementById('zenBtn').textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
-}
-function formatTime(s){return Math.floor(s/60).toString().padStart(2,'0')+':'+(s%60).toString().padStart(2,'0')}
-function updateTimerDisplay(){timerEl.textContent='Session: '+formatTime(sessionSeconds-remaining)+' / '+formatTime(sessionSeconds)}
-const freqLEl=document.getElementById('freqL'),freqREl=document.getElementById('freqR'),volMasterEl=document.getElementById('volMaster');
-const volLEl=document.getElementById('volL'),volREl=document.getElementById('volR');
-const mixLEl=document.getElementById('mixL'),mixREl=document.getElementById('mixR'),modLEl=document.getElementById('modRateL'),modREl=document.getElementById('modRateR'),burstLEl=document.getElementById('burstRateL'),burstREl=document.getElementById('burstRateR'),timerEl=document.getElementById('timer');
-
-async function startSession(){
-  if(running)return;
-  sessionSeconds=parseInt(document.getElementById('session').value); remaining=sessionSeconds;
-  if(!audioCtx) await setupAudio();
-  audioCtx._expectingSound = true;
-  validateLenireParams();
-  updateParams(); running=true;
-  nextChimeTime = audioCtx.currentTime;
-  document.body.classList.add('session-running');
-  schedulePacerAudio();
-  drawViz();
-  runVisualPulse();
-  document.getElementById('startBtn').style.display='none';
-  document.getElementById('stopBtn').style.display='block';
-  timerId=setInterval(()=>{
-    remaining--;
-    if(remaining<=0) {
-      logUsageMinutes(sessionSeconds / 60);
-      stopSession();
-      refreshUsageUI();
-    }
-    updateTimerDisplay();
-  },1000);
-}
-function stopSession(){
-  running=false;
-  document.body.classList.remove('session-running');
-  eqNodesL = []; eqNodesR = [];
-  document.getElementById('startBtn').style.display='block';
-  document.getElementById('stopBtn').style.display='none';
-  if(timerId)clearInterval(timerId);
-  if(rafViz)cancelAnimationFrame(rafViz);
-  if(rafPulse)cancelAnimationFrame(rafPulse);
-  if(pacerTimer)clearTimeout(pacerTimer);
-  document.body.style.background = ''; // Reset visual pulse
-  if(liveStream) {
-      liveStream.getTracks().forEach(t => t.stop());
-      liveStream = null;
-  }
-  if(bgSrc && bgSrc.pause) bgSrc.pause();
-  if(audioCtx) audioCtx._expectingSound = false;
-  if(audioCtx) { audioCtx.close(); audioCtx = null; }
-  remaining=0;
-  updateTimerDisplay();
-}
-
-async function setupAudio(){
-  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  merger = audioCtx.createChannelMerger(2);
-  globalMasterGain = audioCtx.createGain();
-
-  const masterAnalyser = audioCtx.createAnalyser();
-  masterAnalyser.fftSize = 256;
-  merger.connect(globalMasterGain).connect(masterAnalyser).connect(audioCtx.destination);
-  audioCtx._healthAnalyser = masterAnalyser;
-
-  const color = document.getElementById('noiseColor').value;
-
-  let customSourceNode = null, splitter = null;
-  if (document.getElementById('useLiveAudio').checked) {
-      liveStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-      customSourceNode = audioCtx.createMediaStreamSource(liveStream);
-      splitter = audioCtx.createChannelSplitter(2); customSourceNode.connect(splitter);
-  }
-
-  const fileInput = document.getElementById('customFile');
-  const file = fileInput.files[0];
-  if (file && !customSourceNode) {
-      bgSrc = new Audio(URL.createObjectURL(file)); bgSrc.loop = true;
-      customSourceNode = audioCtx.createMediaElementSource(bgSrc);
-      splitter = audioCtx.createChannelSplitter(2); customSourceNode.connect(splitter);
-  }
-
-  const noiseModOsc = audioCtx.createOscillator();
-  const noiseModGain = audioCtx.createGain(); noiseModGain.gain.value = 0.4;
-  noiseModOsc.connect(noiseModGain);
-
-  const setupChannel = async (side) => {
-      const toneOsc = audioCtx.createOscillator();
-      const toneGain = audioCtx.createGain();
-      toneOsc.connect(toneGain);
-
-      let noiseSource = null;
-      if (!customSourceNode) {
-          noiseSource = await audioCtx.generator.createSafeNoiseNode(color);
-      }
-      const noiseFilter = audioCtx.createBiquadFilter(); noiseFilter.type='bandpass'; noiseFilter.Q.value=1.5;
-      const noiseGain = audioCtx.createGain();
-      if (customSourceNode) splitter.connect(noiseFilter, (side === 'L' ? 0 : 1));
-      else noiseSource.connect(noiseFilter);
-      noiseFilter.connect(noiseGain);
-
-      const masterGain = audioCtx.createGain();
-
-      // 1. Inject Hearing Profile Compensation (if enabled)
-      const useHP = document.getElementById('useHearingProfile').checked;
-      const hpFreqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
-      let head = masterGain;
-
-      if (useHP) {
-          hpFreqs.forEach(f => {
-              const boost = getHearingBoost(f, side);
-              if (boost > 0 && isFrequencySafe(audioCtx, f)) {
-                  const filter = audioCtx.createBiquadFilter();
-                  filter.type = 'peaking'; filter.frequency.value = f; filter.Q.value = 1;
-                  filter.gain.value = boost;
-                  head.connect(filter); head = filter;
-              }
-          });
-      }
-
-      // 2. Build Manual EQ Chain
-      const eqNodes = eqBands.map(freq => {
-          const f = audioCtx.createBiquadFilter();
-          f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1;
-          f.gain.value = parseFloat(loadSetting(`eq_len_${side}_${freq}`, 0));
-          head.connect(f); head = f;
-          return f;
-      });
-
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 2048;
-
-      const burstOsc = audioCtx.createOscillator(); burstOsc.type = 'square';
-      const burstGain = audioCtx.createGain(); burstGain.gain.value = 0.5;
-
-      toneGain.connect(masterGain);
-      noiseGain.connect(masterGain);
-      head.connect(analyser).connect(merger, 0, (side === 'L' ? 0 : 1));
-
-      // Connect shared modulation
-      noiseModGain.connect(noiseGain.gain);
-      burstGain.connect(toneGain.gain);
-
-      return { toneOsc, toneGain, noiseSource, noiseFilter, noiseGain, masterGain, analyser, burstOsc, burstGain, noiseModOsc, noiseModGain, eqNodes };
-  };
-
-  nodesL = await setupChannel('L');
-  nodesR = await setupChannel('R');
-  analyserL = nodesL.analyser;
-  analyserR = nodesR.analyser;
-  eqNodesL = nodesL.eqNodes;
-  eqNodesR = nodesR.eqNodes;
-
-  nodesL.toneOsc.start(); if(nodesL.noiseSource) nodesL.noiseSource.start();
-  nodesR.toneOsc.start(); if(nodesR.noiseSource) nodesR.noiseSource.start();
-  if (bgSrc) bgSrc.play();
-  nodesL.burstOsc.start();
-  nodesR.burstOsc.start();
-  nodesL.noiseModOsc.start();
-  nodesR.noiseModOsc.start();
-}
-
-function drawViz(){
-  if(!running||!analyserL||!analyserR)return;
-  const canvas=document.getElementById('viz'),c=canvas.getContext('2d');
-  canvas.width=canvas.offsetWidth*2;canvas.height=canvas.offsetHeight*2;
-  const dataL=new Uint8Array(analyserL.frequencyBinCount);analyserL.getByteFrequencyData(dataL);
-  const dataR=new Uint8Array(analyserR.frequencyBinCount);analyserR.getByteFrequencyData(dataR);
-  c.clearRect(0,0,canvas.width,canvas.height);
-  const barW=canvas.width/(dataL.length/2);
-  // Draw Left (Top half - Teal)
-  for(let i=0;i<dataL.length/2;i++){
-    const h=(dataL[i]/255)*(canvas.height/2.1),hue=170;
-    c.fillStyle='hsla('+hue+',70%,55%,0.8)';
-    c.fillRect(i*barW,canvas.height/2-h,barW-1,h);
-  }
-  // Draw Right (Bottom half - Purple)
-  for(let i=0;i<dataR.length/2;i++){
-    const h=(dataR[i]/255)*(canvas.height/2.1),hue=280;
-    c.fillStyle='hsla('+hue+',70%,55%,0.8)';
-    c.fillRect(i*barW,canvas.height/2,barW-1,h);
-  }
-  c.fillStyle='rgba(255,255,255,0.1)';c.fillRect(0,canvas.height/2-1,canvas.width,2);
-
-  // STEREO BALANCE OVERLAY
-  if(analyserL && analyserR) {
-      const bufL = new Uint8Array(analyserL.fftSize), bufR = new Uint8Array(analyserR.fftSize);
-      analyserL.getByteTimeDomainData(bufL); analyserR.getByteTimeDomainData(bufR);
-      let sL=0, sR=0;
-      for(let i=0; i<bufL.length; i++) {
-          let vL=(bufL[i]-128)/128, vR=(bufR[i]-128)/128;
-          sL+=vL*vL; sR+=vR*vR;
-      }
-      const rmsL = Math.sqrt(sL/bufL.length), rmsR = Math.sqrt(sR/bufR.length);
-      const bal = (rmsL + rmsR > 0) ? (rmsR / (rmsL + rmsR)) : 0.5;
-      
-      const ty = 40, tx = 80, tw = canvas.width - 160, th = 6;
-      c.fillStyle = 'rgba(255,255,255,0.1)';
-      c.fillRect(tx, ty, tw, th);
-      c.fillStyle = 'var(--accent)';
-      c.beginPath();
-      c.arc(tx + (bal * tw), ty + th/2, 10, 0, Math.PI*2);
-      c.fill();
-      c.font = "bold 20px sans-serif"; c.fillStyle = "#888";
-      c.fillText("L", tx - 45, ty + 15); c.fillText("R", tx + tw + 15, ty + 15);
-  }
-  rafViz=requestAnimationFrame(drawViz);
-}
-
-function updateParams(){
-  if(!audioCtx)return;
-  const fL=+freqLEl.value, fR=+freqREl.value, vL=+volLEl.value, vR=+volREl.value, mL=+mixLEl.value, mR=+mixREl.value, mrL=+modLEl.value, mrR=+modREl.value, brL=+burstLEl.value, brR=+burstREl.value;
-  
-  // Master Volume & Mute handling
-  const isMuted = document.getElementById('muteToggle').checked;
-  const mVol = isMuted ? 0 : volMasterEl.value / 100;
-  if (globalMasterGain) {
-      globalMasterGain.gain.setTargetAtTime(mVol, audioCtx.currentTime, 0.05);
-  }
-
-  nodesL.toneOsc.frequency.setTargetAtTime(fL,audioCtx.currentTime,0.05); nodesL.noiseFilter.frequency.setTargetAtTime(fL,audioCtx.currentTime,0.05);
-  nodesR.toneOsc.frequency.setTargetAtTime(fR,audioCtx.currentTime,0.05); nodesR.noiseFilter.frequency.setTargetAtTime(fR,audioCtx.currentTime,0.05);
-  
-  nodesL.masterGain.gain.setTargetAtTime(vL / 100, audioCtx.currentTime, 0.05); nodesL.toneGain.gain.setTargetAtTime(mL,audioCtx.currentTime,0.05); nodesL.noiseGain.gain.setTargetAtTime(1-mL,audioCtx.currentTime,0.05);
-  nodesR.masterGain.gain.setTargetAtTime(vR / 100, audioCtx.currentTime, 0.05); nodesR.toneGain.gain.setTargetAtTime(mR,audioCtx.currentTime,0.05); nodesR.noiseGain.gain.setTargetAtTime(1-mR,audioCtx.currentTime,0.05);
-  
-  nodesL.noiseModOsc.frequency.setTargetAtTime(mrL,audioCtx.currentTime,0.05);
-  nodesR.noiseModOsc.frequency.setTargetAtTime(mrR,audioCtx.currentTime,0.05);
-  nodesL.burstOsc.frequency.setTargetAtTime(brL,audioCtx.currentTime,0.05);
-  nodesR.burstOsc.frequency.setTargetAtTime(brR,audioCtx.currentTime,0.05);
-}
-
-function validateLenireParams() {
-    const fL = +freqLEl.value, fR = +freqREl.value, mrL = +modLEl.value, mrR = +modREl.value, brL = +burstLEl.value, brR = +burstREl.value, mL = +mixLEl.value, mR = +mixREl.value;
-
-    console.log("--- Lenire-Style Parameter Validation ---");
-    console.log(`Carrier Frequency: L:${fL} R:${fR} Hz`);
-    console.log(`Modulation Rate: L:${mrL} R:${mrR} Hz | Burst Rate: L:${brL} R:${brR} Hz`);
-    console.log(`Mix: L:${Math.round(mL*100)}% R:${Math.round(mR*100)}%`);
-    
-    if (fL < 1000 || fR < 1000) console.warn("Note: Carrier frequencies below 1kHz are unusual for tonal tinnitus.");
-    if (mL > 0.9 || mL < 0.1 || mR > 0.9 || mR < 0.1) console.warn("⚠️ Warning: Extreme mix levels may negate the benefits of combining tones and noise.");
-    
-    if (nodesL && nodesL.noiseModOsc && nodesL.burstOsc) {
-        console.log("✅ All neuromodulation oscillators verified active.");
-        console.log(`✅ Timing Precision: L:${(1000/brL).toFixed(0)}ms R:${(1000/brR).toFixed(0)}ms burst intervals.`);
-    } else {
-        console.error("❌ Audio Engine Error: Modulation nodes failed to initialize.");
-    }
-}
-
-document.getElementById('lockLR').onchange = (e) => {
-    saveSetting('len_lock_lr', e.target.checked);
-    if (e.target.checked) performGlobalSync();
-};
-
-document.getElementById('muteToggle').onchange = (e) => {
-    saveSetting('len_volMuted', e.target.checked);
-    if (audioCtx && globalMasterGain) {
-        const targetVol = e.target.checked ? 0 : volMasterEl.value / 100;
-        globalMasterGain.gain.setTargetAtTime(targetVol, audioCtx.currentTime, 0.1);
-    }
-};
-
-[freqLEl,freqREl,volLEl,volREl,volMasterEl,mixLEl,mixREl,modLEl,modREl,burstLEl,burstREl].forEach(el=>{el.oninput=()=>{
-    const isLocked = document.getElementById('lockLR').checked;
-    
-    // If locked and adjusting a Left control, propagate to Right
-    if (isLocked && el.id.endsWith('L')) {
-        const rightId = el.id.replace('L', 'R');
-        const rightEl = document.getElementById(rightId);
-        if (rightEl) {
-            rightEl.value = el.value;
-            // Dispatching input on the right element ensures it also saves its own state
-            rightEl.dispatchEvent(new Event('input'));
+                    container.appendChild(div);
+                    const slider = div.querySelector('input');
+                    slider.oninput = (e) => {
+                        const v = e.target.value;
+                        document.getElementById(`eqVal_len_${side}_${freq}`).textContent = v + ' dB';
+                        saveSetting(`eq_len_${side}_${freq}`, v);
+                        if (document.getElementById('lockLR').checked && side === 'L') {
+                            const rSlider = document.getElementById(`eq_len_R_${freq}`);
+                            if (rSlider) { rSlider.value = v; rSlider.dispatchEvent(new Event('input')); }
+                        }
+                        if (audioCtx) {
+                            const nodes = side === 'L' ? eqNodesL : eqNodesR;
+                            const node = nodes.find(n => n.frequency.value === freq);
+                            if (node) node.gain.setTargetAtTime(v, audioCtx.currentTime, 0.05);
+                        }
+                    };
+                });
+            });
         }
-    }
 
-    updateParams(); updateLabels();
-    const key = 'len_'+el.id.replace('Rate','');
-    saveSetting(key, el.value);
-}});
+        document.getElementById('lockLR').onchange = (e) => {
+            saveSetting('len_lock_lr', e.target.checked);
+            updateLockVisuals();
+        };
 
-function getReportData() {
-    const colorSelect = document.getElementById('noiseColor');
-    let bgSource = "Internal " + colorSelect.options[colorSelect.selectedIndex].text;
-    const useHP = document.getElementById('useHearingProfile').checked;
-    if (document.getElementById('useLiveAudio').checked) {
-        bgSource = "Live System Audio (Browser/App Capture)"; // Live audio takes precedence
-    } else {
-        const file = document.getElementById('customFile').files[0];
-        if (file) bgSource = `Custom File: ${file.name}`;
-    }
-    const data = {
-        "Hearing Profile Active": useHP ? 'Yes' : 'No',
-        "Carrier Source": bgSource,
-        "Carrier Frequency L": freqLEl.value + " Hz",
-        "Carrier Frequency R": freqREl.value + " Hz",
-        "Master Volume": volMasterEl.value + "%",
-        "Volume L": volLEl.value + "%",
-        "Volume R": volREl.value + "%",
-        "Tone/Noise Mix L": Math.round(mixLEl.value * 100) + "%",
-        "Tone/Noise Mix R": Math.round(mixREl.value * 100) + "%",
-        "Noise Modulation L": modLEl.value + " Hz",
-        "Noise Modulation R": modREl.value + " Hz",
-        "Tone Burst Rate L": burstLEl.value + " Hz",
-        "Tone Burst Rate R": burstREl.value + " Hz",
-        "Set Session Length": (document.getElementById('session').value / 60) + " minutes"
-    };
-    eqBands.forEach(f => {
-        data[`EQ L ${f}Hz`] = loadSetting(`eq_len_L_${f}`, 0) + " dB";
-        data[`EQ R ${f}Hz`] = loadSetting(`eq_len_R_${f}`, 0) + " dB";
-    });
-    return data;
-}
+        function refreshUsageUI() {
+            const goal = loadSetting('daily_goal', 20);
+            const current = getDailyUsage();
+            document.getElementById('usageBar').style.width = Math.min(100, (current / goal) * 100) + '%';
+            document.getElementById('usageText').textContent = `Today's Progress: ${Math.round(current)} / ${goal} mins`;
+        }
 
-function exportClinicalSettings() {
-    const reportData = getClinicalReportData("Lenire-Style Sound (Experimental)", getReportData());
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(aiSummaryText => {
-        reportData.aiSummary = aiSummaryText;
-        const report = generateClinicalReportText(reportData);
-        const blob = new Blob([report], { type: 'text/plain' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = `tinnitus_clinical_lenire_style.txt`; a.click();
-        alert("Clinical report downloaded. Please check your browser's Downloads folder.");
-    });
-}
+        let repeatTimeout, repeatInterval;
+        function setupStepButtons() {
+            document.querySelectorAll('.btn-group .button-step, .fine-tune-btn').forEach(btn => {
+                const delta = parseFloat(btn.dataset.delta);
+                let targetParent = btn.closest('[data-target]');
+                if (!targetParent) return;
 
-async function generatePDFReport() {
-    const reportData = getClinicalReportData("Lenire-Style Sound (Experimental)", getReportData());
-    // Fetch AI summary and add to reportData
-    const aiSummaryText = await getClinicalSummary();
-    reportData.aiSummary = aiSummaryText;
-    const htmlContent = generateClinicalReportHtml(reportData);
+                const targetId = targetParent.dataset.target;
+                const target = document.getElementById(targetId);
 
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    document.body.appendChild(tempDiv);
+                const step = () => {
+                    let val = (parseFloat(target.value) + delta);
+                    if (target.step.includes('.')) val = parseFloat(val.toFixed(1));
+                    target.value = Math.min(target.max, Math.max(target.min, val));
+                    target.dispatchEvent(new Event('input'));
+                };
+                btn.onmousedown = btn.ontouchstart = (e) => {
+                    e.preventDefault(); step();
+                    repeatTimeout = setTimeout(() => { repeatInterval = setInterval(step, 80); }, 500);
+                };
+                btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => {
+                    clearInterval(repeatInterval); clearTimeout(repeatTimeout); repeatInterval = null;
+                };
+                btn.onclick = () => { if (!repeatInterval) step(); };
+            });
+        }
 
-    const isDark = document.documentElement.classList.contains('light-mode');
-    if (!isDark) document.documentElement.classList.add('light-mode');
+        function syncFreqToR() {
+            document.getElementById('freqR').value = document.getElementById('freqL').value;
+            document.getElementById('freqR').dispatchEvent(new Event('input'));
+        }
 
-    const opt = {
-        margin: [20, 15], filename: 'tinnitus_clinical_lenire_style.pdf', image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    await html2pdf().set(opt).from(tempDiv).save();
+        function syncVolToR() {
+            document.getElementById('volR').value = document.getElementById('volL').value;
+            document.getElementById('volR').dispatchEvent(new Event('input'));
+        }
 
-    if (!isDark) document.documentElement.classList.remove('light-mode');
-    document.body.removeChild(tempDiv);
-}
+        function syncMixToR() {
+            document.getElementById('mixR').value = document.getElementById('mixL').value;
+            document.getElementById('mixR').dispatchEvent(new Event('input'));
+        }
 
-function emailToAudiologist() {
-    const email = loadSetting('audiologist_email', '');
-    if (!email) return alert("Please set your audiologist's email on the Home page.");
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(async aiSummaryText => {
-        const reportData = getClinicalReportData("Lenire-Style Sound (Experimental)", getReportData());
-        reportData.aiSummary = aiSummaryText;
-        const report = generateClinicalReportText(reportData);
-        window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
-        alert("Email client opened. Please review and send the clinical report draft.");
-    });
-}
+        function syncModToR() {
+            document.getElementById('modRateR').value = document.getElementById('modRateL').value;
+            document.getElementById('modRateR').dispatchEvent(new Event('input'));
+        }
 
-function shareToCommunity() {
-    shareSetup("Dual-Stimulus Neuromodulation", getReportData());
-}
+        function syncBurstToR() {
+            document.getElementById('burstRateR').value = document.getElementById('burstRateL').value;
+            document.getElementById('burstRateR').dispatchEvent(new Event('input'));
+        }
 
-// Audio Recovery: Automatically restart session if the global watchdog detects silence
-window.addEventListener('tts-audio-recovery-triggered', () => {
-    if (running) {
-        console.warn("[AudioRecovery] Sustained silence detected. Re-initializing engine...");
-        const savedRemaining = remaining;
-        stopSession();
-        startSession().then(() => {
-            remaining = savedRemaining; updateTimerDisplay();
+        function performGlobalSync() {
+            if (!document.getElementById('lockLR').checked) return;
+            syncFreqToR();
+            syncVolToR();
+            syncMixToR();
+            syncModToR();
+            syncBurstToR();
+        }
+
+        function syncBalanceToPreset() {
+            const bal = getBalancePreset();
+            const baseVol = 30; // Default volume for Lenire therapy
+            document.getElementById('volL').value = bal <= 0 ? baseVol : Math.round(baseVol * (1 - bal));
+            document.getElementById('volR').value = bal >= 0 ? baseVol : Math.round(baseVol * (1 + bal));
+            document.getElementById('volL').dispatchEvent(new Event('input'));
+            document.getElementById('volR').dispatchEvent(new Event('input'));
+            alert("Volume balance adjusted to global tinnitus side preset.");
+        }
+
+        function updateLabels() {
+            document.getElementById('volValL').textContent = document.getElementById('volL').value + '%';
+            document.getElementById('volValR').textContent = document.getElementById('volR').value + '%';
+            document.getElementById('volValMaster').textContent = document.getElementById('volMaster').value + '%';
+            document.getElementById('mixValL').textContent = Math.round(document.getElementById('mixL').value * 100) + '%';
+            document.getElementById('mixValR').textContent = Math.round(document.getElementById('mixR').value * 100) + '%';
+        }
+
+        function updateLockVisuals() {
+            const isLocked = document.getElementById('lockLR').checked;
+            const ids = ['freqR', 'volR', 'mixR', 'modRateR', 'burstRateR', 'eqControlsR'];
+            ids.forEach(id => {
+                const el = document.getElementById(id)?.closest('.ctrl');
+                if (el) el.classList.toggle('locked-ui', isLocked);
+            });
+            if (isLocked) performGlobalSync();
+        }
+
+        function runVisualPulse() {
+            if (!running || !document.getElementById('visualPulse').checked) {
+                document.body.style.background = '';
+                return;
+            }
+
+            // Detect signal peaks from the analyzer to drive the visual flicker
+            const data = new Uint8Array(analyserL.frequencyBinCount);
+            analyserL.getByteTimeDomainData(data);
+            let sum = 0;
+            for (let i = 0; i < data.length; i++) {
+                const s = (data[i] - 128) / 128;
+                sum += s * s;
+            }
+            const rms = Math.sqrt(sum / data.length);
+
+            // High-contrast flicker synchronized to the auditory bursts
+            const hapticEnabled = document.getElementById('hapticPulse').checked;
+            const threshold = parseFloat(document.getElementById('hapticSens').value);
+
+            if (rms > threshold && Date.now() - lastVibrateTime > 200) {
+                document.body.style.background = 'rgba(0, 191, 165, 0.15)';
+                lastVibrateTime = Date.now();
+
+                if (hapticEnabled && "vibrate" in navigator) navigator.vibrate(40);
+            } else if (rms <= threshold) {
+                document.body.style.background = '';
+            }
+            rafPulse = requestAnimationFrame(runVisualPulse);
+        }
+
+        function playPacerChime(time, freq) {
+            if (!document.getElementById('pacerAudio').checked) return;
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, time);
+
+            g.gain.setValueAtTime(0, time);
+            g.gain.linearRampToValueAtTime(0.04, time + 0.02); // Very soft
+            g.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
+
+            osc.connect(g).connect(audioCtx.destination);
+            osc.start(time);
+            osc.stop(time + 1.0);
+        }
+
+        function schedulePacerAudio() {
+            if (!running) return;
+            const bpm = parseFloat(document.getElementById('pulseRate').value);
+            const duration = 60 / bpm;
+
+            // Schedule slightly ahead of current time to avoid jitter
+            while (nextChimeTime < audioCtx.currentTime + 0.1) {
+                // Inhale: High chime (880Hz)
+                playPacerChime(nextChimeTime, 880);
+                // Exhale: Lower chime (440Hz) scheduled at the midpoint of the cycle
+                playPacerChime(nextChimeTime + (duration / 2), 440);
+                nextChimeTime += duration;
+            }
+            pacerTimer = setTimeout(schedulePacerAudio, 50);
+        }
+
+        document.getElementById('visualPulse').onchange = (e) => {
+            saveSetting('len_visual_pulse', e.target.checked);
+        };
+
+        document.getElementById('pacerAudio').onchange = (e) => {
+            saveSetting('len_pacer_audio', e.target.checked);
+        };
+
+        document.getElementById('hapticPulse').onchange = (e) => {
+            saveSetting('len_haptic_pulse', e.target.checked);
+        };
+
+        function toggleZenMode() {
+            document.body.classList.toggle('zen-mode');
+            const isZen = document.body.classList.contains('zen-mode');
+            saveSetting('lenire_zen_mode', isZen);
+            document.getElementById('zenBtn').textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
+        }
+        function formatTime(s) { return Math.floor(s / 60).toString().padStart(2, '0') + ':' + (s % 60).toString().padStart(2, '0') }
+        function updateTimerDisplay() { timerEl.textContent = 'Session: ' + formatTime(sessionSeconds - remaining) + ' / ' + formatTime(sessionSeconds) }
+        const freqLEl = document.getElementById('freqL'), freqREl = document.getElementById('freqR'), volMasterEl = document.getElementById('volMaster');
+        const volLEl = document.getElementById('volL'), volREl = document.getElementById('volR');
+        const mixLEl = document.getElementById('mixL'), mixREl = document.getElementById('mixR'), modLEl = document.getElementById('modRateL'), modREl = document.getElementById('modRateR'), burstLEl = document.getElementById('burstRateL'), burstREl = document.getElementById('burstRateR'), timerEl = document.getElementById('timer');
+
+        async function startSession() {
+            if (running) return;
+            sessionSeconds = parseInt(document.getElementById('session').value); remaining = sessionSeconds;
+            if (!audioCtx) await setupAudio();
+            audioCtx._expectingSound = true;
+            validateLenireParams();
+            updateParams(); running = true;
+            nextChimeTime = audioCtx.currentTime;
+            document.body.classList.add('session-running');
+            schedulePacerAudio();
+            drawViz();
+            runVisualPulse();
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'block';
+            timerId = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    logUsageMinutes(sessionSeconds / 60);
+                    stopSession();
+                    refreshUsageUI();
+                }
+                updateTimerDisplay();
+            }, 1000);
+        }
+        function stopSession() {
+            running = false;
+            document.body.classList.remove('session-running');
+            eqNodesL = []; eqNodesR = [];
+            document.getElementById('startBtn').style.display = 'block';
+            document.getElementById('stopBtn').style.display = 'none';
+            if (timerId) clearInterval(timerId);
+            if (rafViz) cancelAnimationFrame(rafViz);
+            if (rafPulse) cancelAnimationFrame(rafPulse);
+            if (pacerTimer) clearTimeout(pacerTimer);
+            document.body.style.background = ''; // Reset visual pulse
+            if (liveStream) {
+                liveStream.getTracks().forEach(t => t.stop());
+                liveStream = null;
+            }
+            if (bgSrc && bgSrc.pause) bgSrc.pause();
+            if (audioCtx) audioCtx._expectingSound = false;
+            if (audioCtx) { audioCtx.close(); audioCtx = null; }
+            remaining = 0;
+            updateTimerDisplay();
+        }
+
+        async function setupAudio() {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            merger = audioCtx.createChannelMerger(2);
+            globalMasterGain = audioCtx.createGain();
+
+            const masterAnalyser = audioCtx.createAnalyser();
+            masterAnalyser.fftSize = 256;
+            merger.connect(globalMasterGain).connect(masterAnalyser).connect(audioCtx.destination);
+            audioCtx._healthAnalyser = masterAnalyser;
+
+            const color = document.getElementById('noiseColor').value;
+
+            let customSourceNode = null, splitter = null;
+            if (document.getElementById('useLiveAudio').checked) {
+                liveStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+                customSourceNode = audioCtx.createMediaStreamSource(liveStream);
+                splitter = audioCtx.createChannelSplitter(2); customSourceNode.connect(splitter);
+            }
+
+            const fileInput = document.getElementById('customFile');
+            const file = fileInput.files[0];
+            if (file && !customSourceNode) {
+                bgSrc = new Audio(URL.createObjectURL(file)); bgSrc.loop = true;
+                customSourceNode = audioCtx.createMediaElementSource(bgSrc);
+                splitter = audioCtx.createChannelSplitter(2); customSourceNode.connect(splitter);
+            }
+
+            const noiseModOsc = audioCtx.createOscillator();
+            const noiseModGain = audioCtx.createGain(); noiseModGain.gain.value = 0.4;
+            noiseModOsc.connect(noiseModGain);
+
+            const setupChannel = async (side) => {
+                const toneOsc = audioCtx.createOscillator();
+                const toneGain = audioCtx.createGain();
+                toneOsc.connect(toneGain);
+
+                let noiseSource = null;
+                if (!customSourceNode) {
+                    noiseSource = await audioCtx.generator.createSafeNoiseNode(color);
+                }
+                const noiseFilter = audioCtx.createBiquadFilter(); noiseFilter.type = 'bandpass'; noiseFilter.Q.value = 1.5;
+                const noiseGain = audioCtx.createGain();
+                if (customSourceNode) splitter.connect(noiseFilter, (side === 'L' ? 0 : 1));
+                else noiseSource.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+
+                const masterGain = audioCtx.createGain();
+
+                // 1. Inject Hearing Profile Compensation (if enabled)
+                const useHP = document.getElementById('useHearingProfile').checked;
+                const hpFreqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
+                let head = masterGain;
+
+                if (useHP) {
+                    hpFreqs.forEach(f => {
+                        const boost = getHearingBoost(f, side);
+                        if (boost > 0 && isFrequencySafe(audioCtx, f)) {
+                            const filter = audioCtx.createBiquadFilter();
+                            filter.type = 'peaking'; filter.frequency.value = f; filter.Q.value = 1;
+                            filter.gain.value = boost;
+                            head.connect(filter); head = filter;
+                        }
+                    });
+                }
+
+                // 2. Build Manual EQ Chain
+                const eqNodes = eqBands.map(freq => {
+                    const f = audioCtx.createBiquadFilter();
+                    f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1;
+                    f.gain.value = parseFloat(loadSetting(`eq_len_${side}_${freq}`, 0));
+                    head.connect(f); head = f;
+                    return f;
+                });
+
+                const analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 2048;
+
+                const burstOsc = audioCtx.createOscillator(); burstOsc.type = 'square';
+                const burstGain = audioCtx.createGain(); burstGain.gain.value = 0.5;
+
+                toneGain.connect(masterGain);
+                noiseGain.connect(masterGain);
+                head.connect(analyser).connect(merger, 0, (side === 'L' ? 0 : 1));
+
+                // Connect shared modulation
+                noiseModGain.connect(noiseGain.gain);
+                burstGain.connect(toneGain.gain);
+
+                return { toneOsc, toneGain, noiseSource, noiseFilter, noiseGain, masterGain, analyser, burstOsc, burstGain, noiseModOsc, noiseModGain, eqNodes };
+            };
+
+            nodesL = await setupChannel('L');
+            nodesR = await setupChannel('R');
+            analyserL = nodesL.analyser;
+            analyserR = nodesR.analyser;
+            eqNodesL = nodesL.eqNodes;
+            eqNodesR = nodesR.eqNodes;
+
+            nodesL.toneOsc.start(); if (nodesL.noiseSource) nodesL.noiseSource.start();
+            nodesR.toneOsc.start(); if (nodesR.noiseSource) nodesR.noiseSource.start();
+            if (bgSrc) bgSrc.play();
+            nodesL.burstOsc.start(); nodesR.burstOsc.start();
+            // noiseModOsc is a shared oscillator between channels; start it only once to avoid StateErrors
+            nodesL.noiseModOsc.start();
+        }
+
+        function drawViz() {
+            if (!running || !analyserL || !analyserR) return;
+            const canvas = document.getElementById('viz'), c = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth * 2; canvas.height = canvas.offsetHeight * 2;
+            const dataL = new Uint8Array(analyserL.frequencyBinCount); analyserL.getByteFrequencyData(dataL);
+            const dataR = new Uint8Array(analyserR.frequencyBinCount); analyserR.getByteFrequencyData(dataR);
+            c.clearRect(0, 0, canvas.width, canvas.height);
+            const barW = canvas.width / (dataL.length / 2);
+            // Draw Left (Top half - Teal)
+            for (let i = 0; i < dataL.length / 2; i++) {
+                const h = (dataL[i] / 255) * (canvas.height / 2.1), hue = 170;
+                c.fillStyle = 'hsla(' + hue + ',70%,55%,0.8)';
+                c.fillRect(i * barW, canvas.height / 2 - h, barW - 1, h);
+            }
+            // Draw Right (Bottom half - Purple)
+            for (let i = 0; i < dataR.length / 2; i++) {
+                const h = (dataR[i] / 255) * (canvas.height / 2.1), hue = 280;
+                c.fillStyle = 'hsla(' + hue + ',70%,55%,0.8)';
+                c.fillRect(i * barW, canvas.height / 2, barW - 1, h);
+            }
+            c.fillStyle = 'rgba(255,255,255,0.1)'; c.fillRect(0, canvas.height / 2 - 1, canvas.width, 2);
+
+            // STEREO BALANCE OVERLAY
+            if (analyserL && analyserR) {
+                const bufL = new Uint8Array(analyserL.fftSize), bufR = new Uint8Array(analyserR.fftSize);
+                analyserL.getByteTimeDomainData(bufL); analyserR.getByteTimeDomainData(bufR);
+                let sL = 0, sR = 0;
+                for (let i = 0; i < bufL.length; i++) {
+                    let vL = (bufL[i] - 128) / 128, vR = (bufR[i] - 128) / 128;
+                    sL += vL * vL; sR += vR * vR;
+                }
+                const rmsL = Math.sqrt(sL / bufL.length), rmsR = Math.sqrt(sR / bufR.length);
+                const bal = (rmsL + rmsR > 0) ? (rmsR / (rmsL + rmsR)) : 0.5;
+
+                const ty = 40, tx = 80, tw = canvas.width - 160, th = 6;
+                c.fillStyle = 'rgba(255,255,255,0.1)';
+                c.fillRect(tx, ty, tw, th);
+                c.fillStyle = 'var(--accent)';
+                c.beginPath();
+                c.arc(tx + (bal * tw), ty + th / 2, 10, 0, Math.PI * 2);
+                c.fill();
+                c.font = "bold 20px sans-serif"; c.fillStyle = "#888";
+                c.fillText("L", tx - 45, ty + 15); c.fillText("R", tx + tw + 15, ty + 15);
+            }
+            rafViz = requestAnimationFrame(drawViz);
+        }
+
+        function updateParams() {
+            if (!audioCtx) return;
+            const fL = +freqLEl.value, fR = +freqREl.value, vL = +volLEl.value, vR = +volREl.value, mL = +mixLEl.value, mR = +mixREl.value, mrL = +modLEl.value, mrR = +modREl.value, brL = +burstLEl.value, brR = +burstREl.value;
+
+            // Master Volume & Mute handling
+            const isMuted = document.getElementById('muteToggle').checked;
+            const mVol = isMuted ? 0 : volMasterEl.value / 100;
+            if (globalMasterGain) {
+                globalMasterGain.gain.setTargetAtTime(mVol, audioCtx.currentTime, 0.05);
+            }
+
+            nodesL.toneOsc.frequency.setTargetAtTime(fL, audioCtx.currentTime, 0.05); nodesL.noiseFilter.frequency.setTargetAtTime(fL, audioCtx.currentTime, 0.05);
+            nodesR.toneOsc.frequency.setTargetAtTime(fR, audioCtx.currentTime, 0.05); nodesR.noiseFilter.frequency.setTargetAtTime(fR, audioCtx.currentTime, 0.05);
+
+            nodesL.masterGain.gain.setTargetAtTime(vL / 100, audioCtx.currentTime, 0.05); nodesL.toneGain.gain.setTargetAtTime(mL, audioCtx.currentTime, 0.05); nodesL.noiseGain.gain.setTargetAtTime(1 - mL, audioCtx.currentTime, 0.05);
+            nodesR.masterGain.gain.setTargetAtTime(vR / 100, audioCtx.currentTime, 0.05); nodesR.toneGain.gain.setTargetAtTime(mR, audioCtx.currentTime, 0.05); nodesR.noiseGain.gain.setTargetAtTime(1 - mR, audioCtx.currentTime, 0.05);
+
+            nodesL.noiseModOsc.frequency.setTargetAtTime(mrL, audioCtx.currentTime, 0.05);
+            nodesR.noiseModOsc.frequency.setTargetAtTime(mrR, audioCtx.currentTime, 0.05);
+            nodesL.burstOsc.frequency.setTargetAtTime(brL, audioCtx.currentTime, 0.05);
+            nodesR.burstOsc.frequency.setTargetAtTime(brR, audioCtx.currentTime, 0.05);
+        }
+
+        function validateLenireParams() {
+            const fL = +freqLEl.value, fR = +freqREl.value, mrL = +modLEl.value, mrR = +modREl.value, brL = +burstLEl.value, brR = +burstREl.value, mL = +mixLEl.value, mR = +mixREl.value;
+
+            console.log("--- Lenire-Style Parameter Validation ---");
+            console.log(`Carrier Frequency: L:${fL} R:${fR} Hz`);
+            console.log(`Modulation Rate: L:${mrL} R:${mrR} Hz | Burst Rate: L:${brL} R:${brR} Hz`);
+            console.log(`Mix: L:${Math.round(mL * 100)}% R:${Math.round(mR * 100)}%`);
+
+            if (fL < 1000 || fR < 1000) console.warn("Note: Carrier frequencies below 1kHz are unusual for tonal tinnitus.");
+            if (mL > 0.9 || mL < 0.1 || mR > 0.9 || mR < 0.1) console.warn("⚠️ Warning: Extreme mix levels may negate the benefits of combining tones and noise.");
+
+            if (nodesL && nodesL.noiseModOsc && nodesL.burstOsc) {
+                console.log("✅ All neuromodulation oscillators verified active.");
+                console.log(`✅ Timing Precision: L:${(1000 / brL).toFixed(0)}ms R:${(1000 / brR).toFixed(0)}ms burst intervals.`);
+            } else {
+                console.error("❌ Audio Engine Error: Modulation nodes failed to initialize.");
+            }
+        }
+
+        document.getElementById('muteToggle').onchange = (e) => {
+            saveSetting('len_volMuted', e.target.checked);
+            if (audioCtx && globalMasterGain) {
+                const targetVol = e.target.checked ? 0 : volMasterEl.value / 100;
+                globalMasterGain.gain.setTargetAtTime(targetVol, audioCtx.currentTime, 0.1);
+            }
+        };
+
+        [freqLEl, freqREl, volLEl, volREl, volMasterEl, mixLEl, mixREl, modLEl, modREl, burstLEl, burstREl].forEach(el => {
+            el.oninput = () => {
+                const isLocked = document.getElementById('lockLR').checked;
+
+                // If locked and adjusting a Left control, propagate to Right
+                if (isLocked && el.id.endsWith('L')) {
+                    const rightId = el.id.replace('L', 'R');
+                    const rightEl = document.getElementById(rightId);
+                    if (rightEl) {
+                        rightEl.value = el.value;
+                        // Dispatching input on the right element ensures it also saves its own state
+                        rightEl.dispatchEvent(new Event('input'));
+                    }
+                }
+
+                updateParams(); updateLabels();
+                const key = 'len_' + el.id.replace('Rate', '');
+                saveSetting(key, el.value);
+            }
         });
-    }
-});
-</script>
+
+        function getReportData() {
+            const colorSelect = document.getElementById('noiseColor');
+            let bgSource = "Internal " + colorSelect.options[colorSelect.selectedIndex].text;
+            const useHP = document.getElementById('useHearingProfile').checked;
+            if (document.getElementById('useLiveAudio').checked) {
+                bgSource = "Live System Audio (Browser/App Capture)"; // Live audio takes precedence
+            } else {
+                const file = document.getElementById('customFile').files[0];
+                if (file) bgSource = `Custom File: ${file.name}`;
+            }
+            const data = {
+                "Hearing Profile Active": useHP ? 'Yes' : 'No',
+                "Carrier Source": bgSource,
+                "Carrier Frequency L": freqLEl.value + " Hz",
+                "Carrier Frequency R": freqREl.value + " Hz",
+                "Master Volume": volMasterEl.value + "%",
+                "Volume L": volLEl.value + "%",
+                "Volume R": volREl.value + "%",
+                "Tone/Noise Mix L": Math.round(mixLEl.value * 100) + "%",
+                "Tone/Noise Mix R": Math.round(mixREl.value * 100) + "%",
+                "Noise Modulation L": modLEl.value + " Hz",
+                "Noise Modulation R": modREl.value + " Hz",
+                "Tone Burst Rate L": burstLEl.value + " Hz",
+                "Tone Burst Rate R": burstREl.value + " Hz",
+                "Set Session Length": (document.getElementById('session').value / 60) + " minutes"
+            };
+            eqBands.forEach(f => {
+                data[`EQ L ${f}Hz`] = loadSetting(`eq_len_L_${f}`, 0) + " dB";
+                data[`EQ R ${f}Hz`] = loadSetting(`eq_len_R_${f}`, 0) + " dB";
+            });
+            return data;
+        }
+
+        function exportClinicalSettings() {
+            const reportData = getClinicalReportData("Lenire-Style Sound (Experimental)", getReportData());
+            // Fetch AI summary and add to reportData
+            getClinicalSummary().then(aiSummaryText => {
+                reportData.aiSummary = aiSummaryText;
+                const report = generateClinicalReportText(reportData);
+                const blob = new Blob([report], { type: 'text/plain' });
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                a.download = `tinnitus_clinical_lenire_style.txt`; a.click();
+                alert("Clinical report downloaded. Please check your browser's Downloads folder.");
+            });
+        }
+
+        async function generatePDFReport() {
+            const reportData = getClinicalReportData("Lenire-Style Sound (Experimental)", getReportData());
+            // Fetch AI summary and add to reportData
+            const aiSummaryText = await getClinicalSummary();
+            reportData.aiSummary = aiSummaryText;
+            const htmlContent = generateClinicalReportHtml(reportData);
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            document.body.appendChild(tempDiv);
+
+            const isDark = document.documentElement.classList.contains('light-mode');
+            if (!isDark) document.documentElement.classList.add('light-mode');
+
+            const opt = {
+                margin: [20, 15], filename: 'tinnitus_clinical_lenire_style.pdf', image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            await html2pdf().set(opt).from(tempDiv).save();
+
+            if (!isDark) document.documentElement.classList.remove('light-mode');
+            document.body.removeChild(tempDiv);
+        }
+
+        function emailToAudiologist() {
+            const email = loadSetting('audiologist_email', '');
+            if (!email) return alert("Please set your audiologist's email on the Home page.");
+            // Fetch AI summary and add to reportData
+            getClinicalSummary().then(async aiSummaryText => {
+                const reportData = getClinicalReportData("Lenire-Style Sound (Experimental)", getReportData());
+                reportData.aiSummary = aiSummaryText;
+                const report = generateClinicalReportText(reportData);
+                window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+                alert("Email client opened. Please review and send the clinical report draft.");
+            });
+        }
+
+        function shareToCommunity() {
+            shareSetup("Dual-Stimulus Neuromodulation", getReportData());
+        }
+
+        // Audio Recovery: Automatically restart session if the global watchdog detects silence
+        window.addEventListener('tts-audio-recovery-triggered', () => {
+            if (running) {
+                console.warn("[AudioRecovery] Sustained silence detected. Re-initializing engine...");
+                const savedRemaining = remaining;
+                stopSession();
+                startSession().then(() => {
+                    remaining = savedRemaining; updateTimerDisplay();
+                });
+            }
+        });
+    </script>
 </body>
+
 </html>

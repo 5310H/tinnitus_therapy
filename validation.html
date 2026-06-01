@@ -1,533 +1,608 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>System Validation - Tinnitus Therapy Suite</title>
-<link rel="icon" href="icon-192.png" type="image/png">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="style.css">
-<script type="module">
-    import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
-    window.GoogleGenerativeAI = GoogleGenerativeAI;
-</script>
-<script src="storage.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="nav.js"></script>
-<style>
-    .test-result {
-        background: var(--card-bg);
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        margin-top: 10px;
-        text-align: left;
-    }
-    .test-result h3 {
-        margin-top: 0;
-        margin-bottom: 10px;
-        color: var(--accent);
-    }
-    .test-result p {
-        font-size: 0.9em;
-        color: var(--text-dim);
-        margin-bottom: 5px;
-    }
-    .test-result.pass { border-color: #4CAF50; }
-    .test-result.fail { border-color: #f44336; }
-    .test-result.warn { border-color: #ff9800; }
-    .test-result.info { border-color: #2196F3; }
-    .test-status {
-        font-weight: bold;
-        margin-left: 10px;
-    }
-    .test-status.pass { color: #4CAF50; }
-    .test-status.fail { color: #f44336; }
-    .test-status.warn { color: #ff9800; }
-    .test-status.info { color: #2196F3; }
-</style>
-</head>
-<body>
-<div class="panel">
-    <h1>System Validation</h1>
-    <p class="info">Automated engine checks and hardware phase calibration.</p>
 
-    <div class="card">
-        <h2>System Calibration (Phase Test)</h2>
-        <p class="info">Verify that your headphones are correctly wired and in-phase.</p>
-        <button class="button" onclick="testPhase('in')">Test In-Phase (Center)</button>
-        <button class="button play-btn" onclick="testPhase('out')">Test Out-of-Phase (Diffuse)</button>
-        <button class="button stop-btn" style="width:100%; margin-top:10px; background: var(--error);" onclick="stopPhase()">Stop Phase Tone</button>
-        
-        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); text-align: center;">
-            <p style="font-size: 0.85rem; margin-bottom: 10px;">Does the In-Phase tone sound centered?</p>
-            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button class="button" style="border-color: #4CAF50; color: #4CAF50;" onclick="savePhaseStatus('Verified: In-Phase (Correct)')">Yes (Correct)</button>
-                <button class="button" style="border-color: #f44336; color: #f44336;" onclick="savePhaseStatus('Error: Out-of-Phase Detected')">No (Phase Issue)</button>
+<head>
+    <meta charset="UTF-8">
+    <title>System Validation - Tinnitus Therapy Suite</title>
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script type="module">
+        import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
+        window.GoogleGenerativeAI = GoogleGenerativeAI;
+    </script>
+    <script src="storage.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="nav.js"></script>
+    <style>
+        .test-result {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        .test-result h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: var(--accent);
+        }
+
+        .test-result p {
+            font-size: 0.9em;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+        }
+
+        .test-result.pass {
+            border-color: #4CAF50;
+        }
+
+        .test-result.fail {
+            border-color: #f44336;
+        }
+
+        .test-result.warn {
+            border-color: #ff9800;
+        }
+
+        .test-result.info {
+            border-color: #2196F3;
+        }
+
+        .test-status {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .test-status.pass {
+            color: #4CAF50;
+        }
+
+        .test-status.fail {
+            color: #f44336;
+        }
+
+        .test-status.warn {
+            color: #ff9800;
+        }
+
+        .test-status.info {
+            color: #2196F3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="panel">
+        <h1>System Validation</h1>
+        <p class="info">Automated engine checks and hardware phase calibration.</p>
+
+        <div class="card">
+            <h2>System Calibration (Phase Test)</h2>
+            <p class="info">Verify that your headphones are correctly wired and in-phase.</p>
+            <button class="button" onclick="testPhase('in')">Test In-Phase (Center)</button>
+            <button class="button play-btn" onclick="testPhase('out')">Test Out-of-Phase (Diffuse)</button>
+            <button class="button stop-btn" style="width:100%; margin-top:10px; background: var(--error);"
+                onclick="stopPhase()">Stop Phase Tone</button>
+
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); text-align: center;">
+                <p style="font-size: 0.85rem; margin-bottom: 10px;">Does the In-Phase tone sound centered?</p>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button class="button" style="border-color: #4CAF50; color: #4CAF50;"
+                        onclick="savePhaseStatus('Verified: In-Phase (Correct)')">Yes (Correct)</button>
+                    <button class="button" style="border-color: #f44336; color: #f44336;"
+                        onclick="savePhaseStatus('Error: Out-of-Phase Detected')">No (Phase Issue)</button>
+                </div>
+                <p id="phaseStatusDisplay"
+                    style="font-size: 0.8rem; margin-top: 10px; color: var(--accent); font-weight: bold;"></p>
             </div>
-            <p id="phaseStatusDisplay" style="font-size: 0.8rem; margin-top: 10px; color: var(--accent); font-weight: bold;"></p>
+
+            <p id="phaseInfo" style="font-size: 0.8rem; margin-top: 10px; color: var(--muted);">
+                <b>In-Phase:</b> Should sound perfectly centered in your head.<br>
+                <b>Out-of-Phase:</b> Should sound hollow, diffuse, or "wide."
+            </p>
         </div>
 
-        <p id="phaseInfo" style="font-size: 0.8rem; margin-top: 10px; color: var(--muted);">
-            <b>In-Phase:</b> Should sound perfectly centered in your head.<br>
-            <b>Out-of-Phase:</b> Should sound hollow, diffuse, or "wide."
-        </p>
+        <button class="big-btn play-btn" onclick="runAllTests()">Run Engine Validation</button>
+        <div id="results" style="margin-top: 20px;">
+            <!-- Test results will be appended here -->
+        </div>
+
+        <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <button class="button" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download
+                PDF Report</button>
+            <button class="button" onclick="exportClinicalSettings()">Export Validation Log (.txt)</button>
+            <button class="button email-audiologist-btn" style="background:var(--accent); color:white; display:none;"
+                onclick="emailToAudiologist()">Email Log to Audiologist</button>
+        </div>
     </div>
 
-    <button class="big-btn play-btn" onclick="runAllTests()">Run Engine Validation</button>
-    <div id="results" style="margin-top: 20px;">
-        <!-- Test results will be appended here -->
-    </div>
-
-    <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
-        <button class="button" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-        <button class="button" onclick="exportClinicalSettings()">Export Validation Log (.txt)</button>
-        <button class="button email-audiologist-btn" style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email Log to Audiologist</button>
-    </div>
-</div>
-
-<script>
-window.onload = () => {
-    initNav(`
+    <script>
+        window.onload = () => {
+            initNav(`
         <b>Purpose:</b> This page verifies the technical accuracy of the suite and your hardware.<br><br>
         <b>Phase Test:</b> Ensures L/R channels are not inverted. Correct phase is critical for Decorrelated Noise and Binaural therapies.<br><br>
         <b>Engine Validation:</b> Simulates therapy setups to measure filter slopes and node connectivity.
     `);
-    const savedStatus = loadSetting('phase_status', 'Not Verified');
-    document.getElementById('phaseStatusDisplay').textContent = "Current Status: " + savedStatus;
-};
+            const savedStatus = loadSetting('phase_status', 'Not Verified');
+            document.getElementById('phaseStatusDisplay').textContent = "Current Status: " + savedStatus;
+        };
 
-function savePhaseStatus(status) {
-    saveSetting('phase_status', status);
-    document.getElementById('phaseStatusDisplay').textContent = "Current Status: " + status;
-}
+        function savePhaseStatus(status) {
+            saveSetting('phase_status', status);
+            document.getElementById('phaseStatusDisplay').textContent = "Current Status: " + status;
+        }
 
-let phaseCtx, phaseOsc, engineTestResults = [];
+        let phaseCtx, phaseOsc, engineTestResults = [];
 
-function testPhase(mode) {
-    stopPhase();
-    phaseCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (phaseCtx.state === 'suspended') phaseCtx.resume();
+        function testPhase(mode) {
+            stopPhase();
+            phaseCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (phaseCtx.state === 'suspended') phaseCtx.resume();
 
-    phaseOsc = phaseCtx.createOscillator();
-    phaseOsc.frequency.value = 440;
+            phaseOsc = phaseCtx.createOscillator();
+            phaseOsc.frequency.value = 440;
 
-    const merger = phaseCtx.createChannelMerger(2);
-    const gainL = phaseCtx.createGain();
-    const gainR = phaseCtx.createGain();
-    
-    gainL.gain.value = 0.15;
-    // Phase inversion for 'out' mode
-    gainR.gain.value = (mode === 'out') ? -0.15 : 0.15;
+            const merger = phaseCtx.createChannelMerger(2);
+            const gainL = phaseCtx.createGain();
+            const gainR = phaseCtx.createGain();
 
-    phaseOsc.connect(gainL).connect(merger, 0, 0);
-    phaseOsc.connect(gainR).connect(merger, 0, 1);
-    merger.connect(phaseCtx.destination);
-    
-    phaseOsc.start();
-}
+            gainL.gain.value = 0.15;
+            // Phase inversion for 'out' mode
+            gainR.gain.value = (mode === 'out') ? -0.15 : 0.15;
 
-function stopPhase() {
-    if (phaseCtx) {
-        phaseCtx.close();
-        phaseCtx = null;
-    }
-}
+            phaseOsc.connect(gainL).connect(merger, 0, 0);
+            phaseOsc.connect(gainR).connect(merger, 0, 1);
+            merger.connect(phaseCtx.destination);
 
-const resultsContainer = document.getElementById('results');
+            phaseOsc.start();
+        }
 
-function addResult(title, status, message, details = '') {
-    const timestamp = new Date().toLocaleTimeString();
-    const resultDiv = document.createElement('div');
-    resultDiv.className = `test-result ${status}`;
-    resultDiv.innerHTML = `
+        function stopPhase() {
+            if (phaseCtx) {
+                phaseCtx.close();
+                phaseCtx = null;
+            }
+        }
+
+        const resultsContainer = document.getElementById('results');
+
+        function addResult(title, status, message, details = '') {
+            const timestamp = new Date().toLocaleTimeString();
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${status}`;
+            resultDiv.innerHTML = `
         <h3>${title} <span class="test-status ${status}">[${status.toUpperCase()}]</span></h3>
         <p style="font-size: 0.75rem; color: var(--muted); margin-bottom: 4px;">Executed at: ${timestamp}</p>
         <p>${message}</p>
         ${details ? `<p style="font-size:0.8em; color:var(--muted);">${details}</p>` : ''}
     `;
-    resultsContainer.appendChild(resultDiv);
+            resultsContainer.appendChild(resultDiv);
 
-    if (status !== 'info') {
-        engineTestResults.push(`[${timestamp}] ${title}: [${status.toUpperCase()}] ${message}`);
-        saveSetting('engine_validation_results', engineTestResults.join('\n'));
-    }
-    return resultDiv;
-}
+            if (status !== 'info') {
+                engineTestResults.push(`[${timestamp}] ${title}: [${status.toUpperCase()}] ${message}`);
+                saveSetting('engine_validation_results', engineTestResults.join('\n'));
+            }
+            return resultDiv;
+        }
 
-let audioContextLatency = 'N/A', audioContextSampleRate = 'N/A';
-async function runAllTests() {
-    resultsContainer.innerHTML = ''; 
-    engineTestResults = [];
-    saveSetting('engine_validation_results', 'Not Performed');
-    addResult('Starting Tests', 'info', 'Initializing AudioContext...');
+        let audioContextLatency = 'N/A', audioContextSampleRate = 'N/A';
+        async function runAllTests() {
+            resultsContainer.innerHTML = '';
+            engineTestResults = [];
+            saveSetting('engine_validation_results', 'Not Performed');
+            addResult('Starting Tests', 'info', 'Initializing AudioContext...');
 
-    let audioCtx;
-    try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') await audioCtx.resume();
-        audioContextLatency = audioCtx.baseLatency;
-        audioContextSampleRate = audioCtx.sampleRate;
-        addResult('Web Audio Engine', 'pass', `AudioContext is active and stable. Base Latency: ${(audioContextLatency * 1000).toFixed(2)} ms.`);
-    } catch (e) {
-        addResult('Web Audio Engine', 'fail', 'Failed to initialize.');
-        return;
-    }
+            let audioCtx;
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                audioContextLatency = audioCtx.baseLatency;
+                audioContextSampleRate = audioCtx.sampleRate;
+                addResult('Web Audio Engine', 'pass', `AudioContext is active and stable. Base Latency: ${(audioContextLatency * 1000).toFixed(2)} ms.`);
+            } catch (e) {
+                addResult('Web Audio Engine', 'fail', 'Failed to initialize.');
+                return;
+            }
 
-    await testSampleRate(audioCtx);
-    await testChannelConfiguration(audioCtx);
-    await testNotchFilter(audioCtx);
-    await testModulationNodes(audioCtx);
-    await testLocalStorageQuota();
-    await testAIConnectivity();
-    await testIndependentMix(audioCtx);
-    await testStereoSeparation(audioCtx);
+            await testSampleRate(audioCtx);
+            await testBrowserCompatibility(audioCtx);
+            await testChannelConfiguration(audioCtx);
+            await testNotchFilter(audioCtx);
+            await testModulationNodes(audioCtx);
+            await testLocalStorageQuota();
+            await testAIConnectivity();
+            await testIndependentMix(audioCtx);
+            await testStereoSeparation(audioCtx);
 
-    if (audioCtx) await audioCtx.close();
-    saveSetting('last_validation_date', new Date().toISOString());
-    addResult('Finished', 'info', 'Validation sequence completed.');
-}
+            if (audioCtx) await audioCtx.close();
+            saveSetting('last_validation_date', new Date().toISOString());
+            addResult('Finished', 'info', 'Validation sequence completed.');
+        }
 
-async function testSampleRate(audioCtx) {
-    const title = 'Sample Rate Verification';
-    const sr = audioCtx.sampleRate;
-    
-    // Clinical standards are 44.1k or 48k. 
-    // Rates below 44.1k are insufficient for precise high-frequency therapy.
-    if (sr === 44100 || sr === 48000 || sr === 88200 || sr === 96000) {
-        addResult(title, 'pass', `Sample rate is ${sr} Hz (High-Resolution Output).`);
-    } else if (sr < 44100) {
-        addResult(title, 'fail', `Low sample rate: ${sr} Hz.`, 'Your audio output is restricted. This usually happens with Bluetooth "Hands-Free" mode. High-frequency therapy signals will be corrupted. Please check your OS sound settings.');
-    } else {
-        addResult(title, 'info', `Non-standard sample rate: ${sr} Hz.`);
-    }
-}
+        async function testSampleRate(audioCtx) {
+            const title = 'Sample Rate Verification';
+            const sr = audioCtx.sampleRate;
 
-async function testChannelConfiguration(audioCtx) {
-    const title = 'Stereo Routing Check';
-    try {
-        const maxChannels = audioCtx.destination.maxChannelCount;
-        
-        // Automated engine test: Can we pan a signal to one channel without it appearing in the other?
-        const offlineCtx = new OfflineAudioContext(2, 1024, audioCtx.sampleRate);
-        const panner = offlineCtx.createStereoPanner();
-        const osc = offlineCtx.createOscillator();
-        
-        panner.pan.value = -1; // Hard Left
-        osc.connect(panner).connect(offlineCtx.destination);
-        osc.start();
-        
-        const rendered = await offlineCtx.startRendering();
-        const rightData = rendered.getChannelData(1);
-        
-        let rightBleed = false;
-        for (let i = 0; i < rightData.length; i++) {
-            if (Math.abs(rightData[i]) > 0.0001) {
-                rightBleed = true;
-                break;
+            // Clinical standards are 44.1k or 48k. 
+            // Rates below 44.1k are insufficient for precise high-frequency therapy.
+            if (sr === 44100 || sr === 48000 || sr === 88200 || sr === 96000) {
+                addResult(title, 'pass', `Sample rate is ${sr} Hz (High-Resolution Output).`);
+            } else if (sr < 44100) {
+                addResult(title, 'fail', `Low sample rate: ${sr} Hz.`, 'Your audio output is restricted. This usually happens with the Bluetooth "Hands-Free" (HFP) profile. High-frequency therapy signals will be corrupted. Please check your OS sound settings.');
+            } else {
+                addResult(title, 'info', `Non-standard sample rate: ${sr} Hz.`);
             }
         }
 
-        if (maxChannels >= 2 && !rightBleed) {
-            addResult(title, 'pass', `Stereo verified. Browser supports ${maxChannels} channels with discrete L/R routing.`);
-        } else if (maxChannels < 2) {
-            addResult(title, 'fail', `Hardware/Browser reports MONO only (maxChannelCount: ${maxChannels}).`);
-        } else {
-            addResult(title, 'fail', 'Mono downmixing detected in audio engine.', 'Panned signals are bleeding across channels.');
-        }
-    } catch (e) { addResult(title, 'fail', e.message); }
-}
+        async function testBrowserCompatibility(audioCtx) {
+            const title = 'Compatibility Audit';
+            const sr = audioCtx.sampleRate;
+            const checks = [
+                { name: 'AudioWorklets', supported: !!(audioCtx && audioCtx.audioWorklet), critical: true, failMsg: 'Precision noise generation unavailable (using buffer fallback).' },
+                { name: 'Haptics (Vibration)', supported: !!navigator.vibrate, critical: false, failMsg: 'Tactile feedback restricted (common on iOS browsers).' },
+                { name: 'Audio Capture', supported: !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia), critical: false, failMsg: 'System audio capture restricted (common on mobile browsers).' },
+                { name: 'Service Workers', supported: !!('serviceWorker' in navigator), critical: false, failMsg: 'Offline installation unavailable.' },
+                { name: 'Secure Context', supported: window.isSecureContext, critical: true, failMsg: 'Site not running over HTTPS; essential APIs will be blocked.' },
+                { name: 'Audio Fidelity', supported: (sr >= 44100), critical: true, failMsg: `Low sample rate (${sr}Hz). Likely Bluetooth 'Hands-Free' (HFP) mode.` }
+            ];
 
-async function testNotchFilter(audioCtx) {
-    const title = 'Filter Validation';
-    try {
-        const notch = audioCtx.createBiquadFilter();
-        notch.type = 'notch';
-        notch.frequency.value = 6000;
-        notch.Q.value = 10;
+            let status = 'pass';
+            checks.forEach(c => {
+                if (!c.supported) {
+                    if (c.critical) status = 'fail';
+                    else if (status !== 'fail') status = 'warn';
+                }
+            });
 
-        // Generate frequency response data (Logarithmic sweep 20Hz - 20kHz)
-        const sampleCount = 300;
-        const freqs = new Float32Array(sampleCount);
-        const mag = new Float32Array(sampleCount);
-        const phase = new Float32Array(sampleCount);
-        for (let i = 0; i < sampleCount; i++) {
-            freqs[i] = 20 * Math.pow(1000, i / (sampleCount - 1));
-        }
-        notch.getFrequencyResponse(freqs, mag, phase);
-        
-        let minMag = 1.0;
-        for (let i = 0; i < sampleCount; i++) if (mag[i] < minMag) minMag = mag[i];
-        const db = 20 * Math.log10(Math.max(minMag, 0.0001));
+            const summary = status === 'pass' ? 'Standard browser APIs and audio fidelity are operational.' :
+                (status === 'fail' ? 'Critical constraints or missing APIs detected.' : 'Some device features are restricted on this browser.');
 
-        const status = (db < -40) ? 'pass' : 'fail';
-        const msg = (status === 'pass') 
-            ? `Digital notch filter achieved ${db.toFixed(1)} dB attenuation.` 
-            : `Filter attenuation was only ${db.toFixed(1)} dB.`;
+            const container = addResult(title, status, summary);
+            const list = document.createElement('ul');
+            list.style.cssText = "margin-left: 20px; font-size: 0.8rem; color: var(--text-dim); list-style-type: none; padding: 0; margin-top: 10px;";
 
-        const container = addResult(title, status, msg);
-        
-        // Render response graph
-        const canvas = document.createElement('canvas');
-        const g = canvas.getContext('2d');
-        canvas.width = 600; canvas.height = 150;
-        g.fillStyle = '#0a0a1a'; g.fillRect(0,0,600,150);
-        
-        // Draw Grid (dB levels and Frequency)
-        g.strokeStyle = '#333'; g.setLineDash([5, 5]);
-        g.font = '10px sans-serif';
-        g.fillStyle = '#888';
-        
-        [-20, -40].forEach(level => {
-            const y = (level / -60) * 150;
-            g.beginPath(); g.moveTo(0, y); g.lineTo(600, y); g.stroke();
-            g.fillText(`${level} dB`, 5, y - 5);
-        });
-
-        [20, 100, 1000, 5000, 10000, 20000].forEach(f => {
-            const x = (Math.log10(f / 20) / 3) * 600;
-            g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 150); g.stroke();
-            const label = f >= 1000 ? (f/1000) + 'k' : f;
-            g.fillText(label + (f === 20 ? 'Hz' : ''), x + 2, 145);
-        });
-        
-        // Draw Curve
-        g.setLineDash([]);
-        g.strokeStyle = '#00bfa5'; g.lineWidth = 3;
-        g.beginPath();
-        for (let i = 0; i < sampleCount; i++) {
-            const val = 20 * Math.log10(Math.max(mag[i], 0.0001));
-            const x = (i / (sampleCount - 1)) * 600;
-            const y = Math.min(150, (val / -60) * 150);
-            if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
-        }
-        g.stroke();
-        container.appendChild(canvas);
-    } catch (e) { addResult(title, 'fail', e.message); }
-}
-
-async function testModulationNodes(audioCtx) {
-    const title = 'Neuromodulation Engine';
-    try {
-        const duration = 0.5; // Render 0.5 seconds
-        const offlineCtx = new OfflineAudioContext(1, audioCtx.sampleRate * duration, audioCtx.sampleRate);
-
-        // Carrier (440Hz Tone)
-        const carrier = offlineCtx.createOscillator();
-        carrier.frequency.value = 440;
-
-        // Modulation Target (Gain)
-        const modGain = offlineCtx.createGain();
-        modGain.gain.value = 0.5; // Base volume
-
-        // LFO (10Hz Sine)
-        const lfo = offlineCtx.createOscillator();
-        lfo.frequency.value = 10;
-        const lfoDepth = offlineCtx.createGain();
-        lfoDepth.gain.value = 0.5; // Modulate +/- 0.5
-
-        lfo.connect(lfoDepth).connect(modGain.gain);
-        carrier.connect(modGain).connect(offlineCtx.destination);
-
-        lfo.start();
-        carrier.start();
-
-        const renderedBuffer = await offlineCtx.startRendering();
-        const data = renderedBuffer.getChannelData(0);
-
-        const container = addResult(title, 'pass', 'Parameter modulation (LFO -> Gain) is supported and connected.');
-
-        // Render Modulation Graph
-        const canvas = document.createElement('canvas');
-        const g = canvas.getContext('2d');
-        canvas.width = 600; canvas.height = 100;
-        g.fillStyle = '#0a0a1a'; g.fillRect(0, 0, 600, 100);
-        g.strokeStyle = '#333'; g.setLineDash([5, 5]);
-        g.beginPath(); g.moveTo(0, 50); g.lineTo(600, 50); g.stroke(); // Center line
-
-        g.setLineDash([]);
-        g.strokeStyle = '#8e24aa'; // Purple to signify neuromodulation
-        g.lineWidth = 2;
-        g.beginPath();
-        const step = Math.floor(data.length / 600);
-        for (let i = 0; i < 600; i++) {
-            const y = 50 - (data[i * step] * 40);
-            if (i === 0) g.moveTo(i, y); else g.lineTo(i, y);
-        }
-        g.stroke();
-        container.appendChild(canvas);
-    } catch (e) { addResult(title, 'fail', e.message); }
-}
-
-async function testStereoSeparation(audioCtx) {
-    const title = 'Stereo Decorrelation';
-    try {
-        const bufL = audioCtx.createBuffer(1, 128, audioCtx.sampleRate);
-        const bufR = audioCtx.createBuffer(1, 128, audioCtx.sampleRate);
-        bufL.getChannelData(0)[0] = 0.5;
-        bufR.getChannelData(0)[0] = -0.5;
-
-        if (bufL.getChannelData(0)[0] !== bufR.getChannelData(0)[0]) {
-            addResult(title, 'pass', 'Independent L/R buffer synthesis verified.');
-        } else {
-            addResult(title, 'fail', 'Buffers are mirrored.');
-        }
-    } catch (e) { addResult(title, 'fail', e.message); }
-}
-
-async function testIndependentMix(audioCtx) {
-    const title = 'Neuromodulation Mix';
-    try {
-        const offlineCtx = new OfflineAudioContext(2, 512, audioCtx.sampleRate);
-        const merger = offlineCtx.createChannelMerger(2);
-        merger.connect(offlineCtx.destination);
-
-        const tone = offlineCtx.createOscillator();
-        const noise = offlineCtx.createBufferSource();
-        const noiseBuf = offlineCtx.createBuffer(1, 512, audioCtx.sampleRate);
-        noiseBuf.getChannelData(0).fill(1.0); // Constant peak signal for easy detection
-        noise.buffer = noiseBuf;
-
-        // Simulate Lenire-style independent L/R mix routing
-        const setupTestChannel = (side, toneLevel, noiseLevel) => {
-            const tGain = offlineCtx.createGain();
-            const nGain = offlineCtx.createGain();
-            const mGain = offlineCtx.createGain();
-            tGain.gain.value = toneLevel;
-            nGain.gain.value = noiseLevel;
-            tone.connect(tGain).connect(mGain);
-            noise.connect(nGain).connect(mGain);
-            mGain.connect(merger, 0, side === 'L' ? 0 : 1);
-        };
-
-        setupTestChannel('L', 1.0, 0.0); // 100% Tone, 0% Noise
-        setupTestChannel('R', 0.0, 1.0); // 0% Tone, 100% Noise
-
-        tone.start(); noise.start();
-        const res = await offlineCtx.startRendering();
-        const l = res.getChannelData(0);
-        const r = res.getChannelData(1);
-
-        let isIndependent = false;
-        for(let i=0; i<l.length; i++) {
-            if(Math.abs(l[i] - r[i]) > 0.1) { isIndependent = true; break; }
+            checks.forEach(c => {
+                const li = document.createElement('li');
+                const icon = c.supported ? '✓' : (c.critical ? '✕' : '⚠');
+                const color = c.supported ? '#4CAF50' : (c.critical ? '#f44336' : '#ff9800');
+                li.innerHTML = `<span style="color:${color}; font-weight:bold; margin-right:8px;">${icon}</span> <b>${c.name}:</b> ${c.supported ? 'Supported' : c.failMsg}`;
+                li.style.marginBottom = "4px";
+                list.appendChild(li);
+            });
+            container.appendChild(list);
         }
 
-        if (isIndependent) {
-            addResult(title, 'pass', 'Independent L/R neuromodulation mix (Tone/Noise) verified.');
-        } else {
-            addResult(title, 'fail', 'Mix test failed: L/R channels are identical or missing signals.');
+        async function testChannelConfiguration(audioCtx) {
+            const title = 'Stereo Routing Check';
+            try {
+                const maxChannels = audioCtx.destination.maxChannelCount;
+
+                // Automated engine test: Can we pan a signal to one channel without it appearing in the other?
+                const offlineCtx = new OfflineAudioContext(2, 1024, audioCtx.sampleRate);
+                const panner = offlineCtx.createStereoPanner();
+                const osc = offlineCtx.createOscillator();
+
+                panner.pan.value = -1; // Hard Left
+                osc.connect(panner).connect(offlineCtx.destination);
+                osc.start();
+
+                const rendered = await offlineCtx.startRendering();
+                const rightData = rendered.getChannelData(1);
+
+                let rightBleed = false;
+                for (let i = 0; i < rightData.length; i++) {
+                    if (Math.abs(rightData[i]) > 0.0001) {
+                        rightBleed = true;
+                        break;
+                    }
+                }
+
+                if (maxChannels >= 2 && !rightBleed) {
+                    addResult(title, 'pass', `Stereo verified. Browser supports ${maxChannels} channels with discrete L/R routing.`);
+                } else if (maxChannels < 2) {
+                    addResult(title, 'fail', `Hardware/Browser reports MONO only (maxChannelCount: ${maxChannels}).`);
+                } else {
+                    addResult(title, 'fail', 'Mono downmixing detected in audio engine.', 'Panned signals are bleeding across channels.');
+                }
+            } catch (e) { addResult(title, 'fail', e.message); }
         }
-    } catch (e) { addResult(title, 'fail', 'Mix Engine Error: ' + e.message); }
-}
 
-async function testLocalStorageQuota() {
-    const title = 'LocalStorage Quota Check';
-    const testKey = 'tts_quota_test';
-    const testDataSizeKB = 1024; // Try to write 1MB of data (approx)
-    const testData = 'a'.repeat(testDataSizeKB * 1024); // 1MB string
+        async function testNotchFilter(audioCtx) {
+            const title = 'Filter Validation';
+            try {
+                const notch = audioCtx.createBiquadFilter();
+                notch.type = 'notch';
+                notch.frequency.value = 6000;
+                notch.Q.value = 10;
 
-    try {
-        // Attempt to write a large string to test quota
-        localStorage.setItem(testKey, testData);
-        localStorage.removeItem(testKey); // Clean up
+                // Generate frequency response data (Logarithmic sweep 20Hz - 20kHz)
+                const sampleCount = 300;
+                const freqs = new Float32Array(sampleCount);
+                const mag = new Float32Array(sampleCount);
+                const phase = new Float32Array(sampleCount);
+                for (let i = 0; i < sampleCount; i++) {
+                    freqs[i] = 20 * Math.pow(1000, i / (sampleCount - 1));
+                }
+                notch.getFrequencyResponse(freqs, mag, phase);
 
-        const currentUsage = getLocalStorageUsage(); // Function from storage.js
-        addResult(title, 'pass', `LocalStorage is available and has sufficient quota. Current usage: ${currentUsage} KB.`);
-    } catch (e) {
-        if (e.name === 'QuotaExceededError') {
-            addResult(title, 'fail', `LocalStorage quota exceeded. Current usage: ${getLocalStorageUsage()} KB.`, 'Your browser has limited the storage available to this application. Please clear browser data or free up space.');
-        } else {
-            addResult(title, 'fail', `LocalStorage test failed: ${e.message}. Current usage: ${getLocalStorageUsage()} KB.`);
+                let minMag = 1.0;
+                for (let i = 0; i < sampleCount; i++) if (mag[i] < minMag) minMag = mag[i];
+                const db = 20 * Math.log10(Math.max(minMag, 0.0001));
+
+                const status = (db < -40) ? 'pass' : 'fail';
+                const msg = (status === 'pass')
+                    ? `Digital notch filter achieved ${db.toFixed(1)} dB attenuation.`
+                    : `Filter attenuation was only ${db.toFixed(1)} dB.`;
+
+                const container = addResult(title, status, msg);
+
+                // Render response graph
+                const canvas = document.createElement('canvas');
+                const g = canvas.getContext('2d');
+                canvas.width = 600; canvas.height = 150;
+                g.fillStyle = '#0a0a1a'; g.fillRect(0, 0, 600, 150);
+
+                // Draw Grid (dB levels and Frequency)
+                g.strokeStyle = '#333'; g.setLineDash([5, 5]);
+                g.font = '10px sans-serif';
+                g.fillStyle = '#888';
+
+                [-20, -40].forEach(level => {
+                    const y = (level / -60) * 150;
+                    g.beginPath(); g.moveTo(0, y); g.lineTo(600, y); g.stroke();
+                    g.fillText(`${level} dB`, 5, y - 5);
+                });
+
+                [20, 100, 1000, 5000, 10000, 20000].forEach(f => {
+                    const x = (Math.log10(f / 20) / 3) * 600;
+                    g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 150); g.stroke();
+                    const label = f >= 1000 ? (f / 1000) + 'k' : f;
+                    g.fillText(label + (f === 20 ? 'Hz' : ''), x + 2, 145);
+                });
+
+                // Draw Curve
+                g.setLineDash([]);
+                g.strokeStyle = '#00bfa5'; g.lineWidth = 3;
+                g.beginPath();
+                for (let i = 0; i < sampleCount; i++) {
+                    const val = 20 * Math.log10(Math.max(mag[i], 0.0001));
+                    const x = (i / (sampleCount - 1)) * 600;
+                    const y = Math.min(150, (val / -60) * 150);
+                    if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+                }
+                g.stroke();
+                container.appendChild(canvas);
+            } catch (e) { addResult(title, 'fail', e.message); }
         }
-    } finally {
-        localStorage.removeItem(testKey); // Ensure cleanup even if other errors occur
-    }
-}
 
-async function testAIConnectivity() {
-    const title = 'AI Assistant Connectivity';
-    const SDK = tinnitusAI._getSDK();
+        async function testModulationNodes(audioCtx) {
+            const title = 'Neuromodulation Engine';
+            try {
+                const duration = 0.5; // Render 0.5 seconds
+                const offlineCtx = new OfflineAudioContext(1, audioCtx.sampleRate * duration, audioCtx.sampleRate);
 
-    if (SDK) {
-        addResult(title, 'pass', 'Google Generative AI SDK is loaded and authorized for therapy support.');
-    } else {
-        addResult(title, 'fail', 'AI Assistant SDK failed to load.', 'Please check your internet connection or disable ad-blockers (ensure cdn.jsdelivr.net is allowed).');
-    }
-}
+                // Carrier (440Hz Tone)
+                const carrier = offlineCtx.createOscillator();
+                carrier.frequency.value = 440;
 
-function getReportData() {
-    const engineLog = loadSetting('engine_validation_results', 'Not Performed');
-    const mixStatus = engineLog.includes('Neuromodulation Mix: [PASS]') ? 'PASS' : 
-                     (engineLog.includes('Neuromodulation Mix: [FAIL]') ? 'FAIL' : 'Not Tested');
+                // Modulation Target (Gain)
+                const modGain = offlineCtx.createGain();
+                modGain.gain.value = 0.5; // Base volume
 
-    const SDK = tinnitusAI._getSDK();
-    const aiStatus = SDK ? 'Active' : 'Unavailable/Blocked';
+                // LFO (10Hz Sine)
+                const lfo = offlineCtx.createOscillator();
+                lfo.frequency.value = 10;
+                const lfoDepth = offlineCtx.createGain();
+                lfoDepth.gain.value = 0.5; // Modulate +/- 0.5
 
-    return { 
-        settings: {
-            "Hardware Phase Status": loadSetting('phase_status', 'Not Verified'),
-            "Independent Mix Validation": mixStatus,
-            "AI Engine Status": aiStatus,
-            "Engine Validation Summary": engineLog.includes('[FAIL]') ? 'Critical Issues Detected' : 
-                                         (engineLog === 'Not Performed' ? 'Pending Validation' : 'All Engine Checks Passed')
-        },
-        techSpecs: {
-            "AudioContext Base Latency": `${(audioContextLatency * 1000).toFixed(2)} ms`,
-            "Audio Sample Rate": `${audioContextSampleRate} Hz`
+                lfo.connect(lfoDepth).connect(modGain.gain);
+                carrier.connect(modGain).connect(offlineCtx.destination);
+
+                lfo.start();
+                carrier.start();
+
+                const renderedBuffer = await offlineCtx.startRendering();
+                const data = renderedBuffer.getChannelData(0);
+
+                const container = addResult(title, 'pass', 'Parameter modulation (LFO -> Gain) is supported and connected.');
+
+                // Render Modulation Graph
+                const canvas = document.createElement('canvas');
+                const g = canvas.getContext('2d');
+                canvas.width = 600; canvas.height = 100;
+                g.fillStyle = '#0a0a1a'; g.fillRect(0, 0, 600, 100);
+                g.strokeStyle = '#333'; g.setLineDash([5, 5]);
+                g.beginPath(); g.moveTo(0, 50); g.lineTo(600, 50); g.stroke(); // Center line
+
+                g.setLineDash([]);
+                g.strokeStyle = '#8e24aa'; // Purple to signify neuromodulation
+                g.lineWidth = 2;
+                g.beginPath();
+                const step = Math.floor(data.length / 600);
+                for (let i = 0; i < 600; i++) {
+                    const y = 50 - (data[i * step] * 40);
+                    if (i === 0) g.moveTo(i, y); else g.lineTo(i, y);
+                }
+                g.stroke();
+                container.appendChild(canvas);
+            } catch (e) { addResult(title, 'fail', e.message); }
         }
-    };
-}
 
-function exportClinicalSettings() {
-    const reportData = getClinicalReportData("System Validation", getReportData().settings, getReportData().techSpecs);
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(aiSummaryText => {
-        reportData.aiSummary = aiSummaryText;
-        const report = generateClinicalReportText(reportData);
-        const blob = new Blob([report], { type: 'text/plain' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = `tinnitus_validation_log.txt`; a.click();
-        alert("Validation log downloaded. Please check your browser's Downloads folder.");
-    });
-}
+        async function testStereoSeparation(audioCtx) {
+            const title = 'Stereo Decorrelation';
+            try {
+                const bufL = audioCtx.createBuffer(1, 128, audioCtx.sampleRate);
+                const bufR = audioCtx.createBuffer(1, 128, audioCtx.sampleRate);
+                bufL.getChannelData(0)[0] = 0.5;
+                bufR.getChannelData(0)[0] = -0.5;
 
-async function generatePDFReport() {
-    const reportData = getClinicalReportData("System Validation", getReportData().settings, getReportData().techSpecs);
-    // Fetch AI summary and add to reportData
-    const aiSummaryText = await getClinicalSummary();
-    reportData.aiSummary = aiSummaryText;
-    const htmlContent = generateClinicalReportHtml(reportData);
+                if (bufL.getChannelData(0)[0] !== bufR.getChannelData(0)[0]) {
+                    addResult(title, 'pass', 'Independent L/R buffer synthesis verified.');
+                } else {
+                    addResult(title, 'fail', 'Buffers are mirrored.');
+                }
+            } catch (e) { addResult(title, 'fail', e.message); }
+        }
 
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    document.body.appendChild(tempDiv);
+        async function testIndependentMix(audioCtx) {
+            const title = 'Neuromodulation Mix';
+            try {
+                const offlineCtx = new OfflineAudioContext(2, 512, audioCtx.sampleRate);
+                const merger = offlineCtx.createChannelMerger(2);
+                merger.connect(offlineCtx.destination);
 
-    const isDark = document.documentElement.classList.contains('light-mode');
-    if (!isDark) document.documentElement.classList.add('light-mode');
+                const tone = offlineCtx.createOscillator();
+                const noise = offlineCtx.createBufferSource();
+                const noiseBuf = offlineCtx.createBuffer(1, 512, audioCtx.sampleRate);
+                noiseBuf.getChannelData(0).fill(1.0); // Constant peak signal for easy detection
+                noise.buffer = noiseBuf;
 
-    const opt = {
-        margin: [20, 15], filename: 'tinnitus_validation_log.pdf', image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    await html2pdf().set(opt).from(tempDiv).save();
+                // Simulate Lenire-style independent L/R mix routing
+                const setupTestChannel = (side, toneLevel, noiseLevel) => {
+                    const tGain = offlineCtx.createGain();
+                    const nGain = offlineCtx.createGain();
+                    const mGain = offlineCtx.createGain();
+                    tGain.gain.value = toneLevel;
+                    nGain.gain.value = noiseLevel;
+                    tone.connect(tGain).connect(mGain);
+                    noise.connect(nGain).connect(mGain);
+                    mGain.connect(merger, 0, side === 'L' ? 0 : 1);
+                };
 
-    if (!isDark) document.documentElement.classList.remove('light-mode');
-    document.body.removeChild(tempDiv);
-}
+                setupTestChannel('L', 1.0, 0.0); // 100% Tone, 0% Noise
+                setupTestChannel('R', 0.0, 1.0); // 0% Tone, 100% Noise
 
-function emailToAudiologist() {
-    const email = loadSetting('audiologist_email', '');
-    if (!email) return alert("Please set your audiologist's email on the Home page.");
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(async aiSummaryText => {
-        const reportData = getClinicalReportData("System Validation", getReportData().settings, getReportData().techSpecs);
-        reportData.aiSummary = aiSummaryText;
-        const report = generateClinicalReportText(reportData);
-        window.location.href = `mailto:${email}?subject=System Validation Log&body=${encodeURIComponent(report)}`;
-        alert("Email client opened. Please review and send the validation log draft.");
-    });
-}
-</script>
+                tone.start(); noise.start();
+                const res = await offlineCtx.startRendering();
+                const l = res.getChannelData(0);
+                const r = res.getChannelData(1);
+
+                let isIndependent = false;
+                for (let i = 0; i < l.length; i++) {
+                    if (Math.abs(l[i] - r[i]) > 0.1) { isIndependent = true; break; }
+                }
+
+                if (isIndependent) {
+                    addResult(title, 'pass', 'Independent L/R neuromodulation mix (Tone/Noise) verified.');
+                } else {
+                    addResult(title, 'fail', 'Mix test failed: L/R channels are identical or missing signals.');
+                }
+            } catch (e) { addResult(title, 'fail', 'Mix Engine Error: ' + e.message); }
+        }
+
+        async function testLocalStorageQuota() {
+            const title = 'LocalStorage Quota Check';
+            const testKey = 'tts_quota_test';
+            const testDataSizeKB = 1024; // Try to write 1MB of data (approx)
+            const testData = 'a'.repeat(testDataSizeKB * 1024); // 1MB string
+
+            try {
+                // Attempt to write a large string to test quota
+                localStorage.setItem(testKey, testData);
+                localStorage.removeItem(testKey); // Clean up
+
+                const currentUsage = getLocalStorageUsage(); // Function from storage.js
+                addResult(title, 'pass', `LocalStorage is available and has sufficient quota. Current usage: ${currentUsage} KB.`);
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    addResult(title, 'fail', `LocalStorage quota exceeded. Current usage: ${getLocalStorageUsage()} KB.`, 'Your browser has limited the storage available to this application. Please clear browser data or free up space.');
+                } else {
+                    addResult(title, 'fail', `LocalStorage test failed: ${e.message}. Current usage: ${getLocalStorageUsage()} KB.`);
+                }
+            } finally {
+                localStorage.removeItem(testKey); // Ensure cleanup even if other errors occur
+            }
+        }
+
+        async function testAIConnectivity() {
+            const title = 'AI Assistant Connectivity';
+            const SDK = tinnitusAI._getSDK();
+
+            if (SDK) {
+                addResult(title, 'pass', 'Google Generative AI SDK is loaded and authorized for therapy support.');
+            } else {
+                addResult(title, 'fail', 'AI Assistant SDK failed to load.', 'Please check your internet connection or disable ad-blockers (ensure cdn.jsdelivr.net is allowed).');
+            }
+        }
+
+        function getReportData() {
+            const engineLog = loadSetting('engine_validation_results', 'Not Performed');
+            const mixStatus = engineLog.includes('Neuromodulation Mix: [PASS]') ? 'PASS' :
+                (engineLog.includes('Neuromodulation Mix: [FAIL]') ? 'FAIL' : 'Not Tested');
+
+            const SDK = tinnitusAI._getSDK();
+            const aiStatus = SDK ? 'Active' : 'Unavailable/Blocked';
+
+            return {
+                settings: {
+                    "Hardware Phase Status": loadSetting('phase_status', 'Not Verified'),
+                    "Independent Mix Validation": mixStatus,
+                    "AI Engine Status": aiStatus,
+                    "Engine Validation Summary": engineLog.includes('[FAIL]') ? 'Critical Issues Detected' :
+                        (engineLog === 'Not Performed' ? 'Pending Validation' : 'All Engine Checks Passed')
+                },
+                techSpecs: {
+                    "AudioContext Base Latency": `${(audioContextLatency * 1000).toFixed(2)} ms`,
+                    "Audio Sample Rate": `${audioContextSampleRate} Hz`
+                }
+            };
+        }
+
+        function exportClinicalSettings() {
+            const reportData = getClinicalReportData("System Validation", getReportData().settings, getReportData().techSpecs);
+            // Fetch AI summary and add to reportData
+            getClinicalSummary().then(aiSummaryText => {
+                reportData.aiSummary = aiSummaryText;
+                const report = generateClinicalReportText(reportData);
+                const blob = new Blob([report], { type: 'text/plain' });
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                a.download = `tinnitus_validation_log.txt`; a.click();
+                alert("Validation log downloaded. Please check your browser's Downloads folder.");
+            });
+        }
+
+        async function generatePDFReport() {
+            const reportData = getClinicalReportData("System Validation", getReportData().settings, getReportData().techSpecs);
+            // Fetch AI summary and add to reportData
+            const aiSummaryText = await getClinicalSummary();
+            reportData.aiSummary = aiSummaryText;
+            const htmlContent = generateClinicalReportHtml(reportData);
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            document.body.appendChild(tempDiv);
+
+            const isDark = document.documentElement.classList.contains('light-mode');
+            if (!isDark) document.documentElement.classList.add('light-mode');
+
+            const opt = {
+                margin: [20, 15], filename: 'tinnitus_validation_log.pdf', image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            await html2pdf().set(opt).from(tempDiv).save();
+
+            if (!isDark) document.documentElement.classList.remove('light-mode');
+            document.body.removeChild(tempDiv);
+        }
+
+        function emailToAudiologist() {
+            const email = loadSetting('audiologist_email', '');
+            if (!email) return alert("Please set your audiologist's email on the Home page.");
+            // Fetch AI summary and add to reportData
+            getClinicalSummary().then(async aiSummaryText => {
+                const reportData = getClinicalReportData("System Validation", getReportData().settings, getReportData().techSpecs);
+                reportData.aiSummary = aiSummaryText;
+                const report = generateClinicalReportText(reportData);
+                window.location.href = `mailto:${email}?subject=System Validation Log&body=${encodeURIComponent(report)}`;
+                alert("Email client opened. Please review and send the validation log draft.");
+            });
+        }
+    </script>
 </body>
+
 </html>
