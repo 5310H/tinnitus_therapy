@@ -1,11 +1,11 @@
 {
   "enabled": false,
   "whatsNew": [
-    "<b>Session Intelligence:</b> Implemented <code>sessionStorage</code> logic to track session-level display state. This ensures the cinematic branding sequence only executes once per session, improving the experience for frequent reloads.",
-    "<b>Unified Swarm Branding:</b> Synchronized the animated bee metaphor between the startup splash screen and the User Manual cover art.",
-    "<b>High-Fidelity Transitions:</b> Dramatic entry dismissal sequence featuring cubic-bezier scaling and dynamic motion blur filters.",
-    "<b>v2026.05.4 Deployment:</b> Finalized branding updates and session-based entry logic."
+    "<b>Splash Screen Suppression:</b> Fixed logic to ensure the cinematic intro only plays once per session. Navigating back Home now bypasses the animation.",
+    "<b>Spectral Compatibility Check:</b> Added real-time warnings to Notch and CR modules if the selected noise source doesn't cover your matched frequency.",
+    "<b>CR Spectrum Visualization:</b> Integrated a new frequency spectrum canvas into the Acoustic CR module with visual range flagging.",
+    "<b>Technical Clarity:</b> Added logarithmic frequency labels (100Hz, 1k, 10k) to the spectrum visualization for improved precision."
   ],
-  "date": "May 30, 2026",
-  "version": "2026.05.4"
+  "date": "June 2, 2026",
+  "version": "2026.06.1"
 }

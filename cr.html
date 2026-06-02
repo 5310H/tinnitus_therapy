@@ -117,6 +117,7 @@
         <p class="info" style="text-align: center; margin-top: 15px;">
             Status: <span id="cycleLabel">Stopped</span>
         </p>
+        <canvas id="crSpectrumCanvas" style="width: 100%; height: 60px; background: var(--bg); border-radius: 6px; margin-top: 15px; border: 1px solid var(--border); cursor: help;"></canvas>
     </div>
 
     <div class="ctrl">
@@ -135,6 +136,7 @@
 
     <div class="card" style="margin-top: 20px;">
         <h3>Background Masking</h3>
+        <div id="noiseRangeWarning" class="info" style="display:none; color:var(--error); border: 1px solid var(--error); padding: 12px; border-radius: 8px; margin-top: 10px; margin-bottom: 10px; text-align: left; background: rgba(211, 47, 47, 0.05);"></div>
         <div class="ctrl">
             <label>Noise Color</label>
             <select id="noiseColor">
@@ -241,6 +243,45 @@ function calculateTones() {
         document.getElementById(`tone${i}`).textContent = Math.round(freq) + " Hz";
     });
     saveSetting('cr_baseFreq', f); // Save the base frequency for persistence
+    drawSpectrum(); // Redraw spectrum when frequencies change
+    updateNoiseRangeWarning();
+}
+
+function updateNoiseRangeWarning() {
+    const color = document.getElementById('noiseColor').value;
+    const f = parseFloat(document.getElementById('baseFreq').value);
+    const warn = document.getElementById('noiseRangeWarning');
+    
+    if (color === 'none' || isNaN(f)) {
+        warn.style.display = 'none';
+        return;
+    }
+
+    const ranges = {
+        white: { min: 20, max: 20000, desc: "White: 20Hz - 20kHz (Flat Spectrum)" },
+        pink: { min: 20, max: 20000, desc: "Pink: 20Hz - 20kHz (Clinical Balanced)" },
+        brown: { min: 20, max: 1500, desc: "Brown: 20Hz - 1.5kHz (Low-Frequency Focus)" },
+        blue: { min: 1000, max: 20000, desc: "Blue: 1kHz - 20kHz (High-Frequency Focus)" },
+        violet: { min: 2000, max: 20000, desc: "Violet: 2kHz - 20kHz (Extreme High Focus)" }
+    };
+
+    if (ranges[color]) {
+        const outOfRange = f < ranges[color].min || f > ranges[color].max;
+
+        if (outOfRange) {
+            let html = `<strong style="color:var(--error)">⚠️ Masking Incompatibility</strong><br>`;
+            html += `The selected background noise (${color}) does not provide effective energy at your therapy frequency (${f} Hz). This may make it harder for the tones to blend with the background.<br><br>`;
+            html += `<b>Available Noise Ranges:</b><ul style="margin:8px 0 0 18px; padding:0; font-size:0.75rem;">`;
+            Object.values(ranges).forEach(r => { html += `<li>${r.desc}</li>`; });
+            html += `</ul>`;
+            warn.innerHTML = html;
+            warn.style.display = 'block';
+        } else {
+            warn.style.display = 'none';
+        }
+    } else {
+        warn.style.display = 'none';
+    }
 }
 
 function refreshUsageUI() {
@@ -464,8 +505,15 @@ document.getElementById('volSlider').oninput = e => {
     document.getElementById('volVal').textContent = e.target.value + "%";
 };
 
+    document.getElementById('baseFreq').oninput = () => {
+        calculateTones();
+    };
+
+    window.onresize = () => { if (frequencies.length > 0) drawSpectrum(); };
+
 document.getElementById('noiseColor').onchange = (e) => {
     saveSetting('cr_noiseColor', e.target.value);
+        updateNoiseRangeWarning();
 };
 
 document.getElementById('noiseVolSlider').oninput = (e) => {

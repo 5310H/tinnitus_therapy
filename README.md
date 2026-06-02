@@ -81,7 +81,7 @@ The suite includes an automated validation engine to ensure therapy integrity:
 - **Actionable Recommendations:** Provides automated troubleshooting for common system issues (e.g., detecting "Shallow Notch" errors caused by browser audio enhancers).
  
 ## 📖 User Documentation
-### **Comprehensive User Manual (v2026.05.4)**
+### **Comprehensive User Manual (v2026.06.1)**
 The suite includes a dynamic PDF generation engine (accessible under Settings) that compiles all module documentation into a single, printable reference guide. The manual includes:
 - **Getting Started:** Quick Start Guide, Clinical Protocols, and the "Path to Relief" workflow.
 - **Detailed Protocols:** In-depth setup for the "Mixing Point," 24/7 Enrichment, and lateral inhibition strategies.

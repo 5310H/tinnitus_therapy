@@ -98,7 +98,7 @@ requestPersistentStorage();
 // Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
 // This line assumes the SDK is available globally (e.g., from a CDN script tag).
 // If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2026.05.4";
+const APP_VERSION = "2026.06.1";
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
@@ -810,6 +810,17 @@ function toggleMilestone(index) {
     return getMilestoneProgress();
 }
 window.toggleMilestone = toggleMilestone;
+
+/**
+ * Marks the splash screen as having been shown for the current browser session.
+ */
+function markSplashShown() {
+    try {
+        sessionStorage.setItem('tts_splash_shown', 'true');
+        console.log("TTS: Splash screen marked as shown for this session.");
+    } catch (e) { }
+}
+window.markSplashShown = markSplashShown;
 
 function resetModuleSettings(prefixArray) {
     const keysToRemove = [];
@@ -2456,6 +2467,16 @@ function syncUIVersion() {
         document.documentElement.classList.add('single-column-layout');
     }
 
+    // Splash Screen Persistence: Prevent re-showing splash when navigating back Home in the same session.
+    try {
+        if (sessionStorage.getItem('tts_splash_shown') === 'true') {
+            const style = document.createElement('style');
+            style.id = 'tts-splash-suppressor';
+            style.textContent = '#appSplashScreen { display: none !important; visibility: hidden !important; pointer-events: none !important; opacity: 0 !important; animation: none !important; transition: none !important; }';
+            document.head.appendChild(style);
+        }
+    } catch (e) { }
+
     // --- Trahreg Gatekeeper Logic ---
     (async function () {
         const fullPath = decodeURIComponent(window.location.pathname).toLowerCase();
@@ -2507,6 +2528,11 @@ function syncUIVersion() {
         try {
             // Set session active if we are on the home page or a public page to avoid immediate redirect
             if (isHome || isDocs) _memSessionActive = true;
+
+            // If we are on a therapy page or tool, mark splash as shown so going "Home" skips it.
+            if (!isHome && !isDocs) {
+                sessionStorage.setItem('tts_splash_shown', 'true');
+            }
         } catch (e) { /* Private mode protection */ }
 
         // 2. Identify Whitelisted (Public) pages

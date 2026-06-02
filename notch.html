@@ -167,6 +167,7 @@
       </select>
       <input type="file" id="customFile" accept="audio/*" style="display:none; margin-top:10px;">
     </div>
+    <div id="noiseRangeWarning" class="info" style="display:none; color:var(--error); border: 1px solid var(--error); padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: left; background: rgba(211, 47, 47, 0.05);"></div>
     <div class="ctrl">
       <label style="display: flex; justify-content: space-between; align-items: center;">
         <span style="display: flex; align-items: center;">Master Volume <span class="status-dot"
@@ -1046,6 +1047,39 @@
         document.getElementById('muteToggle').checked;
       document.getElementById('volMasterStatus').textContent = volAdjusted ? '✓' : '○';
       document.getElementById('volMasterStatus').classList.toggle('active', volAdjusted);
+
+      // Noise Compatibility & Range Validation
+      const color = document.getElementById('color').value;
+      const fL = parseInt(document.getElementById('notchL').value);
+      const fR = parseInt(document.getElementById('notchR').value);
+      const warn = document.getElementById('noiseRangeWarning');
+
+      const ranges = {
+        white: { min: 20, max: 20000, desc: "White: 20Hz - 20kHz (Flat Spectrum)" },
+        pink: { min: 20, max: 20000, desc: "Pink: 20Hz - 20kHz (Clinical Balanced)" },
+        brown: { min: 20, max: 1500, desc: "Brown: 20Hz - 1.5kHz (Low-Frequency Focus)" },
+        blue: { min: 1000, max: 20000, desc: "Blue: 1kHz - 20kHz (High-Frequency Focus)" },
+        violet: { min: 2000, max: 20000, desc: "Violet: 2kHz - 20kHz (Extreme High Focus)" }
+      };
+
+      if (ranges[color]) {
+        const outL = fL < ranges[color].min || fL > ranges[color].max;
+        const outR = fR < ranges[color].min || fR > ranges[color].max;
+
+        if (outL || outR) {
+          let html = `<strong style="color:var(--error)">⚠️ Spectral Incompatibility</strong><br>`;
+          html += `The selected noise (${color}) does not provide effective energy at your matched frequency (${outL ? fL : fR} Hz). This may render Notch therapy ineffective.<br><br>`;
+          html += `<b>Available Noise Ranges:</b><ul style="margin:8px 0 0 18px; padding:0; font-size:0.75rem;">`;
+          Object.values(ranges).forEach(r => { html += `<li>${r.desc}</li>`; });
+          html += `</ul>`;
+          warn.innerHTML = html;
+          warn.style.display = 'block';
+        } else {
+          warn.style.display = 'none';
+        }
+      } else {
+        warn.style.display = 'none';
+      }
     }
   </script>
 </body>

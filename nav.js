@@ -61,7 +61,7 @@ function initNav(helpHtml) {
     document.querySelectorAll('a.back, .back-btn').forEach(el => {
         el.style.setProperty('display', 'none', 'important');
     });
-    
+
     // Also find any legacy "Home" links specifically and hide them if they aren't part of our new nav
     document.querySelectorAll('a').forEach(a => {
         if (a.textContent.trim() === 'Home' && !a.closest('.unified-nav')) {
@@ -71,11 +71,11 @@ function initNav(helpHtml) {
 
     const isDocs = window.location.pathname.toLowerCase().includes('/docs/');
     const homePath = isDocs ? '../index.html' : 'index.html';
-    
+
     // Auto-detect tutorial key from filename
     const filename = window.location.pathname.split('/').pop().replace('.html', '').toLowerCase() || 'index';
     const supportedTutorials = [
-        'decorrelated', 'notch', 'cr', 'lenire', 'soundtherapy', 
+        'decorrelated', 'notch', 'cr', 'lenire', 'soundtherapy',
         'notchfinder', 'twotone', 'sweep', 'tmc', 'lg', 'hearingtest', 'audiogram', 'ri', 'validation', 'clinical_summary'
     ];
     const tutorialKey = supportedTutorials.includes(filename) ? filename : null;
@@ -83,7 +83,7 @@ function initNav(helpHtml) {
     const navHTML = `
         <div class="unified-nav" style="position:fixed; top:1rem; left:1rem; right:1rem; display:flex; justify-content: space-between; z-index:99999; align-items: center; pointer-events: none;">
             <div style="display:flex; gap:10px; pointer-events: auto;">
-                <a class="help-btn" href="${homePath}" style="position:static; padding: 8px 12px; background: var(--success); color: white; border-color: var(--success); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; border-width: 2px; box-shadow: 0 0 10px rgba(56, 142, 60, 0.4);">Home</a>
+                <a class="help-btn" href="${homePath}" onclick="try { sessionStorage.setItem('tts_splash_shown', 'true'); } catch(e) {}" style="position:static; padding: 8px 12px; background: var(--success); color: white; border-color: var(--success); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; border-width: 2px; box-shadow: 0 0 10px rgba(56, 142, 60, 0.4);">Home</a>
                 <button class="help-btn" style="position:static; padding: 8px 10px; border-color:var(--accent); color:var(--accent);" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌓</button>
             </div>
             <div style="display:flex; gap:10px; align-items: center; pointer-events: auto;">
@@ -132,7 +132,7 @@ function initNav(helpHtml) {
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
+
     // Combine page-specific help with the universal guide
     let guide = TINNITUS_MANAGEMENT_GUIDE;
     const hearingTestPath = isDocs ? '../audiogram.html' : 'audiogram.html';
@@ -154,7 +154,7 @@ window.updateHubStatus = () => {
     // 1. Audio Engine Status
     const ctx = window.audioCtx;
     const state = ctx ? ctx.state : 'offline';
-    
+
     audioDot.style.background = state === 'running' ? 'var(--accent)' : (state === 'suspended' ? '#ff9800' : 'var(--text-dim)');
     audioText.textContent = state === 'running' ? 'Active' : (state === 'suspended' ? 'Suspended' : (state === 'closed' ? 'Closed' : 'Offline'));
     audioText.style.color = audioDot.style.background;
@@ -243,25 +243,25 @@ window.showPreFlight = (onConfirm) => {
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     toggleUIInteraction(true); // Disable background UI while pre-flight is active
-    document.getElementById('preFlightStart').onclick = () => { 
+    document.getElementById('preFlightStart').onclick = () => {
         if (document.getElementById('skipPreFlightCheck').checked) {
             saveSetting('skip_preflight', 'true');
         }
-        closePreFlight(); 
+        closePreFlight();
         // Attempt to resume the active AudioContext on user interaction
         if (window.audioCtx && window.audioCtx.state === 'suspended') {
             window.audioCtx.resume().then(() => {
                 console.log("AudioContext resumed by user interaction.");
-                if(onConfirm) onConfirm(); 
+                if (onConfirm) onConfirm();
             }).catch(e => console.error("Error resuming AudioContext:", e));
         } else {
-            if(onConfirm) onConfirm(); 
+            if (onConfirm) onConfirm();
         }
     };
 };
-window.closePreFlight = () => { 
-    const el = document.getElementById('preFlightModal'); 
-    if(el) el.remove(); 
+window.closePreFlight = () => {
+    const el = document.getElementById('preFlightModal');
+    if (el) el.remove();
     toggleUIInteraction(false); // Re-enable UI after pre-flight is closed
 };
 
@@ -284,7 +284,7 @@ window.toggleUIInteraction = (locked) => {
 
 // --- Global AudioContext State Observer ---
 // This interceptor monitors the Web Audio engine status across all therapy modules.
-(function() {
+(function () {
     const OriginalAudioContext = window.AudioContext || window.webkitAudioContext;
     if (!OriginalAudioContext) return;
 
@@ -296,146 +296,146 @@ window.toggleUIInteraction = (locked) => {
             // Ensure the global reference always points to the most recently created context
             window.audioCtx = this;
 
-        let watchdogInterval = null;
+            let watchdogInterval = null;
 
-        const updateUI = () => {
-            // Refresh Hub Status if the modal is currently visible
-            if (typeof window.updateHubStatus === 'function') window.updateHubStatus();
+            const updateUI = () => {
+                // Refresh Hub Status if the modal is currently visible
+                if (typeof window.updateHubStatus === 'function') window.updateHubStatus();
 
-            const el = document.getElementById('audioStatusIndicator');
-            if (!el) return;
-            
-            const state = this.state;
-            
-            if (state === 'running') {
-                this._startWatchdog();
-            }
-
-            if (el) {
-                if (state === 'running' && this._expectingSoundVal) {
-                    el.style.display = 'block';
-                    el.innerHTML = '<span style="color: var(--accent)">●</span> Audio Active';
-                    el.style.borderColor = 'var(--accent)';
-                    el.title = "The audio engine is processing sound normally.";
-                } else {
-                    el.style.display = 'none';
-                }
-            }
-
-            if (state === 'suspended') {
+                const el = document.getElementById('audioStatusIndicator');
                 if (!el) return;
-                el.style.display = 'block';
-                el.innerHTML = '<span style="color: #ff9800">●</span> Audio Suspended';
-                el.style.borderColor = '#ff9800';
-                el.title = "Audio is suspended by the browser. Interaction (like clicking Start) is required.";
-                this._stopWatchdog();
 
-                // Auto-recovery: If we expect sound but the browser suspended us, try to resume
-                if (this._expectingSoundVal && !this._isRecovering) {
-                    console.warn("[AudioEngine] Context suspended while therapy active. Attempting auto-resume...");
-                    this.resume().catch(() => {});
-                }
-            } else if (state === 'closed') {
-                el.style.display = 'block';
-                el.innerHTML = '○ Audio Closed';
-                el.style.borderColor = 'var(--border)';
-                el.title = "The audio engine has been shut down.";
-                this._stopWatchdog();
-            }
-        };
-
-        // Closure-safe reference to updateUI for the setter
-        this._refreshUI = () => updateUI();
-
-        // Automatically attach the high-precision generator to the context
-        this.generator = new NoiseGenerator(this);
-        this._isRecovering = false;
-        this._expectingSoundVal = false;
-        this._healthAnalyser = null;
-        this._glitchCount = 0;
-        this._peakDetected = 0;
-
-        this._startWatchdog = () => {
-            if (watchdogInterval) return;
-            let lastTime = this.currentTime;
-            let silenceCount = 0;
-            let lastClockTime = performance.now();
-            const silenceThreshold = 0.00001;
-            const buffer = new Float32Array(128);
-
-            watchdogInterval = setInterval(() => {
                 const state = this.state;
-                const time = this.currentTime;
-                const now = performance.now();
 
-                // 1. Clock Stall Check: Is the Web Audio clock actually moving?
-                if (state === 'running' && time === lastTime && lastTime > 0) {
-                    console.warn("[Watchdog] Audio clock stall detected. Attempting recovery...");
-                    this.resume().catch(e => { if(typeof logTherapyError === 'function') logTherapyError("Watchdog", e); });
-                }
-                
-                // 2. Performance Glitch Detection: Has the clock drifted from real-time?
-                if (state === 'running' && time > lastTime) {
-                    const drift = Math.abs((now - lastClockTime) / 1000 - (time - lastTime));
-                    if (drift > 0.1) this._glitchCount++; // Drift > 100ms indicates a frame dropout
+                if (state === 'running') {
+                    this._startWatchdog();
                 }
 
-                // 3. Silence / Error Detection: Is the clock moving but the output is silent or invalid?
-                if (state === 'running' && this._expectingSound && this._healthAnalyser && time > lastTime) {
-                    try {
-                        this._healthAnalyser.getFloatTimeDomainData(buffer);
-                        let sum = 0;
-                        for (let i = 0; i < buffer.length; i++) sum += buffer[i] * buffer[i];
-                        const rms = Math.sqrt(sum / buffer.length);
+                if (el) {
+                    if (state === 'running' && this._expectingSoundVal) {
+                        el.style.display = 'block';
+                        el.innerHTML = '<span style="color: var(--accent)">●</span> Audio Active';
+                        el.style.borderColor = 'var(--accent)';
+                        el.title = "The audio engine is processing sound normally.";
+                    } else {
+                        el.style.display = 'none';
+                    }
+                }
 
-                        // Peak / Clipping Detection
-                        for (let i = 0; i < buffer.length; i++) {
-                            const abs = Math.abs(buffer[i]);
-                            if (abs > this._peakDetected) this._peakDetected = abs;
-                        }
-                        if (this._peakDetected > 0.98) console.warn("[Safety] Digital clipping detected in output graph.");
+                if (state === 'suspended') {
+                    if (!el) return;
+                    el.style.display = 'block';
+                    el.innerHTML = '<span style="color: #ff9800">●</span> Audio Suspended';
+                    el.style.borderColor = '#ff9800';
+                    el.title = "Audio is suspended by the browser. Interaction (like clicking Start) is required.";
+                    this._stopWatchdog();
 
-                        // Catch silence OR NaN (NaN indicates a filter has exploded)
-                        if (rms < silenceThreshold || isNaN(rms)) {
-                            silenceCount++;
-                            if (silenceCount >= 3) { 
-                                console.warn(`[Watchdog] ${isNaN(rms) ? 'Engine Crash (NaN)' : 'Silence'} detected. Triggering recovery...`);
-                                silenceCount = 0;
-                                this._isRecovering = true;
-                                
-                                // Hard reset state if NaN detected to clear the signal path, otherwise just resume.
-                                if (isNaN(rms)) this.suspend().then(() => this.resume()).catch(() => {});
-                                else this.resume().catch(() => {});
-                                
-                                // Telemetry: Report the failure to the host
-                                if (typeof sendClinicalTelemetry === 'function') {
-                                    sendClinicalTelemetry('recovery_triggered', { module: window.location.pathname.split('/').pop() });
+                    // Auto-recovery: If we expect sound but the browser suspended us, try to resume
+                    if (this._expectingSoundVal && !this._isRecovering) {
+                        console.warn("[AudioEngine] Context suspended while therapy active. Attempting auto-resume...");
+                        this.resume().catch(() => { });
+                    }
+                } else if (state === 'closed') {
+                    el.style.display = 'block';
+                    el.innerHTML = '○ Audio Closed';
+                    el.style.borderColor = 'var(--border)';
+                    el.title = "The audio engine has been shut down.";
+                    this._stopWatchdog();
+                }
+            };
+
+            // Closure-safe reference to updateUI for the setter
+            this._refreshUI = () => updateUI();
+
+            // Automatically attach the high-precision generator to the context
+            this.generator = new NoiseGenerator(this);
+            this._isRecovering = false;
+            this._expectingSoundVal = false;
+            this._healthAnalyser = null;
+            this._glitchCount = 0;
+            this._peakDetected = 0;
+
+            this._startWatchdog = () => {
+                if (watchdogInterval) return;
+                let lastTime = this.currentTime;
+                let silenceCount = 0;
+                let lastClockTime = performance.now();
+                const silenceThreshold = 0.00001;
+                const buffer = new Float32Array(128);
+
+                watchdogInterval = setInterval(() => {
+                    const state = this.state;
+                    const time = this.currentTime;
+                    const now = performance.now();
+
+                    // 1. Clock Stall Check: Is the Web Audio clock actually moving?
+                    if (state === 'running' && time === lastTime && lastTime > 0) {
+                        console.warn("[Watchdog] Audio clock stall detected. Attempting recovery...");
+                        this.resume().catch(e => { if (typeof logTherapyError === 'function') logTherapyError("Watchdog", e); });
+                    }
+
+                    // 2. Performance Glitch Detection: Has the clock drifted from real-time?
+                    if (state === 'running' && time > lastTime) {
+                        const drift = Math.abs((now - lastClockTime) / 1000 - (time - lastTime));
+                        if (drift > 0.1) this._glitchCount++; // Drift > 100ms indicates a frame dropout
+                    }
+
+                    // 3. Silence / Error Detection: Is the clock moving but the output is silent or invalid?
+                    if (state === 'running' && this._expectingSound && this._healthAnalyser && time > lastTime) {
+                        try {
+                            this._healthAnalyser.getFloatTimeDomainData(buffer);
+                            let sum = 0;
+                            for (let i = 0; i < buffer.length; i++) sum += buffer[i] * buffer[i];
+                            const rms = Math.sqrt(sum / buffer.length);
+
+                            // Peak / Clipping Detection
+                            for (let i = 0; i < buffer.length; i++) {
+                                const abs = Math.abs(buffer[i]);
+                                if (abs > this._peakDetected) this._peakDetected = abs;
+                            }
+                            if (this._peakDetected > 0.98) console.warn("[Safety] Digital clipping detected in output graph.");
+
+                            // Catch silence OR NaN (NaN indicates a filter has exploded)
+                            if (rms < silenceThreshold || isNaN(rms)) {
+                                silenceCount++;
+                                if (silenceCount >= 3) {
+                                    console.warn(`[Watchdog] ${isNaN(rms) ? 'Engine Crash (NaN)' : 'Silence'} detected. Triggering recovery...`);
+                                    silenceCount = 0;
+                                    this._isRecovering = true;
+
+                                    // Hard reset state if NaN detected to clear the signal path, otherwise just resume.
+                                    if (isNaN(rms)) this.suspend().then(() => this.resume()).catch(() => { });
+                                    else this.resume().catch(() => { });
+
+                                    // Telemetry: Report the failure to the host
+                                    if (typeof sendClinicalTelemetry === 'function') {
+                                        sendClinicalTelemetry('recovery_triggered', { module: window.location.pathname.split('/').pop() });
+                                    }
+
+                                    window.dispatchEvent(new CustomEvent('tts-audio-recovery-triggered', { detail: { context: this } }));
                                 }
-
-                                window.dispatchEvent(new CustomEvent('tts-audio-recovery-triggered', { detail: { context: this } }));
+                            } else {
+                                if (this._isRecovering) {
+                                    this._isRecovering = false;
+                                    window.dispatchEvent(new CustomEvent('tts-audio-recovered'));
+                                }
+                                silenceCount = 0;
                             }
-                        } else {
-                            if (this._isRecovering) {
-                                this._isRecovering = false;
-                                window.dispatchEvent(new CustomEvent('tts-audio-recovered'));
-                            }
-                            silenceCount = 0;
-                        }
-                    } catch (e) { silenceCount = 0; }
-                }
+                        } catch (e) { silenceCount = 0; }
+                    }
 
-                lastTime = time;
-                lastClockTime = now;
-            }, 3000);
-        };
+                    lastTime = time;
+                    lastClockTime = now;
+                }, 3000);
+            };
 
-        this._stopWatchdog = () => {
-            if (watchdogInterval) clearInterval(watchdogInterval);
-            watchdogInterval = null;
-        };
+            this._stopWatchdog = () => {
+                if (watchdogInterval) clearInterval(watchdogInterval);
+                watchdogInterval = null;
+            };
 
-        this.addEventListener('statechange', updateUI);
-        setTimeout(updateUI, 100);
+            this.addEventListener('statechange', updateUI);
+            setTimeout(updateUI, 100);
         }
 
         get _expectingSound() { return this._expectingSoundVal; }
