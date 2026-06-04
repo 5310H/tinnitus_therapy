@@ -1,205 +1,244 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Audio Level Meter</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="stylesheet" href="style.css">
-<script src="storage.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="nav.js"></script>
-<style>.meter-bar { width:100%; height:30px; background:var(--surface); margin:10px 0; border-radius:10px; overflow:hidden; position: relative; }
-.meter-fill { height:100%; width:0%; background:var(--accent); transition: width 0.1s; }
-.meter-peak { position: absolute; top: 0; height: 100%; width: 3px; background: var(--text); transition: left 0.1s; pointer-events: none; }</style>
+    <meta charset="UTF-8">
+    <title>Audio Level Meter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <script src="storage.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="nav.js"></script>
+    <style>
+        .meter-bar {
+            width: 100%;
+            height: 30px;
+            background: var(--surface);
+            margin: 10px 0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .meter-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            transition: width 0.1s;
+        }
+
+        .meter-peak {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--text);
+            transition: left 0.1s;
+            pointer-events: none;
+        }
+    </style>
 </head>
+
 <body>
-<div class="panel">
-<h1>Audio Level Meter</h1>
-<p class="info">Shows real‑time audio amplitude and clinical calibration status.</p>
+    <div class="panel">
+        <h1>Audio Level Meter</h1>
+        <p class="info">Shows real‑time audio amplitude and clinical calibration status.</p>
 
-<div class="match-section" style="margin-bottom: 20px;">
-    <h3>Habituation Range</h3>
-    <p>Habituation is most effective in environments between <b>45dB and 60dB</b>. Use this meter to ensure your surroundings provide enough ambient enrichment without being overly loud.</p>
-</div>
-
-<div id="validationBox" class="match-section" style="display:none; margin-bottom: 20px;">
-    <h3>Clinical Calibration Check</h3>
-    <p id="clipWarning" style="color:#ef5350; font-weight:bold; display:none;">⚠️ SIGNAL CLIPPING DETECTED: Reduce system volume.</p>
-    <p id="floorCheck">Noise Floor: Measuring...</p>
-    <button class="button" style="font-size: 0.75rem; margin-top:10px;" onclick="getAIEnvAdvice()">✨ Get AI Room Advice</button>
-</div>
-
-<div class="card">
-    <div style="display: flex; align-items: center; gap: 12px;">
-        <div class="meter-bar" style="flex: 1;">
-            <div class="meter-fill" id="fill"></div>
-            <div class="meter-peak" id="peak" style="left: 0%;"></div>
+        <div class="match-section" style="margin-bottom: 20px;">
+            <h3>Habituation Range</h3>
+            <p>Habituation is most effective in environments between <b>45dB and 60dB</b>. Use this meter to ensure your
+                surroundings provide enough ambient enrichment without being overly loud.</p>
         </div>
-        <div id="dbVal" style="width: 75px; font-weight: bold; color: var(--accent); font-size: 1.1rem; text-align: right;">-100 dB</div>
-    </div>
-    <button class="button play-btn" onclick="start()">Start</button>
-    <button class="button stop-btn" onclick="stop()" style="background: var(--error);">Stop</button>
 
-    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-        <button class="button" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-        <button class="button" onclick="exportClinicalSettings()">Export Level Report (.txt)</button>
-        <button class="button email-audiologist-btn" style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
+        <div id="validationBox" class="match-section" style="display:none; margin-bottom: 20px;">
+            <h3>Clinical Calibration Check</h3>
+            <p id="clipWarning" style="color:#ef5350; font-weight:bold; display:none;">⚠️ SIGNAL CLIPPING DETECTED:
+                Reduce system volume.</p>
+            <p id="floorCheck">Noise Floor: Measuring...</p>
+            <button class="button" style="font-size: 0.75rem; margin-top:10px;" onclick="getAIEnvAdvice()">✨ Get AI Room
+                Advice</button>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="meter-bar" style="flex: 1;">
+                    <div class="meter-fill" id="fill"></div>
+                    <div class="meter-peak" id="peak" style="left: 0%;"></div>
+                </div>
+                <div id="dbVal"
+                    style="width: 75px; font-weight: bold; color: var(--accent); font-size: 1.1rem; text-align: right;">
+                    -100 dB</div>
+            </div>
+            <button class="button play-btn" onclick="start()">Start</button>
+            <button class="button stop-btn" onclick="stop()" style="background: var(--error);">Stop</button>
+
+            <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                <button class="button" style="background:var(--accent); color:white;"
+                    onclick="generatePDFReport()">Download PDF Report</button>
+                <button class="button" onclick="exportClinicalSettings()">Export Level Report (.txt)</button>
+                <a class="button"
+                    style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim); text-decoration: none; display: flex; align-items: center; justify-content: center;"
+                    href="user_manual.html#sec-20" target="_blank">Open Manual for this Tool</a>
+                <button class="button email-audiologist-btn"
+                    style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to
+                    Audiologist</button>
+            </div>
+        </div>
     </div>
-</div>
-</div>
-<script>
-window.onload = () => initNav(`
+    <script>
+        window.onload = () => initNav(`
     <b>Purpose:</b> This tool measures the real-time volume (amplitude) and monitors for signal clipping.<br><br>
     <b>Usage:</b> Use this to calibrate your therapy levels. Many researchers suggest therapy sounds should be adjusted to a "mixing point" where they just begin to blend with your tinnitus or the ambient room noise.<br><br>
     <b>Note:</b> This tool is passive and does not produce sound.
 `);
-let audioCtx=null, analyser, source, raf, streamRef=null, peakLevel=0, lastPeakUpdate=0;
+        let audioCtx = null, analyser, source, raf, streamRef = null, peakLevel = 0, lastPeakUpdate = 0;
 
-function start(){
-    stop();
-    document.getElementById("validationBox").style.display = "block";
-    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    if(audioCtx.state === 'suspended') audioCtx.resume();
+        function start() {
+            stop();
+            document.getElementById("validationBox").style.display = "block";
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
 
-    navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
-        streamRef = stream;
-        source=audioCtx.createMediaStreamSource(stream);
-        analyser=audioCtx.createAnalyser();
-        analyser.fftSize=256;
-        source.connect(analyser);
-        draw();
-    }).catch(err => {
-        alert("Microphone access is required for the meter to function.");
-    });
-}
-
-function stop(){ 
-    if(raf) cancelAnimationFrame(raf);
-    if(streamRef) {
-        streamRef.getTracks().forEach(track => track.stop());
-        streamRef = null;
-    }
-    document.getElementById("validationBox").style.display = "none";
-    document.getElementById("fill").style.width = "0%";
-    document.getElementById("peak").style.left = "0%";
-    document.getElementById("dbVal").textContent = "-100 dB";
-    document.getElementById("fill").style.background = "var(--accent)";
-    peakLevel = 0;
-}
-
-function draw(){
-    const data=new Uint8Array(analyser.frequencyBinCount);
-    const fill=document.getElementById("fill");
-    const peak=document.getElementById("peak");
-    const dbText=document.getElementById("dbVal");
-    const clipMsg=document.getElementById("clipWarning");
-    const floorMsg=document.getElementById("floorCheck");
-
-    function loop(){
-        analyser.getByteFrequencyData(data);
-        // Defensive clamping: ensure we don't divide by zero or process extreme outliers
-        const sum = data.reduce((a, b) => a + b, 0);
-        const avg = sum / (data.length || 1);
-        const clampedAvg = Math.max(1e-5, avg); // Avoid zero for log calculations
-        fill.style.width=(clampedAvg/255*100)+"%";
-
-        // Smoothly transition from teal (140) to red (0) based on amplitude
-        const hue = Math.max(0, 140 - (clampedAvg / 255) * 140);
-        fill.style.background = `hsl(${hue}, 80%, 50%)`;
-
-        // Calculate dB based on AnalyserNode defaults (-100 to -30 dB)
-        const db = Math.round(analyser.minDecibels + (avg / 255) * (analyser.maxDecibels - analyser.minDecibels));
-        dbText.textContent = db + " dB";
-
-        // Clinical Validation Logic
-        const isClipping = data.some(val => val >= 250);
-        clipMsg.style.display = isClipping ? "block" : "none";
-        if (db < -80) floorMsg.textContent = "Noise Floor: Clean (Low Ambient Noise)";
-        else floorMsg.textContent = "Noise Floor: High (Check Surroundings)";
-
-        const now = performance.now();
-        if (avg >= peakLevel) {
-            peakLevel = avg;
-            lastPeakUpdate = now;
-        } else if (now - lastPeakUpdate > 2000) {
-            peakLevel = Math.max(avg, peakLevel * 0.98); // Decay after 2-second hold
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                streamRef = stream;
+                source = audioCtx.createMediaStreamSource(stream);
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
+                source.connect(analyser);
+                draw();
+            }).catch(err => {
+                alert("Microphone access is required for the meter to function.");
+            });
         }
-        peak.style.left = (peakLevel / 255 * 100) + "%";
 
-        raf=requestAnimationFrame(loop);
-    }
-    loop();
-}
+        function stop() {
+            if (raf) cancelAnimationFrame(raf);
+            if (streamRef) {
+                streamRef.getTracks().forEach(track => track.stop());
+                streamRef = null;
+            }
+            document.getElementById("validationBox").style.display = "none";
+            document.getElementById("fill").style.width = "0%";
+            document.getElementById("peak").style.left = "0%";
+            document.getElementById("dbVal").textContent = "-100 dB";
+            document.getElementById("fill").style.background = "var(--accent)";
+            peakLevel = 0;
+        }
 
-async function getAIEnvAdvice() {
-    const db = document.getElementById('dbVal').textContent;
-    const floor = document.getElementById('floorCheck').textContent;
-    
-    // Create a temporary status display
-    const floorMsg = document.getElementById('floorCheck');
-    const originalText = floorMsg.textContent;
-    floorMsg.textContent = "Consulting AI...";
-    const advice = await getEnvironmentalAdvice(db, floor);
-    alert(advice.replace(/<i>.*<\/i>/g, '')); // Show advice without the disclaimer for alert
-    floorMsg.textContent = originalText;
-}
+        function draw() {
+            const data = new Uint8Array(analyser.frequencyBinCount);
+            const fill = document.getElementById("fill");
+            const peak = document.getElementById("peak");
+            const dbText = document.getElementById("dbVal");
+            const clipMsg = document.getElementById("clipWarning");
+            const floorMsg = document.getElementById("floorCheck");
 
-function getReportData() {
-    return { "Last Measured Level": document.getElementById('dbVal').textContent };
-}
+            function loop() {
+                analyser.getByteFrequencyData(data);
+                // Defensive clamping: ensure we don't divide by zero or process extreme outliers
+                const sum = data.reduce((a, b) => a + b, 0);
+                const avg = sum / (data.length || 1);
+                const clampedAvg = Math.max(1e-5, avg); // Avoid zero for log calculations
+                fill.style.width = (clampedAvg / 255 * 100) + "%";
 
-function exportClinicalSettings() {
-    const reportData = getClinicalReportData("Audio Level Analysis", getReportData());
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(aiSummaryText => {
-        reportData.aiSummary = aiSummaryText;
-        const report = generateClinicalReportText(reportData);
-        const blob = new Blob([report], { type: 'text/plain' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = `tinnitus_level_report.txt`; a.click();
-        alert("Audio level report downloaded. Please check your browser's Downloads folder.");
-    });
-}
+                // Smoothly transition from teal (140) to red (0) based on amplitude
+                const hue = Math.max(0, 140 - (clampedAvg / 255) * 140);
+                fill.style.background = `hsl(${hue}, 80%, 50%)`;
 
-async function generatePDFReport() {
-    const reportData = getClinicalReportData("Audio Level Analysis", getReportData());
-    // Fetch AI summary and add to reportData
-    const aiSummaryText = await getClinicalSummary();
-    reportData.aiSummary = aiSummaryText;
-    const htmlContent = generateClinicalReportHtml(reportData);
+                // Calculate dB based on AnalyserNode defaults (-100 to -30 dB)
+                const db = Math.round(analyser.minDecibels + (avg / 255) * (analyser.maxDecibels - analyser.minDecibels));
+                dbText.textContent = db + " dB";
 
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    document.body.appendChild(tempDiv);
+                // Clinical Validation Logic
+                const isClipping = data.some(val => val >= 250);
+                clipMsg.style.display = isClipping ? "block" : "none";
+                if (db < -80) floorMsg.textContent = "Noise Floor: Clean (Low Ambient Noise)";
+                else floorMsg.textContent = "Noise Floor: High (Check Surroundings)";
 
-    const isDark = document.documentElement.classList.contains('light-mode');
-    if (!isDark) document.documentElement.classList.add('light-mode');
+                const now = performance.now();
+                if (avg >= peakLevel) {
+                    peakLevel = avg;
+                    lastPeakUpdate = now;
+                } else if (now - lastPeakUpdate > 2000) {
+                    peakLevel = Math.max(avg, peakLevel * 0.98); // Decay after 2-second hold
+                }
+                peak.style.left = (peakLevel / 255 * 100) + "%";
 
-    const opt = {
-        margin: [20, 15], filename: 'tinnitus_level_report.pdf', image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    await html2pdf().set(opt).from(tempDiv).save();
+                raf = requestAnimationFrame(loop);
+            }
+            loop();
+        }
 
-    if (!isDark) document.documentElement.classList.remove('light-mode');
-    document.body.removeChild(tempDiv);
-}
+        async function getAIEnvAdvice() {
+            const db = document.getElementById('dbVal').textContent;
+            const floor = document.getElementById('floorCheck').textContent;
 
-function emailToAudiologist() {
-    const email = loadSetting('audiologist_email', '');
-    if (!email) return alert("Please set your audiologist's email on the Home page.");
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(async aiSummaryText => {
-        const reportData = getClinicalReportData("Audio Level Analysis", getReportData());
-        reportData.aiSummary = aiSummaryText;
-        const report = generateClinicalReportText(reportData);
-        window.location.href = `mailto:${email}?subject=Audio Level Report&body=${encodeURIComponent(report)}`;
-        alert("Email client opened. Please review and send the audio level report draft.");
-    });
-}
-</script>
+            // Create a temporary status display
+            const floorMsg = document.getElementById('floorCheck');
+            const originalText = floorMsg.textContent;
+            floorMsg.textContent = "Consulting AI...";
+            const advice = await getEnvironmentalAdvice(db, floor);
+            alert(advice.replace(/<i>.*<\/i>/g, '')); // Show advice without the disclaimer for alert
+            floorMsg.textContent = originalText;
+        }
+
+        function getReportData() {
+            return { "Last Measured Level": document.getElementById('dbVal').textContent };
+        }
+
+        function exportClinicalSettings() {
+            const reportData = getClinicalReportData("Audio Level Analysis", getReportData());
+            // Fetch AI summary and add to reportData
+            getClinicalSummary().then(aiSummaryText => {
+                reportData.aiSummary = aiSummaryText;
+                const report = generateClinicalReportText(reportData);
+                const blob = new Blob([report], { type: 'text/plain' });
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                a.download = `tinnitus_level_report.txt`; a.click();
+                alert("Audio level report downloaded. Please check your browser's Downloads folder.");
+            });
+        }
+
+        async function generatePDFReport() {
+            const reportData = getClinicalReportData("Audio Level Analysis", getReportData());
+            // Fetch AI summary and add to reportData
+            const aiSummaryText = await getClinicalSummary();
+            reportData.aiSummary = aiSummaryText;
+            const htmlContent = generateClinicalReportHtml(reportData);
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            document.body.appendChild(tempDiv);
+
+            const isDark = document.documentElement.classList.contains('light-mode');
+            if (!isDark) document.documentElement.classList.add('light-mode');
+
+            const opt = {
+                margin: [20, 15], filename: 'tinnitus_level_report.pdf', image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            await html2pdf().set(opt).from(tempDiv).save();
+
+            if (!isDark) document.documentElement.classList.remove('light-mode');
+            document.body.removeChild(tempDiv);
+        }
+
+        function emailToAudiologist() {
+            const email = loadSetting('audiologist_email', '');
+            if (!email) return alert("Please set your audiologist's email on the Home page.");
+            // Fetch AI summary and add to reportData
+            getClinicalSummary().then(async aiSummaryText => {
+                const reportData = getClinicalReportData("Audio Level Analysis", getReportData());
+                reportData.aiSummary = aiSummaryText;
+                const report = generateClinicalReportText(reportData);
+                window.location.href = `mailto:${email}?subject=Audio Level Report&body=${encodeURIComponent(report)}`;
+                alert("Email client opened. Please review and send the audio level report draft.");
+            });
+        }
+    </script>
 
 </body>
+
 </html>

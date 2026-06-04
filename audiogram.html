@@ -1,260 +1,297 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Hearing Profile (Audiogram) - Tinnitus Therapy Suite</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="stylesheet" href="style.css">
-<script src="storage.js"></script>
-<script src="nav.js"></script>
-<style>
-    .audiogram-container {
-        position: relative;
-        background: #fff;
-        border-radius: 12px;
-        padding: 20px;
-        margin-top: 15px;
-        border: 1px solid var(--border);
-        box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-    }
-    canvas {
-        width: 100%;
-        height: 350px;
-        display: block;
-    }
-    .ear-controls {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(65px, 1fr));
-        gap: 8px;
-        margin-top: 20px;
-    }
-    .slider-col {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    .slider-col label {
-        font-size: 0.7rem;
-        color: var(--text-dim);
-        margin-bottom: 8px;
-        font-weight: bold;
-    }
-    .slider-col input[type=range] {
-        writing-mode: bt-lr; 
-        -webkit-appearance: slider-vertical;
-        width: 12px;
-        height: 140px;
-        padding: 0;
-    }
-    .val-display {
-        font-weight: bold;
-        font-size: 0.85rem;
-        margin-top: 8px;
-        color: var(--accent);
-    }
-    .ear-tabs {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 15px;
-    }
-    .ear-tab {
-        flex: 1;
-        padding: 12px;
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        background: var(--surface);
-        color: var(--text);
-        cursor: pointer;
-        font-weight: bold;
-        transition: all 0.2s ease;
-    }
-    .ear-tab.active.right { border-color: #ef5350; color: #ef5350; background: rgba(239, 83, 80, 0.1); }
-    .ear-tab.active.left { border-color: #42a5f5; color: #42a5f5; background: rgba(66, 165, 245, 0.1); }
-    
-    .legend {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-        margin-top: 15px;
-        font-size: 0.75rem;
-        color: var(--text-dim);
-    }
-    .legend-item { display: flex; align-items: center; gap: 6px; }
-</style>
+    <meta charset="UTF-8">
+    <title>Hearing Profile (Audiogram) - Tinnitus Therapy Suite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <script src="storage.js"></script>
+    <script src="nav.js"></script>
+    <style>
+        .audiogram-container {
+            position: relative;
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        canvas {
+            width: 100%;
+            height: 350px;
+            display: block;
+        }
+
+        .ear-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(65px, 1fr));
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .slider-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .slider-col label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .slider-col input[type=range] {
+            writing-mode: bt-lr;
+            -webkit-appearance: slider-vertical;
+            width: 12px;
+            height: 140px;
+            padding: 0;
+        }
+
+        .val-display {
+            font-weight: bold;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            color: var(--accent);
+        }
+
+        .ear-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .ear-tab {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .ear-tab.active.right {
+            border-color: #ef5350;
+            color: #ef5350;
+            background: rgba(239, 83, 80, 0.1);
+        }
+
+        .ear-tab.active.left {
+            border-color: #42a5f5;
+            color: #42a5f5;
+            background: rgba(66, 165, 245, 0.1);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
 </head>
+
 <body>
-<div class="panel" style="max-width: 800px;">
-    <h1>Hearing Profile (Audiogram)</h1>
-    <p class="info">Enter your clinical thresholds. 0dB is normal; positive values indicate loss.</p>
+    <div class="panel" style="max-width: 800px;">
+        <h1>Hearing Profile (Audiogram)</h1>
+        <p class="info">Enter your clinical thresholds. 0dB is normal; positive values indicate loss.</p>
 
-    <div class="ear-tabs">
-        <button class="ear-tab active right" id="tabRight" onclick="setEar('R')">Right Ear (Red ○)</button>
-        <button class="ear-tab left" id="tabLeft" onclick="setEar('L')">Left Ear (Blue ✕)</button>
+        <div class="ear-tabs">
+            <button class="ear-tab active right" id="tabRight" onclick="setEar('R')">Right Ear (Red ○)</button>
+            <button class="ear-tab left" id="tabLeft" onclick="setEar('L')">Left Ear (Blue ✕)</button>
+        </div>
+
+        <div class="card">
+            <div class="audiogram-container">
+                <canvas id="audiogramCanvas"></canvas>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item"><span style="width:12px; height:2px; background:currentColor;"></span> Raw
+                    Threshold</div>
+                <div class="legend-item"><span
+                        style="width:12px; height:2px; border-top: 2px dashed currentColor; opacity: 0.5;"></span>
+                    Target Compensation (Half-Gain)</div>
+            </div>
+
+            <div id="controlsContainer" class="ear-controls"></div>
+
+            <div style="margin-top: 25px; display: flex; gap: 10px;">
+                <button class="big-btn play-btn" onclick="saveProfile()" style="margin-top:0; flex: 2;">Save Hearing
+                    Profile</button>
+                <button class="button" onclick="resetToNormal()"
+                    style="margin-top:0; flex: 1; border-color: var(--text-dim); color: var(--text-dim);">Reset to
+                    0dB</button>
+            </div>
+            <a class="button"
+                style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim); text-decoration: none; display: flex; align-items: center; justify-content: center;"
+                href="user_manual.html#sec-18" target="_blank">Open Manual for this Tool</a>
+            <a href="hearingtest.html" class="button" style="width: 100%; margin-top: 15px; border-style: dashed;">Open
+                Audibility Button Test</a>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h3>Tinnitus Location</h3>
+            <p class="info">Selecting your tinnitus side allows the suite to automatically preset the L/R balance for
+                your therapy sessions.</p>
+            <div class="ear-tabs" style="margin-top: 10px;">
+                <button class="ear-tab" id="sideL" onclick="setTinnitusSide('L')">Left Ear</button>
+                <button class="ear-tab" id="sideBoth" onclick="setTinnitusSide('Both')">Both / Center</button>
+                <button class="ear-tab" id="sideR" onclick="setTinnitusSide('R')">Right Ear</button>
+            </div>
+        </div>
     </div>
 
-    <div class="card">
-        <div class="audiogram-container">
-            <canvas id="audiogramCanvas"></canvas>
-        </div>
-        
-        <div class="legend">
-            <div class="legend-item"><span style="width:12px; height:2px; background:currentColor;"></span> Raw Threshold</div>
-            <div class="legend-item"><span style="width:12px; height:2px; border-top: 2px dashed currentColor; opacity: 0.5;"></span> Target Compensation (Half-Gain)</div>
-        </div>
+    <script>
+        const freqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
+        let currentEar = 'R';
+        let profile = getJson('hearing_profile', {
+            L: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            R: [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        });
 
-        <div id="controlsContainer" class="ear-controls"></div>
+        window.onload = () => {
+            initNav("Enter your hearing thresholds from a professional audiogram. The solid line represents your loss; the dashed line shows how the suite will compensate using the Half-Gain rule.");
+            initUI();
+            updateSideUI();
+            draw();
+        };
 
-        <div style="margin-top: 25px; display: flex; gap: 10px;">
-            <button class="big-btn play-btn" onclick="saveProfile()" style="margin-top:0; flex: 2;">Save Hearing Profile</button>
-            <button class="button" onclick="resetToNormal()" style="margin-top:0; flex: 1; border-color: var(--text-dim); color: var(--text-dim);">Reset to 0dB</button>
-        </div>
-        <a href="hearingtest.html" class="button" style="width: 100%; margin-top: 15px; border-style: dashed;">Open Audibility Button Test</a>
-    </div>
-
-    <div class="card" style="margin-top: 20px;">
-        <h3>Tinnitus Location</h3>
-        <p class="info">Selecting your tinnitus side allows the suite to automatically preset the L/R balance for your therapy sessions.</p>
-        <div class="ear-tabs" style="margin-top: 10px;">
-            <button class="ear-tab" id="sideL" onclick="setTinnitusSide('L')">Left Ear</button>
-            <button class="ear-tab" id="sideBoth" onclick="setTinnitusSide('Both')">Both / Center</button>
-            <button class="ear-tab" id="sideR" onclick="setTinnitusSide('R')">Right Ear</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    const freqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
-    let currentEar = 'R';
-    let profile = getJson('hearing_profile', {
-        L: [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        R: [0, 0, 0, 0, 0, 0, 0, 0, 0]
-    });
-
-    window.onload = () => {
-        initNav("Enter your hearing thresholds from a professional audiogram. The solid line represents your loss; the dashed line shows how the suite will compensate using the Half-Gain rule.");
-        initUI();
-        updateSideUI();
-        draw();
-    };
-
-    function initUI() {
-        const container = document.getElementById('controlsContainer');
-        container.innerHTML = '';
-        freqs.forEach((f, i) => {
-            const col = document.createElement('div');
-            col.className = 'slider-col';
-            col.innerHTML = `
-                <label>${f >= 1000 ? (f/1000)+'k' : f}Hz</label>
+        function initUI() {
+            const container = document.getElementById('controlsContainer');
+            container.innerHTML = '';
+            freqs.forEach((f, i) => {
+                const col = document.createElement('div');
+                col.className = 'slider-col';
+                col.innerHTML = `
+                <label>${f >= 1000 ? (f / 1000) + 'k' : f}Hz</label>
                 <input type="range" min="0" max="110" step="5" value="${profile[currentEar][i]}" 
                     oninput="updateVal(${i}, this.value)">
                 <div class="val-display" id="val-${i}">${profile[currentEar][i]} dB</div>
             `;
-            container.appendChild(col);
-        });
-    }
+                container.appendChild(col);
+            });
+        }
 
-    function setEar(e) {
-        currentEar = e;
-        document.getElementById('tabRight').className = 'ear-tab right ' + (e === 'R' ? 'active' : '');
-        document.getElementById('tabLeft').className = 'ear-tab left ' + (e === 'L' ? 'active' : '');
-        initUI();
-        draw();
-    }
-
-    function setTinnitusSide(side) {
-        saveSetting('tinnitus_side', side);
-        updateSideUI();
-    }
-
-    function updateSideUI() {
-        const side = loadSetting('tinnitus_side', 'Both');
-        document.getElementById('sideL').className = 'ear-tab ' + (side === 'L' ? 'active left' : '');
-        document.getElementById('sideBoth').className = 'ear-tab ' + (side === 'Both' ? 'active' : '');
-        document.getElementById('sideR').className = 'ear-tab ' + (side === 'R' ? 'active right' : '');
-    }
-
-    function updateVal(idx, val) {
-        profile[currentEar][idx] = parseInt(val);
-        document.getElementById(`val-${idx}`).textContent = val + ' dB';
-        draw();
-    }
-
-    function saveProfile() {
-        setJson('hearing_profile', profile);
-        alert("Hearing Profile saved. Auto-compensation is now active across all therapy modules.");
-    }
-
-    function resetToNormal() {
-        if(confirm("Reset current ear thresholds to 0 dB HL?")) {
-            profile[currentEar] = freqs.map(() => 0);
+        function setEar(e) {
+            currentEar = e;
+            document.getElementById('tabRight').className = 'ear-tab right ' + (e === 'R' ? 'active' : '');
+            document.getElementById('tabLeft').className = 'ear-tab left ' + (e === 'L' ? 'active' : '');
             initUI();
             draw();
         }
-    }
 
-    function draw() {
-        const canvas = document.getElementById('audiogramCanvas');
-        const ctx = canvas.getContext('2d');
-        const dpi = window.devicePixelRatio || 1;
-        canvas.width = canvas.offsetWidth * dpi; canvas.height = canvas.offsetHeight * dpi;
-        ctx.scale(dpi, dpi);
-        const w = canvas.offsetWidth, h = canvas.offsetHeight, pad = 40;
-        const gW = w - (pad * 2), gH = h - (pad * 2);
-        ctx.clearRect(0,0,w,h);
-
-        // Grid
-        ctx.strokeStyle = '#eee'; ctx.lineWidth = 1; ctx.font = '10px Arial'; ctx.fillStyle = '#999'; ctx.textAlign = 'right';
-        for (let db = 0; db <= 110; db += 10) {
-            const y = pad + (db / 110) * gH;
-            ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(w - pad, y); ctx.stroke();
-            ctx.fillText(db, pad - 8, y + 3);
+        function setTinnitusSide(side) {
+            saveSetting('tinnitus_side', side);
+            updateSideUI();
         }
-        ctx.textAlign = 'center';
-        freqs.forEach((f, i) => {
-            const x = pad + (i / (freqs.length - 1)) * gW;
-            ctx.beginPath(); ctx.moveTo(x, pad); ctx.lineTo(x, h - pad); ctx.stroke();
-            ctx.fillText(f >= 1000 ? (f/1000)+'k' : f, x, h - pad + 15);
-        });
 
-        ['L', 'R'].forEach(side => {
-            const isL = side === 'L';
-            const color = isL ? '#42a5f5' : '#ef5350';
-            
-            // 1. Draw Raw Threshold Curve
-            ctx.strokeStyle = color; ctx.setLineDash([]); ctx.lineWidth = 2; ctx.beginPath();
-            profile[side].forEach((db, i) => {
-                const x = pad + (i / (freqs.length - 1)) * gW;
+        function updateSideUI() {
+            const side = loadSetting('tinnitus_side', 'Both');
+            document.getElementById('sideL').className = 'ear-tab ' + (side === 'L' ? 'active left' : '');
+            document.getElementById('sideBoth').className = 'ear-tab ' + (side === 'Both' ? 'active' : '');
+            document.getElementById('sideR').className = 'ear-tab ' + (side === 'R' ? 'active right' : '');
+        }
+
+        function updateVal(idx, val) {
+            profile[currentEar][idx] = parseInt(val);
+            document.getElementById(`val-${idx}`).textContent = val + ' dB';
+            draw();
+        }
+
+        function saveProfile() {
+            setJson('hearing_profile', profile);
+            alert("Hearing Profile saved. Auto-compensation is now active across all therapy modules.");
+        }
+
+        function resetToNormal() {
+            if (confirm("Reset current ear thresholds to 0 dB HL?")) {
+                profile[currentEar] = freqs.map(() => 0);
+                initUI();
+                draw();
+            }
+        }
+
+        function draw() {
+            const canvas = document.getElementById('audiogramCanvas');
+            const ctx = canvas.getContext('2d');
+            const dpi = window.devicePixelRatio || 1;
+            canvas.width = canvas.offsetWidth * dpi; canvas.height = canvas.offsetHeight * dpi;
+            ctx.scale(dpi, dpi);
+            const w = canvas.offsetWidth, h = canvas.offsetHeight, pad = 40;
+            const gW = w - (pad * 2), gH = h - (pad * 2);
+            ctx.clearRect(0, 0, w, h);
+
+            // Grid
+            ctx.strokeStyle = '#eee'; ctx.lineWidth = 1; ctx.font = '10px Arial'; ctx.fillStyle = '#999'; ctx.textAlign = 'right';
+            for (let db = 0; db <= 110; db += 10) {
                 const y = pad + (db / 110) * gH;
-                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-            });
-            ctx.stroke();
-
-            // 2. Draw Target Compensation Curve (Half-Gain + 20dB Cap)
-            ctx.strokeStyle = color; ctx.setLineDash([4, 4]); ctx.globalAlpha = 0.5; ctx.beginPath();
-            profile[side].forEach((db, i) => {
+                ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(w - pad, y); ctx.stroke();
+                ctx.fillText(db, pad - 8, y + 3);
+            }
+            ctx.textAlign = 'center';
+            freqs.forEach((f, i) => {
                 const x = pad + (i / (freqs.length - 1)) * gW;
-                const boost = Math.min(20, db * 0.5);
-                const targetY = pad + ((db - boost) / 110) * gH;
-                if (i === 0) ctx.moveTo(x, targetY); else ctx.lineTo(x, targetY);
+                ctx.beginPath(); ctx.moveTo(x, pad); ctx.lineTo(x, h - pad); ctx.stroke();
+                ctx.fillText(f >= 1000 ? (f / 1000) + 'k' : f, x, h - pad + 15);
             });
-            ctx.stroke();
-            ctx.globalAlpha = 1.0;
 
-            // 3. Draw Markers (X for Left, Circle for Right)
-            ctx.setLineDash([]);
-            profile[side].forEach((db, i) => {
-                const x = pad + (i / (freqs.length - 1)) * gW;
-                const y = pad + (db / 110) * gH;
-                ctx.beginPath();
-                if (isL) {
-                    ctx.moveTo(x-4, y-4); ctx.lineTo(x+4, y+4); ctx.moveTo(x+4, y-4); ctx.lineTo(x-4, y+4);
-                } else { ctx.arc(x, y, 4, 0, Math.PI*2); }
+            ['L', 'R'].forEach(side => {
+                const isL = side === 'L';
+                const color = isL ? '#42a5f5' : '#ef5350';
+
+                // 1. Draw Raw Threshold Curve
+                ctx.strokeStyle = color; ctx.setLineDash([]); ctx.lineWidth = 2; ctx.beginPath();
+                profile[side].forEach((db, i) => {
+                    const x = pad + (i / (freqs.length - 1)) * gW;
+                    const y = pad + (db / 110) * gH;
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                });
                 ctx.stroke();
+
+                // 2. Draw Target Compensation Curve (Half-Gain + 20dB Cap)
+                ctx.strokeStyle = color; ctx.setLineDash([4, 4]); ctx.globalAlpha = 0.5; ctx.beginPath();
+                profile[side].forEach((db, i) => {
+                    const x = pad + (i / (freqs.length - 1)) * gW;
+                    const boost = Math.min(20, db * 0.5);
+                    const targetY = pad + ((db - boost) / 110) * gH;
+                    if (i === 0) ctx.moveTo(x, targetY); else ctx.lineTo(x, targetY);
+                });
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+
+                // 3. Draw Markers (X for Left, Circle for Right)
+                ctx.setLineDash([]);
+                profile[side].forEach((db, i) => {
+                    const x = pad + (i / (freqs.length - 1)) * gW;
+                    const y = pad + (db / 110) * gH;
+                    ctx.beginPath();
+                    if (isL) {
+                        ctx.moveTo(x - 4, y - 4); ctx.lineTo(x + 4, y + 4); ctx.moveTo(x + 4, y - 4); ctx.lineTo(x - 4, y + 4);
+                    } else { ctx.arc(x, y, 4, 0, Math.PI * 2); }
+                    ctx.stroke();
+                });
             });
-        });
-    }
-</script>
+        }
+    </script>
 </body>
+
 </html>

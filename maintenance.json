@@ -1,11 +1,10 @@
 {
+  "version": "2026.06.19",
   "enabled": false,
   "whatsNew": [
-    "<b>Splash Screen Suppression:</b> Fixed logic to ensure the cinematic intro only plays once per session. Navigating back Home now bypasses the animation.",
-    "<b>Spectral Compatibility Check:</b> Added real-time warnings to Notch and CR modules if the selected noise source doesn't cover your matched frequency.",
-    "<b>CR Spectrum Visualization:</b> Integrated a new frequency spectrum canvas into the Acoustic CR module with visual range flagging.",
-    "<b>Technical Clarity:</b> Added logarithmic frequency labels (100Hz, 1k, 10k) to the spectrum visualization for improved precision."
-  ],
-  "date": "June 2, 2026",
-  "version": "2026.06.1"
+    "Anti-Aliased Frequency Jitter Fix",
+    "Optimized Chime Strike Engine",
+    "Smoother Monophonic Portamento",
+    "Reduced CPU Overhead for AudioThread"
+  ]
 }

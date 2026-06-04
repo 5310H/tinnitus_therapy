@@ -876,10 +876,69 @@ summary:hover {
     cursor: pointer;
 }
 
+/* Safety Banner for Hearing Aid Users */
+.safety-banner {
+    background: #e65100;
+    /* Deep warning orange */
+    color: white;
+    padding: 12px 20px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.85rem;
+    position: sticky;
+    top: 0;
+    z-index: 100001;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+@media (min-width: 600px) {
+    .safety-banner {
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
+    }
+}
+
+.safety-banner button {
+    background: white;
+    color: #e65100;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    transition: opacity 0.2s;
+}
+
+.safety-banner button:hover {
+    opacity: 0.9;
+}
+
 .locked-ui {
     opacity: 0.45;
     pointer-events: none;
     user-select: none;
+}
+
+.pending-badge {
+    background: #ff9800;
+    color: white;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1;
 }
 
 /* Tutorial Annotation Highlights */
@@ -899,42 +958,6 @@ summary:hover {
     /* Light App: Use the Dark Tutorial's accent color for inversion */
     --h-accent: #00bfa5;
     background: rgba(0, 191, 165, 0.15) !important;
-}
-
-@keyframes tutorial-pulse {
-    0% {
-        outline-width: 4px;
-        box-shadow: 0 0 10px var(--h-accent);
-    }
-
-    50% {
-        outline-width: 6px;
-        box-shadow: 0 0 35px var(--h-accent);
-    }
-
-    100% {
-        outline-width: 4px;
-        box-shadow: 0 0 10px var(--h-accent);
-    }
-}
-
-/* Zen Mode for therapeutic focus */
-body.zen-mode .panel>*:not(.zen-keep) {
-    display: none !important;
-}
-
-body.zen-mode .back,
-body.zen-mode .help-btn,
-body.zen-mode #audioStatusIndicator,
-body.zen-mode .main-header {
-    display: none !important;
-}
-
-body.zen-mode .panel {
-    margin-top: 12vh;
-    border: none;
-    background: transparent;
-    box-shadow: none;
 }
 
 /* Ensure therapeutic visual elements (like Lenire pulses) stay above the dimming layer */
@@ -1391,6 +1414,11 @@ g.bee-swarm:nth-of-type(4) {
 
 g.bee-swarm:nth-of-type(5) {
     animation: bee-orbit 22s linear infinite;
+}
+
+/* Specific centering for "Protocol for Success (Phases)" in the User Manual */
+#protocol-for-success-heading {
+    text-align: center;
 }
 
 /* Adjust transform origin for smaller splash screen SVG if necessary */

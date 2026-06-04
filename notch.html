@@ -147,9 +147,10 @@
       <label style="display: flex; align-items: center;">Sound Source <span class="status-dot"
           id="sourceStatus">○</span></label>
       <select id="color">
+        <option value="auto" selected>Auto-Match (Neural Algorithm)</option>
         <optgroup label="Broadband Noise">
           <option value="white" title="Flat spectrum; effective for broadband masking.">White Noise</option>
-          <option value="pink" selected title="Balanced power; research standard for comfort.">Pink Noise</option>
+          <option value="pink" title="Balanced power; research standard for comfort.">Pink Noise</option>
           <option value="brown" title="Low-frequency focus; best for low-pitched tinnitus.">Brown Noise</option>
           <option value="blue" title="High-frequency focus; useful for high-pitched tinnitus.">Blue Noise (+3dB/oct)
           </option>
@@ -167,7 +168,9 @@
       </select>
       <input type="file" id="customFile" accept="audio/*" style="display:none; margin-top:10px;">
     </div>
-    <div id="noiseRangeWarning" class="info" style="display:none; color:var(--error); border: 1px solid var(--error); padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: left; background: rgba(211, 47, 47, 0.05);"></div>
+    <div id="noiseRangeWarning" class="info"
+      style="display:none; color:var(--error); border: 1px solid var(--error); padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: left; background: rgba(211, 47, 47, 0.05);">
+    </div>
     <div class="ctrl">
       <label style="display: flex; justify-content: space-between; align-items: center;">
         <span style="display: flex; align-items: center;">Master Volume <span class="status-dot"
@@ -216,11 +219,12 @@
     <button class="big-btn play-btn" id="toggleBtn" onclick="handleToggle()">Start Notch Therapy</button>
     <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;"
       onclick="generatePDFReport()">Download PDF Report</button>
-    <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export
+    <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical
       (.txt)</button>
     <button class="button" style="width:100%; margin-top:10px; border-color: #ff9800; color: #ff9800;"
       onclick="shareToCommunity()">💬 Share Setup to Community (BBCode/MD)</button>
-    <a class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
+    <a class="button"
+      style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim); text-decoration: none; display: flex; align-items: center; justify-content: center;"
       href="user_manual.html#sec-3" target="_blank">Open Manual for this Tool</a>
     <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
       onclick="resetToDefaults()">Reset to Defaults</button>
@@ -235,7 +239,7 @@
     <canvas id="viz"></canvas>
   </div>
   <script>
-    let ctx, playing = false, src, analyser, analyserL, analyserR, gainL, gainR, masterGain, toneCtx, toneOscL, toneOscR, tonePlaying = false, timerInterval = null, rafVolViz, nodeNotchL, nodeNotchR, eqNodesL = [], eqNodesR = [], hpEqNodesL = [], hpEqNodesR = [], zenActive = false, advancedSettingsOpen = false;
+    let ctx, playing = false, src, analyser, analyserL, analyserR, gainL, gainR, masterGain, toneCtx, toneOscL, toneOscR, tonePlaying = false, timerInterval = null, rafVolViz, nodeNotchL, nodeNotchR, eqNodesL = [], eqNodesR = [], hpEqNodesL = [], hpEqNodesR = [], advancedSettingsOpen = false;
     window.lastValidationStatus = "Not Validated";
     const BUF_SIZE = 2 * 44100;
     const eqBands = [2000, 4000, 8000, 12000];
@@ -268,7 +272,7 @@
       document.getElementById('volR').value = loadSetting('volR', loadSetting('vol', bal >= 0 ? 40 : Math.round(40 * (1 + bal))));
       document.getElementById('volMaster').value = loadSetting('volMaster', 100);
       document.getElementById('muteToggle').checked = loadSetting('volMuted', 'false') === 'true';
-      document.getElementById('color').value = loadSetting('color', 'pink');
+      document.getElementById('color').value = loadSetting('color', 'auto');
       if (document.getElementById('color').value === 'custom') document.getElementById('customFile').style.display = 'block';
 
       document.getElementById('lockLR').checked = loadSetting('notch_lock_lr', 'false') === 'true';
@@ -363,6 +367,16 @@
       document.getElementById('notchR').value = document.getElementById('notchL').value;
       document.getElementById('toneFreqR').dispatchEvent(new Event('input'));
       document.getElementById('notchR').dispatchEvent(new Event('input'));
+    }
+
+    function importGlobalMatch() {
+      const match = loadSetting('notchL', loadSetting('toneFreqL', null));
+      if (match) {
+        document.getElementById('toneFreqL').value = match;
+        document.getElementById('notchL').value = match;
+        syncFrequencies();
+        alert(`Frequency synced to your ${match}Hz global pitch match.`);
+      } else { alert("No global pitch match found. Please use the Notch Finder first."); }
     }
 
     function syncBalanceToPreset() {
@@ -469,7 +483,12 @@
 
         // --- Source Node Setup ---
         let sourceNode; // This will be the node that feeds into the splitter
-        const natureMap = { rain: 'audio/rain.mp3', ocean: 'audio/ocean.mp3', stream: 'audio/stream.mp3', wind: 'audio/wind.mp3' };
+        const natureMap = {
+          rain: 'audio/rain.mp3',
+          ocean: 'audio/ocean.mp3',
+          stream: 'audio/stream.mp3',
+          wind: 'audio/wind.mp3'
+        };
 
         // Build EQ Chains
         if (color === 'live') {
@@ -843,6 +862,13 @@
         if (playing && nodeNotchL && nodeNotchR) {
           const node = (side === 'L' ? nodeNotchL : nodeNotchR);
           node.frequency.setTargetAtTime(e.target.value, ctx.currentTime, 0.05);
+
+          // Real-time update for generative noise harmonics (Zen/Melody/Auto)
+          // This shifts the fundamental of the noise engine via the messaging system
+          if (src && src.engineType === 'worklet' && typeof src.updateTargetFreq === 'function') {
+            src.updateTargetFreq(e.target.value);
+          }
+
           if (side === 'L') validateFilter(nodeNotchL);
           document.getElementById('status').textContent = `Notch L:${document.getElementById('notchL').value} R:${document.getElementById('notchR').value} (${document.getElementById('color').value})`;
         }
@@ -916,9 +942,15 @@
       if (isLocked) performGlobalSync();
     }
 
-    document.getElementById('color').onchange = e => {
-      saveSetting('color', e.target.value);
-      document.getElementById('customFile').style.display = (e.target.value === 'custom') ? 'block' : 'none';
+    document.getElementById('color').onchange = (e) => {
+      const newColor = e.target.value;
+      saveSetting('color', newColor);
+      document.getElementById('customFile').style.display = (newColor === 'custom') ? 'block' : 'none';
+
+      // Real-time update for generative noise harmonics via the messaging system
+      if (playing && src && src.engineType === 'worklet' && typeof src.updateColor === 'function') {
+        src.updateColor(newColor);
+      }
       updateStatusDots();
     };
 
@@ -1057,9 +1089,9 @@
       const ranges = {
         white: { min: 20, max: 20000, desc: "White: 20Hz - 20kHz (Flat Spectrum)" },
         pink: { min: 20, max: 20000, desc: "Pink: 20Hz - 20kHz (Clinical Balanced)" },
-        brown: { min: 20, max: 1500, desc: "Brown: 20Hz - 1.5kHz (Low-Frequency Focus)" },
-        blue: { min: 1000, max: 20000, desc: "Blue: 1kHz - 20kHz (High-Frequency Focus)" },
-        violet: { min: 2000, max: 20000, desc: "Violet: 2kHz - 20kHz (Extreme High Focus)" }
+        brown: { min: 20, max: 1200, desc: "Brown: 20Hz - 1.2kHz (Low-Frequency Focus)" },
+        blue: { min: 6000, max: 20000, desc: "Blue: 6kHz - 20kHz (High-Frequency Focus)" },
+        violet: { min: 10000, max: 20000, desc: "Violet: 10kHz - 20kHz (Extreme High Focus)" }
       };
 
       if (ranges[color]) {

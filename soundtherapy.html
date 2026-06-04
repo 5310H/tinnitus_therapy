@@ -1,161 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="icon-192.png" type="image/png">
-<title>Broadband Sound Therapy - Tinnitus Therapy Suite</title>
-<script type="module">
-    import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
-    window.GoogleGenerativeAI = GoogleGenerativeAI;
-</script>
-<script src="storage.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="nav.js"></script>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <title>Broadband Sound Therapy - Tinnitus Therapy Suite</title>
+    <script type="module">
+        import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
+        window.GoogleGenerativeAI = GoogleGenerativeAI;
+    </script>
+    <script src="storage.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="nav.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <style>
     .pacer-circle {
-        width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--accent);
-        margin: 20px auto; display: none; align-items: center; justify-content: center;
-        font-weight: bold; transition: transform 0.1s linear;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 4px solid var(--accent);
+        margin: 20px auto;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        transition: transform 0.1s linear;
     }
-    .pacer-active { display: flex; }
-    @keyframes breathe-in { from { transform: scale(0.8); } to { transform: scale(1.5); } }
-    @keyframes breathe-out { from { transform: scale(1.5); } to { transform: scale(0.8); } }
-    #pacerLabel { color: var(--accent); font-size: 1.2rem; }
+
+    .pacer-active {
+        display: flex;
+    }
+
+    @keyframes breathe-in {
+        from {
+            transform: scale(0.8);
+        }
+
+        to {
+            transform: scale(1.5);
+        }
+    }
+
+    @keyframes breathe-out {
+        from {
+            transform: scale(1.5);
+        }
+
+        to {
+            transform: scale(0.8);
+        }
+    }
+
+    #pacerLabel {
+        color: var(--accent);
+        font-size: 1.2rem;
+    }
 </style>
+
 <body>
-<div class="panel">
-    <h1>Broadband Sound Therapy</h1>
-    <p class="info">Nature sounds and calibrated broadband noise.</p>
+    <div class="panel">
+        <h1>Broadband Sound Therapy</h1>
+        <p class="info">Nature sounds and calibrated broadband noise.</p>
 
-    <div class="match-section" style="margin-bottom: 20px;">
-        <h3>Clinical Significance</h3>
-        <p>Broadband noise is the cornerstone of <b>Tinnitus Retraining Therapy (TRT)</b>. Partial masking facilitates habituation, training the brain to reclassify and ignore the tinnitus signal over time.</p>
-    </div>
-
-    <div class="card ai-input-area">
-        <h2>AI Sound Recipe</h2>
-        <textarea id="tinnitusDescription" rows="3" placeholder="Describe your tinnitus (e.g., 'high-pitched hiss', 'low roar', 'pulsatile')"></textarea>
-        <button class="big-btn play-btn" style="margin-top:10px;" onclick="triggerAISoundRecipe()">✨ Get AI Sound Recipe</button>
-        <div id="aiSoundRecipeResponse" class="ai-suggestion-box"></div>
-    </div>
-
-    <div class="ctrl" title="Calibrated broadband noise reduces the contrast between tinnitus and silence, making the tinnitus less noticeable.">
-        <h3 id="noiseTypesSection" style="display: flex; align-items: center; flex-wrap: wrap;">Noise Types <span class="status-dot" id="noiseTypesStatus">○</span> <span id="noiseEngineStatus" style="font-size: 0.65rem; font-weight: normal; margin-left: 8px;"></span> <span class="info-icon">?</span></h3>
-        <div class="btn-grid">
-            <button class="sm-btn noise-btn" onclick="handlePlayNoise('white', this)" title="Flat spectrum; effective for broadband masking.">White</button>
-            <button class="sm-btn noise-btn" onclick="handlePlayNoise('pink', this)" title="Balanced power; research standard for comfort.">Pink</button>
-            <button class="sm-btn noise-btn" onclick="handlePlayNoise('brown', this)" title="Low-frequency focus; best for low-pitched tinnitus.">Brown</button>
-            <button class="sm-btn noise-btn" onclick="handlePlayNoise('blue', this)" title="High-frequency focus; useful for high-pitched tinnitus.">Blue</button>
-            <button class="sm-btn noise-btn" onclick="handlePlayNoise('violet', this)" title="Strong high-frequency focus; best for piercing tones.">Violet</button>
-            <button class="sm-btn stop-btn" onclick="stopNoise()" style="grid-column: span 2; background: var(--error);">Stop Noise</button>
+        <div class="match-section" style="margin-bottom: 20px;">
+            <h3>Clinical Significance</h3>
+            <p>Broadband noise is the cornerstone of <b>Tinnitus Retraining Therapy (TRT)</b>. Partial masking
+                facilitates habituation, training the brain to reclassify and ignore the tinnitus signal over time.</p>
         </div>
-    </div>
 
-    <div class="ctrl" title="The 4-7-8 breathing technique helps lower physiological stress and reduce the intensity of tinnitus spikes.">
-        <h3 id="pacerSection" style="display: flex; align-items: center;">Relaxation Pacer (4-7-8) <span class="status-dot" id="pacerStatus">○</span> <span class="info-icon">?</span></h3>
-        <div class="pacer-circle" id="pacerCircle"><span id="pacerLabel">In</span></div>
-        <div class="btn-grid">
-            <button class="sm-btn" id="pacerToggle" onclick="handlePacer()">Start Breathing Pacer</button>
+        <div class="card ai-input-area">
+            <h2>AI Sound Recipe</h2>
+            <textarea id="tinnitusDescription" rows="3"
+                placeholder="Describe your tinnitus (e.g., 'high-pitched hiss', 'low roar', 'pulsatile')"></textarea>
+            <button class="big-btn play-btn" style="margin-top:10px;" onclick="triggerAISoundRecipe()">✨ Get AI Sound
+                Recipe</button>
+            <div id="aiSoundRecipeResponse" class="ai-suggestion-box"></div>
         </div>
-    </div>
 
-    <div class="match-section" id="eqSection" title="Boosting frequencies where you have hearing loss reduces 'neural gain' and listening effort.">
-        <h3 style="display: flex; align-items: center;">Hearing Compensation (EQ) <span class="status-dot">○</span> <span class="info-icon">?</span>
-            <label style="margin-left: auto; font-size: 0.8rem; color: var(--accent); cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                <input type="checkbox" id="useHearingProfile" style="width: 16px; height: 16px;"> Auto-Compensate
-            </label>
-        </h3>
-        <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div id="eqControlsL"></div>
-            <div id="eqControlsR"></div>
-        </div>
-    </div>
+        <div class="ctrl"
+            title="Calibrated broadband noise reduces the contrast between tinnitus and silence, making the tinnitus less noticeable.">
+            <h3 id="noiseTypesSection" style="display: flex; align-items: center; flex-wrap: wrap;">Noise Types <span
+                    class="status-dot" id="noiseTypesStatus">○</span> <span id="noiseEngineStatus"
+                    style="font-size: 0.65rem; font-weight: normal; margin-left: 8px;"></span> <span
+                    class="info-icon">?</span></h3>
+            <div class="btn-grid">
+                <button class="sm-btn noise-btn" onclick="handlePlayNoise('auto', this)"
+                    style="grid-column: span 2; background: rgba(0, 191, 165, 0.15); border-color: var(--accent);">✨
+                    Neural Auto-Match</button>
+                <button class="sm-btn noise-btn" onclick="handlePlayNoise('white', this)"
+                    title="Flat spectrum; effective for broadband masking.">White</button>
+                <button class="sm-btn noise-btn" onclick="handlePlayNoise('pink', this)"
+                    title="Balanced power; research standard for comfort.">Pink</button>
+                <button class="sm-btn noise-btn" onclick="handlePlayNoise('brown', this)"
+                    title="Low-frequency focus; best for low-pitched tinnitus.">Brown</button>
+                <button class="sm-btn noise-btn" onclick="handlePlayNoise('blue', this)"
+                    title="High-frequency focus; useful for high-pitched tinnitus.">Blue</button>
+                <button class="sm-btn noise-btn" onclick="handlePlayNoise('violet', this)"
+                    title="Strong high-frequency focus; best for piercing tones.">Violet</button>
+                <button class="sm-btn noise-btn" onclick="handlePlayNoise('chimes', this)">Wind Chimes</button>
+                <button class="sm-btn stop-btn" onclick="stopNoise()"
+                    style="grid-column: span 2; background: var(--error);">Stop Noise</button>
+            </div>
+            <div id="noiseRangeWarning" class="info"
+                style="display:none; color:var(--error); border: 1px solid var(--error); padding: 12px; border-radius: 8px; margin-top: 15px; text-align: left; background: rgba(211, 47, 47, 0.05);">
+            </div>
 
-    <div class="ctrl" id="natureSoundsSection">
-        <h3>Nature Sounds <span class="status-dot">○</span></h3>
-        <div class="btn-grid">
-            <button class="sm-btn ambient-btn" onclick="handlePlaySample('rain', this)">Rain</button>
-            <button class="sm-btn ambient-btn" onclick="handlePlaySample('ocean', this)">Ocean</button>
-            <button class="sm-btn ambient-btn" onclick="handlePlaySample('stream', this)">Stream</button>
-            <button class="sm-btn ambient-btn" onclick="handlePlaySample('wind', this)">Wind</button>
-            <button class="sm-btn stop-btn" onclick="stopAmbient()" style="grid-column: 1 / 2; background: var(--error);">Stop Nature</button>
-            <button class="sm-btn stop-btn" onclick="stopAll()" style="grid-column: 2 / 3; background: var(--error);">Stop All</button>
-        </div>
-    </div>
-
-    <div class="ctrl" title="Set the volume to the 'Mixing Point'—where the noise and your tinnitus blend together without one hiding the other.">
-        <label>Volume (%) <span class="status-dot" id="volumeStatus">○</span> <span class="info-icon">?</span>
-            <div class="input-with-buttons">
-                <input type="number" id="volInput" class="val-input" min="0" max="100" value="30">
-                <div class="fine-tune-group" data-target="volume">
-                    <button class="fine-tune-btn" data-delta="-5">-5</button>
-                    <button class="fine-tune-btn" data-delta="-1">-1</button>
-                    <button class="fine-tune-btn" data-delta="1">+1</button>
-                    <button class="fine-tune-btn" data-delta="5">+5</button>
+            <div class="ctrl"
+                title="The 4-7-8 breathing technique helps lower physiological stress and reduce the intensity of tinnitus spikes.">
+                <h3 id="pacerSection" style="display: flex; align-items: center;">Relaxation Pacer (4-7-8) <span
+                        class="status-dot" id="pacerStatus">○</span> <span class="info-icon">?</span></h3>
+                can <div class="pacer-circle" id="pacerCircle"><span id="pacerLabel">In</span></div>
+                <div class="btn-grid">
+                    <button class="sm-btn" id="pacerToggle" onclick="handlePacer()">Start Breathing Pacer</button>
                 </div>
             </div>
-        </label>
-        <input id="volume" type="range" min="0" max="100" value="30">
-        <div class="btn-group" data-target="volume">
-            <button class="button-step" data-delta="-5">-5</button>
-            <button class="button-step" data-delta="5">+5</button>
-        </div>
 
-        <label id="balanceLabel" style="display: flex; align-items: center; margin-top: 10px;" title="Adjust the sound level between ears to match the perceived location of your tinnitus.">L/R Balance <span class="status-dot" id="balanceStatus">○</span> <span class="info-icon">?</span></label>
-            <div class="input-with-buttons">
-                <input type="number" id="balInput" class="val-input" min="-1" max="1" step="0.1" value="0">
-                <div class="fine-tune-group" data-target="balance">
-                    <button class="fine-tune-btn" data-delta="-0.1">-0.1</button>
-                    <button class="fine-tune-btn" data-delta="0.1">+0.1</button>
+            <div class="match-section" id="eqSection"
+                title="Boosting frequencies where you have hearing loss reduces 'neural gain' and listening effort.">
+                <h3 style="display: flex; align-items: center;">Hearing Compensation (EQ) <span
+                        class="status-dot">○</span>
+                    <span class="info-icon">?</span>
+                    <label
+                        style="margin-left: auto; font-size: 0.8rem; color: var(--accent); cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" id="useHearingProfile" style="width: 16px; height: 16px;">
+                        Auto-Compensate
+                    </label>
+                </h3>
+                <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.
+                </p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div id="eqControlsL"></div>
+                    <div id="eqControlsR"></div>
                 </div>
             </div>
-        </label>
-        <input id="balance" type="range" min="-1" max="1" step="0.02" value="0">
-        <div class="btn-group" data-target="balance">
-            <button class="button-step" data-delta="-0.1">-0.1</button>
-            <button class="button-step" data-delta="0.1">+0.1</button>
-        </div>
-        <button class="button" style="width:100%; margin-top:10px;" onclick="syncBalanceToPreset()">Sync Balance to Preset</button>
-        <div class="bal-viz">
-            <div class="bal-track"><div id="balMarker" class="bal-marker"></div></div>
-            <div class="bal-labels"><span>Left</span><span>Center</span><span>Right</span></div>
-        </div>
-    </div>
 
-    <div class="ctrl zen-keep" style="text-align:center">
-        <h3>Session Timer</h3>
-        <input id="timer" type="number" min="1" max="120" value="10" style="width:60px;padding:5px;border-radius:4px;border:1px solid #333;background:#0a0a1a;color:#fff"> min
-        <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;" class="zen-keep">
-            <input type="checkbox" id="sleepMode" style="width: 18px; height: 18px;">
-            <label for="sleepMode" style="margin: 0; color: var(--accent); font-size: 0.85rem;">Sleep Fade (60s gradual fade)</label>
-        </div>
-        
-        <button class="big-btn zen-keep" onclick="startTimer()">Start Timer</button>
-        <button class="button zen-keep" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-        <button class="button zen-keep" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
-        <button class="button zen-keep" style="width:100%; margin-top:10px; border-color: #ff9800; color: #ff9800;" onclick="shareToCommunity()">💬 Share Setup to Community (BBCode/MD)</button>
-        <button class="button email-audiologist-btn zen-keep" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
-        <p id="timerDisplay" style="margin-top:10px;color:#ab47bc;font-weight:700" class="zen-keep"></p>
-        <div class="usage-progress zen-keep">
-            <div id="usageBar" class="usage-bar" style="width: 0%"></div>
-        </div>
-        <div id="usageText" class="usage-text zen-keep">Today's Progress: 0 / 20 mins</div>
-        <button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
-    </div>
-</div>
-<div id="status" class="status zen-keep" style="text-align: center; margin-top: 10px;"></div>
-<script>
-let audioCtx, noiseSource, ambientSource, gainNode, pannerNode, eqNodesL = [], eqNodesR = [], pacerActive = false, zenActive = false,
-    pacerOsc = null, pacerGain = null, pacerTimeout = null, timerInterval = null;
+            <div class="ctrl" id="natureSoundsSection">
+                <h3>Nature Sounds <span class="status-dot">○</span></h3>
+                <div class="btn-grid">
+                    <button class="sm-btn ambient-btn" onclick="handlePlaySample('rain', this)">Rain</button>
+                    <button class="sm-btn ambient-btn" onclick="handlePlaySample('ocean', this)">Ocean</button>
+                    <button class="sm-btn ambient-btn" onclick="handlePlaySample('stream', this)">Stream</button>
+                    <button class="sm-btn ambient-btn" onclick="handlePlaySample('wind', this)">Wind</button>
+                    <button class="sm-btn stop-btn" onclick="stopAmbient()"
+                        style="grid-column: 1 / 2; background: var(--error);">Stop Nature</button>
+                    <button class="sm-btn stop-btn" onclick="stopAll()"
+                        style="grid-column: 2 / 3; background: var(--error);">Stop All</button>
+                </div>
+            </div>
 
-const eqBands = [2000, 4000, 8000, 12000];
+            <div class="ctrl"
+                title="Set the volume to the 'Mixing Point'—where the noise and your tinnitus blend together without one hiding the other.">
+                <label>Volume (%) <span class="status-dot" id="volumeStatus">○</span> <span class="info-icon">?</span>
+                    <div class="input-with-buttons">
+                        <input type="number" id="volInput" class="val-input" min="0" max="100" value="30">
+                        <div class="fine-tune-group" data-target="volume">
+                            <button class="fine-tune-btn" data-delta="-5">-5</button>
+                            <button class="fine-tune-btn" data-delta="-1">-1</button>
+                            <button class="fine-tune-btn" data-delta="1">+1</button>
+                            <button class="fine-tune-btn" data-delta="5">+5</button>
+                        </div>
+                    </div>
+                </label>
+                <input id="volume" type="range" min="0" max="100" value="30">
+                <div class="btn-group" data-target="volume">
+                    <button class="button-step" data-delta="-5">-5</button>
+                    <button class="button-step" data-delta="5">+5</button>
+                </div>
 
-window.onload = () => {
-    initNav(`
+                <label id="balanceLabel" style="display: flex; align-items: center; margin-top: 10px;"
+                    title="Adjust the sound level between ears to match the perceived location of your tinnitus.">L/R
+                    Balance <span class="status-dot" id="balanceStatus">○</span> <span
+                        class="info-icon">?</span></label>
+                <div class="input-with-buttons">
+                    <input type="number" id="balInput" class="val-input" min="-1" max="1" step="0.1" value="0">
+                    <div class="fine-tune-group" data-target="balance">
+                        <button class="fine-tune-btn" data-delta="-0.1">-0.1</button>
+                        <button class="fine-tune-btn" data-delta="0.1">+0.1</button>
+                    </div>
+                </div>
+                </label>
+                <input id="balance" type="range" min="-1" max="1" step="0.02" value="0">
+                <div class="btn-group" data-target="balance">
+                    <button class="button-step" data-delta="-0.1">-0.1</button>
+                    <button class="button-step" data-delta="0.1">+0.1</button>
+                </div>
+                <button class="button" style="width:100%; margin-top:10px;" onclick="syncBalanceToPreset()">Sync Balance
+                    to
+                    Preset</button>
+                <div class="bal-viz">
+                    <div class="bal-track">
+                        <div id="balMarker" class="bal-marker"></div>
+                    </div>
+                    <div class="bal-labels"><span>Left</span><span>Center</span><span>Right</span></div>
+                </div>
+            </div>
+
+            <div class="ctrl" style="text-align:center">
+                <h3>Session Timer</h3>
+                <input id="timer" type="number" min="1" max="120" value="10"
+                    style="width:60px;padding:5px;border-radius:4px;border:1px solid #333;background:#0a0a1a;color:#fff">
+                min
+                <div style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <input type="checkbox" id="sleepMode" style="width: 18px; height: 18px;">
+                    <label for="sleepMode" style="margin: 0; color: var(--accent); font-size: 0.85rem;">Sleep Fade (60s
+                        gradual fade)</label>
+                </div>
+
+                <button class="big-btn" onclick="startTimer()">Start Timer</button>
+                <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;"
+                    onclick="generatePDFReport()">Download PDF Report</button>
+                <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical
+                    Export (.txt)</button>
+                <button class="button" style="width:100%; margin-top:10px; border-color: #ff9800; color: #ff9800;"
+                    onclick="shareToCommunity()">💬 Share Setup to Community (BBCode/MD)</button>
+                <button class="button email-audiologist-btn"
+                    style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;"
+                    onclick="emailToAudiologist()">Email to Audiologist</button>
+                <p id="timerDisplay" style="margin-top:10px;color:#ab47bc;font-weight:700"></p>
+                <button class="button"
+                    style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
+                    onclick="resetToDefaults()">Reset to Defaults</button>
+                <div class="usage-progress">
+                    <div id="usageBar" class="usage-bar" style="width: 0%"></div>
+                </div>
+                <div id="usageText" class="usage-text">Today's Progress: 0 / 20 mins</div>
+                <canvas id="viz" style="height: 100px; margin-top: 15px;"></canvas>
+            </div>
+        </div>
+        <div id="status" class="status" style="text-align: center; margin-top: 10px;"></div>
+        <script>
+            let audioCtx, noiseSource, ambientSource, gainNode, pannerNode, eqNodesL = [], eqNodesR = [], pacerActive = false,
+                pacerOsc = null, pacerGain = null, pacerTimeout = null, timerInterval = null, rafViz = null;
+
+            const eqBands = [2000, 4000, 8000, 12000];
+
+            window.onload = () => {
+                initNav(`
         <h3 style="color:var(--accent); margin-bottom:10px;">Sound Therapy Protocol</h3>
         <ul style="padding-left:20px; margin-bottom:15px;">
             <li><b>The Mixing Point:</b> This is the most important step. Adjust volume until the noise and your tinnitus "mix" like two colors of paint. If you mask it completely, you aren't habituating.</li>
@@ -172,571 +254,641 @@ window.onload = () => {
         • <b>Blue/Violet:</b> High-frequency focus; best for high-pitched tinnitus.
     `);
 
-    const v = loadSetting('st_vol', 30);
-    const b = loadSetting('st_bal', getBalancePreset());
-    document.getElementById('volume').value = v;
-    document.getElementById('balance').value = b;
-    createEqUI();
-    updateLabels();
-    updateStatusDots(); // Call on load
-    setupStepButtons();
-    if (loadSetting('st_zen_mode', 'false') === 'true') {
-        toggleZenMode();
-    }
-    document.getElementById('useHearingProfile').checked = loadSetting('st_use_hp', 'false') === 'true';
-    document.getElementById('useHearingProfile').onchange = (e) => {
-        saveSetting('st_use_hp', e.target.checked);
-        if (audioCtx) stopAll(); // Restart required to rebuild graph
-    };
-    refreshUsageUI();
-};
+                const v = loadSetting('st_vol', 30);
+                const b = loadSetting('st_bal', getBalancePreset());
+                document.getElementById('volume').value = v;
+                document.getElementById('balance').value = b;
+                createEqUI();
+                updateLabels();
+                updateStatusDots(); // Call on load
+                setupStepButtons();
+                document.getElementById('useHearingProfile').checked = loadSetting('st_use_hp', 'false') === 'true';
+                document.getElementById('useHearingProfile').onchange = (e) => {
+                    saveSetting('st_use_hp', e.target.checked);
+                    if (audioCtx) stopAll(); // Restart required to rebuild graph
+                };
+                refreshUsageUI();
+            };
 
-function createEqUI() {
-    ['L', 'R'].forEach(side => {
-        const container = document.getElementById(`eqControls${side}`);
-        container.innerHTML = `<h4 style="color:var(--accent); font-size:0.8rem; margin-bottom:10px;">${side === 'L' ? 'Left' : 'Right'} Ear</h4>`;
-        eqBands.forEach(freq => {
-            const val = loadSetting(`eq_st_${side}_${freq}`, 0);
-            const div = document.createElement('div');
-            div.className = 'ctrl';
-            div.innerHTML = `
-                <label>${freq >= 1000 ? (freq/1000)+'k' : freq} Hz Boost <span class="val" id="eqVal_st_${side}_${freq}">${val} dB</span></label>
+
+            function createEqUI() {
+                ['L', 'R'].forEach(side => {
+                    const container = document.getElementById(`eqControls${side}`);
+                    container.innerHTML = `<h4 style="color:var(--accent); font-size:0.8rem; margin-bottom:10px;">${side === 'L' ? 'Left' : 'Right'} Ear</h4>`;
+                    eqBands.forEach(freq => {
+                        const val = loadSetting(`eq_st_${side}_${freq}`, 0);
+                        const div = document.createElement('div');
+                        div.className = 'ctrl';
+                        div.innerHTML = `
+                <label>${freq >= 1000 ? (freq / 1000) + 'k' : freq} Hz Boost <span class="val" id="eqVal_st_${side}_${freq}">${val} dB</span></label>
                 <input type="range" id="eq_st_${side}_${freq}" min="-12" max="12" value="${val}" step="1">
             `;
-            container.appendChild(div);
-            const slider = div.querySelector('input');
-            slider.oninput = (e) => {
-                const v = e.target.value;
-                document.getElementById(`eqVal_st_${side}_${freq}`).textContent = v + ' dB';
-                saveSetting(`eq_st_${side}_${freq}`, v);
-                if (audioCtx) {
-                    const nodes = side === 'L' ? eqNodesL : eqNodesR;
-                    const node = nodes.find(n => n.frequency.value === freq);
-                    if (node) node.gain.setTargetAtTime(v, audioCtx.currentTime, 0.05);
-                }
-                updateStatusDots(); // Call when EQ changes
-            };
-        });
-    });
-}
-
-function refreshUsageUI() {
-    const goal = loadSetting('daily_goal', 20);
-    const current = getDailyUsage();
-    document.getElementById('usageBar').style.width = Math.min(100, (current / goal) * 100) + '%';
-    document.getElementById('usageText').textContent = `Today's Progress: ${Math.round(current)} / ${goal} mins`;
-}
-
-let repeatTimeout, repeatInterval;
-function setupStepButtons() {
-    document.querySelectorAll('.btn-group .button-step, .fine-tune-btn').forEach(btn => {
-        const delta = parseFloat(btn.dataset.delta);
-        const target = document.getElementById(btn.parentElement.dataset.target || btn.closest('.ctrl').querySelector('input[type=range]')?.id);
-        const step = () => {
-            let val = (parseFloat(target.value) + delta);
-            if (target.step.includes('.')) val = parseFloat(val.toFixed(1));
-            target.value = Math.min(target.max, Math.max(target.min, val));
-            target.dispatchEvent(new Event('input'));
-        };
-        btn.onmousedown = btn.ontouchstart = (e) => {
-            e.preventDefault(); step();
-            repeatTimeout = setTimeout(() => { repeatInterval = setInterval(step, 80); }, 500);
-        };
-        btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => { clearInterval(repeatInterval); clearTimeout(repeatTimeout); repeatInterval = null; };
-        btn.onclick = () => { if(!repeatInterval) step(); };
-    });
-}
-
-function updateLabels(){
-    document.getElementById('volInput').value = document.getElementById('volume').value;
-    const b = document.getElementById('balance').value;
-    document.getElementById('balInput').value = b;
-    document.getElementById('balMarker').style.left = ((parseFloat(b) + 1) / 2 * 100) + '%';
-}
-
-document.getElementById('volInput').oninput = e => {
-    document.getElementById('volume').value = e.target.value;
-    document.getElementById('volume').dispatchEvent(new Event('input'));
-};
-document.getElementById('balInput').oninput = e => {
-    document.getElementById('balance').value = e.target.value;
-    document.getElementById('balance').dispatchEvent(new Event('input'));
-};
-
-async function initAudio() {
-    // Check if context is closed or missing
-    if (!audioCtx || audioCtx.state === 'closed') {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    // Ensure generator is always attached to current context
-    if (audioCtx && !audioCtx.generator) {
-        audioCtx.generator = new NoiseGenerator(audioCtx);
-    }
-    
-    // Re-create routing chain if missing or context changed
-    if (!gainNode || !pannerNode || !audioCtx._healthAnalyser) {
-        gainNode = audioCtx.createGain();
-        gainNode.channelCount = 2;
-        gainNode.channelCountMode = 'explicit';
-
-        const useHP = document.getElementById('useHearingProfile').checked;
-        const hpFreqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
-
-        const splitter = audioCtx.createChannelSplitter(2);
-        const merger = audioCtx.createChannelMerger(2);
-        gainNode.connect(splitter);
-
-        ['L', 'R'].forEach((side, idx) => {
-            let head = audioCtx.createGain();
-            splitter.connect(head, idx);
-
-            // 1. Inject Hearing Profile Compensation (if enabled)
-            if (useHP) {
-                hpFreqs.forEach(f => {
-                    const boost = getHearingBoost(f, side);
-                    if (boost > 0 && isFrequencySafe(audioCtx, f)) {
-                        const filter = audioCtx.createBiquadFilter();
-                        filter.type = 'peaking'; filter.frequency.value = f; filter.Q.value = 1;
-                        filter.gain.value = boost;
-                        head.connect(filter); head = filter;
-                    }
+                        container.appendChild(div);
+                        const slider = div.querySelector('input');
+                        slider.oninput = (e) => {
+                            const v = e.target.value;
+                            document.getElementById(`eqVal_st_${side}_${freq}`).textContent = v + ' dB';
+                            saveSetting(`eq_st_${side}_${freq}`, v);
+                            if (audioCtx) {
+                                const nodes = side === 'L' ? eqNodesL : eqNodesR;
+                                const node = nodes.find(n => n.frequency.value === freq);
+                                if (node) node.gain.setTargetAtTime(v, audioCtx.currentTime, 0.05);
+                            }
+                            updateStatusDots(); // Call when EQ changes
+                        };
+                    });
                 });
             }
 
-            // 2. Manual EQ Layers
-            const nodes = eqBands.map(freq => {
-                const f = audioCtx.createBiquadFilter();
-                f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1;
-                f.gain.value = parseFloat(loadSetting(`eq_st_${side}_${freq}`, 0));
-                head.connect(f); head = f;
-                return f;
-            });
-            if (side === 'L') eqNodesL = nodes; else eqNodesR = nodes;
-            head.connect(merger, 0, idx);
-        });
-
-        pannerNode = audioCtx.createStereoPanner();
-        const masterAnalyser = audioCtx.createAnalyser();
-        masterAnalyser.fftSize = 256;
-        merger.connect(pannerNode);
-        pannerNode.connect(masterAnalyser).connect(audioCtx.destination);
-        audioCtx._healthAnalyser = masterAnalyser;
-    }
-
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
-    syncAudioNodes();
-    updateStatusDots(); // Call after audio init
-}
-function syncAudioNodes() { if(gainNode) setVolume(document.getElementById('volume').value); if(pannerNode) setBalance(document.getElementById('balance').value); }
-
-function syncBalanceToPreset() {
-    const bal = getBalancePreset();
-    setBalance(bal);
-    alert("Balance adjusted to global tinnitus side preset.");
-}
-
-function handlePlayNoise(type, btn) {
-    showPreFlight(() => playNoise(type, btn));
-}
-
-async function playNoise(type, btn) {
-    await initAudio(); 
-    stopNoise(); // Stop existing noise before starting new color
-    setActiveBtn(btn, '.noise-btn');
-
-    // Centralized generator handles worklet loading and buffer fallbacks
-    noiseSource = await (audioCtx.generator ? audioCtx.generator.createSafeNoiseNode(type, { loop: true }) : null);
-    
-    // Ensure button is still active (hasn't been stopped or switched) before starting
-    if (noiseSource && (!btn || btn.classList.contains('active'))) {
-        // Force re-sync of volume and routing to ensure the signal path is definitely open
-        syncAudioNodes();
-        audioCtx._expectingSound = true;
-
-        const statusEl = document.getElementById('noiseEngineStatus');
-        if (statusEl) {
-            if (noiseSource.engineType === 'worklet') {
-                statusEl.textContent = "● Precision";
-                statusEl.style.color = "var(--accent)";
-                statusEl.title = "The High-Precision AudioWorklet engine is active for low-latency, clinical-grade noise generation.";
-            } else {
-                statusEl.textContent = "● Fallback";
-                statusEl.style.color = "#ff9800";
-                statusEl.title = "Using the standard buffer engine. This occurs if running from a local file or if the browser doesn't support modern audio modules.";
+            function refreshUsageUI() {
+                const goal = loadSetting('daily_goal', 20);
+                const current = getDailyUsage();
+                document.getElementById('usageBar').style.width = Math.min(100, (current / goal) * 100) + '%';
+                document.getElementById('usageText').textContent = `Today's Progress: ${Math.round(current)} / ${goal} mins`;
             }
-        }
-        noiseSource.connect(gainNode);
-        noiseSource.start();
-        document.getElementById('status').textContent = `Playing ${type} noise...`;
-    } else if (noiseSource) {
-        try { noiseSource.disconnect(); } catch(e){}
-    }
-}
 
-function handlePlaySample(type, btn) {
-    showPreFlight(() => playSample(type, btn));
-}
-
-async function playSample(type, btn) {
-    await initAudio(); 
-    stopAmbient(); // Stop existing ambient sample
-    setActiveBtn(btn, '.ambient-btn');
-
-    const fileMap = { rain:'audio/rain.mp3', ocean:'audio/ocean.mp3', stream:'audio/stream.mp3', wind:'audio/wind.mp3' };
-    
-    try {
-        const audio = new Audio(fileMap[type]);
-        audio.loop = true;
-        // We create a new track for every sample. Web Audio will garbage collect 
-        // the old MediaElementSourceNode once its reference (ambientSource) is cleared.
-        const track = audioCtx.createMediaElementSource(audio); 
-        
-        if (!btn || btn.classList.contains('active')) {
-            audioCtx._expectingSound = true;
-            track.connect(gainNode);
-            audio.play().catch(e => {
-                console.error("SoundTherapy: play() failed:", e);
-                document.getElementById('status').textContent = "Playback blocked. Click 'Confirm & Start' again.";
-            });
-            ambientSource = audio;
-            document.getElementById('status').textContent = `Playing ${type} sound...`;
-            updateStatusDots(); // Call when ambient sound starts
-        }
-    } catch (e) {
-        console.error("SoundTherapy: Failed to load nature sound.", e);
-    }
-}
-
-function handlePacer() {
-    if (pacerActive) stopPacer();
-    else if (audioCtx) togglePacer();
-    else showPreFlight(() => togglePacer());
-}
-
-function togglePacer() {
-    pacerActive = !pacerActive;
-    const btn = document.getElementById('pacerToggle');
-    const circle = document.getElementById('pacerCircle');
-    
-    if (pacerActive) {
-        initAudio();
-        audioCtx._expectingSound = true;
-        pacerOsc = audioCtx.createOscillator();
-        pacerGain = audioCtx.createGain();
-        pacerOsc.frequency.value = 220; // Soft low tone
-        pacerGain.gain.value = 0;
-        pacerOsc.connect(pacerGain).connect(audioCtx.destination);
-        pacerOsc.start();
-        
-        btn.textContent = "Stop Pacer";
-        btn.classList.add('stop-btn');
-        circle.classList.add('pacer-active');
-        updateStatusDots(); // Call when pacer starts
-        runPacerStep('Inhale', 4000, 'breathe-in');
-    } else {
-        stopPacer();
-    }
-}
-
-function stopPacer() {
-    pacerActive = false;
-    clearTimeout(pacerTimeout);
-    if (pacerOsc) { pacerOsc.stop(); pacerOsc = null; }
-    document.getElementById('pacerToggle').textContent = "Start Breathing Pacer";
-    document.getElementById('pacerToggle').classList.remove('stop-btn');
-    document.getElementById('pacerCircle').classList.remove('pacer-active');
-    document.getElementById('pacerCircle').style.animation = 'none';
-    if (audioCtx) audioCtx._expectingSound = !!(noiseSource || ambientSource || pacerActive);
-    updateStatusDots(); // Call when pacer stops
-}
-
-function runPacerStep(phase, duration, anim) {
-    if (!pacerActive) return;
-    const circle = document.getElementById('pacerCircle');
-    const label = document.getElementById('pacerLabel');
-    
-    label.textContent = phase;
-    circle.style.animation = `${anim} ${duration}ms linear forwards`;
-    
-    // Auditory cue: ramp volume for inhale, silence for hold, fade for exhale
-    const now = audioCtx.currentTime;
-    if (phase === 'Inhale') pacerGain.gain.setTargetAtTime(0.1, now, 1.0);
-    else if (phase === 'Hold') pacerGain.gain.setTargetAtTime(0.05, now, 0.5);
-    else pacerGain.gain.setTargetAtTime(0, now, 2.0);
-
-    pacerTimeout = setTimeout(() => {
-        if (phase === 'Inhale') runPacerStep('Hold', 7000, 'none');
-        else if (phase === 'Hold') runPacerStep('Exhale', 8000, 'breathe-out');
-        else runPacerStep('Inhale', 4000, 'breathe-in');
-    }, duration);
-}
-
-function setVolume(v) { if(gainNode) gainNode.gain.value = v / 100; document.getElementById('volInput').value = v; saveSetting('st_vol', v); updateStatusDots(); }
-function setBalance(v) { 
-    if(pannerNode) pannerNode.pan.value = v; 
-    document.getElementById('balInput').value = v; 
-    document.getElementById('balMarker').style.left = ((parseFloat(v) + 1) / 2 * 100) + '%';
-    saveSetting('st_bal', v);
-    updateStatusDots();
-}
-
-
-document.getElementById('volume').oninput = e => { setVolume(e.target.value); };
-document.getElementById('balance').oninput = e => { setBalance(e.target.value); };
-
-function stopNoise() {
-    if(noiseSource) { 
-        // Disconnect immediately to stop sound even if .stop() shim takes a tick
-        try { noiseSource.disconnect(); } catch(e){}
-        try { if(typeof noiseSource.stop === 'function') noiseSource.stop(); } catch(e){}
-        noiseSource=null; 
-    }
-    const statusEl = document.getElementById('noiseEngineStatus');
-    if (statusEl) statusEl.textContent = "";
-    document.getElementById('status').textContent = "";
-    document.querySelectorAll('.noise-btn').forEach(b=>b.classList.remove('active'));
-    if (audioCtx) audioCtx._expectingSound = !!(noiseSource || ambientSource || pacerActive);
-    updateStatusDots(); // Call when noise stops
-}
-
-function stopAmbient() {
-    if(ambientSource) { 
-        // MediaElementSource nodes are "muted" when the underlying audio element is paused
-        try { ambientSource.pause(); ambientSource.src = ""; } catch(e){}
-        ambientSource=null; 
-    }
-    document.getElementById('status').textContent = "";
-    document.querySelectorAll('.ambient-btn').forEach(b=>b.classList.remove('active'));
-    if (audioCtx) audioCtx._expectingSound = !!(noiseSource || ambientSource || pacerActive);
-    updateStatusDots(); // Call when ambient stops
-}
-
-function stopAll() {
-    stopNoise();
-    stopAmbient();
-    stopPacer();
-    if (audioCtx) audioCtx._expectingSound = false;
-    updateStatusDots(); // Call when all stops
-}
-
-function toggleZenMode() {
-    document.body.classList.toggle('zen-mode');
-    const isZen = document.body.classList.contains('zen-mode');
-    saveSetting('st_zen_mode', isZen);
-    const btn = document.getElementById('zenBtn');
-    updateStatusDots(); // Call when zen mode changes
-    if (btn) btn.textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
-}
-
-function setActiveBtn(btn, selector) {
-    if (selector) {
-        document.querySelectorAll(selector).forEach(b=>b.classList.remove('active'));
-    } else {
-        document.querySelectorAll('.sm-btn').forEach(b=>b.classList.remove('active'));
-    }
-    if(btn) btn.classList.add('active');
-}
-
-function startTimer() {
-    const minutes = parseInt(document.getElementById("timer").value);
-    let rem = minutes * 60;
-    clearInterval(timerInterval);
-    const useSleepFade = document.getElementById('sleepMode').checked;
-
-    timerInterval = setInterval(() => {
-        rem--; document.getElementById("timerDisplay").innerText = "Time left: "+Math.floor(rem/60)+":"+(rem%60).toString().padStart(2,'0');
-        
-        if (useSleepFade && rem === 60 && gainNode && audioCtx) {
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 60);
-        }
-
-        if(rem<=0){
-            logUsageMinutes(minutes);
-            stopAll();
-            clearInterval(timerInterval);
-            document.getElementById("timerDisplay").innerText = "Complete";
-            refreshUsageUI();
-        }
-    }, 1000);
-}
-
-function getReportData() {
-    const activeBtn = document.querySelector('.sm-btn.active');
-    const data = {
-        "Active Sound": activeBtn ? activeBtn.textContent : 'None Selected',
-        "Volume Level": document.getElementById('volume').value + "%",
-        "L/R Balance": document.getElementById('balance').value
-    };
-    eqBands.forEach(f => {
-        data[`EQ L ${f}Hz`] = loadSetting(`eq_st_L_${f}`, 0) + " dB";
-        data[`EQ R ${f}Hz`] = loadSetting(`eq_st_R_${f}`, 0) + " dB";
-    });
-    return data;
-}
-
-function exportClinicalSettings() {
-    const reportData = getClinicalReportData("Broadband Sound Therapy", getReportData());
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(aiSummaryText => {
-        reportData.aiSummary = aiSummaryText;
-        const report = generateClinicalReportText(reportData);
-        const blob = new Blob([report], { type: 'text/plain' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `tinnitus_clinical_sound_therapy.txt`;
-        a.click();
-        alert("Clinical report downloaded. Please check your browser's Downloads folder.");
-    });
-}
-
-async function generatePDFReport() {
-    const reportData = getClinicalReportData("Broadband Sound Therapy", getReportData());
-    // Fetch AI summary and add to reportData
-    const aiSummaryText = await getClinicalSummary();
-    reportData.aiSummary = aiSummaryText;
-    const htmlContent = generateClinicalReportHtml(reportData);
-
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    document.body.appendChild(tempDiv);
-
-    const isDark = document.documentElement.classList.contains('light-mode');
-    if (!isDark) document.documentElement.classList.add('light-mode');
-
-    const opt = {
-        margin: [20, 15], filename: 'tinnitus_clinical_sound_therapy.pdf', image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    await html2pdf().set(opt).from(tempDiv).save();
-
-    if (!isDark) document.documentElement.classList.remove('light-mode');
-    document.body.removeChild(tempDiv);
-}
-
-function emailToAudiologist() {
-    const email = loadSetting('audiologist_email', '');
-    if (!email) return alert("Please set your audiologist's email on the Home page.");
-    getClinicalSummary().then(async aiSummaryText => {
-        const reportData = getClinicalReportData("Broadband Sound Therapy", getReportData());
-        reportData.aiSummary = aiSummaryText;
-        const report = generateClinicalReportText(reportData);
-        window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
-        alert("Email client opened. Please review and send the clinical report draft.");
-    });
-}
-
-function shareToCommunity() {
-    shareSetup("Broadband Sound Therapy", getReportData());
-}
-
-// Audio Recovery: Automatically restart noise/ambient if the global watchdog detects silence
-window.addEventListener('tts-audio-recovery-triggered', () => {
-    const activeNoise = document.querySelector('.noise-btn.active');
-    const activeAmbient = document.querySelector('.ambient-btn.active');
-    if (activeNoise || activeAmbient) {
-        console.warn("[AudioRecovery] Sustained silence detected. Attempting to restart sound therapy...");
-        if (activeNoise) {
-            // Use the data-type or parsed onclick to restart
-            let type = 'pink'; // default
-            const noiseTypes = ['white', 'pink', 'brown', 'blue', 'violet'];
-            for (const t of noiseTypes) { if (activeNoise.textContent.toLowerCase().includes(t)) type = t; }
-            const match = activeNoise.getAttribute('onclick')?.match(/handlePlayNoise\('([^']+)'/);
-            if (match) playNoise(match[1], activeNoise);
-            else playNoise(type, activeNoise);
-        }
-        if (activeAmbient) {
-            const match = activeAmbient.getAttribute('onclick').match(/handlePlaySample\('([^']+)'/);
-            if (match) playSample(match[1], activeAmbient);
-        }
-    }
-});
-</script>
-
-<script>
-async function triggerAISoundRecipe() {
-    const description = document.getElementById('tinnitusDescription').value;
-    const responseBox = document.getElementById('aiSoundRecipeResponse');
-    
-    if (!description.trim()) {
-        responseBox.style.display = 'block';
-        responseBox.innerHTML = "Please describe your tinnitus to get a sound recipe.";
-        return;
-    }
-
-    responseBox.style.display = 'block';
-    responseBox.innerHTML = "Generating sound recipe...";
-
-    try {
-        const aiResponse = await getSoundRecipe(description);
-        responseBox.innerHTML = aiResponse.replace(/\n/g, '<br>');
-
-        // Attempt to parse the AI's natural language suggestion
-        const lowerCaseResponse = aiResponse.toLowerCase();
-        let suggestedSoundType = null;
-        let suggestedSoundButton = null;
-
-        // Check for noise types
-        const noiseTypes = ['white', 'pink', 'brown', 'blue', 'violet'];
-        for (const type of noiseTypes) {
-            if (lowerCaseResponse.includes(`${type} noise`)) {
-                suggestedSoundType = type;
-                suggestedSoundButton = document.querySelector(`.sm-btn[onclick*="'${type}'"]`);
-                break;
+            let repeatTimeout, repeatInterval;
+            function setupStepButtons() {
+                document.querySelectorAll('.btn-group .button-step, .fine-tune-btn').forEach(btn => {
+                    const delta = parseFloat(btn.dataset.delta);
+                    const target = document.getElementById(btn.parentElement.dataset.target || btn.closest('.ctrl').querySelector('input[type=range]')?.id);
+                    const step = () => {
+                        let val = (parseFloat(target.value) + delta);
+                        if (target.step.includes('.')) val = parseFloat(val.toFixed(1));
+                        target.value = Math.min(target.max, Math.max(target.min, val));
+                        target.dispatchEvent(new Event('input'));
+                    };
+                    btn.onmousedown = btn.ontouchstart = (e) => {
+                        e.preventDefault(); step();
+                        repeatTimeout = setTimeout(() => { repeatInterval = setInterval(step, 80); }, 500);
+                    };
+                    btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => { clearInterval(repeatInterval); clearTimeout(repeatTimeout); repeatInterval = null; };
+                    btn.onclick = () => { if (!repeatInterval) step(); };
+                });
             }
-        }
 
-        // If no noise type, check for nature sounds
-        if (!suggestedSoundType) {
-            const natureSounds = ['rain', 'ocean', 'stream', 'wind'];
-            for (const type of natureSounds) {
-                if (lowerCaseResponse.includes(type)) {
-                    suggestedSoundType = type;
-                    suggestedSoundButton = document.querySelector(`.sm-btn[onclick*="'${type}'"]`);
-                    break;
+            function updateLabels() {
+                document.getElementById('volInput').value = document.getElementById('volume').value;
+                const b = document.getElementById('balance').value;
+                document.getElementById('balInput').value = b;
+                document.getElementById('balMarker').style.left = ((parseFloat(b) + 1) / 2 * 100) + '%';
+            }
+
+            document.getElementById('volInput').oninput = e => {
+                document.getElementById('volume').value = e.target.value;
+                document.getElementById('volume').dispatchEvent(new Event('input'));
+            };
+            document.getElementById('balInput').oninput = e => {
+                document.getElementById('balance').value = e.target.value;
+                document.getElementById('balance').dispatchEvent(new Event('input'));
+            };
+
+            async function initAudio() {
+                // Check if context is closed or missing
+                if (!audioCtx || audioCtx.state === 'closed') {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                // Ensure generator is always attached to current context
+                if (audioCtx && !audioCtx.generator) {
+                    audioCtx.generator = new NoiseGenerator(audioCtx);
+                }
+
+                // Re-create routing chain if missing or context changed
+                if (!gainNode || !pannerNode || !audioCtx._healthAnalyser) {
+                    gainNode = audioCtx.createGain();
+                    gainNode.channelCount = 2;
+                    gainNode.channelCountMode = 'explicit';
+
+                    const useHP = document.getElementById('useHearingProfile').checked;
+                    const hpFreqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
+
+                    const splitter = audioCtx.createChannelSplitter(2);
+                    const merger = audioCtx.createChannelMerger(2);
+                    gainNode.connect(splitter);
+
+                    ['L', 'R'].forEach((side, idx) => {
+                        let head = audioCtx.createGain();
+                        splitter.connect(head, idx);
+
+                        // 1. Inject Hearing Profile Compensation (if enabled)
+                        if (useHP) {
+                            hpFreqs.forEach(f => {
+                                const boost = getHearingBoost(f, side);
+                                if (boost > 0 && isFrequencySafe(audioCtx, f)) {
+                                    const filter = audioCtx.createBiquadFilter();
+                                    filter.type = 'peaking'; filter.frequency.value = f; filter.Q.value = 1;
+                                    filter.gain.value = boost;
+                                    head.connect(filter); head = filter;
+                                }
+                            });
+                        }
+
+                        // 2. Manual EQ Layers
+                        const nodes = eqBands.map(freq => {
+                            const f = audioCtx.createBiquadFilter();
+                            f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1;
+                            f.gain.value = parseFloat(loadSetting(`eq_st_${side}_${freq}`, 0));
+                            head.connect(f); head = f;
+                            return f;
+                        });
+                        if (side === 'L') eqNodesL = nodes; else eqNodesR = nodes;
+                        head.connect(merger, 0, idx);
+                    });
+
+                    pannerNode = audioCtx.createStereoPanner();
+                    const masterAnalyser = audioCtx.createAnalyser();
+                    masterAnalyser.fftSize = 256;
+                    merger.connect(pannerNode);
+                    pannerNode.connect(masterAnalyser).connect(audioCtx.destination);
+                    audioCtx._healthAnalyser = masterAnalyser;
+                }
+
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                syncAudioNodes();
+                updateStatusDots(); // Call after audio init
+            }
+            function syncAudioNodes() { if (gainNode) setVolume(document.getElementById('volume').value); if (pannerNode) setBalance(document.getElementById('balance').value); }
+
+            function syncBalanceToPreset() {
+                const bal = getBalancePreset();
+                setBalance(bal);
+                alert("Balance adjusted to global tinnitus side preset.");
+            }
+
+            function handlePlayNoise(type, btn) {
+                showPreFlight(() => playNoise(type, btn));
+            }
+
+            async function playNoise(type, btn) {
+                await initAudio();
+
+                // Use real-time crossfade if the high-precision engine is already active
+                if (noiseSource && noiseSource.engineType === 'worklet' && typeof noiseSource.updateColor === 'function') {
+                    noiseSource.updateColor(type);
+                    setActiveBtn(btn, '.noise-btn');
+                    document.getElementById('status').textContent = `Playing ${type} noise...`;
+                    updateStatusDots();
+                    return;
+                }
+
+                stopNoise();
+                setActiveBtn(btn, '.noise-btn');
+
+                // Centralized generator handles worklet loading and buffer fallbacks
+                noiseSource = await (audioCtx.generator ? audioCtx.generator.createSafeNoiseNode(type, { loop: true }) : null);
+
+
+                // Ensure button is still active (hasn't been stopped or switched) before starting
+                if (noiseSource && (!btn || btn.classList.contains('active'))) {
+                    // Force re-sync of volume and routing to ensure the signal path is definitely open
+                    syncAudioNodes();
+                    audioCtx._expectingSound = true;
+
+                    const statusEl = document.getElementById('noiseEngineStatus');
+                    if (statusEl) {
+                        if (noiseSource.engineType === 'worklet') {
+                            statusEl.textContent = "● Precision";
+                            statusEl.style.color = "var(--accent)";
+                            statusEl.title = "The High-Precision AudioWorklet engine is active for low-latency, clinical-grade noise generation.";
+                        } else {
+                            statusEl.textContent = "● Fallback";
+                            statusEl.style.color = "#ff9800";
+                            statusEl.title = "Using the standard buffer engine. This occurs if running from a local file or if the browser doesn't support modern audio modules.";
+                        }
+                    }
+                    noiseSource.connect(gainNode);
+                    noiseSource.start();
+                    document.getElementById('status').textContent = `Playing ${type} noise...`;
+                    drawViz();
+                } else if (noiseSource) {
+                    try { noiseSource.disconnect(); } catch (e) { }
                 }
             }
-        }
 
-        if (suggestedSoundButton) {
-            suggestedSoundButton.click(); // Programmatically click the button to activate the sound
-        }
-    } catch (error) {
-        console.error("Error getting AI sound recipe:", error);
-        responseBox.innerHTML = "Failed to get AI sound recipe. Please try again later.";
-    }
-}
-</script>
-<script>
-function updateStatusDots() {
-    const updateDot = (id, active, container = document) => {
-        const el = container.querySelector(id.startsWith('#') || id.startsWith('.') ? id : `#${id}`);
-        if (el) {
-            el.textContent = active ? '✓' : '○';
-            el.classList.toggle('active', !!active);
-        }
-    };
+            function handlePlaySample(type, btn) {
+                showPreFlight(() => playSample(type, btn));
+            }
 
-    // Noise Types
-    updateDot('noiseTypesStatus', document.querySelector('.noise-btn.active'));
+            async function playSample(type, btn) {
+                await initAudio();
+                stopAmbient(); // Stop existing ambient sample
+                setActiveBtn(btn, '.ambient-btn');
 
-    // Relaxation Pacer
-    updateDot('pacerStatus', pacerActive);
+                const fileMap = {
+                    rain: 'audio/rain.mp3',
+                    ocean: 'audio/ocean.mp3',
+                    stream: 'audio/stream.mp3',
+                    wind: 'audio/wind.mp3'
+                };
 
-    // Hearing Compensation (EQ) - check if any EQ is not 0
-    const anyEqAdjusted = eqBands.some(freq => parseFloat(loadSetting(`eq_st_L_${freq}`, 0)) !== 0 || parseFloat(loadSetting(`eq_st_R_${freq}`, 0)) !== 0);
-    updateDot('#eqSection h3 .status-dot', anyEqAdjusted);
+                try {
+                    const audio = new Audio(fileMap[type]);
+                    audio.loop = true;
+                    // We create a new track for every sample. Web Audio will garbage collect 
+                    // the old MediaElementSourceNode once its reference (ambientSource) is cleared.
+                    const track = audioCtx.createMediaElementSource(audio);
 
-    // Nature Sounds
-    updateDot('#natureSoundsSection h3 .status-dot', document.querySelector('.ambient-btn.active'));
+                    if (!btn || btn.classList.contains('active')) {
+                        audioCtx._expectingSound = true;
+                        track.connect(gainNode);
+                        audio.play().catch(e => {
+                            console.error("SoundTherapy: play() failed:", e);
+                            document.getElementById('status').textContent = "Playback blocked. Click 'Confirm & Start' again.";
+                        });
+                        ambientSource = audio;
+                        document.getElementById('status').textContent = `Playing ${type} sound...`;
+                        updateStatusDots(); // Call when ambient sound starts
+                    }
+                } catch (e) {
+                    console.error("SoundTherapy: Failed to load nature sound.", e);
+                }
+            }
 
-    // Volume & Balance (if not default)
-    const volumeAdjusted = parseFloat(document.getElementById('volume').value) !== 30; // Default is 30
-    const balanceAdjusted = parseFloat(document.getElementById('balance').value) !== 0; // Default is 0
-    updateDot('volumeStatus', volumeAdjusted);
-    updateDot('balanceStatus', balanceAdjusted);
-}
-</script>
+            function handlePacer() {
+                if (pacerActive) stopPacer();
+                else if (audioCtx) togglePacer();
+                else showPreFlight(() => togglePacer());
+            }
+
+            function togglePacer() {
+                pacerActive = !pacerActive;
+                const btn = document.getElementById('pacerToggle');
+                const circle = document.getElementById('pacerCircle');
+
+                if (pacerActive) {
+                    initAudio();
+                    audioCtx._expectingSound = true;
+                    pacerOsc = audioCtx.createOscillator();
+                    pacerGain = audioCtx.createGain();
+                    pacerOsc.frequency.value = 220; // Soft low tone
+                    pacerGain.gain.value = 0;
+                    pacerOsc.connect(pacerGain).connect(audioCtx.destination);
+                    pacerOsc.start();
+
+                    btn.textContent = "Stop Pacer";
+                    btn.classList.add('stop-btn');
+                    circle.classList.add('pacer-active');
+                    updateStatusDots(); // Call when pacer starts
+                    runPacerStep('Inhale', 4000, 'breathe-in');
+                } else {
+                    stopPacer();
+                }
+            }
+
+            function stopPacer() {
+                pacerActive = false;
+                clearTimeout(pacerTimeout);
+                if (pacerOsc) { pacerOsc.stop(); pacerOsc = null; }
+                document.getElementById('pacerToggle').textContent = "Start Breathing Pacer";
+                document.getElementById('pacerToggle').classList.remove('stop-btn');
+                document.getElementById('pacerCircle').classList.remove('pacer-active');
+                document.getElementById('pacerCircle').style.animation = 'none';
+                if (audioCtx) audioCtx._expectingSound = !!(noiseSource || ambientSource || pacerActive);
+                updateStatusDots(); // Call when pacer stops
+            }
+
+            function runPacerStep(phase, duration, anim) {
+                if (!pacerActive) return;
+                const circle = document.getElementById('pacerCircle');
+                const label = document.getElementById('pacerLabel');
+
+                label.textContent = phase;
+                circle.style.animation = `${anim} ${duration}ms linear forwards`;
+
+                // Auditory cue: ramp volume for inhale, silence for hold, fade for exhale
+                const now = audioCtx.currentTime;
+                if (phase === 'Inhale') pacerGain.gain.setTargetAtTime(0.1, now, 1.0);
+                else if (phase === 'Hold') pacerGain.gain.setTargetAtTime(0.05, now, 0.5);
+                else pacerGain.gain.setTargetAtTime(0, now, 2.0);
+
+                pacerTimeout = setTimeout(() => {
+                    if (phase === 'Inhale') runPacerStep('Hold', 7000, 'none');
+                    else if (phase === 'Hold') runPacerStep('Exhale', 8000, 'breathe-out');
+                    else runPacerStep('Inhale', 4000, 'breathe-in');
+                }, duration);
+            }
+
+            function setVolume(v) { if (gainNode) gainNode.gain.value = v / 100; document.getElementById('volInput').value = v; saveSetting('st_vol', v); updateStatusDots(); }
+            function setBalance(v) {
+                if (pannerNode) pannerNode.pan.value = v;
+                document.getElementById('balInput').value = v;
+                document.getElementById('balMarker').style.left = ((parseFloat(v) + 1) / 2 * 100) + '%';
+                saveSetting('st_bal', v);
+                updateStatusDots();
+            }
+
+
+            document.getElementById('volume').oninput = e => { setVolume(e.target.value); };
+            document.getElementById('balance').oninput = e => { setBalance(e.target.value); };
+
+            function stopNoise() {
+                if (noiseSource) {
+                    // Disconnect immediately to stop sound even if .stop() shim takes a tick
+                    try { noiseSource.disconnect(); } catch (e) { }
+                    try { if (typeof noiseSource.stop === 'function') noiseSource.stop(); } catch (e) { }
+                    noiseSource = null;
+                }
+                const statusEl = document.getElementById('noiseEngineStatus');
+                if (statusEl) statusEl.textContent = "";
+                document.getElementById('status').textContent = "";
+                document.querySelectorAll('.noise-btn').forEach(b => b.classList.remove('active'));
+                if (audioCtx) audioCtx._expectingSound = !!(noiseSource || ambientSource || pacerActive);
+                updateStatusDots(); // Call when noise stops
+            }
+
+            function stopAmbient() {
+                if (ambientSource) {
+                    // MediaElementSource nodes are "muted" when the underlying audio element is paused
+                    try { ambientSource.pause(); ambientSource.src = ""; } catch (e) { }
+                    ambientSource = null;
+                }
+                document.getElementById('status').textContent = "";
+                document.querySelectorAll('.ambient-btn').forEach(b => b.classList.remove('active'));
+                if (audioCtx) audioCtx._expectingSound = !!(noiseSource || ambientSource || pacerActive);
+                updateStatusDots(); // Call when ambient stops
+            }
+
+            function stopAll() {
+                stopNoise();
+                stopAmbient();
+                stopPacer();
+                if (audioCtx) audioCtx._expectingSound = false;
+                updateStatusDots(); // Call when all stops
+            }
+
+            function drawViz() {
+                if (!audioCtx || !audioCtx._healthAnalyser) return;
+                const canvas = document.getElementById('viz'), c = canvas.getContext('2d');
+                canvas.width = canvas.offsetWidth * 2; canvas.height = 200;
+                const data = new Uint8Array(audioCtx._healthAnalyser.frequencyBinCount);
+
+                const loop = () => {
+                    if (!noiseSource && !ambientSource) { c.clearRect(0, 0, canvas.width, canvas.height); return; }
+                    audioCtx._healthAnalyser.getByteFrequencyData(data);
+                    c.clearRect(0, 0, canvas.width, canvas.height);
+                    const barW = canvas.width / data.length * 2.5;
+                    for (let i = 0; i < data.length / 2.5; i++) {
+                        const h = (data[i] / 255) * canvas.height;
+                        c.fillStyle = `hsla(${170 + (i / 2)}, 70%, 55%, 0.8)`;
+                        c.fillRect(i * barW, canvas.height - h, barW - 1, h);
+                    }
+                    rafViz = requestAnimationFrame(loop);
+                };
+                loop();
+            }
+            function setActiveBtn(btn, selector) {
+                if (selector) {
+                    document.querySelectorAll(selector).forEach(b => b.classList.remove('active'));
+                } else {
+                    document.querySelectorAll('.sm-btn').forEach(b => b.classList.remove('active'));
+                }
+                if (btn) btn.classList.add('active');
+            }
+
+            function resetToDefaults() {
+                if (confirm("Reset all sound settings and Zen parameters to their defaults?")) {
+                    resetZenSettings();
+                    resetModuleSettings(['st_']);
+                }
+            }
+            window.resetToDefaults = resetToDefaults;
+
+            function startTimer() {
+                const minutes = parseInt(document.getElementById("timer").value);
+                let rem = minutes * 60;
+                clearInterval(timerInterval);
+                const useSleepFade = document.getElementById('sleepMode').checked;
+
+                timerInterval = setInterval(() => {
+                    rem--; document.getElementById("timerDisplay").innerText = "Time left: " + Math.floor(rem / 60) + ":" + (rem % 60).toString().padStart(2, '0');
+
+                    if (useSleepFade && rem === 60 && gainNode && audioCtx) {
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 60);
+                    }
+
+                    if (rem <= 0) {
+                        logUsageMinutes(minutes);
+                        stopAll();
+                        clearInterval(timerInterval);
+                        document.getElementById("timerDisplay").innerText = "Complete";
+                        refreshUsageUI();
+                    }
+                }, 1000);
+            }
+
+            function getReportData() {
+                const activeBtn = document.querySelector('.sm-btn.active');
+                const data = {
+                    "Active Sound": activeBtn ? activeBtn.textContent : 'None Selected',
+                    "Volume Level": document.getElementById('volume').value + "%",
+                    "L/R Balance": document.getElementById('balance').value,
+                    "Neural Auto-Match Enabled": loadSetting('enable_auto_match', 'true') === 'true' ? 'Yes' : 'No'
+                };
+                eqBands.forEach(f => {
+                    data[`EQ L ${f}Hz`] = loadSetting(`eq_st_L_${f}`, 0) + " dB";
+                    data[`EQ R ${f}Hz`] = loadSetting(`eq_st_R_${f}`, 0) + " dB";
+                });
+                return data;
+            }
+
+            function exportClinicalSettings() {
+                const reportData = getClinicalReportData("Broadband Sound Therapy", getReportData());
+                // Fetch AI summary and add to reportData
+                getClinicalSummary().then(aiSummaryText => {
+                    reportData.aiSummary = aiSummaryText;
+                    const report = generateClinicalReportText(reportData);
+                    const blob = new Blob([report], { type: 'text/plain' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `tinnitus_clinical_sound_therapy.txt`;
+                    a.click();
+                    alert("Clinical report downloaded. Please check your browser's Downloads folder.");
+                });
+            }
+
+            async function generatePDFReport() {
+                const reportData = getClinicalReportData("Broadband Sound Therapy", getReportData());
+                // Fetch AI summary and add to reportData
+                const aiSummaryText = await getClinicalSummary();
+                reportData.aiSummary = aiSummaryText;
+                const htmlContent = generateClinicalReportHtml(reportData);
+
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                document.body.appendChild(tempDiv);
+
+                const isDark = document.documentElement.classList.contains('light-mode');
+                if (!isDark) document.documentElement.classList.add('light-mode');
+
+                const opt = {
+                    margin: [20, 15], filename: 'tinnitus_clinical_sound_therapy.pdf', image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                await html2pdf().set(opt).from(tempDiv).save();
+
+                if (!isDark) document.documentElement.classList.remove('light-mode');
+                document.body.removeChild(tempDiv);
+            }
+
+            function emailToAudiologist() {
+                const email = loadSetting('audiologist_email', '');
+                if (!email) return alert("Please set your audiologist's email on the Home page.");
+                getClinicalSummary().then(async aiSummaryText => {
+                    const reportData = getClinicalReportData("Broadband Sound Therapy", getReportData());
+                    reportData.aiSummary = aiSummaryText;
+                    const report = generateClinicalReportText(reportData);
+                    window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+                    alert("Email client opened. Please review and send the clinical report draft.");
+                });
+            }
+
+            function shareToCommunity() {
+                shareSetup("Broadband Sound Therapy", getReportData());
+            }
+
+            // Audio Recovery: Automatically restart noise/ambient if the global watchdog detects silence
+            window.addEventListener('tts-audio-recovery-triggered', () => {
+                const activeNoise = document.querySelector('.noise-btn.active');
+                const activeAmbient = document.querySelector('.ambient-btn.active');
+                if (activeNoise || activeAmbient) {
+                    console.warn("[AudioRecovery] Sustained silence detected. Attempting to restart sound therapy...");
+                    if (activeNoise) {
+                        // Use the data-type or parsed onclick to restart
+                        let type = 'pink'; // default
+                        const noiseTypes = ['white', 'pink', 'brown', 'blue', 'violet'];
+                        for (const t of noiseTypes) { if (activeNoise.textContent.toLowerCase().includes(t)) type = t; }
+                        const match = activeNoise.getAttribute('onclick')?.match(/handlePlayNoise\('([^']+)'/);
+                        if (match) playNoise(match[1], activeNoise);
+                        else playNoise(type, activeNoise);
+                    }
+                    if (activeAmbient) {
+                        const match = activeAmbient.getAttribute('onclick').match(/handlePlaySample\('([^']+)'/);
+                        if (match) playSample(match[1], activeAmbient);
+                    }
+                }
+            });
+        </script>
+
+        <script>
+            async function triggerAISoundRecipe() {
+                const description = document.getElementById('tinnitusDescription').value;
+                const responseBox = document.getElementById('aiSoundRecipeResponse');
+
+                if (!description.trim()) {
+                    responseBox.style.display = 'block';
+                    responseBox.innerHTML = "Please describe your tinnitus to get a sound recipe.";
+                    return;
+                }
+
+                responseBox.style.display = 'block';
+                responseBox.innerHTML = "Generating sound recipe...";
+
+                try {
+                    const aiResponse = await getSoundRecipe(description);
+                    responseBox.innerHTML = aiResponse.replace(/\n/g, '<br>');
+
+                    // Attempt to parse the AI's natural language suggestion
+                    const lowerCaseResponse = aiResponse.toLowerCase();
+                    let suggestedSoundType = null;
+                    let suggestedSoundButton = null;
+
+                    // Check for noise types
+                    const noiseTypes = ['white', 'pink', 'brown', 'blue', 'violet'];
+                    for (const type of noiseTypes) {
+                        if (lowerCaseResponse.includes(`${type} noise`)) {
+                            suggestedSoundType = type;
+                            suggestedSoundButton = document.querySelector(`.sm-btn[onclick*="'${type}'"]`);
+                            break;
+                        }
+                    }
+
+                    // If no noise type, check for nature sounds
+                    if (!suggestedSoundType) {
+                        const natureSounds = ['rain', 'ocean', 'stream', 'wind'];
+                        for (const type of natureSounds) {
+                            if (lowerCaseResponse.includes(type)) {
+                                suggestedSoundType = type;
+                                suggestedSoundButton = document.querySelector(`.sm-btn[onclick*="'${type}'"]`);
+                                break;
+                            }
+                        }
+                    }
+
+                    if (suggestedSoundButton) {
+                        suggestedSoundButton.click(); // Programmatically click the button to activate the sound
+                    }
+                } catch (error) {
+                    console.error("Error getting AI sound recipe:", error);
+                    responseBox.innerHTML = "Failed to get AI sound recipe. Please try again later.";
+                }
+            }
+        </script>
+        <script>
+            function updateStatusDots() {
+                const updateDot = (id, active, container = document) => {
+                    const el = container.querySelector(id.startsWith('#') || id.startsWith('.') ? id : `#${id}`);
+                    if (el) {
+                        el.textContent = active ? '✓' : '○';
+                        el.classList.toggle('active', !!active);
+                    }
+                };
+
+                // Noise Types
+                updateDot('noiseTypesStatus', document.querySelector('.noise-btn.active'));
+
+                // Relaxation Pacer
+                updateDot('pacerStatus', pacerActive);
+
+                // Hearing Compensation (EQ) - check if any EQ is not 0
+                const anyEqAdjusted = eqBands.some(freq => parseFloat(loadSetting(`eq_st_L_${freq}`, 0)) !== 0 || parseFloat(loadSetting(`eq_st_R_${freq}`, 0)) !== 0);
+                updateDot('#eqSection h3 .status-dot', anyEqAdjusted);
+
+                // Nature Sounds
+                updateDot('#natureSoundsSection h3 .status-dot', document.querySelector('.ambient-btn.active'));
+
+                // Volume & Balance (if not default)
+                const volumeAdjusted = parseFloat(document.getElementById('volume').value) !== 30; // Default is 30
+                const balanceAdjusted = parseFloat(document.getElementById('balance').value) !== 0; // Default is 0
+                updateDot('volumeStatus', volumeAdjusted);
+                updateDot('balanceStatus', balanceAdjusted);
+
+                // Neural Auto-Match Switch
+                updateDot('#noiseTypesSection h3 .status-dot', loadSetting('enable_auto_match', 'true') === 'true');
+
+                // Spectral Coverage Validation
+                const activeBtn = document.querySelector('.noise-btn.active');
+                const color = activeBtn ? (activeBtn.textContent.toLowerCase().includes('auto') ? 'auto' : activeBtn.textContent.toLowerCase()) : null;
+                const warn = document.getElementById('noiseRangeWarning');
+
+                if (color && color !== 'auto' && color !== 'wind chimes') {
+                    const targetFreq = parseFloat(loadSetting('notchL', loadSetting('toneFreqL', loadSetting('cr_baseFreq', 6000))));
+                    const ranges = {
+                        white: { min: 20, max: 20000, desc: "White: 20Hz - 20kHz" },
+                        pink: { min: 20, max: 20000, desc: "Pink: 20Hz - 20kHz" },
+                        brown: { min: 20, max: 1200, desc: "Brown: 20Hz - 1.2kHz" },
+                        blue: { min: 6000, max: 20000, desc: "Blue: 6kHz - 20kHz" },
+                        violet: { min: 10000, max: 20000, desc: "Violet: 10kHz - 20kHz" }
+                    };
+
+                    if (ranges[color]) {
+                        const isOutOfRange = targetFreq < ranges[color].min || targetFreq > ranges[color].max;
+                        if (isOutOfRange) {
+                            warn.innerHTML = `<strong style="color:var(--error)">⚠️ Spectral Incompatibility</strong><br>` +
+                                `Your matched tinnitus pitch (${Math.round(targetFreq)} Hz) falls outside the effective range of the selected noise (${color}). ` +
+                                `For best habituation results, use <b>Neural Auto-Match</b> or a compatible color.<br><br>` +
+                                `<b>Recommended Range for ${color}:</b> ${ranges[color].desc}`;
+                            warn.style.display = 'block';
+                        } else {
+                            warn.style.display = 'none';
+                        }
+                    }
+                } else {
+                    warn.style.display = 'none';
+                }
+            }
+        </script>
 </body>
+
 </html>

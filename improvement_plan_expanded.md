@@ -22,9 +22,12 @@
 - [ ] **Therapy Modes:**
     - Add new neuromodulation protocols (e.g., amplitude-modulated tones, new CR variants)
     - Expand sound therapy options (nature soundscapes, user-generated presets)
+- [x] **Binaural Visualizer:** Implement real-time visual feedback for binaural beats.
 - [x] **Personalization:** (Enhanced in v2.5.0)
     - Save/load user therapy profiles and session history (Refined in v2.5.0)
     - Adaptive therapy suggestions based on user progress
+- [ ] **Native Transition:**
+    - Explore Flutter or React Native with C++ DSP core for background audio reliability
 - [ ] **AI Features:**
     - Real-time feedback and adaptive adjustments
     - Enhanced AI log correlation and pattern detection
@@ -46,8 +49,8 @@
 
 ## 4. Technical & Performance (Medium Priority)
 - [ ] **DSP Optimization:**
-    - Lower latency, higher efficiency for real-time audio
-    - WebAssembly (WASM) acceleration
+    - [ ] **WebAssembly (WASM) Migration:** Rewrite core noise loops in C/Rust for zero-latency JS execution (High Priority)
+    - [ ] Lower latency, higher efficiency for real-time audio
 - [ ] **Offline/PWA:**
     - Background sync, push notifications, and install prompts
     - Enhanced offline diagnostics and troubleshooting

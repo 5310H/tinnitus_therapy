@@ -1,241 +1,422 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="icon-192.png" type="image/png">
-<title>CBT & Wellness - Tinnitus Therapy</title>
-<script type="module">
-    import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
-    window.GoogleGenerativeAI = GoogleGenerativeAI;
-</script>
-<script src="storage.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="nav.js"></script>
-<link rel="stylesheet" href="style.css">
-<style>
-    .question { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); text-align: left; }
-    .question:last-of-type { border-bottom: none; } /* No border for the last question */
-    .question p { font-size: 0.95rem; margin-bottom: 10px; line-height: 1.4; }
-    .options { display: flex; gap: 10px; }
-    .opt-btn { flex: 1; padding: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
-    .opt-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-    #scoreResult { margin-top: 20px; padding: 20px; border-radius: 12px; background: rgba(0, 191, 165, 0.1); display: none; }
 
-    .ai-hub { margin-bottom: 25px; border: 2px solid var(--accent); background: rgba(0, 191, 165, 0.05); padding: 15px; border-radius: 12px; }
-    .sos-btn { background: linear-gradient(135deg, #ff5252, #b71c1c); color: white; border: none; font-weight: bold; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; margin-bottom: 10px; font-size: 1.1rem; }
-    .ai-response-box { margin-top: 15px; display: none; flex-direction: column; gap: 10px; }
-    .chat-bubble { 
-        max-width: 90%; padding: 12px 16px; border-radius: 15px; font-size: 0.9rem; line-height: 1.5; 
-        position: relative; word-wrap: break-word; color: var(--text); border: 1px solid var(--border);
-    }
-    .ai-bubble { align-self: flex-start; background: var(--surface); border-bottom-left-radius: 2px; }
-    .ai-bubble::before { content: "✨ Gemini Assistant"; display: block; font-size: 0.65rem; font-weight: bold; color: var(--accent); margin-bottom: 4px; text-transform: uppercase; }
-    .ai-bubble i { font-size: 0.75rem; color: var(--text-dim); display: block; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 5px; font-style: italic; }
-    .typing { display: flex; gap: 4px; align-items: center; padding: 5px 0; }
-    .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; opacity: 0.4; animation: blink 1.4s infinite; }
-    .dot:nth-child(2) { animation-delay: 0.2s; }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes blink { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
-</style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <title>CBT & Wellness - Tinnitus Therapy</title>
+    <script type="module">
+        import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
+        window.GoogleGenerativeAI = GoogleGenerativeAI;
+    </script>
+    <script src="storage.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="nav.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .question {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .question:last-of-type {
+            border-bottom: none;
+        }
+
+        /* No border for the last question */
+        .question p {
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .opt-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .opt-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        #scoreResult {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            background: rgba(0, 191, 165, 0.1);
+            display: none;
+        }
+
+        .ai-hub {
+            margin-bottom: 25px;
+            border: 2px solid var(--accent);
+            background: rgba(0, 191, 165, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .sos-btn {
+            background: linear-gradient(135deg, #ff5252, #b71c1c);
+            color: white;
+            border: none;
+            font-weight: bold;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .ai-response-box {
+            margin-top: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-bubble {
+            max-width: 90%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            position: relative;
+            word-wrap: break-word;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .ai-bubble {
+            align-self: flex-start;
+            background: var(--surface);
+            border-bottom-left-radius: 2px;
+        }
+
+        .ai-bubble::before {
+            content: "✨ Gemini Assistant";
+            display: block;
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .ai-bubble i {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            display: block;
+            margin-top: 10px;
+            border-top: 1px solid var(--border);
+            padding-top: 5px;
+            font-style: italic;
+        }
+
+        .typing {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 5px 0;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: blink 1.4s infinite;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+    </style>
 </head>
 
 <body>
-<div class="panel">
-    <h1>CBT & Wellness</h1>
-    <p class="info">Psychological tools for tinnitus habituation.</p>
+    <div class="panel">
+        <h1>CBT & Wellness</h1>
+        <p class="info">Psychological tools for tinnitus habituation.</p>
 
-    <div class="ai-hub">
-        <button class="sos-btn" onclick="triggerSOS()">🆘 SPIKE SUPPORT (SOS)</button>
-        <div class="ctrl" style="margin-top:10px;">
-            <div style="display:flex; gap:8px;">
-                <input type="text" id="trtQuestion" placeholder="Ask about TRT or trends (e.g. 'Why was Tuesday bad?')" style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);">
-                <button class="button" onclick="askTRT()" style="padding:0 15px;">Ask AI</button>
+        <div class="ai-hub">
+            <button class="sos-btn" onclick="triggerSOS()">🆘 SPIKE SUPPORT (SOS)</button>
+            <div class="ctrl" style="margin-top:10px;">
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="trtQuestion"
+                        placeholder="Ask about TRT or trends (e.g. 'Why was Tuesday bad?')"
+                        style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);">
+                    <button class="button" onclick="askTRT()" style="padding:0 15px;">Ask AI</button>
+                </div>
+            </div>
+            <button class="button"
+                style="width:100%; margin-top:10px; border-color: var(--accent); color: var(--accent);"
+                onclick="triggerPatternAnalysis()">🔍 Intelligent Log Correlation (Pattern Finder)</button>
+            <button class="button"
+                style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
+                onclick="clearAIChat()">Clear AI Chat</button>
+            <div id="aiHubResponse" class="ai-response-box"></div>
+        </div>
+
+        <div class="card">
+            <h2>Tinnitus Handicap Inventory (THI)</h2>
+            <div id="thiReminderCBT" class="card"
+                style="display:none; background: rgba(255, 165, 0, 0.1); border-color: #ff9800; margin-bottom: 15px;">
+                <h3 style="color: #ff9800; margin-top: 0; margin-bottom: 5px;">Reminder: Monthly Assessment</h3>
+                <p class="info" style="color: var(--text); margin-bottom: 0;">It's been over a month since your last THI
+                    assessment. Consider taking it now to track your progress.</p>
+            </div>
+            <p class="info" style="margin-bottom: 15px;">A clinically validated tool to measure the impact of tinnitus
+                on your life. 0-16: Slight, 18-36: Mild, 38-56: Moderate, 58-76: Severe, 78-100: Catastrophic. <span
+                    id="lastThiDate" style="font-weight: bold;"></span></p>
+
+            <div class="ctrl"
+                style="margin-bottom: 20px; border-bottom: 1px dashed var(--border); padding-bottom: 15px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="sleepIssuesToggle" style="width: 20px; height: 20px;">
+                    <span style="color: var(--accent); font-weight: bold;">I am experiencing tinnitus-related sleep
+                        issues</span>
+                </label>
+                <p class="info" style="margin-top: 5px; margin-left: 30px;">Checking this helps tailor your personalized
+                    therapy recommendations.</p>
+            </div>
+
+            <div id="quiz"></div>
+
+            <button id="submitThi" class="big-btn play-btn" onclick="calculateScore()">Calculate & Log Score</button>
+            <div id="thiStatus" class="status"></div>
+            <div id="scoreResult">
+                <h3 id="scoreValue" style="color: var(--accent); margin: 0;">Score: 0/100</h3>
+                <p id="scoreGrade" style="font-size: 0.9rem; margin: 5px 0 0; color: var(--text-dim);"></p>
             </div>
         </div>
-        <button class="button" style="width:100%; margin-top:10px; border-color: var(--accent); color: var(--accent);" onclick="triggerPatternAnalysis()">🔍 Intelligent Log Correlation (Pattern Finder)</button>
-        <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="clearAIChat()">Clear AI Chat</button>
-        <div id="aiHubResponse" class="ai-response-box"></div>
     </div>
 
-    <div class="card">
-        <h2>Tinnitus Handicap Inventory (THI)</h2>
-        <div id="thiReminderCBT" class="card" style="display:none; background: rgba(255, 165, 0, 0.1); border-color: #ff9800; margin-bottom: 15px;">
-            <h3 style="color: #ff9800; margin-top: 0; margin-bottom: 5px;">Reminder: Monthly Assessment</h3>
-            <p class="info" style="color: var(--text); margin-bottom: 0;">It's been over a month since your last THI assessment. Consider taking it now to track your progress.</p>
-        </div>
-        <p class="info" style="margin-bottom: 15px;">A clinically validated tool to measure the impact of tinnitus on your life. 0-16: Slight, 18-36: Mild, 38-56: Moderate, 58-76: Severe, 78-100: Catastrophic. <span id="lastThiDate" style="font-weight: bold;"></span></p>
-        
-        <div class="ctrl" style="margin-bottom: 20px; border-bottom: 1px dashed var(--border); padding-bottom: 15px;">
-            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                <input type="checkbox" id="sleepIssuesToggle" style="width: 20px; height: 20px;">
-                <span style="color: var(--accent); font-weight: bold;">I am experiencing tinnitus-related sleep issues</span>
-            </label>
-            <p class="info" style="margin-top: 5px; margin-left: 30px;">Checking this helps tailor your personalized therapy recommendations.</p>
-        </div>
-        
-        <div id="quiz"></div>
-        
-        <button id="submitThi" class="big-btn play-btn" onclick="calculateScore()">Calculate & Log Score</button>
-        <div id="thiStatus" class="status"></div>
-        <div id="scoreResult">
-            <h3 id="scoreValue" style="color: var(--accent); margin: 0;">Score: 0/100</h3>
-            <p id="scoreGrade" style="font-size: 0.9rem; margin: 5px 0 0; color: var(--text-dim);"></p>
-        </div>
-    </div>
-</div>
-
-<div class="panel">
-    <div class="card">
-        <h2>Tinnitus Thought Record</h2>
-        <p class="info">Systematically analyze and challenge unhelpful thoughts about your tinnitus.</p>
-        <p class="info" style="color: var(--accent); font-style: italic;">Tip: Completing records while playing <b>Brown</b> or <b>Pink</b> noise can help lower the brain's "threat" response.</p>
-        <div class="ctrl">
-            <label for="trSituation">Situation: When did you notice your tinnitus and what were you doing?</label>
-            <textarea id="trSituation" rows="3" maxlength="300" placeholder="e.g., 'Trying to fall asleep,' 'In a quiet room,' 'During a stressful meeting'"></textarea>
-            <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span id="count_trSituation">0</span> / 300</div>
-        </div>
-        <div class="ctrl">
-            <label for="trAutomaticThoughts">Automatic Thought(s): What thoughts or images went through your mind?</label>
-            <textarea id="trAutomaticThoughts" rows="3" maxlength="300" placeholder="e.g., 'This ringing will never stop,' 'I can't stand this anymore,' 'I'll never get a good night's sleep'"></textarea>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
-                <button class="button" style="font-size: 0.75rem; padding: 5px 10px; border-color: var(--accent); color: var(--accent);" onclick="suggestBalancedThought()">✨ Suggest Balanced Thought (AI)</button>
-                <div style="font-size: 0.8em; color: var(--text-dim);"><span id="count_trAutomaticThoughts">0</span> / 300</div>
+    <div class="panel">
+        <div class="card">
+            <h2>Tinnitus Thought Record</h2>
+            <p class="info">Systematically analyze and challenge unhelpful thoughts about your tinnitus.</p>
+            <p class="info" style="color: var(--accent); font-style: italic;">Tip: Completing records while playing
+                <b>Brown</b> or <b>Pink</b> noise can help lower the brain's "threat" response.</p>
+            <div class="ctrl">
+                <label for="trSituation">Situation: When did you notice your tinnitus and what were you doing?</label>
+                <textarea id="trSituation" rows="3" maxlength="300"
+                    placeholder="e.g., 'Trying to fall asleep,' 'In a quiet room,' 'During a stressful meeting'"></textarea>
+                <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span
+                        id="count_trSituation">0</span> / 300</div>
+            </div>
+            <div class="ctrl">
+                <label for="trAutomaticThoughts">Automatic Thought(s): What thoughts or images went through your
+                    mind?</label>
+                <textarea id="trAutomaticThoughts" rows="3" maxlength="300"
+                    placeholder="e.g., 'This ringing will never stop,' 'I can't stand this anymore,' 'I'll never get a good night's sleep'"></textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                    <button class="button"
+                        style="font-size: 0.75rem; padding: 5px 10px; border-color: var(--accent); color: var(--accent);"
+                        onclick="suggestBalancedThought()">✨ Suggest Balanced Thought (AI)</button>
+                    <div style="font-size: 0.8em; color: var(--text-dim);"><span id="count_trAutomaticThoughts">0</span>
+                        / 300</div>
+                </div>
+            </div>
+            <div class="ctrl">
+                <label for="trEmotions">Emotion(s): What emotions did you feel? How intense were they (0-100)?</label>
+                <textarea id="trEmotions" rows="2" maxlength="150"
+                    placeholder="e.g., 'Anxiety (80%), Frustration (70%), Hopelessness (60%)'"></textarea>
+                <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span
+                        id="count_trEmotions">0</span> / 150</div>
+            </div>
+            <div class="ctrl">
+                <label for="trEvidenceFor">Evidence For: What evidence supports this thought?</label>
+                <textarea id="trEvidenceFor" rows="3" maxlength="300"
+                    placeholder="e.g., 'It's been ringing for months,' 'I've tried everything'"></textarea>
+                <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span
+                        id="count_trEvidenceFor">0</span> / 300</div>
+            </div>
+            <div class="ctrl">
+                <label for="trEvidenceAgainst">Evidence Against: What evidence contradicts this thought? What's another
+                    way to look at this?</label>
+                <textarea id="trEvidenceAgainst" rows="3" maxlength="300"
+                    placeholder="e.g., 'It has stopped before, even if briefly,' 'I've managed to sleep on other nights,' 'This is just a sound, not a threat,' 'My doctor said it's not dangerous'"></textarea>
+                <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span
+                        id="count_trEvidenceAgainst">0</span> / 300</div>
+            </div>
+            <div class="ctrl">
+                <label for="trBalancedThought">Alternative/Balanced Thought: What's a more balanced or realistic
+                    thought?</label>
+                <textarea id="trBalancedThought" rows="3" maxlength="300"
+                    placeholder="e.g., 'My tinnitus is present right now, but it doesn't mean it will last forever or that I can't cope,' 'I've learned strategies to manage it, and I can apply them now'"></textarea>
+                <button class="button"
+                    style="font-size: 0.75rem; margin-top: 5px; border-color: #9c27b0; color: #9c27b0;"
+                    onclick="generateGroundingScript()">🧘 Generate Grounding Script from Thought</button>
+                <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span
+                        id="count_trBalancedThought">0</span> / 300</div>
+            </div>
+            <div class="ctrl">
+                <label for="trNewEmotions">Outcome/Re-rate Emotions: How do you feel now? Re-rate your emotions
+                    (0-100).</label>
+                <textarea id="trNewEmotions" rows="2" maxlength="150"
+                    placeholder="e.g., 'Anxiety (40%), Frustration (30%)'"></textarea>
+                <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span
+                        id="count_trNewEmotions">0</span> / 150</div>
+            </div>
+            <button class="big-btn play-btn" onclick="saveThoughtRecord()">Save Thought Record</button>
+            <button class="button" style="width:100%; margin-top:10px;" onclick="viewThoughtRecords()">View Past
+                Entries</button>
+            <div id="thoughtRecordStatus" class="status"></div>
+            <div id="pastThoughtRecords" style="margin-top: 20px; display: none;">
+                <h3>Past Entries</h3>
+                <div id="thoughtRecordList"></div>
             </div>
         </div>
-        <div class="ctrl">
-            <label for="trEmotions">Emotion(s): What emotions did you feel? How intense were they (0-100)?</label>
-            <textarea id="trEmotions" rows="2" maxlength="150" placeholder="e.g., 'Anxiety (80%), Frustration (70%), Hopelessness (60%)'"></textarea>
-            <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span id="count_trEmotions">0</span> / 150</div>
-        </div>
-        <div class="ctrl">
-            <label for="trEvidenceFor">Evidence For: What evidence supports this thought?</label>
-            <textarea id="trEvidenceFor" rows="3" maxlength="300" placeholder="e.g., 'It's been ringing for months,' 'I've tried everything'"></textarea>
-            <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span id="count_trEvidenceFor">0</span> / 300</div>
-        </div>
-        <div class="ctrl">
-            <label for="trEvidenceAgainst">Evidence Against: What evidence contradicts this thought? What's another way to look at this?</label>
-            <textarea id="trEvidenceAgainst" rows="3" maxlength="300" placeholder="e.g., 'It has stopped before, even if briefly,' 'I've managed to sleep on other nights,' 'This is just a sound, not a threat,' 'My doctor said it's not dangerous'"></textarea>
-            <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span id="count_trEvidenceAgainst">0</span> / 300</div>
-        </div>
-        <div class="ctrl">
-            <label for="trBalancedThought">Alternative/Balanced Thought: What's a more balanced or realistic thought?</label>
-            <textarea id="trBalancedThought" rows="3" maxlength="300" placeholder="e.g., 'My tinnitus is present right now, but it doesn't mean it will last forever or that I can't cope,' 'I've learned strategies to manage it, and I can apply them now'"></textarea>
-            <button class="button" style="font-size: 0.75rem; margin-top: 5px; border-color: #9c27b0; color: #9c27b0;" onclick="generateGroundingScript()">🧘 Generate Grounding Script from Thought</button>
-            <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span id="count_trBalancedThought">0</span> / 300</div>
-        </div>
-        <div class="ctrl">
-            <label for="trNewEmotions">Outcome/Re-rate Emotions: How do you feel now? Re-rate your emotions (0-100).</label>
-            <textarea id="trNewEmotions" rows="2" maxlength="150" placeholder="e.g., 'Anxiety (40%), Frustration (30%)'"></textarea>
-            <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span id="count_trNewEmotions">0</span> / 150</div>
-        </div>
-        <button class="big-btn play-btn" onclick="saveThoughtRecord()">Save Thought Record</button>
-        <button class="button" style="width:100%; margin-top:10px;" onclick="viewThoughtRecords()">View Past Entries</button>
-        <div id="thoughtRecordStatus" class="status"></div>
-        <div id="pastThoughtRecords" style="margin-top: 20px; display: none;">
-            <h3>Past Entries</h3>
-            <div id="thoughtRecordList"></div>
+    </div>
+
+    <div class="panel">
+        <div class="card">
+            <h2>Challenging Tinnitus Catastrophizing</h2>
+            <p class="info">Catastrophizing is assuming the worst-case scenario. This exercise helps you challenge those
+                thoughts.</p>
+            <div class="ctrl">
+                <p><strong>1. Identify the Catastrophic Thought:</strong> What's the absolute worst thing you imagine
+                    happening because of your tinnitus?</p>
+                <textarea rows="2"
+                    placeholder="e.g., 'It will get louder and never stop,' 'I'll go crazy,' 'I'll lose my job.'"></textarea>
+            </div>
+            <div class="ctrl">
+                <p><strong>2. Examine the Evidence:</strong> How likely is this worst-case scenario to *actually*
+                    happen? What evidence do you have for or against it?</p>
+                <textarea rows="3"
+                    placeholder="Consider past experiences, medical facts, or logical inconsistencies."></textarea>
+            </div>
+            <div class="ctrl">
+                <p><strong>3. Develop a Coping Plan:</strong> If the worst *did* happen, what steps could you take to
+                    cope or manage it?</p>
+                <textarea rows="3"
+                    placeholder="e.g., 'I would talk to my doctor again,' 'I would focus on my breathing exercises,' 'I would seek support.'"></textarea>
+            </div>
+            <div class="ctrl">
+                <p><strong>4. Reframe to a Realistic Outcome:</strong> What's a more balanced and realistic outcome?</p>
+                <textarea rows="2"
+                    placeholder="e.g., 'My tinnitus might fluctuate, but I have tools to manage my reaction to it.'"></textarea>
+            </div>
+            <p class="info" style="margin-top: 15px;">*This is a reflective exercise. Your entries are not saved.*</p>
         </div>
     </div>
-</div>
 
-<div class="panel">
-    <div class="card">
-        <h2>Challenging Tinnitus Catastrophizing</h2>
-        <p class="info">Catastrophizing is assuming the worst-case scenario. This exercise helps you challenge those thoughts.</p>
-        <div class="ctrl">
-            <p><strong>1. Identify the Catastrophic Thought:</strong> What's the absolute worst thing you imagine happening because of your tinnitus?</p>
-            <textarea rows="2" placeholder="e.g., 'It will get louder and never stop,' 'I'll go crazy,' 'I'll lose my job.'"></textarea>
+    <div class="panel">
+        <div class="card">
+            <h2>Tinnitus Acceptance and Mindfulness</h2>
+            <p class="info">Learn to observe your tinnitus without judgment, reducing its emotional impact.</p>
+            <div class="ctrl">
+                <p><strong>Introduction:</strong> Acceptance doesn't mean liking your tinnitus, but rather acknowledging
+                    its presence without judgment. This can significantly reduce its power over you.</p>
+                <p><strong>Guided Exercise:</strong></p>
+                <ol style="margin-left: 20px; line-height: 1.6;">
+                    <li>Find a quiet place and get comfortable. Close your eyes or soften your gaze.</li>
+                    <li>Notice your breath. Feel the rise and fall of your chest or abdomen.</li>
+                    <li>Now, gently bring your attention to the sound of your tinnitus. Don't try to change it or judge
+                        it.</li>
+                    <li>Just observe it. Is it high-pitched or low? Steady or fluctuating? Loud or soft?</li>
+                    <li>Notice any thoughts or feelings that arise. Acknowledge them without getting caught up in them.
+                    </li>
+                    <li>Imagine your tinnitus as a sound in the background, like traffic noise or a refrigerator hum.
+                        It's just there.</li>
+                    <li>When your mind wanders, gently bring it back to your breath, and then back to observing the
+                        tinnitus.</li>
+                    <li>Continue for a few minutes, or as long as comfortable.</li>
+                </ol>
+                <p style="margin-top: 15px;"><strong>Reflection:</strong></p>
+                <p>What did you notice during this exercise? Did your perception of your tinnitus change, even slightly?
+                    How did it feel to simply observe the sound rather than fight it?</p>
+                <textarea rows="4" placeholder="Reflect on your experience here."></textarea>
+            </div>
+            <p class="info" style="margin-top: 15px;">*This is a reflective exercise. Your entries are not saved.*</p>
         </div>
-        <div class="ctrl">
-            <p><strong>2. Examine the Evidence:</strong> How likely is this worst-case scenario to *actually* happen? What evidence do you have for or against it?</p>
-            <textarea rows="3" placeholder="Consider past experiences, medical facts, or logical inconsistencies."></textarea>
-        </div>
-        <div class="ctrl">
-            <p><strong>3. Develop a Coping Plan:</strong> If the worst *did* happen, what steps could you take to cope or manage it?</p>
-            <textarea rows="3" placeholder="e.g., 'I would talk to my doctor again,' 'I would focus on my breathing exercises,' 'I would seek support.'"></textarea>
-        </div>
-        <div class="ctrl">
-            <p><strong>4. Reframe to a Realistic Outcome:</strong> What's a more balanced and realistic outcome?</p>
-            <textarea rows="2" placeholder="e.g., 'My tinnitus might fluctuate, but I have tools to manage my reaction to it.'"></textarea>
-        </div>
-        <p class="info" style="margin-top: 15px;">*This is a reflective exercise. Your entries are not saved.*</p>
     </div>
-</div>
 
-<div class="panel">
-    <div class="card">
-        <h2>Tinnitus Acceptance and Mindfulness</h2>
-        <p class="info">Learn to observe your tinnitus without judgment, reducing its emotional impact.</p>
-        <div class="ctrl">
-            <p><strong>Introduction:</strong> Acceptance doesn't mean liking your tinnitus, but rather acknowledging its presence without judgment. This can significantly reduce its power over you.</p>
-            <p><strong>Guided Exercise:</strong></p>
-            <ol style="margin-left: 20px; line-height: 1.6;">
-                <li>Find a quiet place and get comfortable. Close your eyes or soften your gaze.</li>
-                <li>Notice your breath. Feel the rise and fall of your chest or abdomen.</li>
-                <li>Now, gently bring your attention to the sound of your tinnitus. Don't try to change it or judge it.</li>
-                <li>Just observe it. Is it high-pitched or low? Steady or fluctuating? Loud or soft?</li>
-                <li>Notice any thoughts or feelings that arise. Acknowledge them without getting caught up in them.</li>
-                <li>Imagine your tinnitus as a sound in the background, like traffic noise or a refrigerator hum. It's just there.</li>
-                <li>When your mind wanders, gently bring it back to your breath, and then back to observing the tinnitus.</li>
-                <li>Continue for a few minutes, or as long as comfortable.</li>
-            </ol>
-            <p style="margin-top: 15px;"><strong>Reflection:</strong></p>
-            <p>What did you notice during this exercise? Did your perception of your tinnitus change, even slightly? How did it feel to simply observe the sound rather than fight it?</p>
-            <textarea rows="4" placeholder="Reflect on your experience here."></textarea>
+    <div class="panel">
+        <div class="card">
+            <h2>Progressive Muscle Relaxation (PMR)</h2>
+            <p class="info">Release physical tension to lower the "fight or flight" response associated with tinnitus
+                distress.</p>
+            <div id="pmrDisplay"
+                style="text-align: center; padding: 20px; min-height: 100px; display: flex; align-items: center; justify-content: center;">
+                <p id="pmrStepText" style="font-size: 1.1rem; color: var(--accent); font-weight: bold;">Ready to begin?
+                </p>
+            </div>
+            <div class="usage-progress" style="margin-bottom: 15px;">
+                <div id="pmrProgressBar" class="usage-bar" style="width: 0%"></div>
+            </div>
+            <button id="pmrBtn" class="big-btn play-btn" onclick="handlePMR()">Start PMR Sequence</button>
+            <p class="info" style="margin-top: 10px; text-align: center;">
+                *Auditory cues will play at the start of each step.*
+            </p>
         </div>
-        <p class="info" style="margin-top: 15px;">*This is a reflective exercise. Your entries are not saved.*</p>
     </div>
-</div>
 
-<div class="panel">
-    <div class="card">
-        <h2>Progressive Muscle Relaxation (PMR)</h2>
-        <p class="info">Release physical tension to lower the "fight or flight" response associated with tinnitus distress.</p>
-        <div id="pmrDisplay" style="text-align: center; padding: 20px; min-height: 100px; display: flex; align-items: center; justify-content: center;">
-            <p id="pmrStepText" style="font-size: 1.1rem; color: var(--accent); font-weight: bold;">Ready to begin?</p>
-        </div>
-        <div class="usage-progress" style="margin-bottom: 15px;">
-            <div id="pmrProgressBar" class="usage-bar" style="width: 0%"></div>
-        </div>
-        <button id="pmrBtn" class="big-btn play-btn" onclick="handlePMR()">Start PMR Sequence</button>
-        <p class="info" style="margin-top: 10px; text-align: center;">
-            *Auditory cues will play at the start of each step.*
-        </p>
-    </div>
-</div>
+    <script>
+        const questions = [
+            "Does your tinnitus make it difficult for you to concentrate?",
+            "Does the loudness of your tinnitus make it difficult for you to hear people?",
+            "Does your tinnitus make you angry?",
+            "Does your tinnitus make you confused?",
+            "Because of your tinnitus, do you feel desperate?",
+            "Do you complain a great deal about your tinnitus?",
+            "Do you have trouble falling asleep at night because of your tinnitus?",
+            "Do you feel as though you cannot escape your tinnitus?",
+            "Does your tinnitus interfere with your ability to enjoy your social activities?",
+            "Because of your tinnitus, do you feel frustrated?",
+            "Because of your tinnitus, do you feel that you have a terrible disease?",
+            "Does your tinnitus make it difficult for you to enjoy life?",
+            "Does your tinnitus interfere with your job or household responsibilities?",
+            "Because of your tinnitus, do you find that you are often irritable?",
+            "Because of your tinnitus, do you find it difficult to read?",
+            "Does your tinnitus make you upset?",
+            "Do you feel that your tinnitus has placed a stress on your relationships?",
+            "Do you find it difficult to focus your attention away from your tinnitus?",
+            "Do you feel that you have no control over your tinnitus?",
+            "Because of your tinnitus, do you often feel tired?",
+            "Because of your tinnitus, do you feel depressed?",
+            "Does your tinnitus make you feel anxious?",
+            "Do you feel that you can no longer cope with your tinnitus?",
+            "Does your tinnitus get worse when you are under stress?",
+            "Does your tinnitus make you feel insecure?"
+        ];
 
-<script>
-const questions = [
-    "Does your tinnitus make it difficult for you to concentrate?",
-    "Does the loudness of your tinnitus make it difficult for you to hear people?",
-    "Does your tinnitus make you angry?",
-    "Does your tinnitus make you confused?",
-    "Because of your tinnitus, do you feel desperate?",
-    "Do you complain a great deal about your tinnitus?",
-    "Do you have trouble falling asleep at night because of your tinnitus?",
-    "Do you feel as though you cannot escape your tinnitus?",
-    "Does your tinnitus interfere with your ability to enjoy your social activities?",
-    "Because of your tinnitus, do you feel frustrated?",
-    "Because of your tinnitus, do you feel that you have a terrible disease?",
-    "Does your tinnitus make it difficult for you to enjoy life?",
-    "Does your tinnitus interfere with your job or household responsibilities?",
-    "Because of your tinnitus, do you find that you are often irritable?",
-    "Because of your tinnitus, do you find it difficult to read?",
-    "Does your tinnitus make you upset?",
-    "Do you feel that your tinnitus has placed a stress on your relationships?",
-    "Do you find it difficult to focus your attention away from your tinnitus?",
-    "Do you feel that you have no control over your tinnitus?",
-    "Because of your tinnitus, do you often feel tired?",
-    "Because of your tinnitus, do you feel depressed?",
-    "Does your tinnitus make you feel anxious?",
-    "Do you feel that you can no longer cope with your tinnitus?",
-    "Does your tinnitus get worse when you are under stress?",
-    "Does your tinnitus make you feel insecure?"
-];
-
-window.onload = () => {
-    initNav(`
+        window.onload = () => {
+            initNav(`
         <h3 style="color:var(--accent); margin-bottom:10px;">Module-Specific Guidance</h3>
         <p><b>Tinnitus Thought Records:</b> This tool helps break the distress cycle by examining the thoughts that occur during a spike.</p>
         <ul style="padding-left:15px; margin-top:5px;">
@@ -249,43 +430,43 @@ window.onload = () => {
         
         <b>Sound Support:</b> Users often find it easier to complete cognitive exercises while playing low-level <b>Brown</b> or <b>Pink</b> noise to reduce the brain's immediate "threat" response.
     `);
-    
-    const lastAssessmentDate = getLastTHIAssessmentDate();
-    if (lastAssessmentDate) {
-        document.getElementById('lastThiDate').textContent = `(Last taken: ${lastAssessmentDate.toLocaleDateString()})`;
-    }
 
-    checkTHIReminderCBT();
-    checkAIState();
+            const lastAssessmentDate = getLastTHIAssessmentDate();
+            if (lastAssessmentDate) {
+                document.getElementById('lastThiDate').textContent = `(Last taken: ${lastAssessmentDate.toLocaleDateString()})`;
+            }
 
-    const sleepIssues = loadSetting('reports_sleep_issues', 'false') === 'true';
-    document.getElementById('sleepIssuesToggle').checked = sleepIssues;
-    document.getElementById('sleepIssuesToggle').onchange = (e) => {
-        saveSetting('reports_sleep_issues', e.target.checked);
-    };
+            checkTHIReminderCBT();
+            checkAIState();
 
-    // Initialize character counters for Thought Record textareas
-    document.querySelectorAll('.card textarea[id^="tr"]').forEach(textarea => {
-        const countSpan = document.getElementById('count_' + textarea.id);
-        const max = parseInt(textarea.getAttribute('maxlength'));
-        if (countSpan) {
-            const update = () => {
-                const len = textarea.value.length;
-                countSpan.textContent = len;
-                // Visual Warning: Red for over-limit, Accent for reaching limit
-                countSpan.style.color = (len > max) ? '#ef5350' : (len === max ? 'var(--accent)' : 'var(--text-dim)');
-                countSpan.style.fontWeight = (len >= max) ? 'bold' : 'normal';
+            const sleepIssues = loadSetting('reports_sleep_issues', 'false') === 'true';
+            document.getElementById('sleepIssuesToggle').checked = sleepIssues;
+            document.getElementById('sleepIssuesToggle').onchange = (e) => {
+                saveSetting('reports_sleep_issues', e.target.checked);
             };
-            textarea.addEventListener('input', update);
-            update(); // Sync on load
-        }
-    });
 
-    const container = document.getElementById('quiz');
-    questions.forEach((q, i) => {
-        const div = document.createElement('div');
-        div.className = 'question';
-        div.innerHTML = `
+            // Initialize character counters for Thought Record textareas
+            document.querySelectorAll('.card textarea[id^="tr"]').forEach(textarea => {
+                const countSpan = document.getElementById('count_' + textarea.id);
+                const max = parseInt(textarea.getAttribute('maxlength'));
+                if (countSpan) {
+                    const update = () => {
+                        const len = textarea.value.length;
+                        countSpan.textContent = len;
+                        // Visual Warning: Red for over-limit, Accent for reaching limit
+                        countSpan.style.color = (len > max) ? '#ef5350' : (len === max ? 'var(--accent)' : 'var(--text-dim)');
+                        countSpan.style.fontWeight = (len >= max) ? 'bold' : 'normal';
+                    };
+                    textarea.addEventListener('input', update);
+                    update(); // Sync on load
+                }
+            });
+
+            const container = document.getElementById('quiz');
+            questions.forEach((q, i) => {
+                const div = document.createElement('div');
+                div.className = 'question';
+                div.innerHTML = `
             <p>${i + 1}. ${q}</p>
             <div class="options" data-idx="${i}">
                 <button class="opt-btn" onclick="select(this, 4)">Yes</button>
@@ -293,137 +474,137 @@ window.onload = () => {
                 <button class="opt-btn" onclick="select(this, 0)">No</button>
             </div>
         `;
-        container.appendChild(div);
-    });
-};
+                container.appendChild(div);
+            });
+        };
 
-/**
- * Checks if the AI key is available and provides UI feedback if it's locked or missing.
- */
-function checkAIState() {
-    const responseBox = document.getElementById('aiHubResponse');
-    if (!responseBox) return;
-    
-    const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
-    const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
-    const isConfigured = !!currentKey;
+        /**
+         * Checks if the AI key is available and provides UI feedback if it's locked or missing.
+         */
+        function checkAIState() {
+            const responseBox = document.getElementById('aiHubResponse');
+            if (!responseBox) return;
 
-    if (encryptedKeyExists && !activeSessionKey) {
-        responseBox.style.display = 'flex';
-        responseBox.innerHTML = `<div class="chat-bubble ai-bubble" style="border-color: #ff9800;">🔒 <b>AI Features Locked.</b> Your API key is encrypted. Please return to the <a href="index.html" style="color: var(--accent); text-decoration: underline;">Dashboard</a> to enter your PIN and unlock AI assistance.</div>`;
-    } else if (!isConfigured) {
-        responseBox.style.display = 'flex';
-        responseBox.innerHTML = `<div class="chat-bubble ai-bubble" style="border-color: #ef5350;">⚠️ <b>AI Features Unconfigured.</b> This program does <u>not</u> provide an API key. Please return to the <a href="index.html" style="color: var(--accent); text-decoration: underline;">Dashboard</a> to add your own private key from Google AI Studio.</div>`;
-    }
-}
+            const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
+            const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
+            const isConfigured = !!currentKey;
 
-const responses = new Array(25).fill(null);
-function select(btn, val) {
-    const parent = btn.parentElement;
-    parent.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    responses[parseInt(parent.dataset.idx)] = val; // Store the selected value
-}
-
-function calculateScore() {
-    if (responses.includes(null)) return alert("Please answer all questions.");
-    document.getElementById('thiStatus').textContent = ""; // Clear previous status
-    const score = responses.reduce((a, b) => a + b, 0);
-    logDistressScore(score);
-    
-    const grades = ["Slight", "Mild", "Moderate", "Severe", "Catastrophic"];
-    const grade = score <= 16 ? grades[0] : score <= 36 ? grades[1] : score <= 56 ? grades[2] : score <= 76 ? grades[3] : grades[4];
-    
-    document.getElementById('thiStatus').textContent = "Score saved!";
-
-    document.getElementById('scoreValue').textContent = `Score: ${score}/100`;
-    document.getElementById('scoreGrade').textContent = `Severity: ${grade}`;
-    document.getElementById('scoreResult').style.display = 'block';
-    document.getElementById('submitThi').textContent = "Score Saved";
-    
-    // Update the last taken date display immediately after saving
-    const newLastAssessmentDate = getLastTHIAssessmentDate();
-    if (newLastAssessmentDate) {
-        document.getElementById('lastThiDate').textContent = `(Last taken: ${newLastAssessmentDate.toLocaleDateString()})`;
-    }
-    // Hide the reminder if it was showing
-    document.getElementById('thiReminderCBT').style.display = 'none';
-}
-
-function checkTHIReminderCBT() {
-    const lastAssessmentDate = getLastTHIAssessmentDate();
-    const today = new Date();
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(today.getMonth() - 1);
-    if (lastAssessmentDate && lastAssessmentDate < oneMonthAgo) {
-        document.getElementById('thiReminderCBT').style.display = 'block';
-    }
-}
-
-function saveThoughtRecord() {
-    const entry = {
-        situation: document.getElementById('trSituation').value,
-        automaticThoughts: document.getElementById('trAutomaticThoughts').value,
-        emotions: document.getElementById('trEmotions').value,
-        evidenceFor: document.getElementById('trEvidenceFor').value,
-        evidenceAgainst: document.getElementById('trEvidenceAgainst').value,
-        balancedThought: document.getElementById('trBalancedThought').value,
-        newEmotions: document.getElementById('trNewEmotions').value,
-    };
-
-    // Basic validation
-    if (Object.values(entry).some(val => val.trim() === '')) {
-        document.getElementById('thoughtRecordStatus').textContent = "Please fill in all fields.";
-        document.getElementById('thoughtRecordStatus').style.color = '#ef5350';
-        return;
-    }
-
-    // Strict limit validation (prevents saving data that could corrupt reports or exceed storage)
-    const textareas = document.querySelectorAll('.card textarea[id^="tr"]');
-    for (let ta of textareas) {
-        const max = parseInt(ta.getAttribute('maxlength'));
-        if (ta.value.length > max) {
-            document.getElementById('thoughtRecordStatus').textContent = "One or more fields exceed character limits. Please shorten your entry.";
-            document.getElementById('thoughtRecordStatus').style.color = '#ef5350';
-            return;
-        }
-    }
-
-    logThoughtRecordEntry(entry);
-    document.getElementById('thoughtRecordStatus').textContent = "Thought record saved!";
-    document.getElementById('thoughtRecordStatus').style.color = 'var(--accent)';
-    // Clear form
-    document.querySelectorAll('.card textarea').forEach(textarea => {
-        if (textarea.id.startsWith('tr')) {
-            textarea.value = '';
-            const countSpan = document.getElementById('count_' + textarea.id);
-            if (countSpan) {
-                countSpan.textContent = '0';
-                countSpan.style.color = 'var(--text-dim)';
+            if (encryptedKeyExists && !activeSessionKey) {
+                responseBox.style.display = 'flex';
+                responseBox.innerHTML = `<div class="chat-bubble ai-bubble" style="border-color: #ff9800;">🔒 <b>AI Features Locked.</b> Your API key is encrypted. Please return to the <a href="index.html" style="color: var(--accent); text-decoration: underline;">Dashboard</a> to enter your PIN and unlock AI assistance.</div>`;
+            } else if (!isConfigured) {
+                responseBox.style.display = 'flex';
+                responseBox.innerHTML = `<div class="chat-bubble ai-bubble" style="border-color: #ef5350;">⚠️ <b>AI Features Unconfigured.</b> This program does <u>not</u> provide an API key. Please return to the <a href="index.html" style="color: var(--accent); text-decoration: underline;">Dashboard</a> to add your own private key from Google AI Studio.</div>`;
             }
         }
-    });
-    viewThoughtRecords(); // Refresh the list
-}
 
-function viewThoughtRecords() {
-    const records = getThoughtRecords();
-    const listDiv = document.getElementById('thoughtRecordList');
-    listDiv.innerHTML = ''; // Clear previous list
-    document.getElementById('pastThoughtRecords').style.display = 'block';
+        const responses = new Array(25).fill(null);
+        function select(btn, val) {
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            responses[parseInt(parent.dataset.idx)] = val; // Store the selected value
+        }
 
-    if (records.length === 0) {
-        listDiv.innerHTML = '<p style="color: var(--text-dim);">No past entries yet.</p>';
-        return;
-    }
+        function calculateScore() {
+            if (responses.includes(null)) return alert("Please answer all questions.");
+            document.getElementById('thiStatus').textContent = ""; // Clear previous status
+            const score = responses.reduce((a, b) => a + b, 0);
+            logDistressScore(score);
 
-    records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Newest first
+            const grades = ["Slight", "Mild", "Moderate", "Severe", "Catastrophic"];
+            const grade = score <= 16 ? grades[0] : score <= 36 ? grades[1] : score <= 56 ? grades[2] : score <= 76 ? grades[3] : grades[4];
 
-    records.forEach((record, index) => {
-        const entryDiv = document.createElement('div');
-        entryDiv.className = 'card'; // Reuse card style
-        entryDiv.style.marginTop = '10px';
-        entryDiv.innerHTML = `
+            document.getElementById('thiStatus').textContent = "Score saved!";
+
+            document.getElementById('scoreValue').textContent = `Score: ${score}/100`;
+            document.getElementById('scoreGrade').textContent = `Severity: ${grade}`;
+            document.getElementById('scoreResult').style.display = 'block';
+            document.getElementById('submitThi').textContent = "Score Saved";
+
+            // Update the last taken date display immediately after saving
+            const newLastAssessmentDate = getLastTHIAssessmentDate();
+            if (newLastAssessmentDate) {
+                document.getElementById('lastThiDate').textContent = `(Last taken: ${newLastAssessmentDate.toLocaleDateString()})`;
+            }
+            // Hide the reminder if it was showing
+            document.getElementById('thiReminderCBT').style.display = 'none';
+        }
+
+        function checkTHIReminderCBT() {
+            const lastAssessmentDate = getLastTHIAssessmentDate();
+            const today = new Date();
+            const oneMonthAgo = new Date();
+            oneMonthAgo.setMonth(today.getMonth() - 1);
+            if (lastAssessmentDate && lastAssessmentDate < oneMonthAgo) {
+                document.getElementById('thiReminderCBT').style.display = 'block';
+            }
+        }
+
+        function saveThoughtRecord() {
+            const entry = {
+                situation: document.getElementById('trSituation').value,
+                automaticThoughts: document.getElementById('trAutomaticThoughts').value,
+                emotions: document.getElementById('trEmotions').value,
+                evidenceFor: document.getElementById('trEvidenceFor').value,
+                evidenceAgainst: document.getElementById('trEvidenceAgainst').value,
+                balancedThought: document.getElementById('trBalancedThought').value,
+                newEmotions: document.getElementById('trNewEmotions').value,
+            };
+
+            // Basic validation
+            if (Object.values(entry).some(val => val.trim() === '')) {
+                document.getElementById('thoughtRecordStatus').textContent = "Please fill in all fields.";
+                document.getElementById('thoughtRecordStatus').style.color = '#ef5350';
+                return;
+            }
+
+            // Strict limit validation (prevents saving data that could corrupt reports or exceed storage)
+            const textareas = document.querySelectorAll('.card textarea[id^="tr"]');
+            for (let ta of textareas) {
+                const max = parseInt(ta.getAttribute('maxlength'));
+                if (ta.value.length > max) {
+                    document.getElementById('thoughtRecordStatus').textContent = "One or more fields exceed character limits. Please shorten your entry.";
+                    document.getElementById('thoughtRecordStatus').style.color = '#ef5350';
+                    return;
+                }
+            }
+
+            logThoughtRecordEntry(entry);
+            document.getElementById('thoughtRecordStatus').textContent = "Thought record saved!";
+            document.getElementById('thoughtRecordStatus').style.color = 'var(--accent)';
+            // Clear form
+            document.querySelectorAll('.card textarea').forEach(textarea => {
+                if (textarea.id.startsWith('tr')) {
+                    textarea.value = '';
+                    const countSpan = document.getElementById('count_' + textarea.id);
+                    if (countSpan) {
+                        countSpan.textContent = '0';
+                        countSpan.style.color = 'var(--text-dim)';
+                    }
+                }
+            });
+            viewThoughtRecords(); // Refresh the list
+        }
+
+        function viewThoughtRecords() {
+            const records = getThoughtRecords();
+            const listDiv = document.getElementById('thoughtRecordList');
+            listDiv.innerHTML = ''; // Clear previous list
+            document.getElementById('pastThoughtRecords').style.display = 'block';
+
+            if (records.length === 0) {
+                listDiv.innerHTML = '<p style="color: var(--text-dim);">No past entries yet.</p>';
+                return;
+            }
+
+            records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Newest first
+
+            records.forEach((record, index) => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'card'; // Reuse card style
+                entryDiv.style.marginTop = '10px';
+                entryDiv.innerHTML = `
             <p style="font-size: 0.8em; color: var(--text-dim); margin-bottom: 5px;">${new Date(record.timestamp).toLocaleString()}</p>
             <p><strong>Situation:</strong> ${record.situation}</p>
             <p><strong>Automatic Thoughts:</strong> ${record.automaticThoughts}</p>
@@ -433,221 +614,226 @@ function viewThoughtRecords() {
             <p><strong>Balanced Thought:</strong> ${record.balancedThought}</p>
             <p><strong>New Emotions:</strong> ${record.newEmotions}</p>
         `;
-        listDiv.appendChild(entryDiv);
-    });
-}
+                listDiv.appendChild(entryDiv);
+            });
+        }
 
-function getReportData() {
-    return { "Therapy Type": "Psychological Wellness (CBT)" };
-}
+        function getReportData() {
+            return { "Therapy Type": "Psychological Wellness (CBT)" };
+        }
 
-function exportClinicalSettings() {
-    const reportData = getClinicalReportData("CBT & Wellness", getReportData());
-    const report = generateClinicalReportText(reportData);
-    const blob = new Blob([report], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `tinnitus_clinical_cbt.txt`;
-    a.click();
-}
+        function exportClinicalSettings() {
+            const reportData = getClinicalReportData("CBT & Wellness", getReportData());
+            const report = generateClinicalReportText(reportData);
+            const blob = new Blob([report], { type: 'text/plain' });
+            const report = generateClinicalReportText(reportData);
+            const blob = new Blob([report], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `tinnitus_clinical_cbt.txt`;
+            a.click();
+        }
 
-async function generatePDFReport() {
-    const reportData = getClinicalReportData("CBT & Wellness", getReportData());
-    const htmlContent = generateClinicalReportHtml(reportData);
+        async function generatePDFReport() {
+            const reportData = getClinicalReportData("CBT & Wellness", getReportData());
+            const htmlContent = generateClinicalReportHtml(reportData);
 
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    document.body.appendChild(tempDiv);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            document.body.appendChild(tempDiv);
 
-    const isDark = document.documentElement.classList.contains('light-mode');
-    if (!isDark) document.documentElement.classList.add('light-mode');
+            const isDark = document.documentElement.classList.contains('light-mode');
+            if (!isDark) document.documentElement.classList.add('light-mode');
 
-    const opt = {
-        margin: [20, 15], filename: 'tinnitus_clinical_cbt.pdf', image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    await html2pdf().set(opt).from(tempDiv).save();
+            const opt = {
+                margin: [20, 15], filename: 'tinnitus_clinical_cbt.pdf', image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            await html2pdf().set(opt).from(tempDiv).save();
 
-    if (!isDark) document.documentElement.classList.remove('light-mode');
-    document.body.removeChild(tempDiv);
-}
+            if (!isDark) document.documentElement.classList.remove('light-mode');
+            document.body.removeChild(tempDiv);
+        }
 
-function emailToAudiologist() {
-    const email = loadSetting('audiologist_email', '');
-    if (!email) return alert("Please set your audiologist's email on the Home page.");
-    const reportData = getClinicalReportData("CBT & Wellness", getReportData());
-    const report = generateClinicalReportText(reportData);
-    window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report (CBT)&body=${encodeURIComponent(report)}`;
-}
 
-const pmrSteps = [
-    { text: "Take 3 deep breaths. Focus on the air entering and leaving.", duration: 10000 },
-    { text: "Tense your feet and toes tightly for 5 seconds... Now release completely.", duration: 10000 },
-    { text: "Tense your calves and thighs... Hold... Now release and feel the heaviness.", duration: 10000 },
-    { text: "Squeeze your glutes and pelvic muscles... Hold... Now release.", duration: 10000 },
-    { text: "Tighten your stomach and chest... Hold... Now release.", duration: 10000 },
-    { text: "Squeeze your hands into fists and tense your arms... Hold... Now release.", duration: 10000 },
-    { text: "Shrug your shoulders up to your ears... Hold... Now release.", duration: 10000 },
-    { text: "Clench your jaw and squint your eyes... Hold... Now release.", duration: 10000 },
-    { text: "Tense your entire body at once... Hold... and let it all go.", duration: 10000 },
-    { text: "Sit in the stillness for 60 seconds. Observe your tinnitus as just a neutral sound.", duration: 60000 }
-];
-let pmrActive = false, pmrIdx = 0, pmrTimer, pmrAudioCtx = null;
 
-function handlePMR() {
-    if (pmrActive) startPMR();
-    else if (pmrAudioCtx) startPMR();
-    else showPreFlight(() => startPMR());
-}
+        function emailToAudiologist() {
+            const email = loadSetting('audiologist_email', '');
+            if (!email) return alert("Please set your audiologist's email on the Home page.");
+            const reportData = getClinicalReportData("CBT & Wellness", getReportData());
+            const report = generateClinicalReportText(reportData);
+            window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report (CBT)&body=${encodeURIComponent(report)}`;
+        }
 
-function playPmrCue(freq = 440) {
-    if (!pmrAudioCtx) pmrAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (pmrAudioCtx.state === 'suspended') pmrAudioCtx.resume();
-    const osc = pmrAudioCtx.createOscillator();
-    const g = pmrAudioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, pmrAudioCtx.currentTime);
-    g.gain.setValueAtTime(0, pmrAudioCtx.currentTime);
-    g.gain.linearRampToValueAtTime(0.1, pmrAudioCtx.currentTime + 0.1);
-    g.gain.exponentialRampToValueAtTime(0.001, pmrAudioCtx.currentTime + 1.5);
-    osc.connect(g).connect(pmrAudioCtx.destination);
-    osc.start();
-    osc.stop(pmrAudioCtx.currentTime + 1.5);
-}
+        const pmrSteps = [
+            { text: "Take 3 deep breaths. Focus on the air entering and leaving.", duration: 10000 },
+            { text: "Tense your feet and toes tightly for 5 seconds... Now release completely.", duration: 10000 },
+            { text: "Tense your calves and thighs... Hold... Now release and feel the heaviness.", duration: 10000 },
+            { text: "Squeeze your glutes and pelvic muscles... Hold... Now release.", duration: 10000 },
+            { text: "Tighten your stomach and chest... Hold... Now release.", duration: 10000 },
+            { text: "Squeeze your hands into fists and tense your arms... Hold... Now release.", duration: 10000 },
+            { text: "Shrug your shoulders up to your ears... Hold... Now release.", duration: 10000 },
+            { text: "Clench your jaw and squint your eyes... Hold... Now release.", duration: 10000 },
+            { text: "Tense your entire body at once... Hold... and let it all go.", duration: 10000 },
+            { text: "Sit in the stillness for 60 seconds. Observe your tinnitus as just a neutral sound.", duration: 60000 }
+        ];
+        let pmrActive = false, pmrIdx = 0, pmrTimer, pmrAudioCtx = null;
 
-function startPMR() {
-    if (pmrActive) {
-        clearTimeout(pmrTimer);
-        pmrActive = false;
-        const btn = document.getElementById('pmrBtn');
-        btn.textContent = "Start PMR Sequence"; btn.classList.replace('stop-btn', 'play-btn');
-        document.getElementById('pmrStepText').textContent = "Ready to begin?";
-        document.getElementById('pmrProgressBar').style.width = "0%";
-        return;
-    }
-    pmrActive = true; pmrIdx = 0;
-    const btn = document.getElementById('pmrBtn');
-    btn.textContent = "Stop Sequence"; btn.classList.replace('play-btn', 'stop-btn');
-    runPmrStep();
-}
+        function handlePMR() {
+            if (pmrActive) startPMR();
+            else if (pmrAudioCtx) startPMR();
+            else showPreFlight(() => startPMR());
+        }
 
-function runPmrStep() {
-    if (!pmrActive) return;
-    if (pmrIdx >= pmrSteps.length) {
-        document.getElementById('pmrStepText').textContent = "Sequence complete. You are relaxed and safe.";
-        document.getElementById('pmrBtn').textContent = "Restart PMR Sequence";
-        document.getElementById('pmrProgressBar').style.width = "100%";
-        playPmrCue(523.25); // Completion chime
-        pmrActive = false;
-        return;
-    }
-    const step = pmrSteps[pmrIdx];
-    document.getElementById('pmrStepText').textContent = step.text;
-    const progress = (pmrIdx / pmrSteps.length) * 100;
-    document.getElementById('pmrProgressBar').style.width = progress + "%";
-    playPmrCue(pmrIdx === pmrSteps.length - 1 ? 329.63 : 440);
-    pmrIdx++;
-    pmrTimer = setTimeout(runPmrStep, step.duration);
-}
+        function playPmrCue(freq = 440) {
+            if (!pmrAudioCtx) pmrAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (pmrAudioCtx.state === 'suspended') pmrAudioCtx.resume();
+            const osc = pmrAudioCtx.createOscillator();
+            const g = pmrAudioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, pmrAudioCtx.currentTime);
+            g.gain.setValueAtTime(0, pmrAudioCtx.currentTime);
+            g.gain.linearRampToValueAtTime(0.1, pmrAudioCtx.currentTime + 0.1);
+            g.gain.exponentialRampToValueAtTime(0.001, pmrAudioCtx.currentTime + 1.5);
+            osc.connect(g).connect(pmrAudioCtx.destination);
+            osc.start();
+            osc.stop(pmrAudioCtx.currentTime + 1.5);
+        }
 
-function showAILoading() {
-    const box = document.getElementById('aiHubResponse');
-    box.style.display = 'flex';
-    box.innerHTML = `<div class="chat-bubble ai-bubble"><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
-}
+        function startPMR() {
+            if (pmrActive) {
+                clearTimeout(pmrTimer);
+                pmrActive = false;
+                const btn = document.getElementById('pmrBtn');
+                btn.textContent = "Start PMR Sequence"; btn.classList.replace('stop-btn', 'play-btn');
+                document.getElementById('pmrStepText').textContent = "Ready to begin?";
+                document.getElementById('pmrProgressBar').style.width = "0%";
+                return;
+            }
+            pmrActive = true; pmrIdx = 0;
+            const btn = document.getElementById('pmrBtn');
+            btn.textContent = "Stop Sequence"; btn.classList.replace('play-btn', 'stop-btn');
+            runPmrStep();
+        }
 
-function setAIResponse(html) {
-    const box = document.getElementById('aiHubResponse');
-    box.style.display = 'flex';
-    box.innerHTML = `<div class="chat-bubble ai-bubble">${html.replace(/\n/g, '<br>')}</div>`;
-}
+        function runPmrStep() {
+            if (!pmrActive) return;
+            if (pmrIdx >= pmrSteps.length) {
+                document.getElementById('pmrStepText').textContent = "Sequence complete. You are relaxed and safe.";
+                document.getElementById('pmrBtn').textContent = "Restart PMR Sequence";
+                document.getElementById('pmrProgressBar').style.width = "100%";
+                playPmrCue(523.25); // Completion chime
+                pmrActive = false;
+                return;
+            }
+            const step = pmrSteps[pmrIdx];
+            document.getElementById('pmrStepText').textContent = step.text;
+            const progress = (pmrIdx / pmrSteps.length) * 100;
+            document.getElementById('pmrProgressBar').style.width = progress + "%";
+            playPmrCue(pmrIdx === pmrSteps.length - 1 ? 329.63 : 440);
+            pmrIdx++;
+            pmrTimer = setTimeout(runPmrStep, step.duration);
+        }
 
-async function triggerSOS() {
-    showAILoading();
-    const response = await getSOSSupport();
-    setAIResponse(response);
-}
+        function showAILoading() {
+            const box = document.getElementById('aiHubResponse');
+            box.style.display = 'flex';
+            box.innerHTML = `<div class="chat-bubble ai-bubble"><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+        }
 
-async function askTRT() {
-    const q = document.getElementById('trtQuestion').value;
-    if (!q) return;
-    showAILoading();
-    const response = await getTRTExplanation(q);
-    setAIResponse(response);
-}
+        function setAIResponse(html) {
+            const box = document.getElementById('aiHubResponse');
+            box.style.display = 'flex';
+            box.innerHTML = `<div class="chat-bubble ai-bubble">${html.replace(/\n/g, '<br>')}</div>`;
+        }
 
-async function triggerPatternAnalysis() {
-    showAILoading();
-    const q = document.getElementById('trtQuestion').value;
-    const response = await getPatternAnalysis(q);
-    setAIResponse(response);
-}
+        async function triggerSOS() {
+            showAILoading();
+            const response = await getSOSSupport();
+            setAIResponse(response);
+        }
 
-/**
- * Uses Gemini to suggest a balanced thought based on the user's automatic thought.
- */
-async function suggestBalancedThought() {
-    const autoField = document.getElementById('trAutomaticThoughts');
-    const balancedField = document.getElementById('trBalancedThought');
-    const thought = autoField.value.trim();
+        async function askTRT() {
+            const q = document.getElementById('trtQuestion').value;
+            if (!q) return;
+            showAILoading();
+            const response = await getTRTExplanation(q);
+            setAIResponse(response);
+        }
 
-    const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
-    const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
-    const isConfigured = !!currentKey;
+        async function triggerPatternAnalysis() {
+            showAILoading();
+            const q = document.getElementById('trtQuestion').value;
+            const response = await getPatternAnalysis(q);
+            setAIResponse(response);
+        }
 
-    if (encryptedKeyExists && !activeSessionKey) return alert("AI features are locked. Please unlock them on the dashboard with your PIN.");
-    if (!isConfigured) return alert("AI features are not configured. Please add your Gemini API key on the dashboard.");
+        /**
+         * Uses Gemini to suggest a balanced thought based on the user's automatic thought.
+         */
+        async function suggestBalancedThought() {
+            const autoField = document.getElementById('trAutomaticThoughts');
+            const balancedField = document.getElementById('trBalancedThought');
+            const thought = autoField.value.trim();
 
-    if (!thought) return alert("Please enter an automatic thought first so Gemini can reframe it.");
+            const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
+            const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
+            const isConfigured = !!currentKey;
 
-    balancedField.value = "Consulting AI assistant...";
+            if (encryptedKeyExists && !activeSessionKey) return alert("AI features are locked. Please unlock them on the dashboard with your PIN.");
+            if (!isConfigured) return alert("AI features are not configured. Please add your Gemini API key on the dashboard.");
 
-    try {
-        const response = await getBalancedThoughtSuggestion(thought);
-        // Strip HTML tags (like <i> for disclaimers) since this is a textarea
-        balancedField.value = response.replace(/<[^>]*>/g, '');
-        // Manually trigger the input event to update the character counter
-        balancedField.dispatchEvent(new Event('input'));
-    } catch (e) {
-        balancedField.value = "Error: Could not reach AI. Please try again.";
-    }
-}
+            if (!thought) return alert("Please enter an automatic thought first so Gemini can reframe it.");
 
-/**
- * Generates a personalized mindfulness script based on the balanced thought.
- */
-async function generateGroundingScript() {
-    const thought = document.getElementById('trBalancedThought').value;
+            balancedField.value = "Consulting AI assistant...";
 
-    const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
-    const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
-    const isConfigured = !!currentKey;
+            try {
+                const response = await getBalancedThoughtSuggestion(thought);
+                // Strip HTML tags (like <i> for disclaimers) since this is a textarea
+                balancedField.value = response.replace(/<[^>]*>/g, '');
+                // Manually trigger the input event to update the character counter
+                balancedField.dispatchEvent(new Event('input'));
+            } catch (e) {
+                balancedField.value = "Error: Could not reach AI. Please try again.";
+            }
+        }
 
-    if (encryptedKeyExists && !activeSessionKey) return alert("AI features are locked.");
-    if (!isConfigured) return alert("AI features are not configured.");
+        /**
+         * Generates a personalized mindfulness script based on the balanced thought.
+         */
+        async function generateGroundingScript() {
+            const thought = document.getElementById('trBalancedThought').value;
 
-    if (!thought) return alert("Please have a balanced thought ready first.");
-    showAILoading();
-    document.getElementById('aiHubResponse').scrollIntoView({ behavior: 'smooth' });
-    const response = await getMindfulnessScript(thought);
-    setAIResponse(`<strong>Your Grounding Script:</strong><br><br>${response}`);
-}
+            const encryptedKeyExists = loadSetting('gemini_api_key_encrypted', null) !== null;
+            const currentKey = activeSessionKey || loadSetting('gemini_api_key', '');
+            const isConfigured = !!currentKey;
 
-/**
- * Clears the AI chat interface.
- */
-function clearAIChat() {
-    const box = document.getElementById('aiHubResponse');
-    box.innerHTML = '';
-    box.style.display = 'none';
-}
+            if (encryptedKeyExists && !activeSessionKey) return alert("AI features are locked.");
+            if (!isConfigured) return alert("AI features are not configured.");
 
-async function generateAISummaryForReport() {
-    // This function is not directly used for PDF/TXT reports, but for a potential UI element.
-    // If you add a button to generate and display the summary in the UI, this function would be used.
-    // For PDF/TXT reports, the summary is generated within the export functions.
-}
-</script>
+            if (!thought) return alert("Please have a balanced thought ready first.");
+            showAILoading();
+            document.getElementById('aiHubResponse').scrollIntoView({ behavior: 'smooth' });
+            const response = await getMindfulnessScript(thought);
+            setAIResponse(`<strong>Your Grounding Script:</strong><br><br>${response}`);
+        }
+
+        /**
+         * Clears the AI chat interface.
+         */
+        function clearAIChat() {
+            const box = document.getElementById('aiHubResponse');
+            box.innerHTML = '';
+            box.style.display = 'none';
+        }
+
+        async function generateAISummaryForReport() {
+            // This function is not directly used for PDF/TXT reports, but for a potential UI element.
+            // If you add a button to generate and display the summary in the UI, this function would be used.
+            // For PDF/TXT reports, the summary is generated within the export functions.
+        }
+    </script>
 </body>
+
 </html>

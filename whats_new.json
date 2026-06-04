@@ -1,0 +1,98 @@
+[
+    {
+        "title": "Version 2026.06.19 - Stability & Performance",
+        "content": "This update provides critical stability fixes for the real-time AudioWorklet engine and introduces high-performance vectorization for the offline WAV generator."
+    },
+    {
+        "title": "Version 2026.06.14 - Binaural Visualizer",
+        "content": "Experience your therapy visually! A new real-time visualizer for Binaural Beats shows dual waveforms and phase relationships to confirm entrainment."
+    },
+    {
+        "title": "Version 2026.06.13 - DSP Refinements",
+        "content": "Minor stability improvements and precision tuning for the Binaural visualizer connectivity."
+    },
+    {
+        "title": "Version 2026.06.12 - Neural Auto-Match",
+        "content": "Therapy sounds now automatically adapt to your pitch match, selecting the most effective procedural texture (Ocean, Melody, or Zen) for your profile."
+    },
+    {
+        "title": "v2026.06.11 - Neural Melody & Harmonic Integration",
+        "content": "Introduced a generative pentatonic melody engine that replaces static noise with relaxing, anchor-aware music. Intervals are derived from your tinnitus pitch."
+    },
+    {
+        "title": "v2026.06.10 - Global Pitch Synchronization",
+        "content": "Reinforced the Notch Finder matched pitch as the 'Global Truth'. It now automatically propagates to Notch, CR, and Aesthetic Sound modes more robustly."
+    },
+    {
+        "title": "v2026.06.9 - UX Persistence & Symmetry",
+        "content": "Resolved layout issues and clarified that certain features are hidden behind mandatory clinical safety steps."
+    },
+    {
+        "title": "v2026.06.8 - Aesthetic Soundscapes",
+        "content": "Replaced static loops with dynamic, procedurally generated 'Forest Rain' and 'Ocean Surge' acoustic profiles."
+    },
+    {
+        "title": "v2026.06.5 - Neural Pulse Mode",
+        "content": "Added periodic amplitude modulation (AM) to the noise engine. This 'Neural Pulse' helps disrupt temporal neural patterns."
+    },
+    {
+        "title": "v2026.06.3 - Onboarding UX & Layout",
+        "content": "All therapy and utility cards are now hidden until mandatory setup is complete to ensure user focus and clinical safety."
+    },
+    {
+        "title": "v2026.06.2 - Organic Audio & Safety",
+        "content": "Harmonic Wash (Zen Mode) replaces static noise with mathematically aligned harmonics. Integrated global safety flags for hearing aid users."
+    },
+    {
+        "title": "v2026.06.1 - Spectral Intelligence",
+        "content": "Added real-time warnings to Notch and CR modules if your noise source doesn't cover your matched frequency."
+    },
+    {
+        "title": "v2026.05.4 - Branding & Session Entry",
+        "content": "Integrated a new cinematic entry sequence featuring an animated swarm of 'tinnitus bees' orbiting a stylized ear logo."
+    },
+    {
+        "title": "Version 2026.05.3 - Clinical Alignment",
+        "content": "This major update ensures the suite is 100% technically aligned with the User Manual, standardizing terminology like 'Broadband Sound Therapy'."
+    },
+    {
+        "title": "Hearing Profile (Audiogram)",
+        "content": "You can now enter your professional audiogram results. The engine uses the <b>Half-Gain Rule</b> to automatically compensate for hearing loss in your therapy sessions."
+    },
+    {
+        "title": "Habituation Milestones",
+        "content": "We've integrated an automated tracker to monitor your journey through the six clinical stages of habituation (Appendix E)."
+    },
+    {
+        "title": "Global Reporting",
+        "content": "You can now generate a comprehensive multi-module Progress Report (PDF) from the dashboard to share with your audiologist."
+    },
+    {
+        "title": "Q-factor & Tonality",
+        "content": "A new trend chart in the Stats page (stats.html) now tracks changes in your tinnitus 'sharpness' (Q-factor) to better visualize progress."
+    },
+    {
+        "title": "Standardized Sharing",
+        "content": "Every therapy module now includes a 'Share Setup' tool formatted for community forums like Tinnitus Talk and Reddit."
+    },
+    {
+        "title": "Technical Validation",
+        "content": "A new interactive tutorial for the <b>System Validation</b> engine ensures your hardware is perfectly calibrated for clinical-grade therapy."
+    },
+    {
+        "title": "Achievement Unlocked",
+        "content": "Stay motivated! Reaching <b>Full Habituation</b> now triggers a celebratory confetti burst and unlocks a downloadable <b>Achievement Certificate</b> to mark your success. This professional record should be shared with your healthcare provider as part of your clinical history."
+    },
+    {
+        "title": "v2026.05.2 - Engine Stability Update",
+        "content": "New background Audio Engine Watchdog that detects and automatically recovers from browser-induced audio stalls."
+    },
+    {
+        "title": "v2026.05.0 - Major AI Integration",
+        "content": "Integrated 5 new AI-driven tools for crisis support, personalized soundscapes, pattern analysis, TRT education, and clinical report summaries."
+    },
+    {
+        "title": "v2026.04.4 - Interactive Tutorials",
+        "content": "Added voice-narrated UI walkthroughs and visual highlights for every therapy and tool."
+    }
+]

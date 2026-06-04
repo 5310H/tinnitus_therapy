@@ -1,251 +1,448 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Binaural Beat Entrainment</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="stylesheet" href="style.css">
-<script src="storage.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="nav.js"></script>
-</head>
-<body>
-<div class="panel">
-    <h1>Binaural Beats</h1>
-    <p class="info">Uses frequency offsets to induce specific brain states.</p>
 
-    <div class="card">
-        <h3>Entrainment Presets</h3>
-        <div class="btn-grid">
-            <button class="sm-btn opt-btn" onclick="setPreset(2.5, 'Delta (Sleep)', this)">Delta (2.5Hz)</button>
-            <button class="sm-btn opt-btn" onclick="setPreset(6, 'Theta (Meditation)', this)">Theta (6Hz)</button>
-            <button class="sm-btn opt-btn" onclick="setPreset(10, 'Alpha (Relaxation)', this)">Alpha (10Hz)</button>
-            <button class="sm-btn opt-btn" onclick="setPreset(40, 'Gamma (Focus/Health)', this)">Gamma (40Hz)</button>
+<head>
+    <meta charset="UTF-8">
+    <title>Binaural Beat Entrainment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <script src="storage.js"></script>
+    <script src="binaural.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="nav.js"></script>
+</head>
+<style>
+    .binaural-viz {
+        display: none;
+        /* Hidden by default */
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        margin: 20px auto;
+        aspect-ratio: 5 / 2;
+        /* Ensure enough space for the circle */
+    }
+
+    .binaural-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--accent);
+        opacity: 0.3;
+        margin: 0 auto;
+        animation: pulse-beat var(--beat-duration, 1s) infinite alternate ease-in-out;
+        box-shadow: 0 0 15px var(--accent);
+    }
+
+    .beat-freq-display {
+        position: absolute;
+        top: 50%;
+        right: 20px;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--accent);
+    }
+
+    @keyframes pulse-beat {
+        from {
+            transform: scale(0.8);
+            opacity: 0.2;
+        }
+
+        to {
+            transform: scale(1.1);
+            opacity: 0.5;
+        }
+    }
+</style>
+
+<body>
+    <div class="panel">
+        <h1>Binaural Beats</h1>
+        <p class="info">Uses frequency offsets to induce specific brain states.</p>
+
+        <div class="card" title="Standard brainwave entrainment frequencies. Discrete L/R separation is required.">
+            <h3>Entrainment Presets <span class="status-dot" id="presetStatus">○</span> <span id="engineStatus"
+                    style="font-size: 0.65rem; font-weight: normal; margin-left: 8px;"></span> <span
+                    class="info-icon">?</span> <span class="status-dot" id="vizStatus">○</span></h3>
+            <div class="btn-grid">
+                <button class="sm-btn opt-btn" onclick="handlePreset(2.5, 'Delta (Sleep)', this)">Delta (2.5Hz)</button>
+                <button class="sm-btn opt-btn" onclick="handlePreset(6, 'Theta (Meditation)', this)">Theta
+                    (6Hz)</button>
+                <button class="sm-btn opt-btn" onclick="handlePreset(10, 'Alpha (Relaxation)', this)">Alpha
+                    (10Hz)</button>
+                <button class="sm-btn opt-btn" onclick="handlePreset(40, 'Gamma (Focus/Health)', this)">Gamma
+                    (40Hz)</button>
+            </div>
+        </div>
+
+        <div class="ctrl">
+            <label>Base Frequency (Hz) <span class="val" id="baseVal">200 Hz</span> <span class="status-dot"
+                    id="baseStatus">○</span>
+                <div class="input-with-buttons">
+                    <input type="number" id="baseInput" class="val-input" min="100" max="1000" value="200">
+                    <div class="fine-tune-group" data-target="baseSlider">
+                        <button class="fine-tune-btn" data-delta="-5">-5</button>
+                        <button class="fine-tune-btn" data-delta="1">+1</button>
+                        <button class="fine-tune-btn" data-delta="5">+5</button>
+                    </div>
+                </div>
+            </label>
+            <input id="baseSlider" type="range" min="100" max="1000" value="200">
+            <label style="margin-top:10px;">Beat Frequency (Hz) <span class="val" id="beatVal">10 Hz</span> <span
+                    class="status-dot" id="beatStatus">○</span>
+                <div class="input-with-buttons">
+                    <input type="number" id="beatInput" class="val-input" min="0.5" max="50" step="0.5" value="10">
+                    <div class="fine-tune-group" data-target="beatSlider">
+                        <button class="fine-tune-btn" data-delta="-1">-1</button>
+                        <button class="fine-tune-btn" data-delta="-0.5">-0.5</button>
+                        <button class="fine-tune-btn" data-delta="0.5">+0.5</button>
+                        <button class="fine-tune-btn" data-delta="1">+1</button>
+                    </div>
+                </div>
+            </label>
+            <input id="beatSlider" type="range" min="0.5" max="50" step="0.5" value="10">
+        </div>
+
+        <div class="ctrl">
+            <label>Master Volume <span class="val" id="volVal">20%</span> <span class="status-dot"
+                    id="volStatus">○</span>
+                <div class="input-with-buttons">
+                    <div class="fine-tune-group" data-target="volSlider">
+                        <button class="fine-tune-btn" data-delta="-5">-5</button>
+                        <button class="fine-tune-btn" data-delta="5">+5</button>
+                    </div>
+                </div>
+            </label>
+            <input id="volSlider" type="range" min="0" max="100" value="20">
+        </div>
+
+        <div class="ctrl">
+            <label id="balanceLabel" style="display: flex; align-items: center;"
+                title="Adjust the sound level between ears to match the perceived location of your tinnitus.">L/R
+                Balance <span class="status-dot" id="balStatus">○</span> <span class="info-icon">?</span>
+                <div class="input-with-buttons">
+                    <input type="number" id="balInput" class="val-input" min="-1" max="1" step="0.1" value="0">
+                    <div class="fine-tune-group" data-target="balSlider">
+                        <button class="fine-tune-btn" data-delta="-0.1">-0.1</button>
+                        <button class="fine-tune-btn" data-delta="0.1">+0.1</button>
+                    </div>
+                </div>
+            </label>
+            <input id="balSlider" type="range" min="-1" max="1" step="0.02" value="0">
+            <div class="btn-group" data-target="balSlider">
+                <button class="button-step" data-delta="-0.1">-0.1</button>
+                <button class="button-step" data-delta="0.1">+0.1</button>
+            </div>
+            <button class="button" style="width:100%; margin-bottom:10px;" onclick="syncBalanceToPreset()">Sync Balance
+                to Preset</button>
+            <div class="bal-viz">
+                <div class="bal-track">
+                    <div id="balMarker" class="bal-marker"></div>
+                </div>
+                <div class="bal-labels"><span>Left</span><span>Center</span><span>Right</span></div>
+            </div>
+        </div>
+
+        <div id="binauralViz" class="binaural-viz">
+            <canvas id="binauralCanvas" width="1000" height="400"
+                style="width: 100%; height: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;"></canvas>
+            <div id="beatFreqDisplay" class="beat-freq-display"></div>
+        </div>
+
+        <button class="big-btn play-btn" id="toggleBtn" onclick="handleToggle()">Start Binaural Therapy</button>
+        <div class="status" id="status" style="text-align: center; margin-top: 10px;">Stopped</div>
+
+        <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;"
+            onclick="generatePDFReport()">Download PDF Report</button>
+        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+            <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+            <button class="button" style="border-color: #ff9800; color: #ff9800;" onclick="shareToCommunity()">💬 Share
+                Setup to Community</button>
+            <a class="button"
+                style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim); text-decoration: none; display: flex; align-items: center; justify-content: center;"
+                href="user_manual.html#sec-7" target="_blank">Open Manual for this Tool</a>
+            <button class="button email-audiologist-btn" style="background:var(--accent); color:white; display:none;"
+                onclick="emailToAudiologist()">Email to
+                Audiologist</button>
+            <button class="button"
+                style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
+                onclick="resetToDefaults()">Reset to Defaults</button>
         </div>
     </div>
 
-    <div class="ctrl">
-        <label>Base Frequency (Hz) <span class="val" id="baseVal">200 Hz</span>
-            <div class="input-with-buttons">
-                <input type="number" id="baseInput" class="val-input" min="100" max="1000" value="200">
-                <div class="fine-tune-group" data-target="baseSlider">
-                    <button class="fine-tune-btn" data-delta="-5">-5</button>
-                    <button class="fine-tune-btn" data-delta="1">+1</button>
-                    <button class="fine-tune-btn" data-delta="5">+5</button>
-                </div>
-            </div>
-        </label>
-        <input id="baseSlider" type="range" min="100" max="1000" value="200">
-        <label style="margin-top:10px;">Beat Frequency (Hz) <span class="val" id="beatVal">10 Hz</span>
-            <div class="input-with-buttons">
-                <input type="number" id="beatInput" class="val-input" min="0.5" max="50" step="0.5" value="10">
-                <div class="fine-tune-group" data-target="beatSlider">
-                    <button class="fine-tune-btn" data-delta="-1">-1</button>
-                    <button class="fine-tune-btn" data-delta="-0.5">-0.5</button>
-                    <button class="fine-tune-btn" data-delta="0.5">+0.5</button>
-                    <button class="fine-tune-btn" data-delta="1">+1</button>
-                </div>
-            </div>
-        </label>
-        <input id="beatSlider" type="range" min="0.5" max="50" step="0.5" value="10">
-    </div>
+    <script>
+        let oscL, oscR, pannerNode, masterGain, playing = false, binauralViz = null;
 
-    <div class="ctrl">
-        <label>Master Volume <span class="val" id="volVal">20%</span>
-            <div class="input-with-buttons">
-                <div class="fine-tune-group" data-target="volSlider">
-                    <button class="fine-tune-btn" data-delta="-5">-5</button>
-                    <button class="fine-tune-btn" data-delta="5">+5</button>
-                </div>
-            </div>
-        </label>
-        <input id="volSlider" type="range" min="0" max="100" value="20">
-    </div>
-
-    <button class="big-btn play-btn" id="toggleBtn" onclick="toggle()">Start Binaural Therapy</button>
-    <div class="status" id="status">Stopped</div>
-
-    <button class="button zen-keep" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-    <div class="zen-keep" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-        <button class="button zen-keep" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
-        <button class="button zen-keep" style="border-color: #ff9800; color: #ff9800;" onclick="shareToCommunity()">💬 Share Setup to Community</button>
-        <a class="button zen-keep" style="border-color: var(--text-dim); color: var(--text-dim);" href="user_manual.html#sec-7" target="_blank">Open Manual for this Tool</a>
-        <button class="button email-audiologist-btn zen-keep" style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
-        <button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
-        <button class="button zen-keep" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetToDefaults()">Reset to Defaults</button>
-    </div>
-</div>
-
-<script>
-let ctx, oscL, oscR, masterGain, playing = false;
-
-window.onload = () => {
-    initNav(`
+        window.onload = () => {
+            initNav(`
         <b>Purpose:</b> Binaural beats occur when two tones of slightly different frequencies are played in each ear. The brain perceives a "beat" equal to the difference, facilitating relaxation or focus.<br><br>
         <b>Requirements:</b> Stereophonic headphones are mandatory for the effect to occur.<br><br>
+        <b>L/R Balance:</b> Adjust the balance to compensate for asymmetric hearing loss or L/R tinnitus bias. Maintaining equal perceived loudness between ears is important for brainwave entrainment.<br><br>
         <b>Noise Selection:</b> This mode is tone-based. Adding background noise is generally not recommended as it may interfere with the "frequency following response" (FFR).<br><br>
         <b>Presets:</b> Use Delta for sleep, Theta for meditation, and Alpha for general relaxation.
     `);
-    document.getElementById('baseSlider').value = loadSetting('bin_base', 200);
-    document.getElementById('beatSlider').value = loadSetting('bin_beat', 10);
-    document.getElementById('volSlider').value = loadSetting('bin_vol', 20);
-    updateUI();
+            document.getElementById('baseSlider').value = loadSetting('bin_base', 200);
+            document.getElementById('beatSlider').value = loadSetting('bin_beat', 10);
+            document.getElementById('volSlider').value = loadSetting('bin_vol', 20);
+            document.getElementById('balSlider').value = loadSetting('bin_bal', getBalancePreset());
+            updateUI();
+            updateStatusDots();
+            setupStepButtons();
+        };
 
-    if (loadSetting('bin_zen_mode', 'false') === 'true') {
-        toggleZenMode(true);
-    }
-};
+        let repeatTimeout, repeatInterval;
+        function setupStepButtons() {
+            document.querySelectorAll('.btn-group .button-step, .fine-tune-btn').forEach(btn => {
+                const delta = parseFloat(btn.dataset.delta);
+                const target = document.getElementById(btn.parentElement.dataset.target || btn.closest('.ctrl').querySelector('input[type=range]')?.id);
+                if (!target) return;
+                const step = () => {
+                    target.value = Math.min(target.max, Math.max(target.min, parseFloat(target.value) + delta));
+                    target.dispatchEvent(new Event('input'));
+                };
+                btn.onmousedown = btn.ontouchstart = (e) => { e.preventDefault(); step(); repeatTimeout = setTimeout(() => { repeatInterval = setInterval(step, 80); }, 500); };
+                btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => { clearInterval(repeatInterval); clearTimeout(repeatTimeout); repeatInterval = null; };
+                btn.onclick = () => { if (!repeatInterval) step(); };
+            });
+        }
 
-function updateUI() {
-    document.getElementById('baseVal').textContent = document.getElementById('baseSlider').value + " Hz";
-    document.getElementById('beatVal').textContent = document.getElementById('beatSlider').value + " Hz";
-    document.getElementById('volVal').textContent = document.getElementById('volSlider').value + "%";
-    saveSetting('bin_base', document.getElementById('baseSlider').value);
-    saveSetting('bin_beat', document.getElementById('beatSlider').value);
-    saveSetting('bin_vol', document.getElementById('volSlider').value);
+        function updateUI() {
+            const base = document.getElementById('baseSlider').value;
+            const beat = document.getElementById('beatSlider').value;
+            const vol = document.getElementById('volSlider').value;
+            const bal = document.getElementById('balSlider').value;
 
-    if (playing) {
-        const beat = parseFloat(document.getElementById('beatSlider').value);
-        let label = "Manual Adjustment";
-        if (beat === 2.5) label = "Delta (Sleep)";
-        else if (beat === 6) label = "Theta (Meditation)";
-        else if (beat === 10) label = "Alpha (Relaxation)";
-        else if (beat === 40) label = "Gamma (Focus/Health)";
-        document.getElementById('status').textContent = "Binaural Beats Active (" + label + ")";
-    }
-    if(playing) updateParams();
-}
+            document.getElementById('baseVal').textContent = base + " Hz";
+            document.getElementById('beatVal').textContent = beat + " Hz";
+            document.getElementById('volVal').textContent = vol + "%";
 
-function setPreset(freq, label) {
-    document.getElementById('beatSlider').value = freq;
-    if (!playing) document.getElementById('status').textContent = "Preset Loaded: " + label;
-    updateUI();
-}
+            // Sync number inputs
+            document.getElementById('baseInput').value = base;
+            document.getElementById('beatInput').value = beat;
+            document.getElementById('balInput').value = bal;
 
-function updateParams() {
-    if(!ctx) return;
-    const base = parseFloat(document.getElementById('baseSlider').value);
-    const beat = parseFloat(document.getElementById('beatSlider').value);
-    const vol = document.getElementById('volSlider').value / 100;
+            // Update balance marker
+            document.getElementById('balMarker').style.left = ((parseFloat(bal) + 1) / 2 * 100) + '%';
 
-    oscL.frequency.setTargetAtTime(base, ctx.currentTime, 0.1);
-    oscR.frequency.setTargetAtTime(base + beat, ctx.currentTime, 0.1);
-    masterGain.gain.setTargetAtTime(vol, ctx.currentTime, 0.1);
-}
+            saveSetting('bin_base', base);
+            saveSetting('bin_beat', beat);
+            saveSetting('bin_vol', vol);
+            saveSetting('bin_bal', bal);
 
-async function toggle() {
-    if (playing) { stop(); return; }
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (ctx.state === 'suspended') await ctx.resume();
-    console.log('AudioContext state after resume:', ctx.state);
+            if (playing) {
+                const beatVal = parseFloat(beat);
+                let label = "Manual Adjustment";
+                if (beatVal === 2.5) label = "Delta (Sleep)";
+                else if (beatVal === 6) label = "Theta (Meditation)";
+                else if (beatVal === 10) label = "Alpha (Relaxation)";
+                else if (beatVal === 40) label = "Gamma (Focus/Health)";
+                document.getElementById('status').textContent = "Binaural Beats Active (" + label + ")";
+                updateParams();
+            }
+            updateStatusDots();
+        }
 
-    const merger = ctx.createChannelMerger(2);
-    masterGain = ctx.createGain();
+        function handlePreset(freq, label, btn) {
+            document.getElementById('beatSlider').value = freq;
+            setActiveBtn(btn, '.opt-btn');
+            if (!playing) document.getElementById('status').textContent = "Preset Loaded: " + label;
+            updateUI();
+        }
 
-    oscL = ctx.createOscillator();
-    oscR = ctx.createOscillator();
-    oscL.type = oscR.type = 'sine';
+        function setActiveBtn(btn, selector) {
+            if (selector) document.querySelectorAll(selector).forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+        }
 
-    oscL.connect(merger, 0, 0);
-    oscR.connect(merger, 0, 1);
-    merger.connect(masterGain).connect(ctx.destination);
+        function syncBalanceToPreset() {
+            const bal = getBalancePreset();
+            document.getElementById('balSlider').value = bal;
+            document.getElementById('balSlider').dispatchEvent(new Event('input'));
+            alert("Balance adjusted to global tinnitus side preset.");
+        }
 
-    oscL.start(); oscR.start();
-    playing = true;
-    updateUI();
-    document.getElementById('toggleBtn').textContent = "Stop Therapy";
-    document.getElementById('toggleBtn').className = "big-btn stop-btn";
-}
+        function updateStatusDots() {
+            const updateDot = (id, active) => {
+                const el = document.getElementById(id);
+                if (el) { el.textContent = active ? '✓' : '○'; el.classList.toggle('active', !!active); }
+            };
 
-function stop() {
-    if (ctx) { ctx.close(); ctx = null; }
-    playing = false;
-    document.getElementById('toggleBtn').textContent = "Start Binaural Therapy";
-    document.getElementById('toggleBtn').className = "big-btn play-btn";
-    document.getElementById('status').textContent = "Stopped";
-}
+            updateDot('presetStatus', document.querySelector('.opt-btn.active'));
+            updateDot('baseStatus', parseFloat(document.getElementById('baseSlider').value) !== 200);
+            updateDot('beatStatus', true);
+            updateDot('volStatus', parseFloat(document.getElementById('volSlider').value) !== 20);
+            updateDot('balStatus', parseFloat(document.getElementById('balSlider').value) !== 0);
+            updateDot('vizStatus', playing); // New status dot for visualizer
 
-function toggleZenMode() {
-    document.body.classList.toggle('zen-mode');
-    const isZen = document.body.classList.contains('zen-mode');
-    saveSetting('bin_zen_mode', isZen);
-    document.getElementById('zenBtn').textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
-}
+            const statusEl = document.getElementById('engineStatus');
+            if (statusEl) {
+                if (playing) {
+                    statusEl.textContent = "● Precision Oscillator";
+                    statusEl.style.color = "var(--accent)";
+                } else {
+                    statusEl.textContent = "";
+                }
+            }
+        }
 
-function resetToDefaults() {
-    if (confirm("Reset all settings for Binaural Beats to their defaults?")) {
-        resetModuleSettings(['bin_']);
-    }
-}
-function getReportData() {
-    const beatFreq = parseFloat(document.getElementById('beatSlider').value);
-    let reportedPreset = "Manual";
-    if (beatFreq === 2.5) reportedPreset = "Delta (Sleep)";
-    else if (beatFreq === 6) reportedPreset = "Theta (Meditation)";
-    else if (beatFreq === 10) reportedPreset = "Alpha (Relaxation)";
-    else if (beatFreq === 40) reportedPreset = "Gamma (Focus/Health)";
+        function updateParams() {
+            if (!window.audioCtx) return;
+            const base = parseFloat(document.getElementById('baseSlider').value);
+            const beat = parseFloat(document.getElementById('beatSlider').value);
+            const vol = document.getElementById('volSlider').value / 100;
+            const bal = parseFloat(document.getElementById('balSlider').value);
 
-    return {
-        "Base Frequency": document.getElementById('baseSlider').value + " Hz",
-        "Beat Frequency": document.getElementById('beatSlider').value + " Hz",
-        "Volume": document.getElementById('volSlider').value + "%",
-        "Last Active Preset": reportedPreset
-    };
-}
+            oscL.frequency.setTargetAtTime(base, window.audioCtx.currentTime, 0.1);
+            oscR.frequency.setTargetAtTime(base + beat, window.audioCtx.currentTime, 0.1);
+            masterGain.gain.setTargetAtTime(vol, window.audioCtx.currentTime, 0.1);
+            if (pannerNode) pannerNode.pan.setTargetAtTime(bal, window.audioCtx.currentTime, 0.1);
 
-function exportClinicalSettings() {
-    const reportData = getClinicalReportData("Binaural Beat Entrainment", getReportData());
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(aiSummaryText => {
-        reportData.aiSummary = aiSummaryText;
-        const report = generateClinicalReportText(reportData);
-        const blob = new Blob([report], { type: 'text/plain' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = `tinnitus_clinical_binaural.txt`; a.click();
-    });
-}
+            // Update the text frequency display while visualizer is running
+            const display = document.getElementById('beatFreqDisplay');
+            if (display) display.textContent = `${beat} Hz`;
+        }
 
-async function generatePDFReport() {
-    const reportData = getClinicalReportData("Binaural Beat Entrainment", getReportData());
-    // Fetch AI summary and add to reportData
-    const aiSummaryText = await getClinicalSummary();
-    reportData.aiSummary = aiSummaryText;
-    const htmlContent = generateClinicalReportHtml(reportData);
+        function handleToggle() {
+            if (playing) toggle();
+            else showPreFlight(() => toggle());
+        }
 
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    document.body.appendChild(tempDiv);
+        async function toggle() {
+            if (playing) { stop(); return; }
+            if (!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (window.audioCtx.state === 'suspended') await window.audioCtx.resume();
 
-    const isDark = document.documentElement.classList.contains('light-mode');
-    if (!isDark) document.documentElement.classList.add('light-mode');
+            const merger = window.audioCtx.createChannelMerger(2);
+            pannerNode = window.audioCtx.createStereoPanner();
+            masterGain = window.audioCtx.createGain();
 
-    const opt = {
-        margin: [20, 15], filename: 'tinnitus_clinical_binaural.pdf', image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    await html2pdf().set(opt).from(tempDiv).save();
+            oscL = window.audioCtx.createOscillator();
+            oscR = window.audioCtx.createOscillator();
+            oscL.type = oscR.type = 'sine';
 
-    if (!isDark) document.documentElement.classList.remove('light-mode');
-    document.body.removeChild(tempDiv);
-}
+            oscL.connect(merger, 0, 0);
+            oscR.connect(merger, 0, 1);
+            merger.connect(pannerNode);
+            pannerNode.connect(masterGain).connect(window.audioCtx.destination);
 
-function emailToAudiologist() {
-    const email = loadSetting('audiologist_email', '');
-    if (!email) return alert("Please set your audiologist's email on the Home page.");
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(async aiSummaryText => {
-        const reportData = getClinicalReportData("Binaural Beat Entrainment", getReportData());
-        reportData.aiSummary = aiSummaryText;
-        const report = generateClinicalReportText(reportData);
-        window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
-    });
-}
+            oscL.start(); oscR.start();
+            playing = true;
+            updateUI();
+            startVisualizer(); // Call to start visualizer
+            document.getElementById('toggleBtn').textContent = "Stop Therapy";
+            document.getElementById('toggleBtn').className = "big-btn stop-btn";
+        }
 
-document.getElementById('baseSlider').oninput = updateUI;
-document.getElementById('beatSlider').oninput = updateUI;
-document.getElementById('volSlider').oninput = updateUI;
-</script>
+        function stop() {
+            if (oscL) { oscL.stop(); oscL = null; }
+            if (oscR) { oscR.stop(); oscR = null; }
+            playing = false;
+            document.getElementById('toggleBtn').textContent = "Start Binaural Therapy";
+            document.getElementById('toggleBtn').className = "big-btn play-btn";
+            document.getElementById('status').textContent = "Stopped";
+            stopVisualizer(); // Call to stop visualizer
+        }
+
+        // New functions for visualizer
+        function startVisualizer() {
+            const vizContainer = document.getElementById('binauralViz');
+            if (vizContainer) vizContainer.style.display = 'block';
+            updateStatusDots();
+            binauralViz = window.initBinauralVisualizer('binauralCanvas', window.audioCtx, oscL, oscR);
+            if (binauralViz) binauralViz.start();
+        }
+
+        function stopVisualizer() {
+            if (binauralViz) binauralViz.stop();
+            const vizContainer = document.getElementById('binauralViz');
+            if (vizContainer) vizContainer.style.display = 'none';
+            updateStatusDots();
+        }
+
+        function resetToDefaults() {
+            if (confirm("Reset all settings for Binaural Beats to their defaults?")) {
+                resetModuleSettings(['bin_']);
+            }
+        }
+
+        function getReportData() {
+            const beatFreq = parseFloat(document.getElementById('beatSlider').value);
+            let reportedPreset = "Manual";
+            if (beatFreq === 2.5) reportedPreset = "Delta (Sleep)";
+            else if (beatFreq === 6) reportedPreset = "Theta (Meditation)";
+            else if (beatFreq === 10) reportedPreset = "Alpha (Relaxation)";
+            else if (beatFreq === 40) reportedPreset = "Gamma (Focus/Health)";
+
+            return {
+                "Base Frequency": document.getElementById('baseSlider').value + " Hz",
+                "Beat Frequency": document.getElementById('beatSlider').value + " Hz",
+                "Volume": document.getElementById('volSlider').value + "%",
+                "L/R Balance": document.getElementById('balSlider').value,
+                "Last Active Preset": reportedPreset
+            };
+        }
+
+        function exportClinicalSettings() {
+            const reportData = getClinicalReportData("Binaural Beat Entrainment", getReportData());
+            // Fetch AI summary and add to reportData
+            getClinicalSummary().then(aiSummaryText => {
+                reportData.aiSummary = aiSummaryText;
+                const report = generateClinicalReportText(reportData);
+                const blob = new Blob([report], { type: 'text/plain' });
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                a.download = `tinnitus_clinical_binaural.txt`; a.click();
+            });
+        }
+
+        async function generatePDFReport() {
+            const reportData = getClinicalReportData("Binaural Beat Entrainment", getReportData());
+            // Fetch AI summary and add to reportData
+            const aiSummaryText = await getClinicalSummary();
+            reportData.aiSummary = aiSummaryText;
+            const htmlContent = generateClinicalReportHtml(reportData);
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            document.body.appendChild(tempDiv);
+
+            const isDark = document.documentElement.classList.contains('light-mode');
+            if (!isDark) document.documentElement.classList.add('light-mode');
+
+            const opt = {
+                margin: [20, 15], filename: 'tinnitus_clinical_binaural.pdf', image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            await html2pdf().set(opt).from(tempDiv).save();
+
+            if (!isDark) document.documentElement.classList.remove('light-mode');
+            document.body.removeChild(tempDiv);
+        }
+
+        function emailToAudiologist() {
+            const email = loadSetting('audiologist_email', '');
+            if (!email) return alert("Please set your audiologist's email on the Home page.");
+            // Fetch AI summary and add to reportData
+            getClinicalSummary().then(async aiSummaryText => {
+                const reportData = getClinicalReportData("Binaural Beat Entrainment", getReportData());
+                reportData.aiSummary = aiSummaryText;
+                const report = generateClinicalReportText(reportData);
+                window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+            });
+        }
+
+        document.getElementById('baseSlider').oninput = updateUI;
+        document.getElementById('beatSlider').oninput = updateUI;
+        document.getElementById('volSlider').oninput = updateUI;
+        document.getElementById('balSlider').oninput = updateUI;
+        // Update visualizer when UI changes, even if not playing
+        document.getElementById('baseInput').oninput = e => { document.getElementById('baseSlider').value = e.target.value; updateUI(); };
+        document.getElementById('beatInput').oninput = e => { document.getElementById('beatSlider').value = e.target.value; updateUI(); };
+        document.getElementById('balInput').oninput = e => { document.getElementById('balSlider').value = e.target.value; updateUI(); };
+    </script>
 </body>
+
 </html>

@@ -39,6 +39,7 @@ Pseudo-random sequences of four tones relative to tinnitus pitch (Tass, 2012) de
 ### **6. Binaural Beat Entrainment**
 Uses frequency offsets to induce specific brainwave states for relaxation, focus, or sleep.
 
+- **Real-time Visualizer:** Dynamic display of dual waveforms and Lissajous patterns to visualize the binaural beat and phase relationship.
 ### **7. CBT & Wellness**
 Psychological tools for tinnitus habituation, including:
 - **Tinnitus Handicap Inventory (THI):** Clinically validated impact tracking.
@@ -75,14 +76,16 @@ All therapy modules now support three primary input methods:
 
 ## 📊 Clinical Validation & Reporting
 The suite includes an automated validation engine to ensure therapy integrity:
+- **Active Hardware Protection (v2026.06.3):** Real-time RMS limiter and DC-offset blocker to prevent clipping and protect headphone transducers.
+- **Clinical Spectral Stability:** All noise colors (Pink, Brown, Red, Rain) include integrated 20Hz high-pass filters to remove sub-sonic drift.
 - **Real-time DSP Checks:** Verifies notch depth (target >40dB) and frequency alignment.
-- **Automated Audio Watchdog (v2026.05.3):** Background observer that detects and recovers from audio stalls, browser-induced suspensions, or digital filter crashes to ensure uninterrupted sessions.
+- **Automated Audio Watchdog:** Background observer that detects and recovers from audio stalls, browser-induced suspensions, or digital filter crashes (NaN/DC Saturation).
 - **Detailed Clinical Export:** Generates reports including THI/Distress history, Minimum Masking Levels (MML), Loudness Growth (LG) data, and Residual Inhibition (RI) results.
 - **Actionable Recommendations:** Provides automated troubleshooting for common system issues (e.g., detecting "Shallow Notch" errors caused by browser audio enhancers).
  
 ## 📖 User Documentation
 ### **Comprehensive User Manual (v2026.06.1)**
-The suite includes a dynamic PDF generation engine (accessible under Settings) that compiles all module documentation into a single, printable reference guide. The manual includes:
+The suite includes a dynamic PDF generation engine (accessible under Settings) that compiles all module documentation into a single, printable reference guide (v2026.06.3). The manual includes:
 - **Getting Started:** Quick Start Guide, Clinical Protocols, and the "Path to Relief" workflow.
 - **Detailed Protocols:** In-depth setup for the "Mixing Point," 24/7 Enrichment, and lateral inhibition strategies.
 - **Therapy Modules:** Technical documentation for Notch, CR, Dual-Stimulus, Sound, Binaural, and Decorrelated therapies.
@@ -171,7 +174,23 @@ These approaches are widely used in tinnitus management and research.
 
 ---
 
-## 📦 Offline Use
+## 🛠 Development & Releases
+
+This project uses a monthly versioning strategy. To create a new monthly snapshot:
+
+1. **Sync Version:** Update `package.json` and run `node sync-version.js`.
+2. **Commit:** `git add . && git commit -m "Release vYYYY.MM.DD"`
+3. **Tag:** Create an annotated Git tag:
+   ```bash
+   git tag -a v2026.07.01 -m "Monthly release description"
+   ```
+4. **Push:** `git push origin v2026.07.01`
+
+Snapshots can be downloaded or viewed via the **Releases** tab on GitHub.
+
+---
+
+## � Offline Use
 
 The entire suite works **fully offline**.
 

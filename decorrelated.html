@@ -1,227 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="icon-192.png" type="image/png">
-<title>Decorrelated Noise Therapy</title>
-<script src="storage.js"></script>
-<script src="nav.js"></script>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <title>Decorrelated Noise Therapy</title>
+  <script src="storage.js"></script>
+  <script src="nav.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-<div class="panel">
-<h1>Decorrelated Noise</h1>
-<p class="info">Independent noise streams per ear reduce pattern-matching, promoting habituation.</p>
-<div class="match-section" style="margin-bottom: 20px;">
-  <h3>Clinical Significance</h3>
-  <p>Based on research by <b>Tass et al. (2012)</b>, decorrelated noise disrupts pathological neural synchrony by providing independent, non-correlated signals to each ear to promote neural desynchronization.</p>
-</div>
-
-<div class="ctrl" style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
-  <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-    <input type="checkbox" id="lockLR" style="width: 20px; height: 20px; margin-top: 0;">
-    <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Lock L & R Parameters</span>
-  </label>
-</div>
-
-<div class="ctrl">
-  <label style="display: flex; align-items: center;">Sound Source <span class="status-dot" id="sourceStatus">○</span></label>
-  <select id="color">
-    <optgroup label="Broadband Noise">
-      <option value="white" title="Flat spectrum; effective for broadband masking.">White Noise</option>
-      <option value="pink" selected title="Balanced power; research standard for comfort.">Pink Noise</option>
-      <option value="brown" title="Low-frequency focus; best for low-pitched tinnitus.">Brown Noise</option>
-      <option value="blue" title="High-frequency focus; useful for high-pitched tinnitus.">Blue Noise (+3dB/oct)</option>
-      <option value="violet" title="Strong high-frequency focus; best for piercing tones.">Violet Noise (High-Tone)</option>
-    </optgroup>
-    <optgroup label="Nature Sounds">
-      <option value="rain">Rain</option>
-      <option value="ocean">Ocean</option>
-      <option value="stream">Stream</option>
-      <option value="wind">Wind</option>
-    </optgroup>
-    <option value="custom">Custom File (Upload)</option>
-    <option value="live">Live System Audio (Tab/App)</option>
-  </select>
-  <input type="file" id="customFile" accept="audio/*" style="display:none; margin-top:10px;">
-</div>
-<div class="ctrl">
-  <label style="display: flex; justify-content: space-between; align-items: center;">
-    <span style="display: flex; align-items: center;">Master Volume <span class="status-dot" id="volMasterStatus">○</span> <span class="val" id="volValMaster" style="float:none; margin-left:10px;">100%</span></span>
-    <label style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; color: var(--accent);">
-      <input type="checkbox" id="muteToggle" style="width: 16px; height: 16px; margin: 0;"> Mute
-    </label>
-  </label>
-  <input type="range" id="volMaster" min="0" max="100" value="100">
-  <div class="btn-group" data-target="volMaster">
-    <button class="button-step" data-delta="-5">-5</button>
-    <button class="button-step" data-delta="5">+5</button>
-  </div>
-</div>
-<div class="responsive-grid">
-  <div class="ctrl">
-    <label style="display: flex; align-items: center;">Volume L <span class="status-dot" id="volLStatus">○</span> <span class="val" id="volValL" style="margin-left: auto;">40%</span></label>
-    <input type="range" id="volL" min="0" max="100" value="40">
-    <div class="btn-group" data-target="volL">
-      <button class="button-step" data-delta="-5">-5</button>
-      <button class="button-step" data-delta="5">+5</button>
+  <div class="panel">
+    <h1>Decorrelated Noise</h1>
+    <p class="info">Independent noise streams per ear reduce pattern-matching, promoting habituation.</p>
+    <div class="match-section" style="margin-bottom: 20px;">
+      <h3>Clinical Significance</h3>
+      <p>Based on research by <b>Tass et al. (2012)</b>, decorrelated noise disrupts pathological neural synchrony by
+        providing independent, non-correlated signals to each ear to promote neural desynchronization.</p>
     </div>
-  </div>
-  <div class="ctrl" id="volRGroup">
-    <label style="display: flex; align-items: center;">Volume R <span class="status-dot" id="volRStatus">○</span> <span class="val" id="volValR" style="margin-left: auto;">40%</span></label>
-    <input type="range" id="volR" min="0" max="100" value="40">
-    <div class="btn-group" data-target="volR">
-      <button class="button-step" data-delta="-5">-5</button>
-      <button class="button-step" data-delta="5">+5</button>
+
+    <div class="ctrl" style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
+      <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+        <input type="checkbox" id="lockLR" style="width: 20px; height: 20px; margin-top: 0;">
+        <span style="font-size: 1rem; color: var(--accent); font-weight: bold;">Lock L & R Parameters</span>
+      </label>
     </div>
-  </div>
-</div>
-<div style="display: flex; gap: 10px; margin-bottom: 20px;">
-  <button class="tone-btn" id="syncVolBtn" style="flex: 1;" onclick="syncVolToR()">Sync Volume L &rarr; R</button>
-</div>
-<div class="ctrl" title="Controls the independence of the left and right audio streams. 100% means completely independent signals."><label style="display: flex; align-items: center;">Decorrelation Amount <span class="status-dot" id="decStatus">○</span> <span class="info-icon">?</span> <span class="val" id="decVal" style="margin-left: auto;">100%</span></label><input type="range" id="dec" min="0" max="100" value="100"></div>
-<div class="responsive-grid">
-  <div class="ctrl">
-    <label style="display: flex; align-items: center; flex-wrap: wrap;">Low-Cut L (Hz) <span class="status-dot" id="lcLStatus">○</span>
-      <div class="input-with-buttons">
-        <input type="number" id="lcInputL" class="val-input" value="80" min="20" max="500">
-        <div class="fine-tune-group" data-target="lcL">
-          <button class="fine-tune-btn" data-delta="-5">-5</button>
-          <button class="fine-tune-btn" data-delta="-1">-1</button>
-          <button class="fine-tune-btn" data-delta="1">+1</button>
-          <button class="fine-tune-btn" data-delta="5">+5</button>
+
+    <div class="ctrl">
+      <label style="display: flex; align-items: center;">Sound Source <span class="status-dot"
+          id="sourceStatus">○</span></label>
+      <select id="color">
+        <option value="auto">Auto-Match (Neural Algorithm)</option>
+        <optgroup label="Broadband Noise">
+          <option value="white" title="Flat spectrum; effective for broadband masking.">White Noise</option>
+          <option value="pink" selected title="Balanced power; research standard for comfort.">Pink Noise</option>
+          <option value="brown" title="Low-frequency focus; best for low-pitched tinnitus.">Brown Noise</option>
+          <option value="blue" title="High-frequency focus; useful for high-pitched tinnitus.">Blue Noise (+3dB/oct)
+          </option>
+          <option value="violet" title="Strong high-frequency focus; best for piercing tones.">Violet Noise (High-Tone)
+          </option>
+        </optgroup>
+        <optgroup label="Nature Sounds">
+          <option value="rain">Rain</option>
+          <option value="ocean">Ocean</option>
+          <option value="stream">Stream</option>
+          <option value="wind">Wind</option>
+        </optgroup>
+        <option value="custom">Custom File (Upload)</option>
+        <option value="live">Live System Audio (Tab/App)</option>
+      </select>
+      <input type="file" id="customFile" accept="audio/*" style="display:none; margin-top:10px;">
+    </div>
+    <div class="ctrl">
+      <label style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="display: flex; align-items: center;">Master Volume <span class="status-dot"
+            id="volMasterStatus">○</span> <span class="val" id="volValMaster"
+            style="float:none; margin-left:10px;">100%</span></span>
+        <label style="display: inline-flex; align-items: center; gap: 5px; cursor: pointer; color: var(--accent);">
+          <input type="checkbox" id="muteToggle" style="width: 16px; height: 16px; margin: 0;"> Mute
+        </label>
+      </label>
+      <input type="range" id="volMaster" min="0" max="100" value="100">
+      <div class="btn-group" data-target="volMaster">
+        <button class="button-step" data-delta="-5">-5</button>
+        <button class="button-step" data-delta="5">+5</button>
+      </div>
+    </div>
+    <div class="responsive-grid">
+      <div class="ctrl">
+        <label style="display: flex; align-items: center;">Volume L <span class="status-dot" id="volLStatus">○</span>
+          <span class="val" id="volValL" style="margin-left: auto;">40%</span></label>
+        <input type="range" id="volL" min="0" max="100" value="40">
+        <div class="btn-group" data-target="volL">
+          <button class="button-step" data-delta="-5">-5</button>
+          <button class="button-step" data-delta="5">+5</button>
         </div>
       </div>
-    </label>
-    <input type="range" id="lcL" min="20" max="500" value="80">
-    <div class="btn-group" data-target="lcL">
-      <button class="button-step" data-delta="-100">-100</button>
-      <button class="button-step" data-delta="-10">-10</button>
-      <button class="button-step" data-delta="10">+10</button>
-      <button class="button-step" data-delta="100">+100</button>
-    </div>
-  </div>
-  <div class="ctrl" id="lcRGroup">
-    <label style="display: flex; align-items: center; flex-wrap: wrap;">Low-Cut R (Hz) <span class="status-dot" id="lcRStatus">○</span>
-      <div class="input-with-buttons">
-        <input type="number" id="lcInputR" class="val-input" value="80" min="20" max="500">
-        <div class="fine-tune-group" data-target="lcR">
-          <button class="fine-tune-btn" data-delta="-5">-5</button>
-          <button class="fine-tune-btn" data-delta="-1">-1</button>
-          <button class="fine-tune-btn" data-delta="1">+1</button>
-          <button class="fine-tune-btn" data-delta="5">+5</button>
+      <div class="ctrl" id="volRGroup">
+        <label style="display: flex; align-items: center;">Volume R <span class="status-dot" id="volRStatus">○</span>
+          <span class="val" id="volValR" style="margin-left: auto;">40%</span></label>
+        <input type="range" id="volR" min="0" max="100" value="40">
+        <div class="btn-group" data-target="volR">
+          <button class="button-step" data-delta="-5">-5</button>
+          <button class="button-step" data-delta="5">+5</button>
         </div>
       </div>
-    </label>
-    <input type="range" id="lcR" min="20" max="500" value="80">
-    <div class="btn-group" data-target="lcR">
-      <button class="button-step" data-delta="-100">-100</button>
-      <button class="button-step" data-delta="-10">-10</button>
-      <button class="button-step" data-delta="10">+10</button>
-      <button class="button-step" data-delta="100">+100</button>
     </div>
-  </div>
-</div>
-<div style="display: flex; gap: 10px; margin-bottom: 20px;">
-  <button class="tone-btn" id="syncLCBtn" style="flex: 1;" onclick="syncLCToR()">Sync Low-Cut L &rarr; R</button>
-</div>
-<div class="responsive-grid">
-  <div class="ctrl">
-    <label style="display: flex; align-items: center; flex-wrap: wrap;">High-Cut L (Hz) <span class="status-dot" id="hcLStatus">○</span>
-      <div class="input-with-buttons">
-        <input type="number" id="hcInputL" class="val-input" value="14000" min="2000" max="20000">
-        <div class="fine-tune-group" data-target="hcL">
-          <button class="fine-tune-btn" data-delta="-50">-50</button>
-          <button class="fine-tune-btn" data-delta="-10">-10</button>
-          <button class="fine-tune-btn" data-delta="10">+10</button>
-          <button class="fine-tune-btn" data-delta="50">+50</button>
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <button class="tone-btn" id="syncVolBtn" style="flex: 1;" onclick="syncVolToR()">Sync Volume L &rarr; R</button>
+    </div>
+    <div class="ctrl"
+      title="Controls the independence of the left and right audio streams. 100% means completely independent signals.">
+      <label style="display: flex; align-items: center;">Decorrelation Amount <span class="status-dot"
+          id="decStatus">○</span> <span class="info-icon">?</span> <span class="val" id="decVal"
+          style="margin-left: auto;">100%</span></label><input type="range" id="dec" min="0" max="100" value="100">
+    </div>
+    <div class="responsive-grid">
+      <div class="ctrl">
+        <label style="display: flex; align-items: center; flex-wrap: wrap;">Low-Cut L (Hz) <span class="status-dot"
+            id="lcLStatus">○</span>
+          <div class="input-with-buttons">
+            <input type="number" id="lcInputL" class="val-input" value="80" min="20" max="500">
+            <div class="fine-tune-group" data-target="lcL">
+              <button class="fine-tune-btn" data-delta="-5">-5</button>
+              <button class="fine-tune-btn" data-delta="-1">-1</button>
+              <button class="fine-tune-btn" data-delta="1">+1</button>
+              <button class="fine-tune-btn" data-delta="5">+5</button>
+            </div>
+          </div>
+        </label>
+        <input type="range" id="lcL" min="20" max="500" value="80">
+        <div class="btn-group" data-target="lcL">
+          <button class="button-step" data-delta="-100">-100</button>
+          <button class="button-step" data-delta="-10">-10</button>
+          <button class="button-step" data-delta="10">+10</button>
+          <button class="button-step" data-delta="100">+100</button>
         </div>
       </div>
-    </label>
-    <input type="range" id="hcL" min="2000" max="20000" value="14000" step="100">
-    <div class="btn-group" data-target="hcL">
-      <button class="button-step" data-delta="-500">-500</button>
-      <button class="button-step" data-delta="-100">-100</button>
-      <button class="button-step" data-delta="100">+100</button>
-      <button class="button-step" data-delta="500">+500</button>
-    </div>
-  </div>
-  <div class="ctrl" id="hcRGroup">
-    <label style="display: flex; align-items: center; flex-wrap: wrap;">High-Cut R (Hz) <span class="status-dot" id="hcRStatus">○</span>
-      <div class="input-with-buttons">
-        <input type="number" id="hcInputR" class="val-input" value="14000" min="2000" max="20000">
-        <div class="fine-tune-group" data-target="hcR">
-          <button class="fine-tune-btn" data-delta="-50">-50</button>
-          <button class="fine-tune-btn" data-delta="-10">-10</button>
-          <button class="fine-tune-btn" data-delta="10">+10</button>
-          <button class="fine-tune-btn" data-delta="50">+50</button>
+      <div class="ctrl" id="lcRGroup">
+        <label style="display: flex; align-items: center; flex-wrap: wrap;">Low-Cut R (Hz) <span class="status-dot"
+            id="lcRStatus">○</span>
+          <div class="input-with-buttons">
+            <input type="number" id="lcInputR" class="val-input" value="80" min="20" max="500">
+            <div class="fine-tune-group" data-target="lcR">
+              <button class="fine-tune-btn" data-delta="-5">-5</button>
+              <button class="fine-tune-btn" data-delta="-1">-1</button>
+              <button class="fine-tune-btn" data-delta="1">+1</button>
+              <button class="fine-tune-btn" data-delta="5">+5</button>
+            </div>
+          </div>
+        </label>
+        <input type="range" id="lcR" min="20" max="500" value="80">
+        <div class="btn-group" data-target="lcR">
+          <button class="button-step" data-delta="-100">-100</button>
+          <button class="button-step" data-delta="-10">-10</button>
+          <button class="button-step" data-delta="10">+10</button>
+          <button class="button-step" data-delta="100">+100</button>
         </div>
       </div>
-    </label>
-    <input type="range" id="hcR" min="2000" max="20000" value="14000" step="100">
-    <div class="btn-group" data-target="hcR">
-      <button class="button-step" data-delta="-500">-500</button>
-      <button class="button-step" data-delta="-100">-100</button>
-      <button class="button-step" data-delta="100">+100</button>
-      <button class="button-step" data-delta="500">+500</button>
     </div>
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <button class="tone-btn" id="syncLCBtn" style="flex: 1;" onclick="syncLCToR()">Sync Low-Cut L &rarr; R</button>
+    </div>
+    <div class="responsive-grid">
+      <div class="ctrl">
+        <label style="display: flex; align-items: center; flex-wrap: wrap;">High-Cut L (Hz) <span class="status-dot"
+            id="hcLStatus">○</span>
+          <div class="input-with-buttons">
+            <input type="number" id="hcInputL" class="val-input" value="14000" min="2000" max="20000">
+            <div class="fine-tune-group" data-target="hcL">
+              <button class="fine-tune-btn" data-delta="-50">-50</button>
+              <button class="fine-tune-btn" data-delta="-10">-10</button>
+              <button class="fine-tune-btn" data-delta="10">+10</button>
+              <button class="fine-tune-btn" data-delta="50">+50</button>
+            </div>
+          </div>
+        </label>
+        <input type="range" id="hcL" min="2000" max="20000" value="14000" step="100">
+        <div class="btn-group" data-target="hcL">
+          <button class="button-step" data-delta="-500">-500</button>
+          <button class="button-step" data-delta="-100">-100</button>
+          <button class="button-step" data-delta="100">+100</button>
+          <button class="button-step" data-delta="500">+500</button>
+        </div>
+      </div>
+      <div class="ctrl" id="hcRGroup">
+        <label style="display: flex; align-items: center; flex-wrap: wrap;">High-Cut R (Hz) <span class="status-dot"
+            id="hcRStatus">○</span>
+          <div class="input-with-buttons">
+            <input type="number" id="hcInputR" class="val-input" value="14000" min="2000" max="20000">
+            <div class="fine-tune-group" data-target="hcR">
+              <button class="fine-tune-btn" data-delta="-50">-50</button>
+              <button class="fine-tune-btn" data-delta="-10">-10</button>
+              <button class="fine-tune-btn" data-delta="10">+10</button>
+              <button class="fine-tune-btn" data-delta="50">+50</button>
+            </div>
+          </div>
+        </label>
+        <input type="range" id="hcR" min="2000" max="20000" value="14000" step="100">
+        <div class="btn-group" data-target="hcR">
+          <button class="button-step" data-delta="-500">-500</button>
+          <button class="button-step" data-delta="-100">-100</button>
+          <button class="button-step" data-delta="100">+100</button>
+          <button class="button-step" data-delta="500">+500</button>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <button class="tone-btn" id="syncHCBtn" style="flex: 1;" onclick="syncHCToR()">Sync High-Cut L &rarr; R</button>
+    </div>
+
+    <div class="match-section" id="eqSection">
+      <h3 style="display: flex; align-items: center;">Hearing Compensation (EQ) <span class="status-dot"
+          id="eqStatus">○</span></h3>
+      <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
+      <div class="responsive-grid">
+        <div id="eqControlsL"></div>
+        <div id="eqControlsR"></div>
+      </div>
+    </div>
+
+    <div class="timer-block"><label>Session Timer (minutes)</label><input id="timerInput" type="number" min="1"
+        max="120" value="10"><button class="big-btn play-btn" onclick="startTimer()">Start Timer</button>
+      <div class="timer-display" id="timerDisplay"></div>
+    </div>
+    <canvas id="volumeViz" class="volume-meter-canvas"></canvas>
+    <button class="big-btn play-btn" id="toggleBtn" onclick="handleToggle()">Start Therapy</button>
+    <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical
+      Export (.txt)</button>
+    <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;"
+      onclick="generatePDFReport()">Download PDF Report</button>
+    <button class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
+      onclick="resetToDefaults()">Reset to Defaults</button>
+    <button class="button email-audiologist-btn"
+      style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;"
+      onclick="emailToAudiologist()">Email to Audiologist</button>
+    <a class="button"
+      style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim); text-decoration: none; display: flex; align-items: center; justify-content: center;"
+      href="user_manual.html#sec-7" target="_blank">Open Manual for this Tool</a>
+    <div id="noiseRangeWarning" class="info"
+      style="display:none; color:var(--error); border: 1px solid var(--error); padding: 12px; border-radius: 8px; margin-top: 15px; text-align: left; background: rgba(211, 47, 47, 0.05);">
+    </div>
+    <div class="status" id="status"></div>
+    <div class="usage-progress">
+      <div id="usageBar" class="usage-bar" style="width: 0%"></div>
+    </div>
+    <div id="usageText" class="usage-text">Today's Progress: 0 / 20 mins</div>
+    <canvas id="decorrelationViz" class="decorrelation-canvas"></canvas>
   </div>
-</div>
-<div style="display: flex; gap: 10px; margin-bottom: 20px;">
-  <button class="tone-btn" id="syncHCBtn" style="flex: 1;" onclick="syncHCToR()">Sync High-Cut L &rarr; R</button>
-</div>
+  <script>
+    let ctx, playing = false, nodesL, nodesR, audioL, audioR, timerInterval = null, analyserL, analyserR, rafViz, rafVolViz, globalMasterGain, liveStream, eqNodesL = [], eqNodesR = [];
+    const BUF_SIZE = 2 * 44100;
+    const eqBands = [2000, 4000, 8000, 12000];
+    window.lastValidationStatus = "Not Validated";
 
-  <div class="match-section" id="eqSection">
-  <h3 style="display: flex; align-items: center;">Hearing Compensation (EQ) <span class="status-dot" id="eqStatus">○</span></h3>
-  <p class="info">Boost frequencies where you have hearing loss to reduce neural strain. Boost carefully.</p>
-  <div class="responsive-grid">
-    <div id="eqControlsL"></div>
-    <div id="eqControlsR"></div>
-  </div>
-</div>
+    function validateFilterSettings() {
+      const lcL = +document.getElementById('lcL').value;
+      const hcL = +document.getElementById('hcL').value;
+      const lcR = +document.getElementById('lcR').value;
+      const hcR = +document.getElementById('hcR').value;
 
-<div class="timer-block zen-keep"><label>Session Timer (minutes)</label><input id="timerInput" type="number" min="1" max="120" value="10"><button class="big-btn play-btn" onclick="startTimer()">Start Timer</button><div class="timer-display" id="timerDisplay"></div></div>
-<canvas id="volumeViz" class="volume-meter-canvas zen-keep"></canvas>
-<button class="big-btn play-btn zen-keep" id="toggleBtn" onclick="handleToggle()">Start Therapy</button>
-<button class="button zen-keep" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
-<button class="button zen-keep" style="width:100%; margin-top:10px; background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-<button class="button zen-keep" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetToDefaults()">Reset to Defaults</button>
-<button class="button email-audiologist-btn zen-keep" style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
-<div class="status zen-keep" id="status"></div> 
-<div class="usage-progress zen-keep">
-  <div id="usageBar" class="usage-bar" style="width: 0%"></div>
-</div>
-<div id="usageText" class="usage-text zen-keep">Today's Progress: 0 / 20 mins</div>
-<button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
-<canvas id="decorrelationViz" class="decorrelation-canvas zen-keep"></canvas>
-</div>
-<script>
-let ctx,playing=false,nodesL,nodesR,audioL,audioR,timerInterval=null,analyserL,analyserR,rafViz,rafVolViz,globalMasterGain,liveStream,eqNodesL=[],eqNodesR=[];
-const BUF_SIZE=2*44100;
-const eqBands = [2000, 4000, 8000, 12000];
-window.lastValidationStatus = "Not Validated";
+      let failed = false;
+      if (lcL >= hcL) failed = true;
+      if (lcR >= hcR) failed = true;
 
-function validateFilterSettings() {
-    const lcL = +document.getElementById('lcL').value;
-    const hcL = +document.getElementById('hcL').value;
-    const lcR = +document.getElementById('lcR').value;
-    const hcR = +document.getElementById('hcR').value;
+      const statusL = lcL >= hcL ? "L: FAIL (Cross-over)" : "L: PASS";
+      const statusR = lcR >= hcR ? "R: FAIL (Cross-over)" : "R: PASS";
 
-    let failed = false;
-    if (lcL >= hcL) failed = true;
-    if (lcR >= hcR) failed = true;
+      window.lastValidationStatus = `${statusL} | ${statusR}`;
+      document.getElementById('status').textContent = 'Playing ' + document.getElementById('color').value + ' (' + window.lastValidationStatus + ')';
+      return !failed;
+    }
 
-    const statusL = lcL >= hcL ? "L: FAIL (Cross-over)" : "L: PASS";
-    const statusR = lcR >= hcR ? "R: FAIL (Cross-over)" : "R: PASS";
-
-    window.lastValidationStatus = `${statusL} | ${statusR}`;
-    document.getElementById('status').textContent = 'Playing ' + document.getElementById('color').value + ' (' + window.lastValidationStatus + ')';
-    return !failed;
-}
-
-window.onload = () => {
-    initNav(`
+    window.onload = () => {
+      initNav(`
         <h3 style="color:var(--accent); margin-bottom:10px;">Module-Specific Guidance</h3>
         <p><b>Stereo Verification:</b> Decorrelation therapy <i>requires</i> independent signals to each ear. Run the <b>System Validation -> Phase Test</b> from the home page to ensure your hardware is not mono-summed or phase-inverted.</p><br>
         
@@ -236,308 +270,304 @@ window.onload = () => {
         • <b>Blue/Violet:</b> High-frequency focus; best for piercing, high-pitched tones.
     `);
 
-    document.getElementById('volL').value = loadSetting('dec_volL', loadSetting('dec_vol', 40));
-    document.getElementById('volR').value = loadSetting('dec_volR', loadSetting('dec_vol', 40));
-    document.getElementById('volMaster').value = loadSetting('dec_volMaster', 100);
-    document.getElementById('muteToggle').checked = loadSetting('dec_volMuted', 'false') === 'true';
-    document.getElementById('dec').value = loadSetting('dec_dec', 100);
-    document.getElementById('lcL').value = loadSetting('dec_lcL', loadSetting('dec_lc', 80));
-    document.getElementById('lcR').value = loadSetting('dec_lcR', loadSetting('dec_lc', 80));
-    document.getElementById('hcL').value = loadSetting('dec_hcL', loadSetting('dec_hc', 14000));
-    document.getElementById('hcR').value = loadSetting('dec_hcR', loadSetting('dec_hc', 14000));
-    document.getElementById('color').value = loadSetting('dec_color', 'pink');
-    if (document.getElementById('color').value === 'custom') document.getElementById('customFile').style.display = 'block';
-    
-    document.getElementById('lockLR').checked = loadSetting('dec_lock_lr', 'false') === 'true';
+      document.getElementById('volL').value = loadSetting('dec_volL', loadSetting('dec_vol', 40));
+      document.getElementById('volR').value = loadSetting('dec_volR', loadSetting('dec_vol', 40));
+      document.getElementById('volMaster').value = loadSetting('dec_volMaster', 100);
+      document.getElementById('muteToggle').checked = loadSetting('dec_volMuted', 'false') === 'true';
+      document.getElementById('dec').value = loadSetting('dec_dec', 100);
+      document.getElementById('lcL').value = loadSetting('dec_lcL', loadSetting('dec_lc', 80));
+      document.getElementById('lcR').value = loadSetting('dec_lcR', loadSetting('dec_lc', 80));
+      document.getElementById('hcL').value = loadSetting('dec_hcL', loadSetting('dec_hc', 14000));
+      document.getElementById('hcR').value = loadSetting('dec_hcR', loadSetting('dec_hc', 14000));
+      document.getElementById('color').value = loadSetting('dec_color', 'pink');
+      if (document.getElementById('color').value === 'custom') document.getElementById('customFile').style.display = 'block';
 
-    createEqUI();
-    updateLockVisuals();
+      document.getElementById('lockLR').checked = loadSetting('dec_lock_lr', 'false') === 'true';
 
-    if (loadSetting('dec_zen_mode', 'false') === 'true') {
-        toggleZenMode(true);
+      createEqUI();
+      updateLockVisuals();
+
+      updateLabels();
+      updateStatusDots();
+      setupStepButtons();
+      refreshUsageUI();
+    };
+
+    function refreshUsageUI() {
+      const goal = loadSetting('daily_goal', 20);
+      const current = getDailyUsage();
+      document.getElementById('usageBar').style.width = Math.min(100, (current / goal) * 100) + '%';
+      document.getElementById('usageText').textContent = `Today's Progress: ${Math.round(current)} / ${goal} mins`;
     }
 
-    updateLabels();
-    updateStatusDots();
-    setupStepButtons();
-    refreshUsageUI();
-};
+    function updateLabels() {
+      document.getElementById('volValL').textContent = document.getElementById('volL').value + '%';
+      document.getElementById('volValR').textContent = document.getElementById('volR').value + '%';
+      document.getElementById('volValMaster').textContent = document.getElementById('volMaster').value + '%';
+      document.getElementById('decVal').textContent = document.getElementById('dec').value + '%';
+      document.getElementById('lcInputL').value = document.getElementById('lcL').value;
+      document.getElementById('lcInputR').value = document.getElementById('lcR').value;
+      document.getElementById('hcInputL').value = document.getElementById('hcL').value;
+      document.getElementById('hcInputR').value = document.getElementById('hcR').value;
+    }
 
-function refreshUsageUI() {
-    const goal = loadSetting('daily_goal', 20);
-    const current = getDailyUsage();
-    document.getElementById('usageBar').style.width = Math.min(100, (current / goal) * 100) + '%';
-    document.getElementById('usageText').textContent = `Today's Progress: ${Math.round(current)} / ${goal} mins`;
-}
-
-function updateLabels(){
-    document.getElementById('volValL').textContent = document.getElementById('volL').value + '%';
-    document.getElementById('volValR').textContent = document.getElementById('volR').value + '%';
-    document.getElementById('volValMaster').textContent = document.getElementById('volMaster').value + '%';
-    document.getElementById('decVal').textContent = document.getElementById('dec').value + '%';
-    document.getElementById('lcInputL').value = document.getElementById('lcL').value;
-    document.getElementById('lcInputR').value = document.getElementById('lcR').value;
-    document.getElementById('hcInputL').value = document.getElementById('hcL').value;
-    document.getElementById('hcInputR').value = document.getElementById('hcR').value;
-}
-
-function createEqUI() {
-    ['L', 'R'].forEach(side => {
+    function createEqUI() {
+      ['L', 'R'].forEach(side => {
         const container = document.getElementById(`eqControls${side}`);
         container.innerHTML = `<h4 style="color:var(--accent); font-size:0.8rem; margin-bottom:10px;">${side === 'L' ? 'Left' : 'Right'} Ear</h4>`;
         eqBands.forEach(freq => {
-            const val = loadSetting(`eq_dec_${side}_${freq}`, 0);
-            const div = document.createElement('div');
-            div.className = 'ctrl';
-            div.innerHTML = `
-                <label>${freq >= 1000 ? (freq/1000)+'k' : freq} Hz Boost <span class="val" id="eqVal_dec_${side}_${freq}">${val} dB</span></label>
+          const val = loadSetting(`eq_dec_${side}_${freq}`, 0);
+          const div = document.createElement('div');
+          div.className = 'ctrl';
+          div.innerHTML = `
+                <label>${freq >= 1000 ? (freq / 1000) + 'k' : freq} Hz Boost <span class="val" id="eqVal_dec_${side}_${freq}">${val} dB</span></label>
                 <input type="range" id="eq_dec_${side}_${freq}" min="-12" max="12" value="${val}" step="1">
             `;
-            container.appendChild(div);
-            const slider = div.querySelector('input');
-            slider.oninput = (e) => {
-                const v = e.target.value;
-                document.getElementById(`eqVal_dec_${side}_${freq}`).textContent = v + ' dB';
-                saveSetting(`eq_dec_${side}_${freq}`, v);
-                if (document.getElementById('lockLR').checked && side === 'L') {
-                    const rSlider = document.getElementById(`eq_dec_R_${freq}`);
-                    if (rSlider) { rSlider.value = v; rSlider.dispatchEvent(new Event('input')); }
-                }
-                if (playing) {
-                    const nodes = side === 'L' ? eqNodesL : eqNodesR;
-                    const node = nodes.find(n => n.frequency.value === freq);
-                    if (node) node.gain.setTargetAtTime(v, ctx.currentTime, 0.05);
-                }
-                updateStatusDots();
-            };
+          container.appendChild(div);
+          const slider = div.querySelector('input');
+          slider.oninput = (e) => {
+            const v = e.target.value;
+            document.getElementById(`eqVal_dec_${side}_${freq}`).textContent = v + ' dB';
+            saveSetting(`eq_dec_${side}_${freq}`, v);
+            if (document.getElementById('lockLR').checked && side === 'L') {
+              const rSlider = document.getElementById(`eq_dec_R_${freq}`);
+              if (rSlider) { rSlider.value = v; rSlider.dispatchEvent(new Event('input')); }
+            }
+            if (playing) {
+              const nodes = side === 'L' ? eqNodesL : eqNodesR;
+              const node = nodes.find(n => n.frequency.value === freq);
+              if (node) node.gain.setTargetAtTime(v, ctx.currentTime, 0.05);
+            }
+            updateStatusDots();
+          };
         });
-    });
-}
+      });
+    }
 
-let repeatTimeout, repeatInterval;
-function setupStepButtons() {
-    document.querySelectorAll('.btn-group .button-step, .fine-tune-group .fine-tune-btn').forEach(btn => {
+    let repeatTimeout, repeatInterval;
+    function setupStepButtons() {
+      document.querySelectorAll('.btn-group .button-step, .fine-tune-group .fine-tune-btn').forEach(btn => {
         const delta = parseInt(btn.dataset.delta);
         // Find the closest parent with a data-target attribute
         let targetParent = btn.closest('[data-target]');
         if (!targetParent) {
-            console.warn("Button has no data-target parent:", btn);
-            return;
+          console.warn("Button has no data-target parent:", btn);
+          return;
         }
         const targetId = targetParent.dataset.target;
         const target = document.getElementById(targetId);
         const step = () => {
-            let val = Number(target.value) + delta;
-            // Handle float steps for fine-tune buttons if needed, though current deltas are integers
-            if (target.step && target.step.includes('.')) {
-                val = parseFloat(val.toFixed(2)); // Adjust precision as needed
-            }
-            target.value = Math.min(target.max, Math.max(target.min, val));
-            target.dispatchEvent(new Event('input'));
+          let val = Number(target.value) + delta;
+          // Handle float steps for fine-tune buttons if needed, though current deltas are integers
+          if (target.step && target.step.includes('.')) {
+            val = parseFloat(val.toFixed(2)); // Adjust precision as needed
+          }
+          target.value = Math.min(target.max, Math.max(target.min, val));
+          target.dispatchEvent(new Event('input'));
         };
         btn.onmousedown = btn.ontouchstart = (e) => {
-            e.preventDefault(); 
-            step();
-            repeatTimeout = setTimeout(() => { repeatInterval = setInterval(step, 80); }, 500);
+          e.preventDefault();
+          step();
+          repeatTimeout = setTimeout(() => { repeatInterval = setInterval(step, 80); }, 500);
         };
-        btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => { 
-            clearInterval(repeatInterval); 
-            clearTimeout(repeatTimeout); 
-            repeatInterval = null; 
+        btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => {
+          clearInterval(repeatInterval);
+          clearTimeout(repeatTimeout);
+          repeatInterval = null;
         };
-        btn.onclick = (e) => { if(!repeatInterval) step(); }; // Accessible fallback
+        btn.onclick = (e) => { if (!repeatInterval) step(); }; // Accessible fallback
+      });
+    }
+
+    function syncLCToR() {
+      document.getElementById('lcR').value = document.getElementById('lcL').value;
+      document.getElementById('lcR').dispatchEvent(new Event('input'));
+    }
+
+    function syncHCToR() {
+      document.getElementById('hcR').value = document.getElementById('hcL').value;
+      document.getElementById('hcR').dispatchEvent(new Event('input'));
+    }
+
+    function syncVolToR() {
+      document.getElementById('volR').value = document.getElementById('volL').value;
+      document.getElementById('volR').dispatchEvent(new Event('input'));
+    }
+
+    function performGlobalSync() {
+      if (!document.getElementById('lockLR').checked) return;
+      syncVolToR();
+      syncLCToR();
+      syncHCToR();
+    }
+
+    function toggleZenMode() {
+      document.body.classList.toggle('zen-mode');
+      const isZen = document.body.classList.contains('zen-mode');
+      saveSetting('dec_zen_mode', isZen);
+      document.getElementById('zenBtn').textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
+    }
+    ['L', 'R'].forEach(side => {
+      document.getElementById(`lcInput${side}`).oninput = e => { document.getElementById(`lc${side}`).value = e.target.value; document.getElementById(`lc${side}`).dispatchEvent(new Event('input')); };
+      document.getElementById(`hcInput${side}`).oninput = e => { document.getElementById(`hc${side}`).value = e.target.value; document.getElementById(`hc${side}`).dispatchEvent(new Event('input')); };
     });
-}
 
-function syncLCToR() {
-    document.getElementById('lcR').value = document.getElementById('lcL').value;
-    document.getElementById('lcR').dispatchEvent(new Event('input'));
-}
+    function createFilterChain(sourceNode, side, vol, lc, hc, analyser) {
+      const g = ctx.createGain(); g.gain.value = vol;
+      const lo = ctx.createBiquadFilter(); lo.type = 'highpass'; lo.frequency.value = lc;
+      const hi = ctx.createBiquadFilter(); hi.type = 'lowpass'; hi.frequency.value = hc;
 
-function syncHCToR() {
-    document.getElementById('hcR').value = document.getElementById('hcL').value;
-    document.getElementById('hcR').dispatchEvent(new Event('input'));
-}
+      sourceNode.connect(lo);
+      lo.connect(hi);
 
-function syncVolToR() {
-    document.getElementById('volR').value = document.getElementById('volL').value;
-    document.getElementById('volR').dispatchEvent(new Event('input'));
-}
-
-function performGlobalSync() {
-    if (!document.getElementById('lockLR').checked) return;
-    syncVolToR();
-    syncLCToR();
-    syncHCToR();
-}
-
-function toggleZenMode() {
-    document.body.classList.toggle('zen-mode');
-    const isZen = document.body.classList.contains('zen-mode');
-    saveSetting('dec_zen_mode', isZen);
-    document.getElementById('zenBtn').textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
-}
-['L', 'R'].forEach(side => {
-    document.getElementById(`lcInput${side}`).oninput = e => { document.getElementById(`lc${side}`).value = e.target.value; document.getElementById(`lc${side}`).dispatchEvent(new Event('input')); };
-    document.getElementById(`hcInput${side}`).oninput = e => { document.getElementById(`hc${side}`).value = e.target.value; document.getElementById(`hc${side}`).dispatchEvent(new Event('input')); };
-});
-
-function createFilterChain(sourceNode, side, vol, lc, hc, analyser) {
-    const g = ctx.createGain(); g.gain.value = vol;
-    const lo = ctx.createBiquadFilter(); lo.type = 'highpass'; lo.frequency.value = lc;
-    const hi = ctx.createBiquadFilter(); hi.type = 'lowpass'; hi.frequency.value = hc;
-
-    sourceNode.connect(lo);
-    lo.connect(hi);
-
-    // Build EQ Chain
-    let head = hi;
-    const nodes = eqBands.map(freq => {
+      // Build EQ Chain
+      let head = hi;
+      const nodes = eqBands.map(freq => {
         const f = ctx.createBiquadFilter();
         f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1;
         f.gain.value = parseFloat(loadSetting(`eq_dec_${side}_${freq}`, 0));
         head.connect(f); head = f;
         return f;
-    });
-    if (side === 'L') eqNodesL = nodes; else eqNodesR = nodes;
+      });
+      if (side === 'L') eqNodesL = nodes; else eqNodesR = nodes;
 
-    head.connect(g);
-    if (analyser) g.connect(analyser);
-    return { gain: g, lo: lo, hi: hi }; // Return the nodes for later manipulation
-}
-
-function handleToggle(){ if(playing) stop(); else showPreFlight(() => start()); }
-async function toggle(){if(!playing) await start();else stop()}
-async function initAudio() {
-    if(!ctx) ctx=new(window.AudioContext||window.webkitAudioContext)();
-    if(!ctx.generator) ctx.generator = new NoiseGenerator(ctx);
-    if (ctx.state === 'suspended') await ctx.resume();
-}
-async function start(){
-  await initAudio();
-  if (!validateFilterSettings()) return;
-  ctx._expectingSound = true;
-  
-  const color=document.getElementById('color').value;
-  const volL=document.getElementById('volL').value/100;
-  const volR=document.getElementById('volR').value/100;
-  const isMuted = document.getElementById('muteToggle').checked;
-  const volMaster = isMuted ? 0 : document.getElementById('volMaster').value/100;
-  const dec=document.getElementById('dec').value/100;
-  const lcL=+document.getElementById('lcL').value;
-  const lcR=+document.getElementById('lcR').value;
-  const hcL=+document.getElementById('hcL').value;
-  const hcR=+document.getElementById('hcR').value;
-
-  analyserL = ctx.createAnalyser(); analyserL.fftSize = 2048;
-  analyserR = ctx.createAnalyser(); analyserR.fftSize = 2048;
-  
-  const merger = ctx.createChannelMerger(2);
-  globalMasterGain = ctx.createGain();
-  globalMasterGain.gain.value = volMaster;
-  
-  const masterAnalyser = ctx.createAnalyser();
-  masterAnalyser.fftSize = 256;
-  merger.connect(globalMasterGain).connect(masterAnalyser).connect(ctx.destination);
-  ctx._healthAnalyser = masterAnalyser;
-
-  const natureMap = { rain:'audio/rain.mp3', ocean:'audio/ocean.mp3', stream:'audio/stream.mp3', wind:'audio/wind.mp3' };
-
-  if (natureMap[color]) {
-    audioL = new Audio(natureMap[color]); audioL.loop = true;
-    const trackL = ctx.createMediaElementSource(audioL);
-    nodesL = createFilterChain(trackL, 'L', volL, lcL, hcL, analyserL);
-    nodesL.gain.connect(merger, 0, 0);
-    nodesL.src = audioL; // Store the Audio element for stopping
-    audioL.play();
-
-    if (dec > 0) {
-      audioR = new Audio(natureMap[color]); audioR.loop = true;
-      audioR.oncanplay = () => { if(audioR.currentTime === 0) audioR.currentTime = Math.random() * 30; };
-      const trackR = ctx.createMediaElementSource(audioR);
-      nodesR = createFilterChain(trackR, 'R', volR, lcR, hcR, analyserR);
-      nodesR.gain.connect(merger, 0, 1);
-      nodesR.src = audioR; // Store the Audio element for stopping
-      audioR.play();
-    } else {
-      // If decorrelation is 0, branch the same trackL to both ears with independent filters
-      nodesR = createFilterChain(trackL, 'R', volR, lcR, hcR, analyserR);
-      nodesR.gain.connect(merger, 0, 1);
-      nodesR.src = audioL; // Reference the same Audio element
+      head.connect(g);
+      if (analyser) g.connect(analyser);
+      return { gain: g, lo: lo, hi: hi }; // Return the nodes for later manipulation
     }
-    document.getElementById('status').textContent='Playing '+color+' sound';
-  } else {
-    let srcL, srcR;
-    
-    // Request independent nodes from the centralized safe generator
-    srcL = await ctx.generator.createSafeNoiseNode(color);
-    srcR = dec > 0 ? await ctx.generator.createSafeNoiseNode(color) : srcL;
 
-    if (!srcL || !srcR) { stop(); return; }
-    
-    srcL.start();
-    if (srcR !== srcL) srcR.start();
-
-    nodesL = createFilterChain(srcL, 'L', volL, lcL, hcL, analyserL);
-    nodesL.gain.connect(merger, 0, 0);
-    nodesR = createFilterChain(srcR, 'R', volR, lcR, hcR, analyserR);
-    nodesR.gain.connect(merger, 0, 1);
-
-    nodesL.src = srcL;
-    nodesR.src = srcR;
-    validateFilterSettings();
-  }
-
-  playing=true;
-  document.getElementById('toggleBtn').textContent='Stop';
-  document.getElementById('toggleBtn').className='big-btn stop-btn';
-  drawVolumeViz();
-  // toggleUIInteraction(false); // UI is already interactive by default, only lock when needed
-  updateStatusDots();
-  drawViz();
-}
-
-function stop(){
-  if(nodesL && nodesL.src){
-    try { nodesL.src.pause(); } catch(e) { /* BufferSource doesn't have pause */ }
-    try { nodesL.src.stop(); } catch(e) { /* Audio element doesn't have stop */ }
-  }
-  if(nodesR && nodesR.src){
-    // Only stop if it's a different source than nodesL.src to avoid double stopping
-    if (nodesR.src !== nodesL.src) {
-        try { nodesR.src.pause(); } catch(e) { /* BufferSource doesn't have pause */ }
-        try { nodesR.src.stop(); } catch(e) { /* Audio element doesn't have stop */ }
+    function handleToggle() { if (playing) stop(); else showPreFlight(() => start()); }
+    async function toggle() { if (!playing) await start(); else stop() }
+    async function initAudio() {
+      if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (!ctx.generator) ctx.generator = new NoiseGenerator(ctx);
+      if (ctx.state === 'suspended') await ctx.resume();
     }
-  }
-  if(ctx) ctx._expectingSound = false;
-  if(ctx){ctx.close();ctx=null}
-  playing=false;
-  eqNodesL = []; eqNodesR = [];
-  if(rafViz) cancelAnimationFrame(rafViz); // Stop visualization loop
-  if(rafVolViz) cancelAnimationFrame(rafVolViz);
-  document.getElementById('toggleBtn').textContent='Start Therapy';
-  document.getElementById('toggleBtn').className='big-btn play-btn';
-  toggleUIInteraction(false); // Re-enable UI interaction when stopped
-  document.getElementById('status').textContent='Stopped'
-  updateStatusDots();
-  const canvas = document.getElementById('volumeViz');
-  if (canvas) canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
-}
+    async function start() {
+      await initAudio();
+      if (!validateFilterSettings()) return;
+      ctx._expectingSound = true;
 
-function drawViz() {
-    const canvas = document.getElementById('decorrelationViz');
-    const c = canvas.getContext('2d');
-    canvas.width = canvas.offsetWidth * 2; // For high-res display
-    canvas.height = canvas.offsetHeight * 2;
+      const color = document.getElementById('color').value;
+      const volL = document.getElementById('volL').value / 100;
+      const volR = document.getElementById('volR').value / 100;
+      const isMuted = document.getElementById('muteToggle').checked;
+      const volMaster = isMuted ? 0 : document.getElementById('volMaster').value / 100;
+      const dec = document.getElementById('dec').value / 100;
+      const lcL = +document.getElementById('lcL').value;
+      const lcR = +document.getElementById('lcR').value;
+      const hcL = +document.getElementById('hcL').value;
+      const hcR = +document.getElementById('hcR').value;
 
-    const bufferLength = analyserL.fftSize;
-    const dataArrayL = new Uint8Array(bufferLength);
-    const dataArrayR = new Uint8Array(bufferLength);
+      analyserL = ctx.createAnalyser(); analyserL.fftSize = 2048;
+      analyserR = ctx.createAnalyser(); analyserR.fftSize = 2048;
 
-    function loop() {
+      const merger = ctx.createChannelMerger(2);
+      globalMasterGain = ctx.createGain();
+      globalMasterGain.gain.value = volMaster;
+
+      const masterAnalyser = ctx.createAnalyser();
+      masterAnalyser.fftSize = 256;
+      merger.connect(globalMasterGain).connect(masterAnalyser).connect(ctx.destination);
+      ctx._healthAnalyser = masterAnalyser;
+
+      const natureMap = { rain: 'audio/rain.mp3', ocean: 'audio/ocean.mp3', stream: 'audio/stream.mp3', wind: 'audio/wind.mp3' };
+
+      if (natureMap[color]) {
+        audioL = new Audio(natureMap[color]); audioL.loop = true;
+        const trackL = ctx.createMediaElementSource(audioL);
+        nodesL = createFilterChain(trackL, 'L', volL, lcL, hcL, analyserL);
+        nodesL.gain.connect(merger, 0, 0);
+        nodesL.src = audioL; // Store the Audio element for stopping
+        audioL.play();
+
+        if (dec > 0) {
+          audioR = new Audio(natureMap[color]); audioR.loop = true;
+          audioR.oncanplay = () => { if (audioR.currentTime === 0) audioR.currentTime = Math.random() * 30; };
+          const trackR = ctx.createMediaElementSource(audioR);
+          nodesR = createFilterChain(trackR, 'R', volR, lcR, hcR, analyserR);
+          nodesR.gain.connect(merger, 0, 1);
+          nodesR.src = audioR; // Store the Audio element for stopping
+          audioR.play();
+        } else {
+          // If decorrelation is 0, branch the same trackL to both ears with independent filters
+          nodesR = createFilterChain(trackL, 'R', volR, lcR, hcR, analyserR);
+          nodesR.gain.connect(merger, 0, 1);
+          nodesR.src = audioL; // Reference the same Audio element
+        }
+        document.getElementById('status').textContent = 'Playing ' + color + ' sound';
+      } else {
+        let srcL, srcR;
+
+        // Request independent nodes from the centralized safe generator
+        srcL = await ctx.generator.createSafeNoiseNode(color);
+        srcR = dec > 0 ? await ctx.generator.createSafeNoiseNode(color) : srcL;
+
+        if (!srcL || !srcR) { stop(); return; }
+
+        srcL.start();
+        if (srcR !== srcL) srcR.start();
+
+        nodesL = createFilterChain(srcL, 'L', volL, lcL, hcL, analyserL);
+        nodesL.gain.connect(merger, 0, 0);
+        nodesR = createFilterChain(srcR, 'R', volR, lcR, hcR, analyserR);
+        nodesR.gain.connect(merger, 0, 1);
+
+        nodesL.src = srcL;
+        nodesR.src = srcR;
+        validateFilterSettings();
+      }
+
+      playing = true;
+      document.getElementById('toggleBtn').textContent = 'Stop';
+      document.getElementById('toggleBtn').className = 'big-btn stop-btn';
+      drawVolumeViz();
+      // toggleUIInteraction(false); // UI is already interactive by default, only lock when needed
+      updateStatusDots();
+      drawViz();
+    }
+
+    function stop() {
+      if (nodesL && nodesL.src) {
+        try { nodesL.src.pause(); } catch (e) { /* BufferSource doesn't have pause */ }
+        try { nodesL.src.stop(); } catch (e) { /* Audio element doesn't have stop */ }
+      }
+      if (nodesR && nodesR.src) {
+        // Only stop if it's a different source than nodesL.src to avoid double stopping
+        if (nodesR.src !== nodesL.src) {
+          try { nodesR.src.pause(); } catch (e) { /* BufferSource doesn't have pause */ }
+          try { nodesR.src.stop(); } catch (e) { /* Audio element doesn't have stop */ }
+        }
+      }
+      if (ctx) ctx._expectingSound = false;
+      if (ctx) { ctx.close(); ctx = null }
+      playing = false;
+      eqNodesL = []; eqNodesR = [];
+      if (rafViz) cancelAnimationFrame(rafViz); // Stop visualization loop
+      if (rafVolViz) cancelAnimationFrame(rafVolViz);
+      document.getElementById('toggleBtn').textContent = 'Start Therapy';
+      document.getElementById('toggleBtn').className = 'big-btn play-btn';
+      toggleUIInteraction(false); // Re-enable UI interaction when stopped
+      document.getElementById('status').textContent = 'Stopped'
+      updateStatusDots();
+      const canvas = document.getElementById('volumeViz');
+      if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawViz() {
+      const canvas = document.getElementById('decorrelationViz');
+      const c = canvas.getContext('2d');
+      canvas.width = canvas.offsetWidth * 2; // For high-res display
+      canvas.height = canvas.offsetHeight * 2;
+
+      const bufferLength = analyserL.fftSize;
+      const dataArrayL = new Uint8Array(bufferLength);
+      const dataArrayR = new Uint8Array(bufferLength);
+
+      function loop() {
         if (!playing || !analyserL || !analyserR) {
-            c.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas when stopped
-            return;
+          c.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas when stopped
+          return;
         }
 
         analyserL.getByteTimeDomainData(dataArrayL);
@@ -550,218 +580,287 @@ function drawViz() {
         drawWaveform(c, canvas, dataArrayR, 'rgba(255, 165, 0, 0.7)'); // Orange for Right
 
         rafViz = requestAnimationFrame(loop);
+      }
+      loop();
     }
-    loop();
-}
 
-function drawVolumeViz() {
-    if (!playing || !analyserL || !analyserR) return;
-    const canvas = document.getElementById('volumeViz');
-    const c = canvas.getContext('2d');
-    canvas.width = canvas.offsetWidth * 2; canvas.height = 80; 
+    function drawVolumeViz() {
+      if (!playing || !analyserL || !analyserR) return;
+      const canvas = document.getElementById('volumeViz');
+      const c = canvas.getContext('2d');
+      canvas.width = canvas.offsetWidth * 2; canvas.height = 80;
 
-    const bufferLength = analyserL.fftSize;
-    const dataArrayL = new Uint8Array(bufferLength);
-    const dataArrayR = new Uint8Array(bufferLength);
+      const bufferLength = analyserL.fftSize;
+      const dataArrayL = new Uint8Array(bufferLength);
+      const dataArrayR = new Uint8Array(bufferLength);
 
-    analyserL.getByteTimeDomainData(dataArrayL);
-    analyserR.getByteTimeDomainData(dataArrayR);
+      analyserL.getByteTimeDomainData(dataArrayL);
+      analyserR.getByteTimeDomainData(dataArrayR);
 
-    c.clearRect(0, 0, canvas.width, canvas.height);
-    let sumL = 0, sumR = 0;
-    for (let i = 0; i < bufferLength; i++) {
-        const sL = (dataArrayL[i]-128)/128, sR = (dataArrayR[i]-128)/128;
-        sumL += sL*sL; sumR += sR*sR;
+      c.clearRect(0, 0, canvas.width, canvas.height);
+      let sumL = 0, sumR = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        const sL = (dataArrayL[i] - 128) / 128, sR = (dataArrayR[i] - 128) / 128;
+        sumL += sL * sL; sumR += sR * sR;
+      }
+      const rmsL = Math.sqrt(sumL / bufferLength), rmsR = Math.sqrt(sumR / bufferLength);
+      const barWidthL = Math.min(canvas.width / 2, rmsL * canvas.width * 0.7);
+      const barWidthR = Math.min(canvas.width / 2, rmsR * canvas.width * 0.7);
+      const barHeight = (canvas.height / 2) - 5;
+
+      // Draw Left bar (Top)
+      c.fillStyle = 'rgba(0, 191, 165, 0.8)';
+      c.fillRect(0, 0, barWidthL, barHeight);
+      c.font = "bold 20px Arial"; c.fillStyle = "white";
+      c.fillText("L", 5, barHeight / 2 + 7);
+
+      // Draw Right bar (Bottom)
+      c.fillStyle = 'rgba(255, 165, 0, 0.8)';
+      c.fillRect(0, canvas.height / 2 + 5, barWidthR, barHeight);
+      c.fillText("R", 5, canvas.height / 2 + barHeight / 2 + 7);
+
+      rafVolViz = requestAnimationFrame(drawVolumeViz);
     }
-    const rmsL = Math.sqrt(sumL / bufferLength), rmsR = Math.sqrt(sumR / bufferLength);
-    const barWidthL = Math.min(canvas.width / 2, rmsL * canvas.width * 0.7);
-    const barWidthR = Math.min(canvas.width / 2, rmsR * canvas.width * 0.7);
-    const barHeight = (canvas.height / 2) - 5; 
 
-    // Draw Left bar (Top)
-    c.fillStyle = 'rgba(0, 191, 165, 0.8)'; 
-    c.fillRect(0, 0, barWidthL, barHeight);
-    c.font = "bold 20px Arial"; c.fillStyle = "white";
-    c.fillText("L", 5, barHeight / 2 + 7);
-
-    // Draw Right bar (Bottom)
-    c.fillStyle = 'rgba(255, 165, 0, 0.8)'; 
-    c.fillRect(0, canvas.height / 2 + 5, barWidthR, barHeight);
-    c.fillText("R", 5, canvas.height / 2 + barHeight / 2 + 7);
-
-    rafVolViz = requestAnimationFrame(drawVolumeViz);
-}
-
-function drawWaveform(c, canvas, dataArray, color) {
-    c.strokeStyle = color;
-    c.beginPath();
-    const sliceWidth = canvas.width * 1.0 / dataArray.length;
-    let x = 0;
-    for (let i = 0; i < dataArray.length; i++) {
+    function drawWaveform(c, canvas, dataArray, color) {
+      c.strokeStyle = color;
+      c.beginPath();
+      const sliceWidth = canvas.width * 1.0 / dataArray.length;
+      let x = 0;
+      for (let i = 0; i < dataArray.length; i++) {
         const v = dataArray[i] / 128.0;
         const y = v * canvas.height / 2;
         if (i === 0) {
-            c.moveTo(x, y);
+          c.moveTo(x, y);
         } else {
-            c.lineTo(x, y);
+          c.lineTo(x, y);
         }
         x += sliceWidth;
+      }
+      c.lineTo(canvas.width, canvas.height / 2);
+      c.stroke();
     }
-    c.lineTo(canvas.width, canvas.height / 2);
-    c.stroke();
-}
 
-function validateDecorrelation(bufL, bufR, lcL, hcL, lcR, hcR) {
-    console.log("--- Decorrelation Validation ---");
-    
-    // 1. Channel Independence Check
-    const isIndependent = (bufL !== bufR);
-    console.log(`Channel Independence: ${isIndependent ? "✅ PASSED (Unique Streams)" : "❌ FAILED (Mono Stream)"}`);
-    
-    // 2. Frequency Range Validation (Left)
-    console.log(`Left Spectrum Bounds: ${lcL}Hz - ${hcL}Hz`);
-    if (lcL >= hcL) {
+    function updateStatusDots() {
+      const updateDot = (id, active) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.textContent = active ? '✓' : '○';
+          el.classList.toggle('active', !!active);
+        }
+      };
+
+      updateDot('sourceStatus', playing);
+      updateDot('volMasterStatus', parseInt(document.getElementById('volMaster').value) !== 100 || document.getElementById('muteToggle').checked);
+      updateDot('volLStatus', parseInt(document.getElementById('volL').value) !== 40);
+      updateDot('volRStatus', parseInt(document.getElementById('volR').value) !== 40);
+      updateDot('decStatus', parseInt(document.getElementById('dec').value) !== 100);
+      updateDot('lcLStatus', parseInt(document.getElementById('lcL').value) !== 80);
+      updateDot('lcRStatus', parseInt(document.getElementById('lcR').value) !== 80);
+      updateDot('hcLStatus', parseInt(document.getElementById('hcL').value) !== 14000);
+      updateDot('hcRStatus', parseInt(document.getElementById('hcR').value) !== 14000);
+
+      const anyEqAdjusted = eqBands.some(f => parseFloat(loadSetting(`eq_dec_L_${f}`, 0)) !== 0 || parseFloat(loadSetting(`eq_dec_R_${f}`, 0)) !== 0);
+      updateDot('eqStatus', anyEqAdjusted);
+
+      // Spectral Coverage Validation
+      const color = document.getElementById('color').value;
+      const warn = document.getElementById('noiseRangeWarning');
+      if (!warn) return;
+
+      const natureSounds = ['auto', 'rain', 'ocean', 'stream', 'wind', 'custom', 'live'];
+      if (natureSounds.includes(color) || color === 'auto') {
+        warn.style.display = 'none';
+        return;
+      }
+
+      const targetFreq = parseFloat(loadSetting('notchL', loadSetting('toneFreqL', loadSetting('cr_baseFreq', 6000))));
+      const ranges = {
+        white: { min: 20, max: 20000, desc: "White: 20Hz - 20kHz" },
+        pink: { min: 20, max: 20000, desc: "Pink: 20Hz - 20kHz" },
+        brown: { min: 20, max: 1200, desc: "Brown: 20Hz - 1.2kHz" },
+        blue: { min: 6000, max: 20000, desc: "Blue: 6kHz - 20kHz" },
+        violet: { min: 10000, max: 20000, desc: "Violet: 10kHz - 20kHz" }
+      };
+
+      if (ranges[color]) {
+        const isOutOfRange = targetFreq < ranges[color].min || targetFreq > ranges[color].max;
+        if (isOutOfRange) {
+          warn.innerHTML = `<strong style="color:var(--error)">⚠️ Spectral Incompatibility</strong><br>` +
+            `Your matched tinnitus pitch (${Math.round(targetFreq)} Hz) falls outside the effective range of the selected noise (${color}). ` +
+            `For best habituation results, use a compatible color.<br><br>` +
+            `<b>Recommended Range for ${color}:</b> ${ranges[color].desc}`;
+          warn.style.display = 'block';
+        } else {
+          warn.style.display = 'none';
+        }
+      } else {
+        warn.style.display = 'none';
+      }
+    }
+
+    function validateDecorrelation(bufL, bufR, lcL, hcL, lcR, hcR) {
+      console.log("--- Decorrelation Validation ---");
+
+      // 1. Channel Independence Check
+      const isIndependent = (bufL !== bufR);
+      console.log(`Channel Independence: ${isIndependent ? "✅ PASSED (Unique Streams)" : "❌ FAILED (Mono Stream)"}`);
+
+      // 2. Frequency Range Validation (Left)
+      console.log(`Left Spectrum Bounds: ${lcL}Hz - ${hcL}Hz`);
+      if (lcL >= hcL) {
         console.error("❌ Validation Error (Left): Low-cut is higher than High-cut.");
-    } else {
+      } else {
         console.log("✅ Left frequency range configuration valid.");
-    }
+      }
 
-    // 3. Frequency Range Validation (Right)
-    console.log(`Right Spectrum Bounds: ${lcR}Hz - ${hcR}Hz`);
-    if (lcR >= hcR) {
+      // 3. Frequency Range Validation (Right)
+      console.log(`Right Spectrum Bounds: ${lcR}Hz - ${hcR}Hz`);
+      if (lcR >= hcR) {
         console.error("❌ Validation Error (Right): Low-cut is higher than High-cut.");
-    } else {
+      } else {
         console.log("✅ Right frequency range configuration valid.");
-    }
+      }
 
-    // 4. Signal Consistency Check (Left)
-    const dataL = bufL.getChannelData(0);
-    const sampleValL = dataL[Math.floor(Math.random() * dataL.length)];
-    if (Math.abs(sampleValL) < 0.0001) {
+      // 4. Signal Consistency Check (Left)
+      const dataL = bufL.getChannelData(0);
+      const sampleValL = dataL[Math.floor(Math.random() * dataL.length)];
+      if (Math.abs(sampleValL) < 0.0001) {
         console.warn("⚠️ Warning (Left): Output signal appears near-silent.");
-    }
+      }
 
-    // 5. Signal Consistency Check (Right)
-    const dataR = bufR.getChannelData(0);
-    const sampleValR = dataR[Math.floor(Math.random() * dataR.length)];
-    if (Math.abs(sampleValR) < 0.0001) {
+      // 5. Signal Consistency Check (Right)
+      const dataR = bufR.getChannelData(0);
+      const sampleValR = dataR[Math.floor(Math.random() * dataR.length)];
+      if (Math.abs(sampleValR) < 0.0001) {
         console.warn("⚠️ Warning (Right): Output signal appears near-silent.");
+      }
     }
-}
 
-function startTimer(){
-  const minutes=parseInt(document.getElementById("timerInput").value);
-  let remaining=minutes*60;
-  clearInterval(timerInterval);
-  timerInterval=setInterval(()=>{
-    remaining--;
-    document.getElementById("timerDisplay").textContent="Time left: "+Math.floor(remaining/60)+":"+(remaining%60).toString().padStart(2,'0');
-    if(remaining<=0){
-      logUsageMinutes(minutes);
-      stop();
+    function startTimer() {
+      const minutes = parseInt(document.getElementById("timerInput").value);
+      let remaining = minutes * 60;
       clearInterval(timerInterval);
-      document.getElementById("timerDisplay").textContent="Session complete";
-      refreshUsageUI();
+      timerInterval = setInterval(() => {
+        remaining--;
+        document.getElementById("timerDisplay").textContent = "Time left: " + Math.floor(remaining / 60) + ":" + (remaining % 60).toString().padStart(2, '0');
+        if (remaining <= 0) {
+          logUsageMinutes(minutes);
+          stop();
+          clearInterval(timerInterval);
+          document.getElementById("timerDisplay").textContent = "Session complete";
+          refreshUsageUI();
+        }
+      }, 1000);
     }
-  },1000);
-}
 
-document.getElementById('lockLR').onchange = (e) => {
-    saveSetting('dec_lock_lr', e.target.checked);
-    if (e.target.checked) performGlobalSync();
-};
+    document.getElementById('lockLR').onchange = (e) => {
+      saveSetting('dec_lock_lr', e.target.checked);
+      if (e.target.checked) performGlobalSync();
+    };
 
-document.getElementById('dec').oninput=e=>{document.getElementById('decVal').textContent=e.target.value+'%';saveSetting('dec_dec',e.target.value); updateStatusDots();};
+    document.getElementById('dec').oninput = e => { document.getElementById('decVal').textContent = e.target.value + '%'; saveSetting('dec_dec', e.target.value); updateStatusDots(); };
 
-document.getElementById('volMaster').oninput = e => {
-    const v = e.target.value;
-    document.getElementById('volValMaster').textContent = v + '%';
-    saveSetting('dec_volMaster', v);
-    if (playing && !document.getElementById('muteToggle').checked) { 
-        globalMasterGain.gain.setTargetAtTime(v / 100, ctx.currentTime, 0.05); 
-    }
-    updateStatusDots();
-};
+    document.getElementById('volMaster').oninput = e => {
+      const v = e.target.value;
+      document.getElementById('volValMaster').textContent = v + '%';
+      saveSetting('dec_volMaster', v);
+      if (playing && !document.getElementById('muteToggle').checked) {
+        globalMasterGain.gain.setTargetAtTime(v / 100, ctx.currentTime, 0.05);
+      }
+      updateStatusDots();
+    };
 
-document.getElementById('muteToggle').onchange = e => {
-    const isMuted = e.target.checked;
-    saveSetting('dec_volMuted', isMuted);
-    if (playing && globalMasterGain) {
+    document.getElementById('muteToggle').onchange = e => {
+      const isMuted = e.target.checked;
+      saveSetting('dec_volMuted', isMuted);
+      if (playing && globalMasterGain) {
         const targetVol = isMuted ? 0 : document.getElementById('volMaster').value / 100;
         globalMasterGain.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.1); // Smooth 100ms fade
-    }
-    updateStatusDots();
-};
+      }
+      updateStatusDots();
+    };
 
-['L', 'R'].forEach(side => {
-    document.getElementById(`vol${side}`).oninput = e => {
+    ['L', 'R'].forEach(side => {
+      document.getElementById(`vol${side}`).oninput = e => {
         const isLocked = document.getElementById('lockLR').checked;
         if (isLocked && side === 'L') {
-            document.getElementById('volR').value = e.target.value;
-            document.getElementById('volR').dispatchEvent(new Event('input'));
+          document.getElementById('volR').value = e.target.value;
+          document.getElementById('volR').dispatchEvent(new Event('input'));
         }
 
         document.getElementById(`volVal${side}`).textContent = e.target.value + '%';
         saveSetting(`dec_vol${side}`, e.target.value);
         if (playing) {
-            const node = (side === 'L' ? nodesL : nodesR);
-            if (node) node.gain.gain.value = e.target.value / 100;
+          const node = (side === 'L' ? nodesL : nodesR);
+          if (node) node.gain.gain.value = e.target.value / 100;
         }
         updateStatusDots();
-    };
-    document.getElementById(`lc${side}`).oninput = e => {
+      };
+      document.getElementById(`lc${side}`).oninput = e => {
         const isLocked = document.getElementById('lockLR').checked;
         if (isLocked && side === 'L') {
-            document.getElementById('lcR').value = e.target.value;
-            document.getElementById('lcR').dispatchEvent(new Event('input'));
+          document.getElementById('lcR').value = e.target.value;
+          document.getElementById('lcR').dispatchEvent(new Event('input'));
         }
 
         document.getElementById(`lcInput${side}`).value = e.target.value;
         saveSetting(`dec_lc${side}`, e.target.value);
-        if(playing && nodesL && nodesR) { 
-            (side === 'L' ? nodesL : nodesR).lo.frequency.setTargetAtTime(+e.target.value, ctx.currentTime, 0.05);
-            validateFilterSettings();
+        if (playing && nodesL && nodesR) {
+          (side === 'L' ? nodesL : nodesR).lo.frequency.setTargetAtTime(+e.target.value, ctx.currentTime, 0.05);
+          validateFilterSettings();
         }
         updateStatusDots();
-    };
-    document.getElementById(`hc${side}`).oninput = e => {
+      };
+      document.getElementById(`hc${side}`).oninput = e => {
         const isLocked = document.getElementById('lockLR').checked;
         if (isLocked && side === 'L') {
-            document.getElementById('hcR').value = e.target.value;
-            document.getElementById('hcR').dispatchEvent(new Event('input'));
+          document.getElementById('hcR').value = e.target.value;
+          document.getElementById('hcR').dispatchEvent(new Event('input'));
         }
 
         document.getElementById(`hcInput${side}`).value = e.target.value;
         saveSetting(`dec_hc${side}`, e.target.value);
-        if(playing && nodesL && nodesR) { 
-            (side === 'L' ? nodesL : nodesR).hi.frequency.setTargetAtTime(+e.target.value, ctx.currentTime, 0.05);
-            validateFilterSettings();
+        if (playing && nodesL && nodesR) {
+          (side === 'L' ? nodesL : nodesR).hi.frequency.setTargetAtTime(+e.target.value, ctx.currentTime, 0.05);
+          validateFilterSettings();
         }
         updateStatusDots();
+      };
+    });
+    document.getElementById('color').onchange = (e) => {
+      const newColor = e.target.value;
+      saveSetting('dec_color', newColor);
+      document.getElementById('customFile').style.display = (newColor === 'custom') ? 'block' : 'none';
+
+      // Trigger smooth crossfading for both independent noise streams
+      if (playing) {
+        if (nodesL && nodesL.src && nodesL.src.engineType === 'worklet' && typeof nodesL.src.updateColor === 'function') {
+          nodesL.src.updateColor(newColor);
+        }
+        if (nodesR && nodesR.src && nodesR.src.engineType === 'worklet' && typeof nodesR.src.updateColor === 'function') {
+          nodesR.src.updateColor(newColor);
+        }
+      }
+      updateStatusDots();
     };
-});
-document.getElementById('color').onchange=e=>{
-    saveSetting('dec_color',e.target.value);
-    document.getElementById('customFile').style.display = (e.target.value === 'custom') ? 'block' : 'none';
-    updateStatusDots();
-};
 
 
-function resetToDefaults() {
-    resetModuleSettings(['dec_', 'eq_dec_']);
-}
+    function resetToDefaults() {
+      resetModuleSettings(['dec_', 'eq_dec_']);
+    }
 
-function getReportData() {
-    const colorSelect = document.getElementById('color');
-    const color = colorSelect.value;
-    let sourceDetail = colorSelect.options[colorSelect.selectedIndex].text;
-    if (color === 'custom') { // Check if custom file is selected
+    function getReportData() {
+      const colorSelect = document.getElementById('color');
+      const color = colorSelect.value;
+      let sourceDetail = colorSelect.options[colorSelect.selectedIndex].text;
+      if (color === 'custom') { // Check if custom file is selected
         const file = document.getElementById('customFile').files[0];
         sourceDetail = `Custom File: ${file ? file.name : 'None Selected'}`;
-    } else if (color === 'live') {
+      } else if (color === 'live') {
         sourceDetail = "Live System Audio (Browser/App Capture)";
-    }
-    const data = {
+      }
+      const data = {
         "Sound Source": sourceDetail,
         "Master Volume": document.getElementById('volMaster').value + "%",
         "Volume L": document.getElementById('volL').value + "%",
@@ -771,64 +870,65 @@ function getReportData() {
         "Low-Cut Filter R": document.getElementById('lcR').value + " Hz",
         "High-Cut Filter L": document.getElementById('hcL').value + " Hz",
         "High-Cut Filter R": document.getElementById('hcR').value + " Hz"
-    };
-    eqBands.forEach(f => {
+      };
+      eqBands.forEach(f => {
         data[`EQ L ${f}Hz`] = loadSetting(`eq_dec_L_${f}`, 0) + " dB";
         data[`EQ R ${f}Hz`] = loadSetting(`eq_dec_R_${f}`, 0) + " dB";
-    });
-    return data;
-}
+      });
+      return data;
+    }
 
-function exportClinicalSettings() {
-    const reportData = getClinicalReportData("Decorrelated Noise", getReportData());
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(aiSummaryText => {
+    function exportClinicalSettings() {
+      const reportData = getClinicalReportData("Decorrelated Noise", getReportData());
+      // Fetch AI summary and add to reportData
+      getClinicalSummary().then(aiSummaryText => {
         reportData.aiSummary = aiSummaryText;
         const report = generateClinicalReportText(reportData);
         const blob = new Blob([report], { type: 'text/plain' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
         a.download = `tinnitus_clinical_decorrelated.txt`; a.click();
         alert("Clinical report downloaded. Please check your browser's Downloads folder.");
-    });
-}
+      });
+    }
 
-async function generatePDFReport() {
-    const reportData = getClinicalReportData("Decorrelated Noise", getReportData());
-    // Fetch AI summary and add to reportData
-    const aiSummaryText = await getClinicalSummary();
-    reportData.aiSummary = aiSummaryText;
-    const htmlContent = generateClinicalReportHtml(reportData);
+    async function generatePDFReport() {
+      const reportData = getClinicalReportData("Decorrelated Noise", getReportData());
+      // Fetch AI summary and add to reportData
+      const aiSummaryText = await getClinicalSummary();
+      reportData.aiSummary = aiSummaryText;
+      const htmlContent = generateClinicalReportHtml(reportData);
 
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    document.body.appendChild(tempDiv); // Append to body to ensure styles are applied
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlContent;
+      document.body.appendChild(tempDiv); // Append to body to ensure styles are applied
 
-    const isDark = document.documentElement.classList.contains('light-mode');
-    if (!isDark) document.documentElement.classList.add('light-mode'); // Force light mode for PDF
+      const isDark = document.documentElement.classList.contains('light-mode');
+      if (!isDark) document.documentElement.classList.add('light-mode'); // Force light mode for PDF
 
-    const opt = {
+      const opt = {
         margin: [20, 15], filename: 'tinnitus_clinical_decorrelated.pdf', image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    await html2pdf().set(opt).from(tempDiv).save();
+      };
+      await html2pdf().set(opt).from(tempDiv).save();
 
-    if (!isDark) document.documentElement.classList.remove('light-mode'); // Revert theme
-    document.body.removeChild(tempDiv); // Clean up
-}
+      if (!isDark) document.documentElement.classList.remove('light-mode'); // Revert theme
+      document.body.removeChild(tempDiv); // Clean up
+    }
 
-function emailToAudiologist() {
-    const email = loadSetting('audiologist_email', '');
-    if (!email) return alert("Please set your audiologist's email on the Home page.");
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(async aiSummaryText => {
+    function emailToAudiologist() {
+      const email = loadSetting('audiologist_email', '');
+      if (!email) return alert("Please set your audiologist's email on the Home page.");
+      // Fetch AI summary and add to reportData
+      getClinicalSummary().then(async aiSummaryText => {
         const reportData = getClinicalReportData("Decorrelated Noise", getReportData());
         reportData.aiSummary = aiSummaryText;
         const report = generateClinicalReportText(reportData);
         window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
         alert("Email client opened. Please review and send the clinical report draft.");
-    });
-}
-</script>
+      });
+    }
+  </script>
 </body>
+
 </html>

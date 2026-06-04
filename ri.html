@@ -1,203 +1,232 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Suppression Test (RI) - Tinnitus Therapy Suite</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="stylesheet" href="style.css">
-<script src="storage.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="nav.js"></script>
+    <meta charset="UTF-8">
+    <title>Suppression Test (RI) - Tinnitus Therapy Suite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <script src="storage.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="nav.js"></script>
 </head>
+
 <body>
-<div class="panel">
-    <h1>Suppression Test (RI)</h1>
-    <p class="info">Test if your tinnitus can be suppressed by high-level sound (Residual Inhibition).</p>
+    <div class="panel">
+        <h1>Suppression Test (RI)</h1>
+        <p class="info">Test if your tinnitus can be suppressed by high-level sound (Residual Inhibition).</p>
 
-    <div class="card" id="testArea">
-        <div id="step1">
-            <h3>Step 1: Preparation</h3>
-            <p class="info">We will play broadband noise at a level that completely masks your tinnitus for 60 seconds.</p>
-            <div class="ctrl">
-                <label>Noise Color</label>
-                <select id="noiseColor" style="width: 100%; padding: 8px; border-radius: 8px; background: var(--card-bg); color: var(--text); border: 1px solid var(--border);">
-                    <option value="white" title="Flat spectrum; effective for broadband masking.">White Noise</option>
-                    <option value="pink" title="Balanced power; research standard for comfort.">Pink Noise</option>
-                    <option value="brown" title="Low-frequency focus; best for low-pitched tinnitus.">Brown Noise</option>
-                    <option value="blue" title="High-frequency focus; useful for high-pitched tinnitus.">Blue Noise (+3dB/oct)</option>
-                    <option value="violet" title="Strong high-frequency focus; best for piercing tones.">Violet Noise (High-Tone)</option>
-                </select>
+        <div class="card" id="testArea">
+            <div id="step1">
+                <h3>Step 1: Preparation</h3>
+                <p class="info">We will play broadband noise at a level that completely masks your tinnitus for 60
+                    seconds.</p>
+                <div class="ctrl">
+                    <label>Noise Color</label>
+                    <select id="noiseColor"
+                        style="width: 100%; padding: 8px; border-radius: 8px; background: var(--card-bg); color: var(--text); border: 1px solid var(--border);">
+                        <option value="white" title="Flat spectrum; effective for broadband masking.">White Noise
+                        </option>
+                        <option value="pink" title="Balanced power; research standard for comfort.">Pink Noise</option>
+                        <option value="brown" title="Low-frequency focus; best for low-pitched tinnitus.">Brown Noise
+                        </option>
+                        <option value="blue" title="High-frequency focus; useful for high-pitched tinnitus.">Blue Noise
+                            (+3dB/oct)</option>
+                        <option value="violet" title="Strong high-frequency focus; best for piercing tones.">Violet
+                            Noise (High-Tone)</option>
+                    </select>
+                </div>
+                <button class="big-btn play-btn" id="startMaskingBtn" onclick="startMasking()">Start 60s
+                    Masking</button>
             </div>
-            <button class="big-btn play-btn" id="startMaskingBtn" onclick="startMasking()">Start 60s Masking</button>
+
+            <div id="step2" style="display:none;">
+                <h2 id="timer">60</h2>
+                <p>Listen to the noise. It should be just loud enough to hide your tinnitus.</p>
+                <div class="usage-progress">
+                    <div id="pBar" class="usage-bar" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <div id="step3" style="display:none;">
+                <h3 style="color: var(--accent);">Noise Stopped!</h3>
+                <p>Is your tinnitus quieter or gone? Click the button the <b>moment</b> your tinnitus returns to its
+                    normal level.</p>
+                <h2 id="stopwatch">0.0s</h2>
+                <button class="big-btn stop-btn" style="background: var(--error);" onclick="stopMeasurement()">Tinnitus
+                    Has Returned</button>
+            </div>
         </div>
 
-        <div id="step2" style="display:none;">
-            <h2 id="timer">60</h2>
-            <p>Listen to the noise. It should be just loud enough to hide your tinnitus.</p>
-            <div class="usage-progress"><div id="pBar" class="usage-bar" style="width: 100%"></div></div>
+        <div class="card" style="margin-top: 20px;">
+            <h3>Results History</h3>
+            <div id="riHistory" class="info">No tests recorded yet.</div>
+            <button class="button"
+                style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
+                onclick="resetHistory()">Clear History</button>
         </div>
 
-        <div id="step3" style="display:none;">
-            <h3 style="color: var(--accent);">Noise Stopped!</h3>
-            <p>Is your tinnitus quieter or gone? Click the button the <b>moment</b> your tinnitus returns to its normal level.</p>
-            <h2 id="stopwatch">0.0s</h2>
-            <button class="big-btn stop-btn" style="background: var(--error);" onclick="stopMeasurement()">Tinnitus Has Returned</button>
+        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+            <button class="button" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download
+                PDF Report</button>
+            <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+            <a class="button"
+                style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim); text-decoration: none; display: flex; align-items: center; justify-content: center;"
+                href="user_manual.html#sec-17" target="_blank">Open Manual for this Tool</a>
+            <a class="button" style="border-color: var(--text-dim); color: var(--text-dim);"
+                href="user_manual.html#sec-17" target="_blank">Open Manual for this Tool</a>
         </div>
     </div>
 
-    <div class="card" style="margin-top: 20px;">
-        <h3>Results History</h3>
-        <div id="riHistory" class="info">No tests recorded yet.</div>
-    </div>
+    <script>
+        let audioCtx, noise, gain, startTime, measureInterval, maskingTimeout, isMasking = false;
 
-    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-        <button class="button" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-        <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
-        <a class="button" style="border-color: var(--text-dim); color: var(--text-dim);" href="user_manual.html#sec-17" target="_blank">Open Manual for this Tool</a>
-    </div>
-</div>
-
-<script>
-let audioCtx, noise, gain, startTime, measureInterval, maskingTimeout, isMasking = false;
-
-window.onload = () => {
-    initNav(`
+        window.onload = () => {
+            initNav(`
         <b>Residual Inhibition (RI):</b> The temporary suppression of tinnitus following auditory stimulation. Approximately 70-90% of sufferers experience some form of RI.<br><br>
         <b>Noise Selection Guide:</b><br>
         • <b>Pink/White:</b> Generally most effective for broad-spectrum RI testing.<br>
         • <b>Brown:</b> Best if you have significant sensitivity to high frequencies.<br>
         • <b>Blue/Violet:</b> Best for attempting suppression of high-pitched tonal tinnitus.
     `);
-    renderHistory();
-};
+            renderHistory();
+        };
 
-async function startMasking() {
-    if (isMasking) return;
-    const color = document.getElementById('noiseColor').value;
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+        async function startMasking() {
+            if (isMasking) return;
+            const color = document.getElementById('noiseColor').value;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
 
-    // Audio Watchdog Support
-    const watchdogAnalyser = audioCtx.createAnalyser();
-    watchdogAnalyser.fftSize = 256;
-    audioCtx._healthAnalyser = watchdogAnalyser;
-    audioCtx._expectingSound = true;
+            // Audio Watchdog Support
+            const watchdogAnalyser = audioCtx.createAnalyser();
+            watchdogAnalyser.fftSize = 256;
+            audioCtx._healthAnalyser = watchdogAnalyser;
+            audioCtx._expectingSound = true;
 
-    // Use the robust noise generator attached to the context (setup in nav.js)
-    noise = await audioCtx.generator.createSafeNoiseNode(color);
-    if (!noise) return;
+            // Use the robust noise generator attached to the context (setup in nav.js)
+            noise = await audioCtx.generator.createSafeNoiseNode(color);
+            if (!noise) return;
 
-    document.getElementById('startMaskingBtn').classList.replace('play-btn', 'stop-btn');
-    document.getElementById('startMaskingBtn').textContent = 'Masking...';
+            document.getElementById('startMaskingBtn').classList.replace('play-btn', 'stop-btn');
+            document.getElementById('startMaskingBtn').textContent = 'Masking...';
 
-    gain = audioCtx.createGain();
-    gain.gain.value = 0.3; // Calibrated comfort level
-    noise.connect(gain).connect(watchdogAnalyser).connect(audioCtx.destination);
-    
-    noise.start(); 
-    isMasking = true;
-    
-    document.getElementById('step1').style.display = 'none';
-    document.getElementById('step2').style.display = 'block';
+            gain = audioCtx.createGain();
+            gain.gain.value = 0.3; // Calibrated comfort level
+            noise.connect(gain).connect(watchdogAnalyser).connect(audioCtx.destination);
 
-    let timeLeft = 60;
-    maskingTimeout = setInterval(() => {
-        timeLeft--;
-        document.getElementById('timer').textContent = timeLeft;
-        document.getElementById('pBar').style.width = (timeLeft / 60 * 100) + "%";
-        if (timeLeft <= 0) {
-            clearInterval(maskingTimeout);
-            startMeasurement();
-            document.getElementById('startMaskingBtn').classList.replace('stop-btn', 'play-btn');
-            document.getElementById('startMaskingBtn').textContent = 'Start 60s Masking'; // Reset for next time
+            noise.start();
+            isMasking = true;
+
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+
+            let timeLeft = 60;
+            maskingTimeout = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+                document.getElementById('pBar').style.width = (timeLeft / 60 * 100) + "%";
+                if (timeLeft <= 0) {
+                    clearInterval(maskingTimeout);
+                    startMeasurement();
+                    document.getElementById('startMaskingBtn').classList.replace('stop-btn', 'play-btn');
+                    document.getElementById('startMaskingBtn').textContent = 'Start 60s Masking'; // Reset for next time
+                }
+            }, 1000);
         }
-    }, 1000);
-}
 
-function startMeasurement() {
-    isMasking = false;
-    if (audioCtx) audioCtx._expectingSound = false;
-    if (noise.stop) noise.stop(); else noise.disconnect();
-    document.getElementById('step2').style.display = 'none';
-    document.getElementById('step3').style.display = 'block';
-    startTime = performance.now();
-    measureInterval = setInterval(() => {
-        const elapsed = (performance.now() - startTime) / 1000;
-        document.getElementById('stopwatch').textContent = elapsed.toFixed(1) + "s";
-    }, 100);
-}
+        function startMeasurement() {
+            isMasking = false;
+            if (audioCtx) audioCtx._expectingSound = false;
+            if (noise.stop) noise.stop(); else noise.disconnect();
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step3').style.display = 'block';
+            startTime = performance.now();
+            measureInterval = setInterval(() => {
+                const elapsed = (performance.now() - startTime) / 1000;
+                document.getElementById('stopwatch').textContent = elapsed.toFixed(1) + "s";
+            }, 100);
+        }
 
-function stopMeasurement() {
-    clearInterval(measureInterval);
-    const finalTime = (performance.now() - startTime) / 1000;
-    logRIResult(Math.round(finalTime));
-    alert("Result saved: " + finalTime.toFixed(1) + " seconds of suppression.");
-    location.reload();
-}
+        function stopMeasurement() {
+            clearInterval(measureInterval);
+            const finalTime = (performance.now() - startTime) / 1000;
+            logRIResult(Math.round(finalTime));
+            alert("Result saved: " + finalTime.toFixed(1) + " seconds of suppression.");
+            location.reload();
+        }
 
-// Audio Recovery: Automatically restart masking if the global watchdog detects silence
-window.addEventListener('tts-audio-recovery-triggered', () => {
-    if (isMasking) {
-        console.warn("[AudioRecovery] Masking interrupted. Attempting restart...");
-        isMasking = false; 
-        startMasking();
-    }
-});
+        function resetHistory() {
+            if (confirm("Permanently clear your Residual Inhibition history?")) {
+                localStorage.removeItem('tts_ri_log');
+                location.reload();
+            }
+        }
 
-function renderHistory() {
-    const log = getRIResults();
-    const history = document.getElementById('riHistory');
-    const entries = Object.entries(log).reverse();
-    if (entries.length > 0) {
-        history.innerHTML = entries.map(([date, times]) => 
-            `<div><b>${date}:</b> ${times.join('s, ')}s</div>`
-        ).join('');
-    }
-}
+        // Audio Recovery: Automatically restart masking if the global watchdog detects silence
+        window.addEventListener('tts-audio-recovery-triggered', () => {
+            if (isMasking) {
+                console.warn("[AudioRecovery] Masking interrupted. Attempting restart...");
+                isMasking = false;
+                startMasking();
+            }
+        });
 
-function getReportData() {
-    const log = getRIResults();
-    const entries = Object.entries(log).reverse();
-    let historyStr = "";
-    if (entries.length > 0) {
-        historyStr = entries.map(([date, times]) => 
-            `Date: ${date} | Suppression Results: ${times.join('s, ')}s`
-        ).join('\n');
-    } else {
-        historyStr = "No tests recorded yet.";
-    }
-    return { "RI History": historyStr };
-}
+        function renderHistory() {
+            const log = getRIResults();
+            const history = document.getElementById('riHistory');
+            const entries = Object.entries(log).reverse();
+            if (entries.length > 0) {
+                history.innerHTML = entries.map(([date, times]) =>
+                    `<div><b>${date}:</b> ${times.join('s, ')}s</div>`
+                ).join('');
+            }
+        }
 
-function exportClinicalSettings() {
-    const reportData = getClinicalReportData("Residual Inhibition Test", getReportData());
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(aiSummaryText => {
-        reportData.aiSummary = aiSummaryText;
-        const report = generateClinicalReportText(reportData);
-        const blob = new Blob([report], { type: 'text/plain' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = `tinnitus_clinical_ri.txt`; a.click();
-    });
-}
+        function getReportData() {
+            const log = getRIResults();
+            const entries = Object.entries(log).reverse();
+            let historyStr = "";
+            if (entries.length > 0) {
+                historyStr = entries.map(([date, times]) =>
+                    `Date: ${date} | Suppression Results: ${times.join('s, ')}s`
+                ).join('\n');
+            } else {
+                historyStr = "No tests recorded yet.";
+            }
+            return { "RI History": historyStr };
+        }
 
-async function generatePDFReport() {
-    const reportData = getClinicalReportData("Residual Inhibition Test", getReportData());
-    // Fetch AI summary and add to reportData
-    const aiSummaryText = await getClinicalSummary();
-    reportData.aiSummary = aiSummaryText;
-    const htmlContent = generateClinicalReportHtml(reportData);
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    document.body.appendChild(tempDiv);
-    const isDark = document.documentElement.classList.contains('light-mode');
-    if (!isDark) document.documentElement.classList.add('light-mode');
-    const opt = { margin: [20, 15], filename: 'tinnitus_clinical_ri.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-    await html2pdf().set(opt).from(tempDiv).save();
-    if (!isDark) document.documentElement.classList.remove('light-mode');
-    document.body.removeChild(tempDiv);
-}
-</script>
+        function exportClinicalSettings() {
+            const reportData = getClinicalReportData("Residual Inhibition Test", getReportData());
+            // Fetch AI summary and add to reportData
+            getClinicalSummary().then(aiSummaryText => {
+                reportData.aiSummary = aiSummaryText;
+                const report = generateClinicalReportText(reportData);
+                const blob = new Blob([report], { type: 'text/plain' });
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                a.download = `tinnitus_clinical_ri.txt`; a.click();
+            });
+        }
+
+        async function generatePDFReport() {
+            const reportData = getClinicalReportData("Residual Inhibition Test", getReportData());
+            // Fetch AI summary and add to reportData
+            const aiSummaryText = await getClinicalSummary();
+            reportData.aiSummary = aiSummaryText;
+            const htmlContent = generateClinicalReportHtml(reportData);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            document.body.appendChild(tempDiv);
+            const isDark = document.documentElement.classList.contains('light-mode');
+            if (!isDark) document.documentElement.classList.add('light-mode');
+            const opt = { margin: [20, 15], filename: 'tinnitus_clinical_ri.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            await html2pdf().set(opt).from(tempDiv).save();
+            if (!isDark) document.documentElement.classList.remove('light-mode');
+            document.body.removeChild(tempDiv);
+        }
+    </script>
 </body>
+
 </html>

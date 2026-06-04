@@ -1,12 +1,15 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
+const APP_VERSION = "2026.06.19";
+
 /** 
  * Helpers for consistent localStorage interaction
  * Initialized at the top to ensure availability for immediate-run IIFEs.
  */
 let _memStorage = {};
 let _memSessionActive = false;
+let activeSessionKey = null; // Tracks the unlocked key for the current session
 
 const isStorageAvailable = () => {
     try { localStorage.setItem('tts_t', '1'); localStorage.removeItem('tts_t'); return true; }
@@ -29,10 +32,15 @@ const loadSetting = (key, defaultVal) => {
 
 const saveSetting = (key, val) => {
     // Technical Guard: Enforce safety bounds at the persistence layer
-    if (key === 'cr_baseFreq' || key === 'st_vol' || key === 'volMaster') {
+    if (key === 'cr_baseFreq' || key === 'st_vol' || key === 'volMaster' || key === 'wearing_hearing_aids' || key === 'onboarding_step' || key === 'noise_pulse_rate' || key === 'noise_pulse_depth') {
         const num = parseFloat(val);
         if (key.includes('vol') && (num < 0 || num > 100)) return;
         if (key === 'cr_baseFreq' && (num < 20 || num > 20000)) return;
+        if (key === 'noise_pulse_rate' && (num < 0 || num > 10)) return;
+        if (key === 'noise_pulse_depth' && (num < 0 || num > 1)) return;
+        // New validation for boolean setting
+        if (key === 'wearing_hearing_aids' && (val !== 'true' && val !== 'false')) return;
+        if (key === 'onboarding_step' && (num < 0 || num > 5 || !Number.isInteger(num))) return; // Validate onboarding step
     }
     _safeSet('tts_' + key, val);
 };
@@ -45,12 +53,22 @@ const getTodayKey = () => new Date().toISOString().split('T')[0];
  */
 function completeOnboarding() {
     try {
-        saveSetting('onboarding_step', '1');
+        saveSetting('onboarding_step', '5'); // Mark as fully complete
         saveSetting('last_seen_version', APP_VERSION);
         try { sessionStorage.setItem('tts_session_active', 'true'); } catch (e) { }
         _memSessionActive = true;
     } catch (e) { console.error("TTS: Failed to save onboarding state.", e); }
     console.log("TTS: Onboarding completed.");
+}
+
+/**
+ * Advances the user to a specific onboarding step.
+ * @param {number} step - The target onboarding step (e.g., 1 for disclaimer, 2 for hearing aids, 5 for complete).
+ */
+function setOnboardingStep(step) {
+    // Removed the "advancing only" restriction to allow users to go back and correct decisions.
+    saveSetting('onboarding_step', step.toString());
+    console.log(`TTS: Onboarding step set to ${step}.`);
 }
 
 /**
@@ -67,42 +85,22 @@ function getLocalStorageUsage() {
     }
     return (total / 1024).toFixed(2); // Convert bytes to KB
 }
-window.getLocalStorageUsage = getLocalStorageUsage;
-
-/**
- * Core Settings Actions
- * Attached to window for global access from UI buttons.
- */
 
 /**
  * Requests that the browser treat the storage for this origin as persistent.
- * This makes it significantly less likely that your API key or logs will be 
- * cleared automatically by the browser during storage maintenance.
  */
 async function requestPersistentStorage() {
     if (navigator.storage && navigator.storage.persist) {
         try {
             const isPersisted = await navigator.storage.persist();
-            if (isPersisted) {
-                console.log("TTS: Persistent storage granted.");
-            } else {
-                console.warn("TTS: Persistent storage denied. Data may be cleared if device storage is low.");
-            }
-        } catch (e) {
-            console.error("TTS: Error requesting persistence:", e);
-        }
+            if (isPersisted) console.log("TTS: Persistent storage granted.");
+            else console.warn("TTS: Persistent storage denied.");
+        } catch (e) { console.error("TTS: Error requesting persistence:", e); }
     }
 }
 requestPersistentStorage();
 
-// Import the Google Generative AI SDK (ensure it's loaded in your HTML, e.g., via <script src="...">)
-// This line assumes the SDK is available globally (e.g., from a CDN script tag).
-// If you were using a module bundler, you'd use: import { GoogleGenerativeAI } from "@google/generative-ai";
-const APP_VERSION = "2026.06.1";
-
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
-
-let activeSessionKey = null; // Tracks the unlocked key for the current session
 
 // ⚠️ CRITICAL SECURITY WARNING ⚠️
 // DIRECTLY INCLUDING YOUR GEMINI API KEY IN CLIENT-SIDE CODE IS UNSAFE FOR PRODUCTION.
@@ -697,7 +695,6 @@ function resetOnboarding(dryRun = false) {
         }
     })();
 }
-window.resetOnboarding = resetOnboarding;
 
 /**
  * Retrieves the most recent entry from a JSON-based log.
@@ -801,7 +798,6 @@ function getMilestoneProgress() {
     const percentage = Math.round((autoState.filter(Boolean).length / autoState.length) * 100);
     return { labels, state: autoState, percentage };
 }
-window.getMilestoneProgress = getMilestoneProgress;
 
 function toggleMilestone(index) {
     const data = getMilestoneProgress();
@@ -809,7 +805,6 @@ function toggleMilestone(index) {
     setJson('milestone_state', data.state);
     return getMilestoneProgress();
 }
-window.toggleMilestone = toggleMilestone;
 
 /**
  * Marks the splash screen as having been shown for the current browser session.
@@ -820,7 +815,6 @@ function markSplashShown() {
         console.log("TTS: Splash screen marked as shown for this session.");
     } catch (e) { }
 }
-window.markSplashShown = markSplashShown;
 
 function resetModuleSettings(prefixArray) {
     const keysToRemove = [];
@@ -970,6 +964,7 @@ class ClinicalSafetyAudit {
  * NoiseGenerator handles the procedural generation of calibrated noise colors.
  * Includes peak volume normalization to ensure consistent therapeutic output levels.
  */
+// Add a switch to turn on/off auto tone matching process.
 class NoiseGenerator {
     constructor(ctx) {
         // Robust verification of the AudioContext before initialization
@@ -1000,7 +995,7 @@ class NoiseGenerator {
     /**
      * Generates a pre-rendered AudioBuffer of the specified noise color.
      */
-    generate(color, bufferSize) {
+    generate(color, bufferSize, options = {}) {
         if (!this.ctx) return null;
         const targetColor = (color || 'white').toLowerCase().trim().replace(/(_noise| noise)/g, '');
         const sampleRate = this.ctx.sampleRate;
@@ -1029,46 +1024,159 @@ class NoiseGenerator {
         const brP = Math.pow(1 / 1.02, ratio);
         const brG = (1 - brP) * 30;
 
-        switch (targetColor) {
+        // Aesthetic spectral auto-selection for neural-aligned buffer generation
+        let activeColor = targetColor;
+        const enableAutoMatch = (options.enableAutoMatch !== undefined) ? options.enableAutoMatch : (loadSetting('enable_auto_match', 'true') === 'true');
+        const target = parseFloat(loadSetting('notchL', loadSetting('toneFreqL', loadSetting('cr_baseFreq', 6000))));
+        if (activeColor === 'auto' && enableAutoMatch) {
+            if (target < 1200) activeColor = 'brown';
+            else if (target > 10000) activeColor = 'violet'; // Extreme high focus for ultra-sharp tones
+            else if (target > 6000) activeColor = 'blue'; // Match high tones with high-frequency emphasis
+            else activeColor = 'pink';
+        }
+        else if (activeColor === 'auto' && !enableAutoMatch) activeColor = 'pink';
+
+        const peakMap = {
+            'white': 0.35,
+            'pink': 0.5,
+            'brown': 0.65,
+            'red': 0.75,
+            'blue': 0.4,
+            'violet': 0.45,
+            'rain': 0.5,
+            'ocean': 0.6,
+            'chimes': 0.5
+        };
+        const currentPeakTarget = peakMap[activeColor] || 0.5;
+
+        switch (activeColor) {
             case 'white': {
-                for (let i = 0; i < size; i++) dL[i] = (Math.random() * 2 - 1) * 0.9;
+                for (let i = 0; i < size; i++) dL[i] = (Math.random() * 2 - 1);
+                break;
+            }
+            case 'chimes': {
+                const target = parseFloat(loadSetting('notchL', loadSetting('toneFreqL', loadSetting('cr_baseFreq', 6000))));
+                let base = target;
+                while (base > 1200) base /= 2;
+                const ratios = [1, 1.25, 1.5, 2, 2.5, 3];
+                let phs = new Float32Array(ratios.length);
+                let envs = new Float32Array(ratios.length);
+                for (let i = 0; i < size; i++) {
+                    let v = 0;
+                    for (let h = 0; h < ratios.length; h++) {
+                        if (Math.random() < 0.00002) envs[h] = 1.0;
+                        v += Math.sin(phs[h]) * envs[h] * (1 / (h + 1));
+                        phs[h] = (phs[h] + (2 * Math.PI * base * ratios[h]) / sr) % (2 * Math.PI);
+                        envs[h] *= 0.99992;
+                    }
+                    dL[i] = v * 0.5;
+                }
                 break;
             }
             case 'pink': {
-                let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+                let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, lastIn = 0, hpState = 0;
                 for (let i = 0; i < size; i++) {
                     const w = Math.random() * 2 - 1;
                     b0 = p[0] * b0 + w * g[0]; b1 = p[1] * b1 + w * g[1]; b2 = p[2] * b2 + w * g[2];
                     b3 = p[3] * b3 + w * g[3]; b4 = p[4] * b4 + w * g[4]; b5 = p[5] * b5 + w * g[5];
-                    dL[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * 0.85; b6 = w * .115926;
+
+                    const raw = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * 0.85;
+                    const out = raw - lastIn + (0.997 * hpState);
+                    lastIn = raw; hpState = out;
+                    dL[i] = out;
+                    b6 = w * .115926;
+                }
+                break;
+            }
+            case 'red': {
+                let l1 = 0, l2 = 0, lastIn = 0, hpState = 0, srRatio = 44100 / sr;
+                for (let i = 0; i < size; i++) {
+                    const w = Math.random() * 2 - 1;
+                    l1 = (l1 * 0.999) + (w * 0.01);
+                    l2 = (l2 * 0.999) + (l1 * 0.01);
+
+                    const raw = l2 * 45;
+                    const out = raw - lastIn + (0.997 * hpState);
+                    lastIn = raw; hpState = out;
+                    dL[i] = out;
+                }
+                break;
+            }
+            case 'rain': {
+                let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, lastIn = 0, hpState = 0, patter = 0;
+                for (let i = 0; i < size; i++) {
+                    const w = Math.random() * 2 - 1;
+                    b0 = p[0] * b0 + w * g[0]; b1 = p[1] * b1 + w * g[1]; b2 = p[2] * b2 + w * g[2];
+                    b3 = p[3] * b3 + w * g[3]; b4 = p[4] * b4 + w * g[4]; b5 = p[5] * b5 + w * g[5];
+
+                    const rawPink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * 0.85;
+
+                    const impulse = Math.random() > 0.9997 ? (Math.random() * 2 - 1) * 0.4 : 0;
+                    patter = (patter * 0.995) + impulse;
+                    const mixed = (rawPink * 0.85 + patter * 0.15);
+
+                    const out = mixed - lastIn + (0.997 * hpState);
+                    lastIn = mixed; hpState = out;
+                    dL[i] = out;
+                    b6 = w * .115926;
+                }
+                break;
+            }
+            case 'ocean': {
+                let l1 = 0, l2 = 0, lastIn = 0, hpState = 0;
+                for (let i = 0; i < size; i++) {
+                    const w = Math.random() * 2 - 1;
+                    l1 = (l1 * 0.999) + (w * 0.01);
+                    l2 = (l2 * 0.999) + (l1 * 0.01);
+                    let red = l2 * 45;
+
+                    const out = red - lastIn + (0.997 * hpState);
+                    lastIn = red; hpState = out;
+
+                    const surge = Math.sin(2 * Math.PI * 0.06 * (i / sr)) * 0.3 + 0.7;
+                    dL[i] = out * surge;
                 }
                 break;
             }
             case 'blue': {
-                let lastB = 0;
-                for (let i = 0; i < size; i++) { const w = Math.random() * 2 - 1; dL[i] = (w - 0.5 * lastB) * 0.9; lastB = w; }
+                let c0 = 0, c1 = 0, c2 = 0;
+                for (let i = 0; i < size; i++) {
+                    const white = Math.random() * 2 - 1;
+                    c0 = 0.8 * c0 + white * 0.2;
+                    c1 = 0.92 * c1 + white * 0.15;
+                    c2 = 0.99 * c2 + white * 0.05;
+                    const blue = white - (c0 + c1 + c2) * 0.2;
+                    dL[i] = blue * 1.5;
+                }
                 break;
             }
             case 'violet': {
                 let lastV = 0;
-                for (let i = 0; i < size; i++) { const w = Math.random() * 2 - 1; dL[i] = (w - lastV) * 0.7; lastV = w; }
+                for (let i = 0; i < size; i++) { const w = Math.random() * 2 - 1; dL[i] = (w - lastV) * 0.8; lastV = w; }
                 break;
             }
             case 'brown': {
-                let lastBr = 0;
-                for (let i = 0; i < size; i++) { const w = Math.random() * 2 - 1; dL[i] = (lastBr * brP) + (w * brG); lastBr = dL[i]; }
-                for (let i = 0; i < size; i++) dL[i] *= 0.5; // Calibrate brown output
+                let lastBr = 0, lastIn = 0, hpState = 0;
+                for (let i = 0; i < size; i++) {
+                    const w = Math.random() * 2 - 1;
+                    const raw = (lastBr * brP) + (w * brG);
+                    lastBr = raw;
+                    // One-pole high-pass (DC blocker) at ~20Hz
+                    const out = raw - lastIn + (0.997 * hpState);
+                    lastIn = raw; hpState = out;
+                    dL[i] = out;
+                }
                 break;
             }
             default: {
-                for (let i = 0; i < size; i++) dL[i] = Math.random() * 2 - 1;
+                for (let i = 0; i < size; i++) dL[i] = (Math.random() * 2 - 1);
             }
         }
 
         dR.set(dL); // Mirror for stereo fallback
-        // Normalize to ~0.5 peak to match standardized Worklet engine
-        this._normalize(dL, 0.5);
-        this._normalize(dR, 0.5);
+        // Normalize to the dynamic peak target to match standardized Worklet engine
+        this._normalize(dL, currentPeakTarget);
+        this._normalize(dR, currentPeakTarget);
         return buffer;
     }
 
@@ -1078,16 +1186,29 @@ class NoiseGenerator {
      * or if the browser does not support AudioWorklets.
      */
     async createSafeNoiseNode(color, options = {}) {
-        const { loop = true, bufferSize = null } = options;
+        const globalAutoMatch = loadSetting('enable_auto_match', 'true') === 'true';
+        const { loop = true, bufferSize = null, enableAutoMatch = globalAutoMatch } = options;
         if (!this.ctx) return null;
 
-        const targetColor = (color || 'white').toLowerCase().trim().replace(/(_noise| noise)/g, '');
+        // Enforce 'auto' as the primary clinical default.
+        // This ensures the noise spectrum is mathematically aligned with the user's tinnitus.
+        let targetColor = (color || 'auto').toLowerCase().trim().replace(/(_noise| noise)/g, '');
+
+        // Detect target frequency for clinical calibration
+        const targetFreq = parseFloat(loadSetting('notchL', loadSetting('toneFreqL', loadSetting('cr_baseFreq', 6000))));
+
+        if (!window.isSecureContext) {
+            console.error('[NoiseGenerator] AudioWorklet requires a Secure Context (HTTPS or localhost). Fallback to buffer engine.');
+        }
+
         if (this.ctx.audioWorklet) {
             try {
                 // Robust path resolution for subfolders (e.g. /docs/)
                 const isDocs = window.location.pathname.toLowerCase().includes('/docs/');
                 // Force cache refresh by appending the version number as a query parameter
                 const workletPath = (isDocs ? '../noise-processor.js' : 'noise-processor.js') + '?v=' + APP_VERSION;
+                console.log('[NoiseGenerator] Attempting to load worklet from:', workletPath);
+
 
                 if (!this._workletLoading) {
                     console.log('[NoiseGenerator] Loading AudioWorklet module:', workletPath);
@@ -1098,14 +1219,14 @@ class NoiseGenerator {
                     console.log('[NoiseGenerator] AudioWorklet module loaded successfully.');
                 } catch (loadErr) {
                     this._workletLoading = null; // Reset to allow retry on next click
-                    console.error('[NoiseGenerator] AudioWorklet module load error:', loadErr);
+                    console.error(`[NoiseGenerator] AudioWorklet load error [${loadErr.name}]: ${loadErr.message}`);
                     throw loadErr;
                 }
 
                 let node;
                 try {
                     node = new AudioWorkletNode(this.ctx, 'noise-processor', {
-                        processorOptions: { color: targetColor },
+                        processorOptions: { color: targetColor, targetFreq: targetFreq, enableAutoMatch: enableAutoMatch.toString() },
                         numberOfInputs: 0,
                         numberOfOutputs: 1,
                         outputChannelCount: [2]
@@ -1117,6 +1238,19 @@ class NoiseGenerator {
                 }
 
                 node.engineType = 'worklet';
+
+                // Helper method to update color without node recreation.
+                // This triggers the linear crossfade implemented in noise-processor.js.
+                node.updateColor = (newColor) => {
+                    const cleanColor = (newColor || 'white').toLowerCase().trim().replace(/(_noise| noise)/g, '');
+                    node.port.postMessage({ type: 'SET_COLOR', color: cleanColor });
+                };
+
+                // Helper method to update target frequency without node recreation.
+                node.updateTargetFreq = (newFreq) => {
+                    const cleanFreq = parseFloat(newFreq);
+                    node.port.postMessage({ type: 'SET_TARGET_FREQ', targetFreq: cleanFreq });
+                };
 
                 // Listen for internal DSP health reports from the audio thread
                 node.port.onmessage = (event) => {
@@ -1139,7 +1273,10 @@ class NoiseGenerator {
             }
         }
 
-        const buffer = this.generate(targetColor, bufferSize);
+        const buffer = this.generate(targetColor, bufferSize, { enableAutoMatch });
+        source.updateTargetFreq = (newFreq) => {
+            console.warn("[NoiseGenerator] Cannot update frequency on a BufferSourceNode. The node must be recreated.");
+        };
         if (!buffer) {
             console.error("NoiseGenerator: Failed to create AudioBuffer for fallback. No noise will be generated.");
             return null;
@@ -1149,6 +1286,17 @@ class NoiseGenerator {
         source.buffer = buffer;
         source.engineType = 'buffer';
         source.loop = loop;
+
+        // Add dummy methods to prevent UI crashes if the module expects a WorkletNode
+        source.updateColor = (newColor) => {
+            console.warn("[NoiseGenerator] Cannot update color on a BufferSourceNode. The node must be recreated.");
+        };
+        source.updateTargetFreq = (newFreq) => {
+            console.warn("[NoiseGenerator] Cannot update frequency on a BufferSourceNode. The node must be recreated.");
+        };
+        if (typeof source.start !== 'function') source.start = () => { source.noteOn(0); };
+        if (typeof source.stop !== 'function') source.stop = () => { source.noteOff(0); };
+
         return source;
     }
 }
@@ -1253,6 +1401,12 @@ function getHearingBoost(freq, side) {
     // Ensure the audiogram module is loaded and the function is available
     if (typeof window.getJson !== 'function') return 0;
 
+    // If the user indicates they are wearing hearing aids, disable digital boost
+    const wearingHearingAids = loadSetting('wearing_hearing_aids', 'false') === 'true'; // Default to false if not set
+    if (wearingHearingAids) {
+        console.warn("Hearing boost disabled: User indicated they are wearing hearing aids to prevent double-amplification.");
+        return 0; // Return 0 boost
+    }
     const profile = getJson('hearing_profile', null);
     if (!profile || !profile[side]) return 0;
 
@@ -1279,7 +1433,6 @@ function getHearingBoost(freq, side) {
     // Enforce a therapeutic ceiling of 20dB to prevent digital clipping/distortion
     return Math.min(20, Math.max(0, hl * 0.5));
 }
-window.getHearingBoost = getHearingBoost;
 
 /**
  * Returns a suggested L/R balance value (-1 to 1) based on the user's tinnitus side preference.
@@ -1291,7 +1444,6 @@ function getBalancePreset() {
     if (side === 'R') return 0.5;  // Default 50% shift to right
     return 0; // Center
 }
-window.getBalancePreset = getBalancePreset;
 
 /**
  * Validates if a frequency is within safe bounds for the current audio context.
@@ -1685,8 +1837,7 @@ function generateClinicalReportHtml(reportData) {
             const dateStr = new Date(entry[0]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
             html += `<text x="${x}" y="${height - 5}" font-size="8" fill="#95a5a6" text-anchor="middle">${dateStr}</text>`;
         });
-        html += `  </svg>`;
-        html += `  </svg></div></div>`;
+        html += `  </svg></div>`;
     }
 
     // Adherence Trend (30-Day Usage)
@@ -1727,8 +1878,7 @@ function generateClinicalReportHtml(reportData) {
                 html += `<text x="${x + barWidth / 2}" y="${height - 5}" font-size="8" fill="#95a5a6" text-anchor="middle">${dateStr}</text>`;
             }
         });
-        html += `  </svg>`;
-        html += `  </svg></div></div>`;
+        html += `  </svg></div>`;
     }
 
     html += sectionHeader("Clinical Metrics");
@@ -1806,8 +1956,8 @@ async function generateGlobalClinicalReportPDF() {
     tempDiv.innerHTML = htmlContent;
     document.body.appendChild(tempDiv);
 
-    const isDark = document.documentElement.classList.contains('light-mode');
-    if (!isDark) document.documentElement.classList.add('light-mode');
+    const isAlreadyLightMode = document.documentElement.classList.contains('light-mode');
+    if (!isAlreadyLightMode) document.documentElement.classList.add('light-mode');
 
     const opt = {
         margin: [20, 15], filename: 'tinnitus_global_progress_report.pdf', image: { type: 'jpeg', quality: 0.98 },
@@ -1816,10 +1966,9 @@ async function generateGlobalClinicalReportPDF() {
     };
     await html2pdf().set(opt).from(tempDiv).save();
 
-    if (!isDark) document.documentElement.classList.remove('light-mode');
+    if (!isAlreadyLightMode) document.documentElement.classList.remove('light-mode');
     document.body.removeChild(tempDiv);
 }
-window.generateGlobalClinicalReportPDF = generateGlobalClinicalReportPDF;
 
 /**
  * Generates a celebratory achievement certificate for users reaching Full Habituation.
@@ -1870,7 +2019,6 @@ async function generateMilestoneCertificatePDF() {
         document.body.removeChild(tempDiv);
     }
 }
-window.generateMilestoneCertificatePDF = generateMilestoneCertificatePDF;
 
 /**
  * Generates personalized therapy recommendations based on THI and MML scores.
@@ -1878,6 +2026,8 @@ window.generateMilestoneCertificatePDF = generateMilestoneCertificatePDF;
 function getTherapyRecommendations() {
     const latestTHI = getLatestLogData('distress_log');
     const thiScore = latestTHI ? latestTHI.data : null;
+
+    const targetFreq = parseFloat(loadSetting('notchL', loadSetting('toneFreqL', loadSetting('cr_baseFreq', 6000))));
 
     const latestMML = getLatestLogData('mml_log');
     const lastMMLValue = (latestMML && Array.isArray(latestMML.data))
@@ -1936,10 +2086,15 @@ function getTherapyRecommendations() {
             reason: "For noise-like tinnitus or high masking thresholds, decorrelated signals provide superior relief by widening the soundstage."
         });
     } else {
+        let bbReason = "For mid-range frequencies, Broadband Sound Therapy using Pink noise (Rain) is the clinical standard for habituation.";
+        if (targetFreq > 10000) bbReason = "For ultra-high frequency tones (>10kHz), Broadband Sound Therapy using Violet noise is specifically recommended to provide sufficient energy in the highest audible range.";
+        else if (targetFreq > 6000) bbReason = "For high-frequency tones, Broadband Sound Therapy with Blue noise provides targeted stimulation to help your brain habituate more effectively.";
+        else if (targetFreq < 1200) bbReason = "For low-frequency roaring or humming, Broadband Sound Therapy with Brown noise (Ocean) provides deep spectral coverage for effective habituation.";
+
         recs.push({
             mode: "Broadband Sound Therapy",
             url: "soundtherapy.html",
-            reason: "Passive enrichment with Pink or Brown noise is the foundation for reducing the contrast of the tinnitus signal."
+            reason: bbReason
         });
     }
 
@@ -2053,6 +2208,12 @@ function showWalkthrough(slides, startIndex = 0) {
         clearHighlights();
         const el = document.getElementById('walkthroughModal');
         if (el) el.remove();
+
+        // Return to onboarding if we were in the middle of step 4
+        const step = parseInt(loadSetting('onboarding_step', '0'));
+        if (step === 4 && typeof window.showOnboardingModal === 'function') {
+            window.showOnboardingModal();
+        }
     };
     window.closeWalkthrough = closeWalkthrough;
 
@@ -2247,19 +2408,61 @@ function showWalkthrough(slides, startIndex = 0) {
 
 /**
  * Displays a summary of updates for the current version.
+ * Unifies the dashboard modal and the multi-module walkthrough logic.
  */
-function showWhatsNew() {
-    showWalkthrough([
-        { title: "Version 2026.05.3 - Clinical Alignment", content: "This major update ensures the suite is 100% technically aligned with the User Manual, standardizing terminology like 'Broadband Sound Therapy'." },
-        { title: "Hearing Profile (Audiogram)", content: "You can now enter your professional audiogram results. The engine uses the <b>Half-Gain Rule</b> to automatically compensate for hearing loss in your therapy sessions." },
-        { title: "Habituation Milestones", content: "We've integrated an automated tracker to monitor your journey through the six clinical stages of habituation (Appendix E)." },
-        { title: "Global Reporting", content: "You can now generate a comprehensive multi-module Progress Report (PDF) from the dashboard to share with your audiologist." },
-        { title: "Q-factor & Tonality", content: "A new trend chart in the Stats page (stats.html) now tracks changes in your tinnitus 'sharpness' (Q-factor) to better visualize progress." },
-        { title: "Standardized Sharing", content: "Every therapy module now includes a 'Share Setup' tool formatted for community forums like Tinnitus Talk and Reddit." },
-        { title: "Technical Validation", content: "A new interactive tutorial for the <b>System Validation</b> engine ensures your hardware is perfectly calibrated for clinical-grade therapy." },
-        { title: "Achievement Unlocked", content: "Stay motivated! Reaching <b>Full Habituation</b> now triggers a celebratory confetti burst and unlocks a downloadable <b>Achievement Certificate</b> to mark your success. This professional record should be shared with your healthcare provider as part of your clinical history." }
-    ]);
+async function showWhatsNew() {
+    let highlights = [];
+    try {
+        const isDocs = window.location.pathname.toLowerCase().includes('/docs/');
+        const configPath = (isDocs ? '../whats_new.json' : 'whats_new.json') + '?v=' + APP_VERSION;
+
+        const response = await fetch(configPath);
+        if (response.ok) highlights = await response.json();
+    } catch (e) {
+        console.warn("TTS: Could not dynamically load version highlights.", e);
+    }
+
+    const modal = document.getElementById('whatsNewModal');
+    const container = document.getElementById('dynamicWhatsNew');
+
+    if (modal && container) {
+        // Dashboard Modal Logic
+        let html = "";
+        if (window.REMOTE_CONFIG && window.REMOTE_CONFIG.whatsNew) {
+            html += `<h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px;">Latest Update (v${window.REMOTE_CONFIG.version})</h3>`;
+            html += `<ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">`;
+            window.REMOTE_CONFIG.whatsNew.forEach(item => { html += `<li>${item}</li>`; });
+            html += `</ul>`;
+        }
+
+        highlights.forEach(item => {
+            html += `<h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">${item.title}</h3>`;
+            if (item.content.trim().startsWith('<')) {
+                html += item.content;
+            } else {
+                html += `<p style="line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">${item.content}</p>`;
+            }
+        });
+        container.innerHTML = html;
+        modal.style.display = 'block';
+    } else if (highlights.length > 0) {
+        // Interactive Walkthrough View: Prioritize slides matching current version
+        const slides = highlights.filter(h => h.title.includes(APP_VERSION));
+        showWalkthrough(slides.length ? slides : highlights.slice(0, 3));
+    }
 }
+
+const closeWhatsNew = () => {
+    saveSetting('last_seen_version', APP_VERSION);
+    const modal = document.getElementById('whatsNewModal');
+    if (modal) modal.style.display = 'none';
+    if (typeof needsValidation === 'function' && needsValidation()) {
+        const vBtn = document.getElementById('validationBtn');
+        if (vBtn) vBtn.classList.add('highlight-btn');
+    }
+    const btn = document.getElementById('whatsNewBtn');
+    if (btn) btn.style.display = 'none';
+};
 
 function showQuickStartGuide() {
     showWalkthrough([
@@ -2308,8 +2511,7 @@ function startModuleTutorial(key, startIndex = 0) {
             { title: "Auditory Pacer", content: "Enable Auditory Cues to hear a subtle chime at the start of each breath. This allows you to maintain synchronization even with your eyes closed.", selector: "#pacerAudio" },
             { title: "Pulse Rate", content: "Adjust the pulse speed to match your natural resting breath. A slow, steady rhythm (around 5-6 breaths per minute) is usually best for relaxation.", selector: "#pulseRate" },
             { title: "Breathing Sync", content: "Try to match your breathing to the visual pulse. Inhaling as the light expands and exhaling as it fades helps activate the body's relaxation response, further aiding habituation.", selector: "#visualPulse" },
-            { title: "The Mix", content: "Balance the tones and noise so neither is overwhelming. The sound should shimmer background.", selector: "#mixL" },
-            { title: "Zen Mode", content: "Once your settings are dialed in, use Zen Mode to hide technical controls. This encourages 'Passive Listening'—allowing the sound to become background wallpaper while you focus on other tasks.", selector: "#zenBtn" },
+            { title: "The Mix", content: "Balance the tones and noise so neither is overwhelming. The sound should shimmer in the background.", selector: "#mixL" },
             { title: "Help the Community", content: "Found a setup that works for you? Use the 'Share Setup' button to generate a summary you can post on forums like Tinnitus Talk or Reddit. Helping others find relief is the best way to grow this project!", selector: "button[onclick='shareToCommunity()']" }
         ],
         'soundtherapy': [
@@ -2403,7 +2605,6 @@ function toggleCompactMode() {
     saveSetting('compact_mode', isCompact ? 'false' : 'true');
     applyCompactMode();
 }
-window.toggleCompactMode = toggleCompactMode;
 
 function applyDashboardLayout() {
     const layout = loadSetting('dashboard_layout', '2-column');
@@ -2416,7 +2617,6 @@ function toggleDashboardLayout() {
     saveSetting('dashboard_layout', next);
     applyDashboardLayout();
 }
-window.toggleDashboardLayout = toggleDashboardLayout;
 
 function applyTheme() {
     const theme = loadSetting('theme', 'dark');
@@ -2440,7 +2640,6 @@ function toggleTheme() {
     saveSetting('theme', next);
     applyTheme();
 }
-window.toggleTheme = toggleTheme;
 
 function syncUIVersion() {
     document.querySelectorAll('.app-version-label').forEach(el => {
@@ -2539,7 +2738,7 @@ function syncUIVersion() {
         const publicPages = ['index.html', 'disclaimer.html', 'license.html', 'about.html', 'research.html', 'feedback.html', 'presentation.html', 'handout.html', 'clinical_summary.html', 'stats.html'];
         const isPublicPage = isHome || publicPages.some(p => pageName === p);
 
-        const onboardingStep = parseInt(loadSetting('onboarding_step', '0'));
+        const onboardingStep = parseInt(loadSetting('onboarding_step', '0')); // Default to 0 if not set
         const sessionActive = _memSessionActive || (function () {
             try { return sessionStorage.getItem('tts_session_active') === 'true'; }
             catch (e) { return false; }
@@ -2551,10 +2750,16 @@ function syncUIVersion() {
         }
 
         // 3. Enforce Redirection: Bypass if already onboarded OR session is active
-        if (!isPublicPage && onboardingStep < 1 && !sessionActive) {
-            console.warn("[Gatekeeper] Disclaimer acceptance required. Redirecting to home...");
+        // New logic: If onboarding is not complete (step < 5) AND it's not a public page AND not the home page, redirect to home.
+        if (onboardingStep < 5 && !isPublicPage && !isHome) {
+            console.warn(`[Gatekeeper] Onboarding not complete (step ${onboardingStep}). Redirecting to home...`);
             const redirectTarget = isDocs ? '../index.html' : 'index.html';
             window.location.replace(redirectTarget);
+            return; // Stop further execution on this page
+        }
+        // If on the home page, and onboarding is not complete, ensure the onboarding modal is shown.
+        if (isHome && onboardingStep < 5) {
+            console.log(`[Gatekeeper] Onboarding in progress (step ${onboardingStep}). Allowing access to home page.`);
         }
     })();
 })();
@@ -2572,10 +2777,9 @@ if (document.readyState === 'loading') {
         const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
         const lastSeenVersion = localStorage.getItem('tts_last_seen_version');
         // Only trigger "What's New" if user has completed onboarding to avoid UI conflicts
-        if (onboardingStep >= 7 && lastSeenVersion && lastSeenVersion !== APP_VERSION) {
+        if (onboardingStep >= 5 && lastSeenVersion && lastSeenVersion !== APP_VERSION) {
             setTimeout(showWhatsNew, 1500);
         }
-        if (onboardingStep >= 7) localStorage.setItem('tts_last_seen_version', APP_VERSION);
     });
 } else {
     applyTheme();
@@ -2587,12 +2791,102 @@ if (document.readyState === 'loading') {
     // Version Update Notification
     const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
     const lastSeenVersion = localStorage.getItem('tts_last_seen_version');
-    if (onboardingStep >= 7 && lastSeenVersion && lastSeenVersion !== APP_VERSION) {
+    if (onboardingStep >= 5 && lastSeenVersion && lastSeenVersion !== APP_VERSION) {
         setTimeout(showWhatsNew, 1500);
     }
-    if (onboardingStep >= 7) localStorage.setItem('tts_last_seen_version', APP_VERSION);
 }
 
 function needsValidation() {
     return !getUnifiedValidationStatus().isValid;
 }
+
+// Expose all relevant components to window for compatibility with non-module scripts
+Object.assign(window, {
+    isStorageAvailable,
+    getJson,
+    setJson,
+    loadSetting,
+    saveSetting,
+    getTodayKey,
+    completeOnboarding,
+    setOnboardingStep,
+    getLocalStorageUsage,
+    requestPersistentStorage,
+    TinnitusAIManager,
+    deriveKeyFromPin,
+    encryptGeminiKey,
+    decryptGeminiKey,
+    resetOnboarding,
+    getLatestLogData,
+    getThoughtRecords,
+    getDistressScores,
+    getDailyUsage,
+    logDistressScore,
+    logUsageMinutes,
+    logRIResult,
+    logTMCPoint,
+    logQFactor,
+    logLoudnessGrowthPoint,
+    logThoughtRecordEntry,
+    getMilestoneProgress,
+    toggleMilestone,
+    markSplashShown,
+    resetModuleSettings,
+    getUnifiedValidationStatus,
+    ClinicalSafetyAudit,
+    NoiseGenerator,
+    createTrahregNoise,
+    getAudioDevices,
+    logTherapyError,
+    getTherapyErrorLog,
+    sendClinicalTelemetry,
+    getHearingBoost,
+    getBalancePreset,
+    isFrequencySafe,
+    exportAllData,
+    importAllData,
+    getClinicalReportData,
+    generateClinicalReportText,
+    generateClinicalReportHtml,
+    generateGlobalClinicalReportPDF,
+    generateMilestoneCertificatePDF,
+    getTherapyRecommendations,
+    shareSetup,
+    initAI,
+    performGeminiTest,
+    fetchAIAssistance,
+    getBalancedThoughtSuggestion,
+    getSOSSupport,
+    getSoundRecipe,
+    getPatternAnalysis,
+    getTRTExplanation,
+    getClinicalSummary,
+    getDailyMotivation,
+    getEnvironmentalAdvice,
+    getMindfulnessScript,
+    getHabituationForecast,
+    getPersonalizedInsights,
+    getRIResults,
+    getMMLResults,
+    getLoudnessGrowthLog,
+    getQFactors,
+    getTMCLog,
+    clearTMCLog,
+    getLastTHIAssessmentDate,
+    showWalkthrough,
+    showWhatsNew,
+    closeWhatsNew,
+    showQuickStartGuide,
+    startModuleTutorial,
+    toggleCompactMode,
+    toggleDashboardLayout,
+    toggleTheme,
+    applyCompactMode,
+    applyDashboardLayout,
+    applyTheme,
+    applyEmailVisibility,
+    syncUIVersion,
+    needsValidation,
+    tinnitusAI,
+    APP_VERSION
+});

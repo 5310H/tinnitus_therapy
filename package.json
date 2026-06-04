@@ -1,8 +1,9 @@
 {
   "name": "trahreg-tinnitus-suite",
-  "version": "2026.05.1",
+  "version": "2026.06.19",
   "scripts": {
-    "start": "python3 -m http.server 8080",
+    "start": "antigravity run",
+    "start-legacy": "python3 -m http.server 8080",
     "sync-version": "node sync-version.js",
     "version": "npm run sync-version && git add .",
     "clean": "rm -f *.stl *.png *.csg",

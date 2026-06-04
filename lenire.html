@@ -261,6 +261,7 @@
         <div class="ctrl">
             <label>Noise Carrier Color</label>
             <select id="noiseColor">
+                <option value="auto">Auto-Match (Neural Algorithm)</option>
                 <option value="white" title="Flat spectrum; effective for broadband masking.">White Noise</option>
                 <option value="pink" selected title="Balanced power; research standard for comfort.">Pink Noise</option>
                 <option value="brown" title="Low-frequency focus; best for low-pitched tinnitus.">Brown Noise</option>
@@ -269,6 +270,9 @@
                 <option value="violet" title="Strong high-frequency focus; best for piercing tones.">Violet Noise
                     (High-Tone)</option>
             </select>
+            <div id="noiseRangeWarning" class="info"
+                style="display:none; color:var(--error); border: 1px solid var(--error); padding: 12px; border-radius: 8px; margin-top: 15px; text-align: left; background: rgba(211, 47, 47, 0.05);">
+            </div>
         </div>
 
         <div class="ctrl">
@@ -280,21 +284,24 @@
             <input type="file" id="customFile" accept="audio/*">
         </div>
 
-        <button id="startBtn" class="big-btn play-btn zen-keep" onclick="startSession()">Start Session</button>
-        <button id="stopBtn" class="big-btn stop-btn zen-keep" style="display:none" onclick="stopSession()">Stop
+        <button id="startBtn" class="big-btn play-btn" onclick="startSession()">Start Session</button>
+        <button id="stopBtn" class="big-btn stop-btn" style="display:none" onclick="stopSession()">Stop
             Session</button>
         <button class="button" style="width:100%; margin-top:10px; background:var(--accent); color:white;"
             onclick="generatePDFReport()">Download PDF Report</button>
-        <button class="button zen-keep" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical
+        <button class="button" style="width:100%; margin-top:10px;" onclick="exportClinicalSettings()">Clinical
             Export (.txt)</button>
         <button class="button" style="width:100%; margin-top:10px; border-color: #ff9800; color: #ff9800;"
             onclick="shareToCommunity()">💬 Share Setup to Community (BBCode/MD)</button>
+        <a class="button"
+            style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim); text-decoration: none; display: flex; align-items: center; justify-content: center;"
+            href="user_manual.html#sec-4" target="_blank">Open Manual for this Tool</a>
         <button class="button email-audiologist-btn"
             style="width:100%; margin-top:10px; background:var(--accent); color:white; display:none;"
             onclick="emailToAudiologist()">Email to Audiologist</button>
-        <div class="timer zen-keep" id="timer" style="margin-top: 15px;">Session: 00:00 / 20:00</div>
-        <div id="usageText" class="usage-text zen-keep">Today's Progress: 0 / 20 mins</div>
-        <div class="breathing-pacer-wrap zen-keep">
+        <div class="timer" id="timer" style="margin-top: 15px;">Session: 00:00 / 20:00</div>
+        <div id="usageText" class="usage-text">Today's Progress: 0 / 20 mins</div>
+        <div class="breathing-pacer-wrap">
             <div class="breathing-wave-label-container">
                 <div class="breathing-label inhale">Inhale</div>
                 <div class="breathing-label exhale">Exhale</div>
@@ -303,16 +310,13 @@
                 <div class="breathing-wave-bar"></div>
             </div>
         </div>
-        <div class="usage-progress zen-keep">
+        <div class="usage-progress">
             <div id="usageBar" class="usage-bar" style="width: 0%"></div>
         </div>
-        <button id="zenBtn" class="button zen-keep"
-            style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter
-            Zen Mode</button>
-        <button class="button zen-keep"
+        <button class="button"
             style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
             onclick="resetToDefaults()">Reset to Defaults</button>
-        <canvas id="viz" class="zen-keep"></canvas>
+        <canvas id="viz"></canvas>
     </div>
     <script>
         let audioCtx, merger, analyserL, analyserR, rafViz, rafPulse, pacerTimer, nodesL, nodesR, bgSrc, globalMasterGain, liveStream, eqNodesL = [], eqNodesR = [], noiseBuf, nextChimeTime = 0, lastVibrateTime = 0;
@@ -390,8 +394,23 @@
             updateLockVisuals();
             updateLabels();
             setupStepButtons();
+            updateStatusDots();
             refreshUsageUI();
             updatePulseDuration();
+
+            document.getElementById('noiseColor').onchange = (e) => {
+                const newColor = e.target.value;
+                saveSetting('len_noiseColor', newColor);
+                if (running) {
+                    if (nodesL && nodesL.noiseSource && nodesL.noiseSource.engineType === 'worklet' && typeof nodesL.noiseSource.updateColor === 'function') {
+                        nodesL.noiseSource.updateColor(newColor);
+                    }
+                    if (nodesR && nodesR.noiseSource && nodesR.noiseSource.engineType === 'worklet' && typeof nodesR.noiseSource.updateColor === 'function') {
+                        nodesR.noiseSource.updateColor(newColor);
+                    }
+                }
+                updateStatusDots();
+            };
 
             document.getElementById('useHearingProfile').checked = loadSetting('len_use_hp', 'false') === 'true';
             document.getElementById('useHearingProfile').onchange = (e) => {
@@ -399,9 +418,6 @@
                 if (running) stopSession(); // Restart required to rebuild graph
             };
 
-            if (loadSetting('lenire_zen_mode', 'false') === 'true') {
-                toggleZenMode(true);
-            }
         };
 
         function resetToDefaults() {
@@ -846,6 +862,15 @@
             nodesL.masterGain.gain.setTargetAtTime(vL / 100, audioCtx.currentTime, 0.05); nodesL.toneGain.gain.setTargetAtTime(mL, audioCtx.currentTime, 0.05); nodesL.noiseGain.gain.setTargetAtTime(1 - mL, audioCtx.currentTime, 0.05);
             nodesR.masterGain.gain.setTargetAtTime(vR / 100, audioCtx.currentTime, 0.05); nodesR.toneGain.gain.setTargetAtTime(mR, audioCtx.currentTime, 0.05); nodesR.noiseGain.gain.setTargetAtTime(1 - mR, audioCtx.currentTime, 0.05);
 
+            // Update generative noise harmonics for both channels if using the high-precision engine.
+            // This ensures the noise spectrum remains anchored to the carrier frequency.
+            if (nodesL.noiseSource && nodesL.noiseSource.engineType === 'worklet' && typeof nodesL.noiseSource.updateTargetFreq === 'function') {
+                nodesL.noiseSource.updateTargetFreq(fL);
+            }
+            if (nodesR.noiseSource && nodesR.noiseSource.engineType === 'worklet' && typeof nodesR.noiseSource.updateTargetFreq === 'function') {
+                nodesR.noiseSource.updateTargetFreq(fR);
+            }
+
             nodesL.noiseModOsc.frequency.setTargetAtTime(mrL, audioCtx.currentTime, 0.05);
             nodesR.noiseModOsc.frequency.setTargetAtTime(mrR, audioCtx.currentTime, 0.05);
             nodesL.burstOsc.frequency.setTargetAtTime(brL, audioCtx.currentTime, 0.05);
@@ -897,6 +922,7 @@
                 updateParams(); updateLabels();
                 const key = 'len_' + el.id.replace('Rate', '');
                 saveSetting(key, el.value);
+                updateStatusDots();
             }
         });
 
@@ -999,6 +1025,37 @@
                 });
             }
         });
+
+        function updateStatusDots() {
+            const color = document.getElementById('noiseColor').value;
+            const fL = parseFloat(document.getElementById('freqL').value);
+            const fR = parseFloat(document.getElementById('freqR').value);
+            const warn = document.getElementById('noiseRangeWarning');
+
+            if (color === 'auto') { warn.style.display = 'none'; return; }
+
+            const ranges = {
+                white: { min: 20, max: 20000, desc: "White: 20Hz - 20kHz" },
+                pink: { min: 20, max: 20000, desc: "Pink: 20Hz - 20kHz" },
+                brown: { min: 20, max: 1200, desc: "Brown: 20Hz - 1.2kHz" },
+                blue: { min: 6000, max: 20000, desc: "Blue: 6kHz - 20kHz" },
+                violet: { min: 10000, max: 20000, desc: "Violet: 10kHz - 20kHz" }
+            };
+
+            if (ranges[color]) {
+                const outL = fL < ranges[color].min || fL > ranges[color].max;
+                const outR = fR < ranges[color].min || fR > ranges[color].max;
+
+                if (outL || outR) {
+                    warn.innerHTML = `<strong style="color:var(--error)">⚠️ Spectral Incompatibility</strong><br>` +
+                        `The carrier frequency (${outL ? fL : fR} Hz) is outside the effective range of ${color} noise. ` +
+                        `This may reduce the effectiveness of bimodal pairing. Consider using Blue or Violet noise for high frequencies.`;
+                    warn.style.display = 'block';
+                } else {
+                    warn.style.display = 'none';
+                }
+            } else { warn.style.display = 'none'; }
+        }
     </script>
 </body>
 

@@ -95,8 +95,13 @@
                 </svg>
             </div>
 
-            <p class="info" style="font-style: italic; margin-bottom: 45px; color: var(--text-dim); font-size: 1rem;">
+            <p class="info" style="font-style: italic; margin-bottom: 15px; color: var(--text-dim); font-size: 1rem;">
                 Evidence-Based Auditory Research & Habituation</p>
+
+            <p style="font-size: 0.85rem; line-height: 1.4; color: var(--muted); margin-bottom: 35px; padding: 0 20px;">
+                Finding a definitive cure for tinnitus requires collaborative effort and sustained funding for
+                scientific inquiry.
+            </p>
 
             <div id="splashTimer" onclick="dismissSplashScreen()"
                 style="margin: 0 auto; padding: 12px 30px; width: fit-content; min-width: 120px; color: var(--accent); font-size: 0.9rem; font-weight: bold; border: 1px solid var(--accent); border-radius: 50px; background: rgba(0, 191, 165, 0.05); cursor: pointer; transition: all 0.3s ease; opacity: 0.7;">
@@ -117,7 +122,7 @@
 
     <div class="grid">
         <div id="card-path" class="card grid-wide" draggable="true"
-            style="border: 2px solid var(--accent); background: rgba(0, 191, 165, 0.05);">
+            style="border: 2px solid var(--accent); background: rgba(0, 191, 165, 0.05); margin: 0 auto;">
             <div class="drag-handle">⠿</div>
             <h2 style="color: var(--accent);"><span style="font-size:1.4rem;">🎯</span> Start Here: The Path to Relief
             </h2>
@@ -126,11 +131,11 @@
             <div style="display: flex; flex-direction: column; gap: 8px;">
                 <button class="button" onclick="showQuickStartGuide()"
                     style="text-align: left; padding: 10px; border-style: dashed;">
-                    <b style="color:var(--accent)">0. Quick Start Guide:</b> Visual overview of the method.
+                    <b style="color:var(--accent)">1. Quick Start Guide:</b> Visual overview of the method.
                 </button>
                 <a class="button" href="cbt.html" id="step-thi"
                     style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <span><b style="color:var(--accent)">1. Assessment:</b> Take the THI baseline.</span> <span
+                    <span><b style="color:var(--accent)">2. Assessment:</b> Take the THI baseline.</span> <span
                         class="step-status"></span>
                 </a>
                 <div id="assessment-steps"
@@ -142,7 +147,7 @@
 
                 <a class="button" href="validation.html" id="step-valid"
                     style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <span><b style="color:var(--accent)">2. Validation:</b> Verify your hardware.</span> <span
+                    <span><b style="color:var(--accent)">3. Validation:</b> Verify your hardware.</span> <span
                         class="step-status"></span>
                 </a>
                 <div id="validation-steps"
@@ -153,12 +158,12 @@
 
                 <a class="button" href="notchfinder.html" id="step-pitch"
                     style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <span><b style="color:var(--accent)">3. Calibration:</b> Pitch-match your tinnitus.</span> <span
+                    <span><b style="color:var(--accent)">4. Calibration:</b> Pitch-match your tinnitus.</span> <span
                         class="step-status"></span>
                 </a>
                 <a class="button" href="recommended.html" id="step-plan"
                     style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center; background: var(--success); color: white;">
-                    <span><b style="color:white">4. Your Plan:</b> View personalized recommendations.</span> <span
+                    <span><b style="color:white">5. Your Plan:</b> View personalized recommendations.</span> <span
                         class="step-status"></span>
                 </a>
                 <!-- Functional Calibration Wizard Status -->
@@ -311,6 +316,15 @@
                     <a class="button" style="margin:0;" href="research.html">Research</a>
                     <a class="button" style="margin:0;" href="license.html">License</a>
                 </div>
+                <div class="ctrl"
+                    style="display: flex; align-items: center; gap: 10px; margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 10px;">
+                    <input type="checkbox" id="globalAutoMatch" style="width: 20px; height: 20px;"
+                        onchange="saveSetting('enable_auto_match', this.checked)">
+                    <label for="globalAutoMatch" style="margin: 0; font-weight: bold; color: var(--accent);">Global
+                        Neural Auto-Match</label>
+                </div>
+                <p class="info" style="margin-top: 5px; font-size: 0.7rem;">When enabled, therapy sounds automatically
+                    adapt to your matched tinnitus pitch.</p>
                 <a class="button"
                     style="width:100%; margin-top:10px; border-color: var(--accent); color: var(--accent);"
                     href="hardware.html">🛠️ Hardware & Testing (Dev)</a>
@@ -372,6 +386,7 @@
                 <button class="button"
                     style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
                     onclick="restartOnboarding()">Restart Onboarding</button>
+                <button id="whatsNewBtn" class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim); display: none;" onclick="showWhatsNew()">Show "What's New" Summary</button>
                 <button class="button"
                     style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
                     onclick="toggleCompactMode()">Toggle Compact Mode</button>
@@ -390,13 +405,18 @@
                     onclick="factoryReset()">Clear All Data (Factory Reset)</button>
             </details>
         </div>
-        <div id="card-support" class="card" draggable="true">
+        <div id="card-support" class="card grid-wide" draggable="true" style="margin: 0 auto;">
             <div class="drag-handle">⠿</div>
             <h2>Support Tinnitus Research</h2>
-            <p style="font-size: 0.85rem; line-height: 1.4; color: var(--muted);">Support organizations like the ATA or
+            <p style="font-size: 0.85rem; line-height: 1.4; color: var(--muted);">Support organizations like the
+                <a href="https://www.ata.org/donate" target="_blank"
+                    style="color:var(--accent); text-decoration:underline;">American Tinnitus Association</a>,
+                <a href="https://tinnitusquest.com/donate" target="_blank"
+                    style="color:var(--accent); text-decoration:underline;">Tinnitus Quest</a>, or
                 the <a href="https://www.chsc.org/donate" target="_blank"
                     style="color:var(--accent); text-decoration:underline;">Cleveland Hearing and Speech Center</a> to
-                help fund future research initiatives.</p>
+                help fund future research initiatives.
+            </p>
         </div>
     </div>
 
@@ -503,6 +523,48 @@
             }
         }
 
+        function updateDashboardGating() {
+            const step = parseInt(loadSetting('onboarding_step', '0'));
+            const isComplete = step >= 5;
+            // Strict gating: Hide all secondary cards until mandatory onboarding is finished
+            const gatedCards = [
+                'card-modes', 'card-tests', 'card-utils', 'card-progress',
+                'card-ai-insights', 'card-community', 'card-settings', 'card-support'
+            ];
+
+            gatedCards.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = isComplete ? '' : 'none';
+                }
+            });
+
+            // Handle the 'Start Here' card specifically
+            const pathCard = document.getElementById('card-path');
+            if (pathCard) {
+                pathCard.style.display = 'block'; // Always show the path card
+                const grid = document.querySelector('.grid');
+                if (grid) {
+                    if (!isComplete) {
+                        // Focused layout: center the path card during setup
+                        grid.style.display = 'flex';
+                        grid.style.flexDirection = 'column';
+                        grid.style.alignItems = 'center';
+                        pathCard.style.width = '100%';
+                        pathCard.style.maxWidth = '';
+                        pathCard.style.margin = '0 auto';
+                    } else {
+                        // Return to standard grid when complete
+                        grid.style.display = 'grid';
+                        grid.style.flexDirection = '';
+                        grid.style.alignItems = '';
+                        pathCard.style.width = '';
+                        pathCard.style.maxWidth = '';
+                    }
+                }
+            }
+        }
+
         /** Global UI Actions - Moved outside onload for immediate availability **/
         window.restartOnboarding = () => {
             const msg = "This will reset your setup progress and all therapy calibrations. Your dashboard will return to the welcome screen. Continue?";
@@ -515,10 +577,10 @@
         window.finishOnboarding = () => {
             console.log("TTS: Finalizing setup...");
             try {
-                saveSetting('onboarding_step', 7);
+                saveSetting('onboarding_step', 5);
                 saveSetting('last_seen_version', APP_VERSION);
                 try { sessionStorage.setItem('tts_session_active', 'true'); } catch (e) { }
-
+                updateDashboardGating();
                 const modal = document.getElementById('onboardingModal');
                 if (modal) {
                     modal.style.display = 'none';
@@ -530,24 +592,6 @@
                 console.error("TTS: Error finishing onboarding:", e);
                 // Fallback: just hide the modal if reload fails
                 document.getElementById('onboardingModal').style.display = 'none';
-            }
-        };
-
-        window.purgeCacheAndReload = async () => {
-            if (confirm("This will clear the application cache and force a fresh download of the latest version. Your saved therapy settings will not be affected. Proceed?")) {
-                if ('serviceWorker' in navigator) {
-                    const registrations = await navigator.serviceWorker.getRegistrations();
-                    for (let registration of registrations) {
-                        await registration.unregister();
-                    }
-                }
-                if ('caches' in window) {
-                    const names = await caches.keys();
-                    for (let name of names) {
-                        await caches.delete(name);
-                    }
-                }
-                window.location.reload(true);
             }
         };
 
@@ -613,10 +657,14 @@
                 });
             }
 
-            // Onboarding Wizard Initialization
-            const step = parseInt(loadSetting('onboarding_step', 0));
-            if (step < 7) {
-                showOnboardingStep(step);
+            // Integrated Onboarding and Dashboard Gating
+            const onboardingStep = parseInt(loadSetting('onboarding_step', 0));
+            updateDashboardGating();
+
+            if (onboardingStep < 5) {
+                if (typeof showOnboardingModal === 'function') {
+                    showOnboardingModal();
+                }
             } else {
                 // Version tracking for returning users
                 const lastSeen = loadSetting('last_seen_version', '0.0.0');
@@ -626,10 +674,18 @@
             }
 
             loadDailyMotivation(); // Load daily motivation on page load
+
+            // Only show the "What's New" button in settings if there is a version mismatch (unread update)
+            const lastSeen = loadSetting('last_seen_version', '0.0.0');
+            if (lastSeen !== APP_VERSION) {
+                document.getElementById('whatsNewBtn').style.display = 'block';
+            }
+
             document.getElementById('goalInput').value = loadSetting('daily_goal', 20);
             document.getElementById('audioEmail').value = loadSetting('audiologist_email', '');
             document.getElementById('clinicName').value = loadSetting('clinic_name', '');
             document.getElementById('clinicLogo').value = loadSetting('clinic_logo', '');
+            document.getElementById('globalAutoMatch').checked = loadSetting('enable_auto_match', 'true') === 'true';
 
             // Highlight validation button if calibration was completed
             const phaseStatus = loadSetting('phase_status', 'Not Verified');
@@ -784,30 +840,6 @@
                 }
             }
         }
-
-        function showWhatsNew() {
-            const container = document.getElementById('dynamicWhatsNew');
-            if (container && window.REMOTE_CONFIG && window.REMOTE_CONFIG.whatsNew) {
-                let html = `<h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 10px;">Latest (v${window.REMOTE_CONFIG.version}) - ${window.REMOTE_CONFIG.date || ''}</h3>`;
-                html += `<ul style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem;">`;
-                window.REMOTE_CONFIG.whatsNew.forEach(item => {
-                    html += `<li>${item}</li>`;
-                });
-                html += `</ul>`;
-                container.innerHTML = html;
-            }
-            document.getElementById('whatsNewModal').style.display = 'block';
-        }
-
-        window.closeWhatsNew = () => {
-            saveSetting('last_seen_version', APP_VERSION);
-            document.getElementById('whatsNewModal').style.display = 'none';
-
-            // If validation is needed, highlight it after they close the news
-            if (needsValidation()) {
-                document.getElementById('validationBtn').classList.add('highlight-btn');
-            }
-        };
 
         window.purgeCacheAndReload = async () => {
             if (confirm("This will clear the application cache and force a fresh download of the latest version. Your saved therapy settings will not be affected. Proceed?")) {
@@ -1254,112 +1286,6 @@
         }
     </script>
 
-    <div id="onboardingModal" class="modal-overlay">
-        <div class="modal-card" style="text-align: center;">
-            <!-- Progress Bar -->
-            <div class="usage-progress" style="margin-top: 0; margin-bottom: 20px;">
-                <div id="onboardingProgressBar" class="usage-bar" style="width: 0%"></div>
-            </div>
-
-            <div id="onboarding-0">
-                <h2>Welcome</h2>
-                <p>This open‑source suite provides research‑based tinnitus tools. For your safety, please accept our
-                    disclaimer to begin.</p>
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <a href="disclaimer.html" class="button" target="_blank" style="flex: 1;">Legal Policy</a>
-                    <button onclick="showQuickStartGuide()" class="button"
-                        style="flex: 1; border-color: var(--accent);">Quick Start Guide</button>
-                </div>
-                <button onclick="completeOnboarding(); nextOnboardingStep(1)" class="big-btn play-btn">I Accept &
-                    Understand</button>
-                <a href="#" onclick="completeOnboarding(); finishOnboarding()"
-                    style="display: block; margin-top: 15px; font-size: 0.85rem; color: var(--text-dim); text-decoration: none;">Skip
-                    Setup & Go to Dashboard</a>
-                <a href="#" onclick="purgeCacheAndReload()"
-                    style="display: block; margin-top: 15px; font-size: 0.75rem; color: #ef5350; text-decoration: underline;">Stuck?
-                    Click here to Force Update & Clear Cache</a>
-            </div>
-            <div id="onboarding-1" style="display:none;">
-                <h2>Step 1: Initial Assessment</h2>
-                <p>Before starting, it's helpful to establish a baseline of how tinnitus affects your daily life using
-                    the THI assessment.</p>
-                <a href="cbt.html" class="big-btn play-btn" onclick="nextOnboardingStep(2)">Take THI Assessment</a>
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button onclick="nextOnboardingStep(0)" class="button" style="flex: 1;">Back</button>
-                    <button onclick="nextOnboardingStep(2)" class="button" style="flex: 1;">Skip for now</button>
-                </div>
-            </div>
-            <div id="onboarding-2" style="display:none;">
-                <h2>Step 2: System Calibration</h2>
-                <p>Ensure your audio engine and hardware are functioning correctly before starting therapy.</p>
-                <a href="validation.html" class="big-btn play-btn" onclick="nextOnboardingStep(3)">Run System
-                    Validation</a>
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button onclick="nextOnboardingStep(1)" class="button" style="flex: 1;">Back</button>
-                    <button onclick="nextOnboardingStep(3)" class="button" style="flex: 1;">Skip for now</button>
-                </div>
-            </div>
-            <div id="onboarding-3" style="display:none;">
-                <h2>Step 3: Hearing Check</h2>
-                <p>It's vital to check your hearing thresholds before using high-frequency noise therapy.</p>
-                <a href="hearingtest.html" class="big-btn play-btn" onclick="nextOnboardingStep(4)">Go to Hearing
-                    Test</a>
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button onclick="nextOnboardingStep(2)" class="button" style="flex: 1;">Back</button>
-                    <button onclick="nextOnboardingStep(4)" class="button" style="flex: 1;">Skip for now</button>
-                </div>
-            </div>
-            <div id="onboarding-4" style="display:none;">
-                <h2>Step 4: Pitch Matching</h2>
-                <p>To use Notch Therapy effectively, you should identify your specific tinnitus frequency.</p>
-                <a href="notchfinder.html" class="big-btn play-btn" onclick="nextOnboardingStep(5)">Go to Notch
-                    Finder</a>
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button onclick="nextOnboardingStep(3)" class="button" style="flex: 1;">Back</button>
-                    <button onclick="nextOnboardingStep(5)" class="button" style="flex: 1;">Skip for now</button>
-                </div>
-            </div>
-            <div id="onboarding-5" style="display:none;">
-                <h2>Step 5: Enable AI Assistant</h2>
-                <p>Enable personalized progress analysis and crisis support by adding a Gemini API Key.</p>
-                <p class="info" style="font-size: 0.8rem; border-left: 2px solid var(--accent); padding-left: 10px;">
-                    <b>Note:</b> This program does <u>not</u> provide an API key. You must get your own from Google.
-                </p>
-                <div
-                    style="background: var(--surface); padding: 12px; border-radius: 8px; margin-top: 10px; margin-bottom: 15px; font-size: 0.85rem; text-align: left;">
-                    1. <a href="https://aistudio.google.com/app/apikey" target="_blank"
-                        style="color: var(--accent);">Get Key from Google</a><br>
-                    2. Copy the key and paste it below.
-                </div>
-                <input type="password" id="onboardGeminiKey" placeholder="Paste Key Here"
-                    style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);">
-                <div id="onboardMeter" class="usage-progress" style="display: none; margin-top: 15px;">
-                    <div id="onboardMeterBar" class="usage-bar"
-                        style="width: 0%; transition: width 0.6s ease, background-color 0.5s ease;"></div>
-                </div>
-                <button
-                    onclick="saveAIKeyFromModal('onboardGeminiKey', 'onboardAIStatus', 'onboardMeter').then(success => { if(success) nextOnboardingStep(6); })"
-                    class="big-btn play-btn">Test & Continue</button>
-                <div id="onboardAIStatus" style="margin-top:10px; font-size:0.8rem;"></div>
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button onclick="nextOnboardingStep(4)" class="button" style="flex: 1;">Back</button>
-                    <button onclick="nextOnboardingStep(6)" class="button" style="flex: 1;">Skip AI for now</button>
-                </div>
-            </div>
-            <div id="onboarding-6" style="display:none;">
-                <h2>Setup Complete!</h2>
-                <p>You're ready to start your journey. You can access all tools from the main dashboard.</p>
-                <button onclick="finishOnboarding()" class="big-btn play-btn">Start Exploring</button>
-                <button onclick="nextOnboardingStep(5)" class="button"
-                    style="width:100%; margin-top:10px;">Back</button>
-            </div>
-
-            <button onclick="finishOnboarding()" class="button"
-                style="width:100%; margin-top:20px; border-color: var(--text-dim); color: var(--text-dim); font-weight: normal;">Exit
-                Wizard</button>
-        </div>
-    </div>
-
     <div id="aiSetupModal" class="modal-overlay">
         <div class="modal-card">
             <h2 style="color: var(--accent); margin-top: 0;">✨ AI Assistant Setup</h2>
@@ -1403,168 +1329,8 @@
             <h2 style="color: var(--accent); margin-top: 0;">What's New in v<span class="app-version-label"></span></h2>
             <p class="info">Recent improvements to your therapy experience:</p>
             <div
-                style="max-height: 400px; overflow-y: auto; text-align: left; padding-right: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
-                <div id="dynamicWhatsNew"></div>
-
-                <h3
-                    style="color: var(--accent); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
-                    v2026.06.1 - Spectral Intelligence & Session Fixes</h3>
-                <ul
-                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
-                    <li><b>Splash Screen Suppression:</b> Fixed logic to ensure the cinematic intro only plays once per
-                        session. Navigating back to the Dashboard via the Home button now bypasses the animation.</li>
-                    <li><b>Spectral Compatibility Check:</b> Added real-time warnings to Notch and CR modules. If your
-                        selected noise source doesn't cover your matched frequency (e.g., high-pitch notch with
-                        low-frequency noise), the suite provides a range guide.</li>
-                    <li><b>CR Spectrum Visualization:</b> Integrated a new frequency spectrum canvas into the Acoustic
-                        CR module, providing a logarithmic overview of your therapy tones relative to the background
-                        noise.</li>
-                    <li><b>Visual Range Flagging:</b> Tones falling outside the effective energy range of the background
-                        noise are now visually flagged with red indicators and alerts on the spectrum canvas.</li>
-                    <li><b>Axis Orientation:</b> Added logarithmic frequency labels (100Hz, 1k, 10k) to the spectrum
-                        visualization for improved technical clarity.</li>
-                </ul>
-
-                <h3
-                    style="color: var(--accent); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
-                    v2026.05.4 - Branding & Session Entry</h3>
-                <ul
-                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
-                    <li><b>Branded Splash Screen:</b> Integrated a new cinematic entry sequence featuring an animated
-                        swarm of 'tinnitus bees' orbiting a stylized ear logo.</li>
-                    <li><b>Dramatic Exit Transitions:</b> Added motion blur and scaling effects to the splash screen
-                        dismissal for a more professional user experience.</li>
-                    <li><b>Session Intelligence:</b> Integrated <code>sessionStorage</code> logic to track the
-                        session-level display state. This optimization ensures the cinematic entry sequence only plays
-                        at the start of a browsing session, preventing redundant animations during internal navigation
-                        or page refreshes.</li>
-                    <li><b>Visual Synchronization:</b> Unified branding elements between the startup splash and the User
-                        Manual cover graphic.</li>
-                </ul>
-
-                <h3
-                    style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
-                    v2026.05.3 - Major Clinical Alignment</h3>
-                <ul
-                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
-                    <li><b>Manual Synchronization:</b> Standardized all terminology (e.g., 'Broadband Sound Therapy')
-                        and logic to match the User Manual.</li>
-                    <li><b>Hearing Profile (Audiogram):</b> Added a new module to enter professional audiogram results
-                        with <b>Half‑Gain Rule</b> auto‑compensation for therapy modules.</li>
-                    <li><b>Habituation Milestone Tracker:</b> Integrated automated detection for clinical habituation
-                        stages (Appendix E).</li>
-                    <li><b>Community Integration:</b> Standardized 'Share Setup' feature across all modules for Tinnitus
-                        Talk/Reddit formatting.</li>
-                    <li><b>Global Clinical Reports:</b> New dashboard tool to generate comprehensive PDF summaries
-                        covering all diagnostic and therapy history.</li>
-                    <li><b>Visual Calibration:</b> Added frequency axis labels to Spectrogram and 45-60dB habituation
-                        range markers to the Audio Meter.</li>
-                    <li><b>Q-factor Tracking:</b> Integrated a new trend chart in the <b>Stats page (stats.html)</b> to
-                        specifically monitor changes in tinnitus 'sharpness' (Q-factor) and tonality over time.</li>
-                    <li><b>Universal Reporting:</b> Added PDF and Clinical Export (.txt) capabilities to all remaining
-                        diagnostic tools.</li>
-                    <li><b>System Guidance:</b> Added a comprehensive interactive tutorial for the <b>System
-                            Validation</b> engine to ensure audio integrity.</li>
-                    <li><b>Milestone Celebration:</b> Earn a printable <b>Achievement Certificate</b> and enjoy a
-                        celebratory confetti burst upon reaching Phase 6: Full Habituation.</li>
-                </ul>
-
-                <h3
-                    style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
-                    v2026.05.2 - Engine Stability Update</h3>
-                <ul
-                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
-                    <li><b>Audio Engine Watchdog:</b> New background observer that detects and automatically recovers
-                        from browser-induced audio stalls.</li>
-                    <li><b>Recovery Notifications:</b> Implemented floating orange/green popups to signal automatic
-                        audio restoration.</li>
-                    <li><b>Precision Engine:</b> Fine-tuned digital filters and improved frequency matching accuracy for
-                        high-pitch therapies.</li>
-                    <li><b>UI Resilience:</b> Resolved a lock-up issue where buttons became unresponsive during audio
-                        context transitions.</li>
-                </ul>
-
-                <h3
-                    style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
-                    v2026.05.1 - May 2026</h3>
-                <ul
-                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
-                    <li><b>Audio Reliability:</b> Fixed a critical bug where the AudioContext was not correctly resumed
-                        on therapy start.</li>
-                    <li><b>Versioning:</b> Migrated to yyyy.mm.counter format as per project requirements.</li>
-                    <li><b>AI Connectivity:</b> Finalized dynamic model auto-discovery to resolve 404 errors with newer
-                        Gemini 2.0/2.5 keys.</li>
-                    <li><b>AI Milestone:</b> Successfully resolved Gemini SDK connectivity and model authorization
-                        issues for high-precision therapeutic insights.</li>
-                    <li><b>404 File Fix:</b> Added missing system files (maintenance.json and docs/index.html) to
-                        resolve server errors.</li>
-                    <li><b>AI Skypack Bridge:</b> Switched to Skypack CDN for better ESM compatibility and to resolve
-                        'exports is not defined' errors on Chromebooks.</li>
-                    <li><b>AI Stability Fix:</b> Resolved global namespace conflicts for the Gemini SDK on Chromebooks
-                        and Chrome browsers.</li>
-                    <li><b>UI Restoration:</b> Added missing AI security fields to the main settings card and resolved a
-                        crash in the dashboard initialization.</li>
-                    <li><b>AI SDK Stability:</b> Switched to UMD browser bundle to resolve global namespace conflicts.
-                    </li>
-                    <li><b>AI Debugger:</b> Improved SDK detection logic and diagnostic error messages for connectivity
-                        issues.</li>
-                    <li><b>AI Reliability:</b> Enhanced SDK detection and synchronized Gemini libraries across all
-                        modules to resolve loading failures.</li>
-                    <li><b>Critical Engine Fix:</b> Resolved a syntax error that prevented the app version from
-                        displaying and blocked AI features.</li>
-                    <li><b>AI Reliability:</b> Upgraded to Gemini SDK v0.12.0 and improved resolution logic for
-                        restricted network environments.</li>
-                    <li><b>AI Reliability:</b> Improved resolution logic for the Gemini SDK to resolve race conditions
-                        and blockages.</li>
-                    <li><b>AI Refinements:</b> Enhanced chat interface with typing indicators and improved context for
-                        Pattern Finder analysis.</li>
-                    <li><b>Wellness Tools:</b> Integrated AI-generated mindfulness scripts into the Thought Record
-                        workflow to assist in grounding.</li>
-                    <li><b>Dashboard Performance:</b> Optimized loading of AI insights and improved real-time
-                        connectivity validation for Gemini keys.</li>
-                </ul>
-
-                <h3
-                    style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
-                    v2026.05.0: Major AI Integration - May 2026</h3>
-                <ul
-                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
-                    <li><b>Clinical Pilot Program:</b> New inquiry system for professional partners.</li>
-                    <li><b>AI-Powered Features (Google Gemini):</b> Integrated 5 new AI-driven tools for crisis support,
-                        personalized soundscapes, pattern analysis, TRT education, and clinical report summaries.</li>
-                </ul>
-
-                <h3
-                    style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
-                    v2026.04.5: Professional Integration - May 2026</h3>
-                <ul
-                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dim);">
-                    <li><b>Dual-Stimulus (Bimodal) Support:</b> Synchronize auditory bursts with wireless tactile pulses
-                        using the new <b>Finger Pacer</b> hardware or mobile haptics.</li>
-                    <li><b>Clinical Summary for Doctors:</b> Generate professional technical PDFs and handouts
-                        summarizing protocols and citations to share with audiologists.</li>
-                    <li><b>Community Sharing:</b> Use the "Share Setup" tool to copy settings formatted for forums like
-                        Tinnitus Talk and Reddit.</li>
-                    <li><b>Breathing Wave Pacer:</b> Integrated visual and auditory pacing for resonance breathing
-                        during therapeutic sessions.</li>
-                </ul>
-
-                <h3
-                    style="color: var(--muted); font-size: 1rem; margin-bottom: 10px; border-top: 1px dashed var(--border); padding-top: 10px;">
-                    v2026.04.4: Interface & Guidance - April 2026</h3>
-                <ul
-                    style="padding-left: 20px; line-height: 1.6; margin-bottom: 10px; font-size: 0.9rem; color: var(--text-dim);">
-                    <li><b>Interactive Tutorials:</b> Voice-narrated UI walkthroughs and visual highlights for every
-                        therapy and tool.</li>
-                    <li><b>Guided Onboarding:</b> A visual "Path to Relief" sequence on the dashboard to help you
-                        complete your clinical setup.</li>
-                    <li><b>PMR Support:</b> Guided relaxation sequence in <b>CBT & Wellness</b> with auditory cues to
-                        help manage distress.</li>
-                    <li><b>Better Organization:</b> Dashboard tools are now split into "Support Tools" and "System
-                        Utilities" for more intuitive navigation.</li>
-                    <li><b>Performance & Safety:</b> Improved DSP validation and new options for data backup or factory
-                        reset.</li>
-                </ul>
+                id="dynamicWhatsNew" style="max-height: 400px; overflow-y: auto; text-align: left; padding-right: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
+                </div>
             </div>
             <button onclick="closeWhatsNew()" class="big-btn play-btn">Let's Go</button>
         </div>

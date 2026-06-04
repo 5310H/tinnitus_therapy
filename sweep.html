@@ -1,173 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Frequency Sweep</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="stylesheet" href="style.css">
-<script src="storage.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="nav.js"></script>
-</head>
-<body>
-<div class="panel">
-<h1>Frequency Sweep</h1>
-<p class="info">20 Hz → 20,000 Hz</p>
-<div class="card">
-    <h2>Current: <span id="freq">0</span> Hz</h2>
-    <div class="usage-progress" style="margin-bottom: 5px;">
-        <div id="progressBar" class="usage-bar" style="width: 0%; transition: none;"></div>
-    </div>
-    <div style="position: relative; height: 1.2rem; font-size: 0.65rem; color: var(--text-dim); margin-bottom: 15px;">
-        <span style="position: absolute; left: 0;">20Hz</span>
-        <span style="position: absolute; left: 23.3%; transform: translateX(-50%);">100Hz</span>
-        <span style="position: absolute; left: 56.6%; transform: translateX(-50%);">1kHz</span>
-        <span style="position: absolute; left: 79.9%; transform: translateX(-50%);">5kHz</span>
-        <span style="position: absolute; left: 90%; transform: translateX(-50%);">10kHz</span>
-        <span style="position: absolute; right: 0;">20kHz</span>
-    </div>
-    <div class="ctrl">
-        <label>Volume <span class="val" id="volVal">10%</span></label>
-        <input id="volSlider" type="range" min="0" max="100" value="10">
-    </div>
-    <button class="button play-btn" id="start">Start Sweep</button>
-    <button class="button stop-btn" id="stop" style="background: var(--error);">Stop</button>
 
-    <div class="zen-keep" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-        <button class="button zen-keep" style="background:var(--accent); color:white;" onclick="generatePDFReport()">Download PDF Report</button>
-        <button class="button zen-keep" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
-        <button class="button email-audiologist-btn zen-keep" style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to Audiologist</button>
-        <button id="zenBtn" class="button zen-keep" style="width:100%; margin-top:20px; border-color: #9c27b0; color: #9c27b0;" onclick="toggleZenMode()">Enter Zen Mode</button>
-        <button class="button zen-keep" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);" onclick="resetToDefaults()">Reset to Defaults</button>
-    </div>
-</div>
-<script>
-window.onload = () => initNav(`
+<head>
+    <meta charset="UTF-8">
+    <title>Frequency Sweep</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <script src="storage.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="nav.js"></script>
+</head>
+
+<body>
+    <div class="panel">
+        <h1>Frequency Sweep</h1>
+        <p class="info">20 Hz → 20,000 Hz</p>
+        <div class="card">
+            <h2>Current: <span id="freq">0</span> Hz</h2>
+            <div class="usage-progress" style="margin-bottom: 5px;">
+                <div id="progressBar" class="usage-bar" style="width: 0%; transition: none;"></div>
+            </div>
+            <div
+                style="position: relative; height: 1.2rem; font-size: 0.65rem; color: var(--text-dim); margin-bottom: 15px;">
+                <span style="position: absolute; left: 0;">20Hz</span>
+                <span style="position: absolute; left: 23.3%; transform: translateX(-50%);">100Hz</span>
+                <span style="position: absolute; left: 56.6%; transform: translateX(-50%);">1kHz</span>
+                <span style="position: absolute; left: 79.9%; transform: translateX(-50%);">5kHz</span>
+                <span style="position: absolute; left: 90%; transform: translateX(-50%);">10kHz</span>
+                <span style="position: absolute; right: 0;">20kHz</span>
+            </div>
+            <div class="ctrl">
+                <label>Volume <span class="val" id="volVal">10%</span></label>
+                <input id="volSlider" type="range" min="0" max="100" value="10">
+            </div>
+            <button class="button play-btn" id="start">Start Sweep</button>
+            <button class="button stop-btn" id="stop" style="background: var(--error);">Stop</button>
+
+            <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                <button class="button" style="background:var(--accent); color:white;"
+                    onclick="generatePDFReport()">Download PDF Report</button>
+                <button class="button" onclick="exportClinicalSettings()">Clinical Export (.txt)</button>
+                <a class="button"
+                    style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim); text-decoration: none; display: flex; align-items: center; justify-content: center;"
+                    href="user_manual.html#sec-14" target="_blank">Open Manual for this Tool</a>
+                <button class="button email-audiologist-btn"
+                    style="background:var(--accent); color:white; display:none;" onclick="emailToAudiologist()">Email to
+                    Audiologist</button>
+                <button class="button"
+                    style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
+                    onclick="resetToDefaults()">Reset to Defaults</button>
+            </div>
+        </div>
+        <script>
+            window.onload = () => initNav(`
     <b>Purpose:</b> A frequency sweep moves from the lowest audible frequencies (20 Hz) to the highest (20,000 Hz) over a 10-second period.<br><br>
     <b>Usage:</b> This helps you identify "dead zones" in your hearing or specific frequencies that trigger your tinnitus. It can also help you roughly verify your upper hearing limit.<br><br>
     <b>Safety:</b> High frequencies can be piercing. Start with your device volume very low.
 `);
+            let ctx = null, osc = null, startTime = null, raf = null, gainNode = null;
 
-if (loadSetting('sweep_zen_mode', 'false') === 'true') {
-        toggleZenMode(true);
-    }
-let ctx=null, osc=null, startTime=null, raf=null, gainNode=null;
+            function sweep() {
+                if (!ctx || !osc) return;
+                const now = ctx.currentTime - startTime;
 
-function sweep(){
-    if(!ctx || !osc) return;
-    const now=ctx.currentTime-startTime;
-    
-    const progress = Math.min(100, (now / 10) * 100);
-    document.getElementById("progressBar").style.width = progress + "%";
+                const progress = Math.min(100, (now / 10) * 100);
+                document.getElementById("progressBar").style.width = progress + "%";
 
-    const freq=20*Math.pow(1000, now/10);
-    if(freq>20000){ stop(); return; }
-    osc.frequency.value=freq;
-    document.getElementById("freq").textContent=Math.round(freq);
-    raf=requestAnimationFrame(sweep);
-}
+                const freq = 20 * Math.pow(1000, now / 10);
+                if (freq > 20000) { stop(); return; }
+                osc.frequency.value = freq;
+                document.getElementById("freq").textContent = Math.round(freq);
+                raf = requestAnimationFrame(sweep);
+            }
 
-function start(){
-    if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)();
-    if(ctx.state === 'suspended') ctx.resume();
-    stop();
+            function start() {
+                if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') ctx.resume();
+                stop();
 
-    osc=ctx.createOscillator();
-    osc.type="sine";
-    gainNode=ctx.createGain();
-    gainNode.gain.value = document.getElementById("volSlider").value / 100;
-    
-    osc.connect(gainNode).connect(ctx.destination);
-    osc.start();
-    startTime=ctx.currentTime;
-    sweep();
-}
+                osc = ctx.createOscillator();
+                osc.type = "sine";
+                gainNode = ctx.createGain();
+                gainNode.gain.value = document.getElementById("volSlider").value / 100;
 
-function stop(){
-    if(osc){ try { osc.stop(); } catch(e){} osc.disconnect(); osc=null; }
-    if(raf) cancelAnimationFrame(raf);
-    document.getElementById("progressBar").style.width = "0%";
-}
-document.getElementById("start").onclick=start;
-document.getElementById("stop").onclick=stop;
+                osc.connect(gainNode).connect(ctx.destination);
+                osc.start();
+                startTime = ctx.currentTime;
+                sweep();
+            }
 
-function getReportData() {
-function toggleZenMode() {
-    document.body.classList.toggle('zen-mode');
-    const isZen = document.body.classList.contains('zen-mode');
-    saveSetting('sweep_zen_mode', isZen);
-    document.getElementById('zenBtn').textContent = isZen ? "Exit Zen Mode" : "Enter Zen Mode";
-}
+            function stop() {
+                if (osc) { try { osc.stop(); } catch (e) { } osc.disconnect(); osc = null; }
+                if (raf) cancelAnimationFrame(raf);
+                document.getElementById("progressBar").style.width = "0%";
+            }
+            document.getElementById("start").onclick = start;
+            document.getElementById("stop").onclick = stop;
 
-function resetToDefaults() {
-    if (confirm("Reset all settings for Frequency Sweep to their defaults?")) {
-        resetModuleSettings(['sweep_']);
-    }
-}
-    return {
-        "Sweep Range": "20 Hz to 20,000 Hz",
-        "Volume Level": document.getElementById('volSlider').value + "%"
-    };
-}
+            function resetToDefaults() {
+                if (confirm("Reset all settings for Frequency Sweep to their defaults?")) {
+                    resetModuleSettings(['sweep_']);
+                }
+            }
+            return {
+                "Sweep Range": "20 Hz to 20,000 Hz",
+                "Volume Level": document.getElementById('volSlider').value + "%"
+            };
+            }
 
-function exportClinicalSettings() {
-    const reportData = getClinicalReportData("Frequency Sweep", getReportData());
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(aiSummaryText => {
-        reportData.aiSummary = aiSummaryText;
-        const report = generateClinicalReportText(reportData);
-        const blob = new Blob([report], { type: 'text/plain' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = `tinnitus_clinical_sweep.txt`; a.click();
-    });
-}
+            function exportClinicalSettings() {
+                const reportData = getClinicalReportData("Frequency Sweep", getReportData());
+                // Fetch AI summary and add to reportData
+                getClinicalSummary().then(aiSummaryText => {
+                    reportData.aiSummary = aiSummaryText;
+                    const report = generateClinicalReportText(reportData);
+                    const blob = new Blob([report], { type: 'text/plain' });
+                    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                    a.download = `tinnitus_clinical_sweep.txt`; a.click();
+                });
+            }
 
-async function generatePDFReport() {
-    const reportData = getClinicalReportData("Frequency Sweep", getReportData());
-    // Fetch AI summary and add to reportData
-    const aiSummaryText = await getClinicalSummary();
-    reportData.aiSummary = aiSummaryText;
-    const htmlContent = generateClinicalReportHtml(reportData);
+            async function generatePDFReport() {
+                const reportData = getClinicalReportData("Frequency Sweep", getReportData());
+                // Fetch AI summary and add to reportData
+                const aiSummaryText = await getClinicalSummary();
+                reportData.aiSummary = aiSummaryText;
+                const htmlContent = generateClinicalReportHtml(reportData);
 
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    document.body.appendChild(tempDiv);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                document.body.appendChild(tempDiv);
 
-    const isDark = document.documentElement.classList.contains('light-mode');
-    if (!isDark) document.documentElement.classList.add('light-mode');
+                const isDark = document.documentElement.classList.contains('light-mode');
+                if (!isDark) document.documentElement.classList.add('light-mode');
 
-    const opt = {
-        margin: [20, 15], filename: 'tinnitus_clinical_sweep.pdf', image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    await html2pdf().set(opt).from(tempDiv).save();
+                const opt = {
+                    margin: [20, 15], filename: 'tinnitus_clinical_sweep.pdf', image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                await html2pdf().set(opt).from(tempDiv).save();
 
-    if (!isDark) document.documentElement.classList.remove('light-mode');
-    document.body.removeChild(tempDiv);
-}
+                if (!isDark) document.documentElement.classList.remove('light-mode');
+                document.body.removeChild(tempDiv);
+            }
 
-function emailToAudiologist() {
-    const email = loadSetting('audiologist_email', '');
-    if (!email) return alert("Please set your audiologist's email on the Home page.");
-    // Fetch AI summary and add to reportData
-    getClinicalSummary().then(async aiSummaryText => {
-        const reportData = getClinicalReportData("Frequency Sweep", getReportData());
-        reportData.aiSummary = aiSummaryText;
-        const report = generateClinicalReportText(reportData);
-        window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
-    });
-}
+            function emailToAudiologist() {
+                const email = loadSetting('audiologist_email', '');
+                if (!email) return alert("Please set your audiologist's email on the Home page.");
+                // Fetch AI summary and add to reportData
+                getClinicalSummary().then(async aiSummaryText => {
+                    const reportData = getClinicalReportData("Frequency Sweep", getReportData());
+                    reportData.aiSummary = aiSummaryText;
+                    const report = generateClinicalReportText(reportData);
+                    window.location.href = `mailto:${email}?subject=Tinnitus Clinical Report&body=${encodeURIComponent(report)}`;
+                });
+            }
 
-document.getElementById("volSlider").oninput = (e) => {
-    const v = e.target.value;
-    document.getElementById("volVal").textContent = v + "%";
-    if (gainNode && ctx) {
-        gainNode.gain.setTargetAtTime(v / 100, ctx.currentTime, 0.05);
-    }
-};
-</script>
+            document.getElementById("volSlider").oninput = (e) => {
+                const v = e.target.value;
+                document.getElementById("volVal").textContent = v + "%";
+                if (gainNode && ctx) {
+                    gainNode.gain.setTargetAtTime(v / 100, ctx.currentTime, 0.05);
+                }
+            };
+        </script>
 
 </body>
+
 </html>

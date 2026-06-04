@@ -10,6 +10,9 @@ No medical claims are made or implied. The sound tools provided here are based o
 general concepts found in tinnitus research, but they are not a substitute for 
 professional evaluation or treatment by a licensed clinician, audiologist, or 
 healthcare provider.
+
+HEARING AIDS AND AMPLIFICATION:
+If you are wearing hearing aids (physical or Bluetooth) while using these therapies, it is CRITICAL to disable the "Hearing Boost" feature. Combining the suite's digital amplification with your hearing aids' own amplification can lead to dangerously high sound levels, potentially causing further hearing damage or discomfort. Always ensure your overall listening volume is safe and comfortable.
  
 AI-GENERATED CONTENT:
 Certain features (CBT Reframing, SOS Spike Support, Sound Recipes, 

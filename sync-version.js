@@ -1,7 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const packageJson = require('./package.json');
 const version = packageJson.version;
+
+const isDryRun = process.argv.includes('--dry-run');
 
 const dateObj = new Date();
 const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -34,9 +37,43 @@ filesToUpdate.forEach(cfg => {
             console.warn(`Unknown type for file ${cfg.file}, skipping.`);
             return;
         }
-        
-        content = content.replace(cfg.regex, replacement);
-        fs.writeFileSync(filePath, content);
-        console.log(`Updated ${cfg.file} to version ${version}`);
+
+        if (isDryRun) {
+            console.log(`[Dry Run] Would update ${cfg.file} to version ${version}`);
+        } else {
+            content = content.replace(cfg.regex, replacement);
+            fs.writeFileSync(filePath, content);
+            console.log(`Updated ${cfg.file} to version ${version}`);
+        }
     }
 });
+
+/**
+ * Git Automation
+ * Automatically stages the updated files, commits, and creates a release tag.
+ */
+try {
+    if (isDryRun) {
+        console.log('\n[Dry Run] Skipping Git automation.');
+        process.exit(0);
+    }
+
+    // Ensure we are in a Git repository
+    execSync('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
+
+    const status = execSync('git status --porcelain').toString().trim();
+    if (status) {
+        console.log('\n--- Git Automation ---');
+        console.log('Staging changes and creating commit...');
+        execSync('git add .');
+        execSync(`git commit -m "chore: release v${version}"`);
+
+        console.log(`Creating annotated tag: v${version}`);
+        execSync(`git tag -a v${version} -m "${dateStr} Release"`);
+
+        console.log(`✅ Success: v${version} is ready to be pushed.`);
+        console.log('Run "git push origin main --tags" to publish your changes.');
+    }
+} catch (e) {
+    console.warn('\n⚠️ Git automation skipped. (Repo not found or Git not installed)');
+}
