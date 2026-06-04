@@ -178,7 +178,12 @@ These approaches are widely used in tinnitus management and research.
 
 This project uses a monthly versioning strategy. To create a new monthly snapshot:
 
-1. **Sync Version:** Update `package.json` and run `node sync-version.js`.
+1. **Sync & Release (One-Click Setup):**
+   - **Sidebar Icon:** Drag the **NPM SCRIPTS** section from the Explorer to the far-left Activity Bar to create a dedicated release icon.
+   - **Action:** Click the "Play" button next to `release`.
+   - **Terminal:** Run `npm run release`.
+   - **Automation:** This runs `sync-version.js` with safety audits and a push confirmation.
+
 2. **Commit:** `git add . && git commit -m "Release vYYYY.MM.DD"`
 3. **Tag:** Create an annotated Git tag:
    ```bash
