@@ -273,6 +273,10 @@ function validateAssets() {
             console.log(`${colors.cyan}To undo:      git tag -d v${version} && git reset --soft HEAD~1${colors.reset}`);
             console.log(`${colors.cyan}To recover:   git checkout ${checkpointName}${colors.reset}`);
         }
+        else {
+            console.log(`\n${colors.yellow}Notice: No changes detected in the repository.${colors.reset}`);
+            console.log(`${colors.gray}Everything is already up to date. Nothing to release.${colors.reset}`);
+        }
     } catch (e) {
         console.warn('\n⚠️ Git automation skipped. (Repo not found or Git not installed)');
     }
