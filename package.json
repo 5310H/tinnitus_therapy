@@ -5,7 +5,7 @@
     "build": "make",
     "run": "./my_c_program",
     "clean": "rm -rf build/ bin/",
-    "release": "git add . && git commit -m 'Release' && git push",
+    "release": "node sync-version.js --push",
     "test": "python3 test_script.py"
   }
 }

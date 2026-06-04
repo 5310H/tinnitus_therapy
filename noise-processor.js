@@ -148,6 +148,13 @@ class NoiseProcessor extends AudioWorkletProcessor {
         this._updateBases();
     }
 
+    _checkBuffers(len) {
+        if (this.tempBuf1.length !== len) {
+            this.tempBuf1 = new Float32Array(len);
+            this.tempBuf2 = new Float32Array(len);
+        }
+    }
+
     static get parameterDescriptors() {
         return [{
             name: 'pulseRate',
@@ -189,10 +196,7 @@ class NoiseProcessor extends AudioWorkletProcessor {
         this.surgePhase = (this.surgePhase + (0.503 * len) / sr) % (2 * Math.PI); // 0.08Hz
         if (pulseDepth > 0) this.pulsePhase = (this.pulsePhase + (2 * Math.PI * pulseRate * len) / sr) % (2 * Math.PI);
 
-        if (this.tempBuf1.length !== len) {
-            this.tempBuf1 = new Float32Array(len);
-            this.tempBuf2 = new Float32Array(len);
-        }
+        this._checkBuffers(len);
 
         const crossfadeSamples = Math.max(1, Math.floor(crossfadeSec * sr));
 

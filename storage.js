@@ -1,7 +1,7 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "2026.06.19";
+const APP_VERSION = "1.0.0";
 
 /** 
  * Helpers for consistent localStorage interaction
