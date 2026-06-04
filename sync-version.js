@@ -61,18 +61,34 @@ try {
     // Ensure we are in a Git repository
     execSync('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
 
+    const currentBranch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
+
+    if (currentBranch !== 'main') {
+        console.warn(`\n⚠️ Note: You are on branch '${currentBranch}'. Releases are usually created on 'main'.`);
+    }
+
     const status = execSync('git status --porcelain').toString().trim();
+
     if (status) {
         console.log('\n--- Git Automation ---');
-        console.log('Staging changes and creating commit...');
+
+        // Safety Feature: Create a recovery checkpoint branch of the current state
+        const checkpointName = `checkpoint/pre-v${version}-${Date.now()}`;
+        console.log(`Creating recovery checkpoint: ${checkpointName}`);
+        execSync(`git branch ${checkpointName}`);
+
+        console.log(`Staging changes on ${currentBranch} and creating commit...`);
         execSync('git add .');
         execSync(`git commit -m "chore: release v${version}"`);
 
         console.log(`Creating annotated tag: v${version}`);
         execSync(`git tag -a v${version} -m "${dateStr} Release"`);
 
-        console.log(`✅ Success: v${version} is ready to be pushed.`);
-        console.log('Run "git push origin main --tags" to publish your changes.');
+        console.log(`\n✅ Success: v${version} is ready.`);
+        console.log(`   Recovery Branch: ${checkpointName}`);
+        console.log(`\nTo publish:   git push origin ${currentBranch} --tags`);
+        console.log(`To undo:      git tag -d v${version} && git reset --soft HEAD~1`);
+        console.log(`To recover:   git checkout ${checkpointName}`);
     }
 } catch (e) {
     console.warn('\n⚠️ Git automation skipped. (Repo not found or Git not installed)');
