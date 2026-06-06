@@ -752,7 +752,8 @@
                                     <li class="inc">35. <a href="#sec-33">Milestone Achievement Certificate</a> <span
                                             class="page-ref"></span></li>
                                     <li class="inc">36. <a href="#sec-support-research">Supporting Tinnitus Research</a>
-                                        <span class="page-ref"></span></li>
+                                        <span class="page-ref"></span>
+                                    </li>
                                     <li class="inc"><a href="#appendix-a">Appendix A: Technical Appendix</a> <span
                                             class="page-ref"></span></li>
                                     <li class="inc"><a href="#appendix-b">Appendix B: Quick Reference for Clinicians</a>
@@ -856,7 +857,7 @@
             </div>
 
             <table class="section-table" style="width: 100%; border-collapse: collapse;">
-                <thead>
+                <thead data-i18n="disclaimer_title">
                     <tr>
                         <th style="text-align: left;">
                             <h1>Safety & Legal Disclaimer</h1>
@@ -870,7 +871,8 @@
                                 <!-- Content loaded from disclaimer.txt -->
                                 Loading legal documentation...
                             </div>
-                            <p style="margin-top: 30px; font-style: italic; color: var(--text-dim);">Note: Acceptance of
+                            <p style="margin-top: 30px; font-style: italic; color: var(--text-dim);"
+                                data-i18n="disclaimer_note">Note: Acceptance of
                                 this disclaimer is required before utilizing any therapeutic modules within the suite.
                             </p>
                         </td>
@@ -885,7 +887,7 @@
                 <thead>
                     <tr>
                         <th style="text-align: left;">
-                            <h1>1. Introduction & Success Protocols</h1>
+                            <h1 data-i18n="introduction_title">1. Introduction & Success Protocols</h1>
                         </th>
                     </tr>
                 </thead>
@@ -907,7 +909,7 @@
                             </p>
 
                             <h2>Therapy Selection Matrix</h2>
-                            <div
+                            <div data-i18n="hardware_check_title"
                                 style="background: #fdfdfd; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
                                 <p
                                     style="font-size: 0.75rem; color: #999; margin: 0 0 15px 0; text-transform: uppercase; font-weight: bold;">
@@ -945,19 +947,25 @@
                                 </svg>
                             </div>
 
-                            <h2>Before You Begin: System Readiness</h2>
+                            <h2 data-i18n="hardware_check_title">Before You Begin: System Readiness</h2>
                             <ul style="list-style-type: '☐ '; padding-left: 30px;">
-                                <li><b>Hardware:</b> Use high-quality, <b>wired, over-ear headphones</b>. Open-back
+                                <li data-i18n="hardware_check_item1"><b>Hardware:</b> Use high-quality, <b>wired,
+                                        over-ear headphones</b>. Open-back
                                     models are preferred for natural spatial imaging. Avoid Bluetooth "Hands-Free" (AG)
                                     mode.</li>
-                                <li><b>OS Audio:</b> Disable "Spatial Sound," "Dolby Atmos," "Windows Sonic," or any
+                                <li data-i18n="hardware_check_item2"><b>OS Audio:</b> Disable "Spatial Sound," "Dolby
+                                    Atmos," "Windows Sonic," or any
                                     "Bass Boost" effects.</li>
-                                <li><b>Sample Rate:</b> Ensure your system is set to <b>44.1 kHz</b> or <b>48 kHz</b>.
-                                    High-frequency filters require this precision to remain stable.</li>
-                                <li><b>Safe Levels:</b> Sound therapy should never be painful. Aim for a listening level
+                                <li data-i18n="hardware_check_item3"><b>Sample Rate:</b> Ensure your system is set to
+                                    <b>44.1 kHz</b> or <b>48 kHz</b>.
+                                    High-frequency filters require this precision to remain stable.
+                                </li>
+                                <li data-i18n="hardware_check_item4"><b>Safe Levels:</b> Sound therapy should never be
+                                    painful. Aim for a listening level
                                     <b>below 70 dB</b> (comfortable conversation level).
                                 </li>
-                                <li><b>Environment:</b> Conduct your calibration in a quiet room to ensure accurate
+                                <li data-i18n="hardware_check_item5"><b>Environment:</b> Conduct your calibration in a
+                                    quiet room to ensure accurate
                                     <b>Pitch Matching</b>.
                                 </li>
                             </ul>
@@ -1375,7 +1383,8 @@
 
                             <h2>Field Guide</h2>
                             <ul>
-                                <li><b>Noise Selection:</b> Buttons for White, Pink, Brown, Blue, and Violet. Pink is
+                                <li><b>Noise Selection:</b> Buttons for White, Pink, Brown, Blue, Violet, and Forest.
+                                    Pink is
                                     the research standard for habituation.</li>
                                 <li><b>Wind Chimes:</b> A procedural soundscape utilizing high-Q impulsive oscillators.
                                     It creates a sequence of consonant 'strikes' mathematically related to your tinnitus
@@ -2778,6 +2787,18 @@
                 <tbody>
                     <tr>
                         <td>
+                            <h2 style="margin-top: 0;">Privacy Policy Statement</h2>
+                            <p>The Trahreg Tinnitus Therapy Suite is committed to protecting your privacy. This
+                                application operates on a "Zero-Knowledge" principle, meaning all your personal health
+                                data, therapy logs, and settings are stored exclusively on your local device (within
+                                your browser's origin-private storage). <b>No data is ever transmitted to or stored on
+                                    our servers, nor is it accessible to the developers.</b> Your privacy is paramount,
+                                and this design ensures full compliance with stringent data protection standards,
+                                including HIPAA.</p>
+                            <p>By using this suite, you acknowledge and agree that you are solely responsible for the
+                                management and security of your local data. We recommend regular backups using the
+                                built-in export feature.</p>
+
                             <p>The Trahreg Suite is engineered with a "Zero-Knowledge" architecture to ensure maximum
                                 privacy and strict adherence to clinical data standards, including HIPAA (Health
                                 Insurance Portability and Accountability Act).</p>
@@ -2820,7 +2841,8 @@
                                         Servers</text>
                                 </svg>
                                 <p style="font-size: 0.75rem; color: #666; font-style: italic; margin-top: 5px;">Figure:
-                                    Data is stored and processed entirely on your local hardware.</p>
+                                    Data is stored and processed entirely on your local hardware. No data is sent to
+                                    developers.</p>
                             </div>
 
                             <h3>HIPAA Compliance Statement</h3>
@@ -2832,9 +2854,11 @@
 
                             <h3>1. Zero-Knowledge Infrastructure</h3>
                             <p>Standard medical apps store data in a cloud database. The Trahreg Suite does not. Your
-                                data lives exclusively in your browser's <b>Origin-Private Storage</b>. If you delete
-                                your browser data or use a different device, your logs are not "synced"—they remain only
-                                where you created them.</p>
+                                data lives exclusively in your browser's <b>Origin-Private Storage</b>. This means your
+                                data is never sent to any external server, including those operated by the developers of
+                                this suite. If you delete your browser data or use a different device, your logs are not
+                                "synced"—they remain only where you created them. You are in full control of your data.
+                            </p>
 
                             <h3>2. Clinical Anonymization (AI Features)</h3>
                             <p>When utilizing the Google Gemini AI features for pattern analysis or clinical summaries,
@@ -2886,6 +2910,40 @@
                                     advice. If you experience sudden hearing loss, severe vertigo, or suicidal ideation,
                                     contact emergency services or your healthcare provider immediately.</p>
                             </div>
+
+                            <h2>Third-Party Libraries and Security Audits</h2>
+                            <p>The Trahreg Suite utilizes a minimal set of carefully selected open-source third-party
+                                libraries to enhance functionality, such as the Google Generative AI SDK for client-side
+                                AI and html2pdf.js for local PDF generation. These libraries are integrated to operate
+                                within the "Zero-Knowledge" framework, meaning they do not compromise your local data
+                                privacy.</p>
+                            <ul>
+                                <li><b>Regular Audits:</b> We commit to regular, manual audits of all third-party
+                                    dependencies for known security vulnerabilities.</li>
+                                <li><b>Community Contribution:</b> As an open-source project, the community is
+                                    encouraged to participate in security reviews.</li>
+                                <li><b>User Responsibility:</b> If you are running a local copy of the suite, it is
+                                    recommended to periodically run `npm audit` (if using Node.js) or similar tools to
+                                    check for updated security advisories for your installed dependencies.</li>
+                            </ul>
+
+                            <h2>Security Update Notifications</h2>
+                            <p>Maintaining the security and stability of the Trahreg Suite is a continuous process. We
+                                employ the following methods to keep you informed about critical updates:</p>
+                            <ul>
+                                <li><b>In-App "What's New" Modal:</b> Upon a new version release, a "What's New" modal
+                                    will automatically appear on the dashboard, detailing new features, bug fixes, and
+                                    security enhancements.</li>
+                                <li><b>Service Worker Updates:</b> The Progressive Web App (PWA) uses a Service Worker
+                                    to automatically check for and download the latest version in the background. You
+                                    will be prompted to refresh the application to apply the update.</li>
+                                <li><b>GitHub Releases:</b> All major updates, including security patches, are
+                                    documented on the project's GitHub Releases page. Users are encouraged to monitor
+                                    this page for the most up-to-date information.</li>
+                                <li><b>Maintenance Mode:</b> In the event of a critical vulnerability or widespread
+                                    issue, the suite can be temporarily placed into a "Maintenance Mode" to prevent
+                                    usage until a fix is deployed, ensuring user safety.</li>
+                            </ul>
                         </td>
                     </tr>
                 </tbody>
@@ -3936,10 +3994,10 @@
     </div>
     <button class="print-btn" onclick="window.print()">Export to PDF</button>
     <script src="storage.js"></script>
+    <script src="lang.js"></script>
     <script src="nav.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            initNav();
             fetch('disclaimer.txt')
                 .then(r => {
                     if (!r.ok) throw new Error('Disclaimer file missing or inaccessible.');

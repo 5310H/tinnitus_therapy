@@ -22,7 +22,8 @@
             <div class="ctrl">
                 <label>Frequency (Hz)
                     <div class="input-with-buttons">
-                        <input type="number" id="freqAInput" class="val-input" value="4000" min="100" max="16000">
+                        <input type="number" id="freqAInput" class="val-input" inputmode="numeric" pattern="[0-9]*"
+                            value="4000" min="100" max="16000">
                         <div class="fine-tune-group" data-target="freqASlider">
                             <button class="fine-tune-btn" data-delta="-5">-5</button>
                             <button class="fine-tune-btn" data-delta="-1">-1</button>
@@ -46,8 +47,8 @@
         <div class="card">
             <h3>Tone B</h3>
             <div class="ctrl">
-                <label>Frequency (Hz) <input type="number" id="freqBInput" class="val-input" value="8000" min="100"
-                        max="16000"></label>
+                <label>Frequency (Hz) <input type="number" id="freqBInput" class="val-input" inputmode="numeric"
+                        pattern="[0-9]*" value="8000" min="100" max="16000"></label>
                 <input id="freqBSlider" type="range" min="100" max="16000" value="8000" step="10">
             </div>
             <div class="btn-group" data-target="freqBSlider">

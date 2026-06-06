@@ -36,7 +36,8 @@
           <label style="display: flex; align-items: center; flex-wrap: wrap;">Left Ear <span class="val"
               id="toneFreqValL" style="margin-left: auto;">6000 Hz</span>
             <div class="input-with-buttons">
-              <input type="number" id="toneFreqInputL" class="val-input" value="6000" min="500" max="16000">
+              <input type="number" id="toneFreqInputL" class="val-input" inputmode="numeric" pattern="[0-9]*"
+                value="6000" min="500" max="16000">
               <div class="fine-tune-group" data-target="toneFreqL">
                 <button class="fine-tune-btn" data-delta="-5">-5</button>
                 <button class="fine-tune-btn" data-delta="-1">-1</button>
@@ -57,7 +58,8 @@
           <label style="display: flex; align-items: center; flex-wrap: wrap;">Right Ear <span class="val"
               id="toneFreqValR" style="margin-left: auto;">6000 Hz</span>
             <div class="input-with-buttons">
-              <input type="number" id="toneFreqInputR" class="val-input" value="6000" min="500" max="16000">
+              <input type="number" id="toneFreqInputR" class="val-input" inputmode="numeric" pattern="[0-9]*"
+                value="6000" min="500" max="16000">
               <div class="fine-tune-group" data-target="toneFreqR">
                 <button class="fine-tune-btn" data-delta="-5">-5</button>
                 <button class="fine-tune-btn" data-delta="-1">-1</button>
@@ -89,7 +91,8 @@
           <label style="display: flex; align-items: center; flex-wrap: wrap;">Notch L <span class="val" id="notchValL"
               style="margin-left: auto;">6000 Hz</span>
             <div class="input-with-buttons">
-              <input type="number" id="notchInputL" class="val-input" value="6000" min="500" max="16000">
+              <input type="number" id="notchInputL" class="val-input" inputmode="numeric" pattern="[0-9]*" value="6000"
+                min="500" max="16000">
               <div class="fine-tune-group" data-target="notchL">
                 <button class="fine-tune-btn" data-delta="-5">-5</button>
                 <button class="fine-tune-btn" data-delta="-1">-1</button>
@@ -110,7 +113,8 @@
           <label style="display: flex; align-items: center; flex-wrap: wrap;">Notch R <span class="val" id="notchValR"
               style="margin-left: auto;">6000 Hz</span>
             <div class="input-with-buttons">
-              <input type="number" id="notchInputR" class="val-input" value="6000" min="500" max="16000">
+              <input type="number" id="notchInputR" class="val-input" inputmode="numeric" pattern="[0-9]*" value="6000"
+                min="500" max="16000">
               <div class="fine-tune-group" data-target="notchR">
                 <button class="fine-tune-btn" data-delta="-5">-5</button>
                 <button class="fine-tune-btn" data-delta="-1">-1</button>
@@ -397,28 +401,54 @@
 
     ['L', 'R'].forEach(side => {
       document.getElementById(`toneFreqInput${side}`).oninput = e => {
-        const val = parseInt(e.target.value);
-        if (!isNaN(val) && val >= 500 && val <= 16000) {
+        const valStr = e.target.value;
+        const val = parseInt(valStr);
+        if (isNaN(val)) return;
+
+        // Allow partial entry but only update internal model if in range
+        if (val >= 500 && val <= 16000) {
           const isLocked = document.getElementById('lockLR').checked;
           if (isLocked && side === 'L') {
             document.getElementById('toneFreqInputR').value = val;
+            document.getElementById('toneFreqR').value = val;
           }
           document.getElementById(`toneFreq${side}`).value = val;
           document.getElementById(`toneFreqVal${side}`).textContent = val + ' Hz';
-          document.getElementById(`toneFreq${side}`).dispatchEvent(new Event('input'));
+          if (tonePlaying) {
+            const osc = (side === 'L' ? toneOscL : toneOscR);
+            if (osc) osc.frequency.setTargetAtTime(val, toneCtx.currentTime, 0.05);
+          }
+          saveSetting(`toneFreq${side}`, val);
+          updateStatusDots();
         }
       };
+      document.getElementById(`toneFreqInput${side}`).onblur = e => {
+        e.target.value = document.getElementById(`toneFreq${side}`).value;
+      };
+
       document.getElementById(`notchInput${side}`).oninput = e => {
-        const val = parseInt(e.target.value);
-        if (!isNaN(val) && val >= 500 && val <= 16000) {
+        const valStr = e.target.value;
+        const val = parseInt(valStr);
+        if (isNaN(val)) return;
+
+        if (val >= 500 && val <= 16000) {
           const isLocked = document.getElementById('lockLR').checked;
           if (isLocked && side === 'L') {
             document.getElementById('notchInputR').value = val;
+            document.getElementById('notchR').value = val;
           }
           document.getElementById(`notch${side}`).value = val;
           document.getElementById(`notchVal${side}`).textContent = val + ' Hz';
-          document.getElementById(`notch${side}`).dispatchEvent(new Event('input'));
+          if (playing && nodeNotchL && nodeNotchR) {
+            const node = (side === 'L' ? nodeNotchL : nodeNotchR);
+            node.frequency.setTargetAtTime(val, ctx.currentTime, 0.05);
+          }
+          saveSetting(`notch${side}`, val);
+          updateStatusDots();
         }
+      };
+      document.getElementById(`notchInput${side}`).onblur = e => {
+        e.target.value = document.getElementById(`notch${side}`).value;
       };
     });
 
@@ -746,13 +776,13 @@
       const barHeight = (canvas.height / 2) - 5;
 
       // Draw Left bar (Top)
-      c.fillStyle = 'rgba(0, 191, 165, 0.8)';
+      c.fillStyle = 'rgba(66, 165, 245, 0.8)';
       c.fillRect(0, 0, barWidthL, barHeight);
       c.font = "bold 20px Arial";
       c.fillText("L", 5, barHeight / 2 + 7);
 
       // Draw Right bar (Bottom)
-      c.fillStyle = 'rgba(142, 36, 170, 0.8)';
+      c.fillStyle = 'rgba(239, 83, 80, 0.8)';
       c.fillRect(0, canvas.height / 2 + 5, barWidthR, barHeight);
       c.fillText("R", 5, canvas.height / 2 + barHeight / 2 + 7);
 

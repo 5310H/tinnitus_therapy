@@ -100,6 +100,310 @@ function validateDSP() {
 }
 
 /**
+ * WASM Integration Audit
+ * Scans noise-processor.js to ensure every noise color (and nature sound)
+ * has a corresponding WASM export call within its specific branch.
+ */
+function validateWasmIntegration() {
+    const filePath = path.join(__dirname, 'noise-processor.js');
+    if (!fs.existsSync(filePath)) return true;
+
+    console.log(`\n${colors.cyan}--- WASM Integration Audit ---${colors.reset}`);
+    const content = fs.readFileSync(filePath, 'utf8');
+
+    const expected = [
+        { name: 'pink', match: "color === 'pink'", call: 'this.wasmInstance.exports.fillPink' },
+        { name: 'red', match: "color === 'red'", call: 'this.wasmInstance.exports.fillRed' },
+        { name: 'chimes', match: "color === 'chimes'", call: 'this.wasmInstance.exports.fillChimes' },
+        { name: 'rain', match: "color === 'rain'", call: 'this.wasmInstance.exports.fillRain' },
+        { name: 'ocean', match: "color === 'ocean'", call: 'this.wasmInstance.exports.fillOcean' },
+        { name: 'brown', match: "color === 'brown'", call: 'this.wasmInstance.exports.fillBrown' },
+        { name: 'blue', match: "color === 'blue'", call: 'this.wasmInstance.exports.fillBlue' },
+        { name: 'violet', match: "color === 'violet'", call: 'this.wasmInstance.exports.fillViolet' },
+        { name: 'white', match: "} else if (color === 'white') {", call: 'this.wasmInstance.exports.fillWhite' }
+    ];
+
+    let allPassed = true;
+    expected.forEach(item => {
+        const parts = content.split(item.match);
+        if (parts.length < 2) {
+            console.error(`${colors.yellow}❌ Branch for ${item.name} not found in noise-processor.js.${colors.reset}`);
+            allPassed = false;
+            return;
+        }
+
+        // Isolate the branch body to ensure the call is in the right place
+        const branchBody = parts[1].split('else if')[0].split('_applyFinalGain')[0];
+
+        if (branchBody.includes(item.call)) {
+            console.log(`${colors.gray}✅ ${item.name.padEnd(10)} -> WASM integration verified.${colors.reset}`);
+        } else {
+            console.error(`${colors.yellow}❌ Missing WASM call in ${item.name} branch. Expected: ${item.call}${colors.reset}`);
+            allPassed = false;
+        }
+    });
+
+    if (allPassed) console.log(`${colors.green}✅ WASM Integration Audit Passed.${colors.reset}`);
+    return allPassed;
+}
+
+/**
+ * WASM Clinical Safety Audit (HPF)
+ * Verifies that the DC-blocking High-Pass Filter is implemented in critical
+ * noise functions to prevent sub-sonic drift and protect hardware.
+ */
+function validateWasmHPF() {
+    const filePath = path.join(__dirname, 'noise-generator.wat');
+    if (!fs.existsSync(filePath)) return true;
+
+    console.log(`\n${colors.cyan}--- WASM Clinical Safety Audit ---${colors.reset}`);
+    const content = fs.readFileSync(filePath, 'utf8');
+
+    // Regex looks for the subtraction followed by the 0.997 decay coefficient logic
+    const hpfRegex = /f32\.sub\s+f32\.const\s+0\.997[\s\S]*?f32\.mul\s+f32\.add/;
+
+    const expected = ['fillPink', 'fillRed', 'fillRain', 'fillBrown'];
+    let allPassed = true;
+
+    expected.forEach(funcName => {
+        const parts = content.split(`(export "${funcName}")`);
+        if (parts.length < 2) {
+            console.error(`${colors.yellow}❌ Function ${funcName} not found in noise-generator.wat.${colors.reset}`);
+            allPassed = false;
+            return;
+        }
+
+        // Isolate the function body until the next export or function definition
+        const funcBody = parts[1].split('(export')[0].split('(func')[0];
+
+        if (hpfRegex.test(funcBody)) {
+            console.log(`${colors.gray}✅ ${funcName.padEnd(10)} -> DC Blocker (HPF) verified.${colors.reset}`);
+        } else {
+            console.error(`${colors.yellow}❌ Safety Risk: Missing or invalid HPF math in ${funcName}.${colors.reset}`);
+            allPassed = false;
+        }
+    });
+
+    if (allPassed) console.log(`${colors.green}✅ WASM Clinical Safety Audit Passed.${colors.reset}`);
+    return allPassed;
+}
+
+/**
+ * WASM Memory Audit
+ * Ensures that the memory offsets used in noise-processor.js (JS) 
+ * match the constant definitions in noise-generator.wat (WASM).
+ * Prevents buffer collisions and state corruption.
+ */
+function validateWasmMemory() {
+    const processorPath = path.join(__dirname, 'noise-processor.js');
+    const watPath = path.join(__dirname, 'noise-generator.wat');
+    if (!fs.existsSync(processorPath) || !fs.existsSync(watPath)) return true;
+
+    console.log(`\n${colors.cyan}--- WASM Memory Audit ---${colors.reset}`);
+    const jsContent = fs.readFileSync(processorPath, 'utf8');
+    const watContent = fs.readFileSync(watPath, 'utf8');
+
+    // 1. Extract outPtr from JS
+    const outPtrMatch = jsContent.match(/const outPtr = (\d+);/);
+    if (!outPtrMatch) {
+        console.error(`${colors.yellow}❌ Could not find outPtr definition in noise-processor.js.${colors.reset}`);
+        return false;
+    }
+    const outPtr = parseInt(outPtrMatch[1]);
+
+    // 2. Extract state offsets from JS (e.g., heap[40 / 4])
+    const jsOffsets = new Set();
+    const heapRegex = /heap\[(\d+)\s*\/\s*4/g;
+    let match;
+    while ((match = heapRegex.exec(jsContent)) !== null) {
+        jsOffsets.add(parseInt(match[1]));
+    }
+
+    // 3. Extract memory constants from WAT (i32.const X)
+    const watOffsets = new Set();
+    const constRegex = /(?:load|store).*?i32\.const\s+(\d+)/g;
+    while ((match = constRegex.exec(watContent)) !== null) {
+        const val = parseInt(match[1]);
+        if (val < outPtr) watOffsets.add(val);
+    }
+
+    let allPassed = true;
+
+    // Check for collisions: outPtr must be greater than any state offset
+    const maxStateOffset = Math.max(...watOffsets, ...jsOffsets, 0);
+    if (outPtr <= maxStateOffset) {
+        console.error(`${colors.yellow}❌ Memory Collision: outPtr (${outPtr}) overlaps with state memory (max offset: ${maxStateOffset}).${colors.reset}`);
+        allPassed = false;
+    } else {
+        console.log(`${colors.gray}✅ Buffer Safety: outPtr (${outPtr}) is safely above max state offset (${maxStateOffset}).${colors.reset}`);
+    }
+
+    // Check for Mismatches: Every offset JS touches should exist in WAT logic
+    jsOffsets.forEach(offset => {
+        if (!watOffsets.has(offset)) {
+            console.error(`${colors.yellow}❌ Memory Mismatch: Offset ${offset} is initialized in JS but not used in WAT.${colors.reset}`);
+            allPassed = false;
+        } else {
+            console.log(`${colors.gray}✅ Offset ${offset.toString().padEnd(3)} verified in both JS and WAT.${colors.reset}`);
+        }
+    });
+
+    if (allPassed) console.log(`${colors.green}✅ WASM Memory Audit Passed.${colors.reset}`);
+    return allPassed;
+}
+
+/**
+ * Peak Target Safety Audit
+ * Ensures that all noise color peak targets in noise-processor.js
+ * stay within safe digital headroom limits (< 0.9) to prevent
+ * downstream clipping in the gain stage.
+ */
+function validatePeakLimits() {
+    const filePath = path.join(__dirname, 'noise-processor.js');
+    if (!fs.existsSync(filePath)) return true;
+
+    console.log(`\n${colors.cyan}--- Peak Target Safety Audit ---${colors.reset}`);
+    const content = fs.readFileSync(filePath, 'utf8');
+
+    const peakMapMatch = content.match(/this\.peakMap\s*=\s*\{([\s\S]*?)\};/);
+    if (!peakMapMatch) {
+        console.error(`${colors.yellow}❌ Could not find peakMap definition in noise-processor.js.${colors.reset}`);
+        return false;
+    }
+
+    const peakLines = peakMapMatch[1].split('\n');
+    let allPassed = true;
+
+    peakLines.forEach(line => {
+        const match = line.match(/'([^']+)':\s*([\d\.]+)/);
+        if (match) {
+            const colorName = match[1];
+            const peakVal = parseFloat(match[2]);
+
+            if (peakVal >= 0.9) {
+                console.error(`${colors.yellow}❌ Unsafe Peak: ${colorName} is set to ${peakVal} (Limit: 0.9). Potential for clipping.${colors.reset}`);
+                allPassed = false;
+            } else {
+                console.log(`${colors.gray}✅ ${colorName.padEnd(10)} -> Peak ${peakVal} is within safe bounds.${colors.reset}`);
+            }
+        }
+    });
+
+    if (allPassed) console.log(`${colors.green}✅ Peak Target Safety Audit Passed.${colors.reset}`);
+    return allPassed;
+}
+
+/**
+ * Nature Sound Audit
+ * Verifies that all therapeutic MP3 files are correctly mapped.
+ * 1. Ensures MP3s listed in sw.js exist in the audio folder.
+ * 2. Ensures all MP3s in the audio folder are tracked in sw.js for offline use.
+ */
+function validateNatureSounds() {
+    const swPath = path.join(__dirname, 'sw.js');
+    const audioDir = path.join(__dirname, 'audio');
+    if (!fs.existsSync(swPath) || !fs.existsSync(audioDir)) return true;
+
+    console.log(`\n${colors.cyan}--- Nature Sound Audit ---${colors.reset}`);
+    const content = fs.readFileSync(swPath, 'utf8');
+    const assetsMatch = content.match(/const ASSETS = \[([\s\S]*?)\];/);
+    if (!assetsMatch) return true;
+
+    const assetEntries = (assetsMatch[1].match(/'[^']+'/g) || []).map(s => s.slice(1, -1));
+    const mp3sInAssets = assetEntries.filter(a => a.endsWith('.mp3'));
+    const filesInAudio = fs.readdirSync(audioDir).filter(f => f.endsWith('.mp3'));
+
+    let allPassed = true;
+
+    // Check 1: Do MP3s in ASSETS exist?
+    mp3sInAssets.forEach(asset => {
+        const fullPath = path.join(__dirname, asset);
+        if (!fs.existsSync(fullPath)) {
+            console.error(`${colors.yellow}❌ Missing Sound: ${asset} is in sw.js but missing from /audio folder.${colors.reset}`);
+            allPassed = false;
+        } else {
+            const stats = fs.statSync(fullPath);
+            const sizeKB = stats.size / 1024;
+            if (sizeKB < 100) {
+                console.error(`${colors.yellow}❌ Corrupt Sound: ${asset} is too small (${sizeKB.toFixed(2)}KB). Min: 100KB.${colors.reset}`);
+                allPassed = false;
+            } else {
+                console.log(`${colors.gray}✅ Verified: ${asset} (${sizeKB.toFixed(2)}KB)${colors.reset}`);
+            }
+        }
+    });
+
+    // Check 2: Are all folder MP3s tracked?
+    filesInAudio.forEach(file => {
+        const relativePath = `./audio/${file}`;
+        if (!mp3sInAssets.includes(relativePath)) {
+            console.error(`${colors.yellow}❌ Untracked Sound: ${relativePath} exists but is not in sw.js ASSETS.${colors.reset}`);
+            allPassed = false;
+        }
+        // Check size of even untracked files to ensure folder hygiene
+        const fullPath = path.join(audioDir, file);
+        const sizeKB = fs.statSync(fullPath).size / 1024;
+        if (sizeKB < 100) {
+            console.error(`${colors.yellow}❌ Corrupt File: ${relativePath} is too small (${sizeKB.toFixed(2)}KB). Cleanup required.${colors.reset}`);
+            allPassed = false;
+        }
+    });
+
+    if (allPassed) console.log(`${colors.green}✅ Nature Sound Audit Passed.${colors.reset}`);
+    return allPassed;
+}
+
+/**
+ * Audio Metadata Audit
+ * Verifies that all nature sounds (MP3) have a consistent clinical 
+ * sample rate of 44.1kHz. Higher or lower rates can cause pitch 
+ * distortions or timing drifts in the therapy engine.
+ */
+async function validateAudioSampleRate() {
+    // This check requires 'music-metadata'. 
+    // Recommended version for CommonJS: npm install music-metadata@7.13.4
+    let mm;
+    try {
+        mm = require('music-metadata');
+    } catch (e) {
+        console.warn(`\n${colors.yellow}⚠️ Skipping Audio Metadata Audit: 'music-metadata' library not found.${colors.reset}`);
+        console.log(`${colors.gray}   To enable this check, run: npm install music-metadata@7.13.4${colors.reset}`);
+        return true;
+    }
+
+    const audioDir = path.join(__dirname, 'audio');
+    if (!fs.existsSync(audioDir)) return true;
+
+    console.log(`\n${colors.cyan}--- Audio Metadata Audit ---${colors.reset}`);
+    const files = fs.readdirSync(audioDir).filter(f => f.endsWith('.mp3'));
+
+    let allPassed = true;
+    for (const file of files) {
+        const fullPath = path.join(audioDir, file);
+        try {
+            const metadata = await mm.parseFile(fullPath);
+            const sr = metadata.format.sampleRate;
+            const isVbr = metadata.format.vbr;
+            if (sr !== 44100) {
+                console.error(`${colors.yellow}❌ Sample Rate Mismatch: ${file} is ${sr}Hz (Expected: 44100Hz).${colors.reset}`);
+                allPassed = false;
+            } else if (isVbr) {
+                console.error(`${colors.yellow}❌ VBR Detected: ${file} uses Variable Bitrate. Looping requires CBR.${colors.reset}`);
+                allPassed = false;
+            } else {
+                console.log(`${colors.gray}✅ ${file.padEnd(20)} -> ${sr}Hz, CBR verified.${colors.reset}`);
+            }
+        } catch (err) {
+            console.error(`${colors.yellow}❌ Metadata Error: Could not read ${file}.${colors.reset}`);
+            allPassed = false;
+        }
+    }
+
+    if (allPassed) console.log(`${colors.green}✅ Audio Metadata Audit Passed.${colors.reset}`);
+    return allPassed;
+}
+
+/**
  * PWA Asset Audit
  * Ensures that every local file listed in the Service Worker (sw.js)
  * actually exists on the disk to prevent PWA installation failures.
@@ -128,31 +432,39 @@ function validateAssets() {
         .map(s => s.slice(1, -1)); // Remove quotes
 
     const existingAssetSet = new Set(currentAssets);
-    const newHtmlFilesToCache = [];
+    const newAssetsToCache = [];
 
-    // Discover local HTML files in root and 'docs' subdirectory
+    // Discover local assets (.html, .wasm, .mp3) in root and subdirectories
     const scanDirectory = (dir, prefix = './') => {
         fs.readdirSync(dir).forEach(file => {
             const fullPath = path.join(dir, file);
             const relativePath = prefix + file;
-            if (fs.statSync(fullPath).isFile() && file.endsWith('.html')) {
-                // Exclude specific HTML files that are dynamically generated or special cases
-                if (['./user_manual.html', './presentation.html', './handout.html'].includes(relativePath)) {
-                    return;
+            const stat = fs.statSync(fullPath);
+
+            if (stat.isFile()) {
+                const isTarget = file.endsWith('.html') || file.endsWith('.wasm') || file.endsWith('.mp3');
+                if (isTarget) {
+                    // Exclude specific HTML files that are dynamically generated or special cases
+                    if (file.endsWith('.html') && ['./user_manual.html', './presentation.html', './handout.html'].includes(relativePath)) {
+                        return;
+                    }
+                    if (!existingAssetSet.has(relativePath)) {
+                        newAssetsToCache.push(relativePath);
+                    }
                 }
-                if (!existingAssetSet.has(relativePath)) {
-                    newHtmlFilesToCache.push(relativePath);
+            } else if (stat.isDirectory()) {
+                // Only scan specific subdirectories for performance and safety
+                if (file === 'docs' || file === 'audio') {
+                    scanDirectory(fullPath, `./${file}/`);
                 }
-            } else if (fs.statSync(fullPath).isDirectory() && file === 'docs') {
-                scanDirectory(fullPath, './docs/');
             }
         });
     };
     scanDirectory(__dirname);
 
-    if (newHtmlFilesToCache.length > 0) {
-        console.log(`${colors.cyan}Discovered new HTML files to add to sw.js ASSETS:${colors.reset}`);
-        newHtmlFilesToCache.forEach(file => console.log(`  - ${file}`));
+    if (newAssetsToCache.length > 0) {
+        console.log(`${colors.cyan}Discovered new assets (.html, .wasm, .mp3) to add to sw.js ASSETS:${colors.reset}`);
+        newAssetsToCache.forEach(file => console.log(`  - ${file}`));
 
         // Find the insertion point: before the first external URL
         let insertionIndex = currentAssets.length;
@@ -163,12 +475,12 @@ function validateAssets() {
             }
         }
 
-        // Insert new HTML files, sorted alphabetically, before external assets
-        const updatedAssets = [...currentAssets.slice(0, insertionIndex), ...newHtmlFilesToCache.sort(), ...currentAssets.slice(insertionIndex)];
+        // Insert new assets, sorted alphabetically, before external assets
+        const updatedAssets = [...currentAssets.slice(0, insertionIndex), ...newAssetsToCache.sort(), ...currentAssets.slice(insertionIndex)];
         const newAssetsContent = updatedAssets.map(p => `    '${p}',`).join('\n');
         content = assetsPrefix + '\n' + newAssetsContent + '\n' + assetsSuffix; // Update content for writing and subsequent checks
         fs.writeFileSync(swPath, content);
-        console.log(`${colors.green}✅ ASSETS array in sw.js updated with new HTML files.${colors.reset}`);
+        console.log(`${colors.green}✅ ASSETS array in sw.js updated with new local assets.${colors.reset}`);
     }
 
     // Re-parse content after potential update for the missing file check
@@ -206,8 +518,14 @@ function validateAssets() {
         // Run Stability and Asset Audits before allowing any Git operations
         const isDSPValid = validateDSP();
         const areAssetsValid = validateAssets();
+        const isWasmValid = validateWasmIntegration();
+        const isHpfValid = validateWasmHPF();
+        const isMemValid = validateWasmMemory();
+        const isPeakValid = validatePeakLimits();
+        const isSoundsValid = validateNatureSounds();
+        const isSampleRateValid = await validateAudioSampleRate();
 
-        if (!isDSPValid || !areAssetsValid) {
+        if (!isDSPValid || !areAssetsValid || !isWasmValid || !isHpfValid || !isMemValid || !isPeakValid || !isSoundsValid || !isSampleRateValid) {
             console.error(`\n${colors.yellow}Aborting: Pre-flight checks failed. Fix the issues above before pushing.${colors.reset}`);
             process.exit(1);
         }

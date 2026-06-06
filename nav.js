@@ -56,9 +56,39 @@ const TINNITUS_MANAGEMENT_GUIDE = `
     </p>
 `;
 
+/**
+ * populates the help modal with the provided page-specific content
+ * merged with the universal tinnitus management guide.
+ */
+function populateHelpContent(helpHtml = '') {
+    const contentEl = document.getElementById('helpContent');
+    if (!contentEl) return;
+
+    const isDocs = window.location.pathname.toLowerCase().includes('/docs/');
+    const manualPath = isDocs ? '../user_manual.html' : 'user_manual.html';
+
+    let guide = TINNITUS_MANAGEMENT_GUIDE;
+    const hearingTestPath = isDocs ? '../audiogram.html' : 'audiogram.html';
+    guide = guide.replace('<b>Hearing Profile (Audiogram)</b>', `<a href="${hearingTestPath}" style="color:var(--accent); text-decoration:underline;">Hearing Profile (Audiogram)</a>`);
+
+    // Sync manual references and versioning against clinical documentation
+    guide = guide.replace('System Resilience', `System Resilience (v${APP_VERSION})`);
+    guide = guide.replace(/User Manual/g, `<a href="${manualPath}" target="_blank" style="color:var(--accent); text-decoration:underline;">User Manual</a>`);
+    guide = guide.replace(/Appendix E/g, `<a href="${manualPath}#app-e" target="_blank" style="color:var(--accent); text-decoration:underline;">Appendix E</a>`);
+
+    contentEl.innerHTML = helpHtml + guide;
+}
+
 function initNav(helpHtml = '') {
     // Safety: Prevent multiple injections and ensure body exists for immediate calls
-    if (!document.body || document.querySelector('.unified-nav')) return;
+    if (!document.body) return;
+
+    const existingNav = document.querySelector('.unified-nav');
+    if (existingNav) {
+        // If nav exists (e.g. initialized by the auto-hook), just update the content if provided
+        if (helpHtml) populateHelpContent(helpHtml);
+        return;
+    }
 
     // Aggressively clean up all legacy back buttons/home links on the left side
     document.querySelectorAll('a.back, .back-btn').forEach(el => {
@@ -103,7 +133,7 @@ function initNav(helpHtml = '') {
     document.body.insertAdjacentHTML('afterbegin', navHTML);
 
     const modalHTML = `
-        <div id="helpModal" class="modal-overlay">
+        <div id="helpModal" class="modal-overlay" style="z-index: 11000;">
             <div class="modal-card" style="max-width: 600px;">
                 <h2 style="color:var(--accent); margin-top:0;">Help & Guidance</h2>
 
@@ -117,6 +147,10 @@ function initNav(helpHtml = '') {
                         <span id="hubValidStatusDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim);"></span>
                         <span style="color: var(--text-dim);">System Validation:</span> <b id="hubValidStatusText">Pending</b>
                     </div>
+                    <div style="display: flex; align-items: center; gap: 5px; border-left: 1px solid var(--border); padding-left: 15px;">
+                        <span id="hubCompatStatusDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim);"></span>
+                        <span style="color: var(--text-dim);">Compatibility:</span> <b id="hubCompatStatusText">Pending</b>
+                    </div>
                 </div>
 
                 <p class="info" style="margin-bottom: 15px;">Select a guide or tutorial to help you calibrate your therapy correctly.</p>
@@ -127,6 +161,13 @@ function initNav(helpHtml = '') {
                     <button class="button" onclick="if(typeof generateGlobalClinicalReportPDF === 'function') { closeHelp(); generateGlobalClinicalReportPDF(); } else { alert('The PDF engine is not loaded on this specific utility page. Please return to the Dashboard or a Therapy module to generate your full report.'); }" style="margin:0; font-size:0.8rem; border-color:var(--accent); color:var(--accent); display: flex; align-items: center; justify-content: center; gap: 5px;">📊 <span>Global Report</span></button>
                     <button class="button" onclick="closeHelp(); window.location.href='${isDocs ? '../clinical_summary.html' : 'clinical_summary.html'}'" style="margin:0; font-size:0.8rem; border-color:var(--accent); color:var(--accent); display: flex; align-items: center; justify-content: center; gap: 5px;">🩺 <span>Doctor Summary</span></button>
                     <button class="button" onclick="closeHelp(); window.location.href='${isDocs ? '../feedback.html' : 'feedback.html'}'" style="margin:0; font-size:0.8rem; border-color:var(--accent); color:var(--accent); display: flex; align-items: center; justify-content: center; gap: 5px;">💬 <span>Feedback</span></button>
+                </div>
+                <hr style="border: 0; border-top: 1px dashed var(--border); margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <label for="languageSelect" style="font-size: 0.9rem; color: var(--text-dim);" data-i18n="select_language">Select Language:</label>
+                    <select id="languageSelect" style="flex-grow: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none;">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
                 </div>
                 <hr style="border: 0; border-top: 1px dashed var(--border); margin-bottom: 20px;">
                 <div style="margin-bottom: 15px;">
@@ -142,28 +183,35 @@ function initNav(helpHtml = '') {
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
     // Combine page-specific help with the universal guide
-    let guide = TINNITUS_MANAGEMENT_GUIDE;
-    const hearingTestPath = isDocs ? '../audiogram.html' : 'audiogram.html';
-    guide = guide.replace('<b>Hearing Profile (Audiogram)</b>', `<a href="${hearingTestPath}" style="color:var(--accent); text-decoration:underline;">Hearing Profile (Audiogram)</a>`);
+    // Populate language selector
+    const languageSelect = document.getElementById('languageSelect');
+    if (languageSelect && typeof i18n !== 'undefined') {
+        for (const code in i18n.availableLanguages) {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = i18n.availableLanguages[code];
+            languageSelect.appendChild(option);
+        }
+        languageSelect.value = i18n.currentLang; // Set initial selection
+        languageSelect.addEventListener('change', (event) => {
+            i18n.loadLanguage(event.target.value);
+            document.getElementById('helpSearch').placeholder = i18n.getTranslation('search_guide_topics');
+        });
+    }
 
-    // Sync manual references and versioning against clinical documentation
-    const manualPath = isDocs ? '../user_manual.html' : 'user_manual.html';
-    guide = guide.replace('System Resilience', `System Resilience (v${APP_VERSION})`);
-    guide = guide.replace(/User Manual/g, `<a href="${manualPath}" target="_blank" style="color:var(--accent); text-decoration:underline;">User Manual</a>`);
-    guide = guide.replace(/Appendix E/g, `<a href="${manualPath}#app-e" target="_blank" style="color:var(--accent); text-decoration:underline;">Appendix E</a>`);
-
-    document.getElementById('helpContent').innerHTML = helpHtml + guide;
+    populateHelpContent(helpHtml);
 }
 
-/**
- * Auto-initialization Hook
- * Ensures the navigation bar is present on all pages without requiring explicit manual triggers.
- */
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => initNav());
-} else {
+// Auto-initialization Hook for nav.js and i18n
+document.addEventListener('DOMContentLoaded', async () => {
+    // Ensure i18n is initialized first to load the correct language
+    if (typeof i18n !== 'undefined') {
+        await i18n.init();
+    }
     initNav();
-}
+    // Apply translations to any elements added by initNav
+    if (typeof i18n !== 'undefined') i18n.applyTranslations();
+});
 
 /**
  * Displays the onboarding modal, guiding the user through initial setup steps.
@@ -171,8 +219,8 @@ if (document.readyState === 'loading') {
  */
 window.showOnboardingModal = () => {
     let currentStep = parseInt(loadSetting('onboarding_step', '0'));
-    const totalSteps = 5;
-    const stepNames = ["Disclaimer", "Safety", "Clinical", "Guidance", "Finish"];
+    const totalSteps = 6;
+    const stepNames = ["Legal", "Safety", "Clinical", "Protocol", "Roadmap", "Finish"];
 
     const onboardingStepsContent = [
         // Step 0: Disclaimer (This is the first step the user sees if onboarding_step is 0)
@@ -206,40 +254,64 @@ window.showOnboardingModal = () => {
         {
             title: "3. Hearing Profile (Optional)",
             content: `
-                <p>Entering your audiogram results allows the suite to automatically compensate for hearing loss using the Half-Gain Rule, reducing listening effort.</p>
-                <p>You can skip this for now and do it later from the Tools menu.</p>
+                <p>Do you have an audiogram from a current professional hearing test?</p>
+                <p>Entering your results allows the suite to automatically compensate for hearing loss using the <b>Half-Gain Rule</b>, reducing listening effort and improving therapy precision.</p>
             `,
             buttons: `
                 <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
                     <div style="display:flex; gap:10px;">
-                        <a href="audiogram.html" class="big-btn play-btn" style="flex:1; margin-top:0; text-decoration:none;" onclick="setOnboardingStep(3);">Enter Audiogram</a>
-                        <button class="big-btn" style="flex:1; margin-top:0;" onclick="setOnboardingStep(3); showOnboardingModal();">Skip for Now</button>
+                        <a href="audiogram.html" class="big-btn play-btn" style="flex:1; margin-top:0; text-decoration:none;" onclick="setOnboardingStep(3);">Yes, Enter Now</a>
+                        <a href="hearingtest.html" class="big-btn" style="flex:1; margin-top:0; text-decoration:none;" onclick="setOnboardingStep(3);">No, Start Test</a>
                     </div>
-                    <button class="button" style="width:100%; border-color:var(--text-dim); color:var(--text-dim);" onclick="setOnboardingStep(1); showOnboardingModal();">Back</button>
+                    <div style="display:flex; gap:10px;">
+                        <button class="button" style="flex:1; border-color:var(--text-dim); color:var(--text-dim);" onclick="setOnboardingStep(1); showOnboardingModal();">Back</button>
+                        <button class="button" style="flex:1; border-color:var(--text-dim); color:var(--text-dim);" onclick="setOnboardingStep(3); showOnboardingModal();">Skip</button>
+                    </div>
                 </div>
             `
         },
-        // Step 3: Quick Start Guide Prompt
+        // Step 3: Success Protocol
         {
-            title: "4. System Guidance (Optional)",
+            title: "4. The Protocol for Success",
             content: `
-                <p>We recommend viewing the Quick Start Guide to understand the essential "Golden Rules" and clinical protocols for effective tinnitus therapy.</p>
+                <p>To maximize your therapeutic benefit, please keep these <b>"Golden Rules"</b> in mind:</p>
+                <ul style="padding-left:20px; font-size:0.9rem; line-height: 1.5;">
+                    <li><b>The Mixing Point:</b> Adjust volume so noise and tinnitus "mix". Never mask it completely.</li>
+                    <li><b>Passive Listening:</b> Treat therapy like background wallpaper. Don't focus on it.</li>
+                    <li><b>Consistency:</b> Habituation is a slow journey. Aim for 30–60 minutes daily.</li>
+                </ul>
             `,
             buttons: `
                 <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
                     <div style="display:flex; gap:10px;">
-                        <button class="big-btn play-btn" style="flex:1; margin-top:0;" onclick="saveSetting('quick_start_viewed', 'true'); setOnboardingStep(4); showQuickStartGuide(); closeOnboardingModal();">View Quick Start</button>
-                        <button id="skipQuickStartBtn" class="big-btn" style="flex:1; margin-top:0; ${loadSetting('quick_start_viewed', 'false') === 'true' ? '' : 'opacity:0.5; pointer-events:none;'}" onclick="setOnboardingStep(4); showOnboardingModal();">Skip for Now</button>
+                        <button class="big-btn play-btn" style="flex:1; margin-top:0;" onclick="saveSetting('quick_start_viewed', 'true'); setOnboardingStep(4); showQuickStartGuide(); closeOnboardingModal();">View Full Guide</button>
+                        <button class="big-btn" style="flex:1; margin-top:0;" onclick="setOnboardingStep(4); showOnboardingModal();">Continue</button>
                     </div>
                     <button class="button" style="width:100%; border-color:var(--text-dim); color:var(--text-dim);" onclick="setOnboardingStep(2); showOnboardingModal();">Back</button>
                 </div>
             `
         },
-        // Step 4: Onboarding Complete
+        // Step 4: Roadmap to Relief
         {
-            title: "5. Setup Complete",
+            title: "5. Your Roadmap to Relief",
             content: `
-                <p>You're all set! You can now access all therapy modules and tools. Remember to use the "Help" button for tutorials and the full user manual.</p>
+                <p>Once you start, look for the <b>"Path to Relief"</b> card at the top of your dashboard. This is your roadmap for the first few weeks.</p>
+                <div style="margin-top: 15px; padding: 12px; background: rgba(0, 191, 165, 0.1); border-radius: 8px; font-size: 0.9rem;">
+                    <b>Your First Clinical Task:</b> Establish your baseline score by taking the <b>THI Assessment</b> in the "CBT & Wellness" module.
+                </div>
+            `,
+            buttons: `
+                <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
+                    <button class="big-btn play-btn" onclick="setOnboardingStep(5); showOnboardingModal();">Understood</button>
+                    <button class="button" style="width:100%; border-color:var(--text-dim); color:var(--text-dim);" onclick="setOnboardingStep(3); showOnboardingModal();">Back</button>
+                </div>
+            `
+        },
+        // Step 5: Onboarding Complete
+        {
+            title: "6. Setup Complete!",
+            content: `
+                <p>You are ready. Access all therapy modules via the dashboard. Tutorials and the manual are always available in the <b>Help</b> hub.</p>
                 <div style="margin-top: 20px; padding: 15px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border);">
                     <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 0.9rem; line-height: 1.4;">
                         <input type="checkbox" id="goldenRulesCheck" style="width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer;" onchange="const btn = document.getElementById('finalStartBtn'); if(btn) btn.style.display = this.checked ? 'block' : 'none';">
@@ -247,32 +319,29 @@ window.showOnboardingModal = () => {
                     </label>
                 </div>
             `,
-            buttons: `<button id="finalStartBtn" class="big-btn play-btn" style="display: none;" onclick="setOnboardingStep(5); closeOnboardingModal();">Start Therapy</button>`
+            buttons: `
+                <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
+                    <button id="finalStartBtn" class="big-btn play-btn" style="display: none; margin-top: 0;" onclick="finishOnboarding();">Start Therapy</button>
+                    <button class="button" style="width:100%; border-color:var(--text-dim); color:var(--text-dim);" onclick="setOnboardingStep(4); showOnboardingModal();">Back</button>
+                </div>
+            `
         }
     ];
-
-    // Map current onboarding_step to the correct stepIndex in the array
-    let stepIndex = currentStep;
-    if (currentStep === 0) stepIndex = 0; // If 0, show disclaimer
-    else if (currentStep === 1) stepIndex = 1; // After disclaimer, show hearing aids
-    else if (currentStep === 2) stepIndex = 2; // After hearing aids, show audiogram
-    else if (currentStep === 3) stepIndex = 3; // After audiogram, show quick start
-    else if (currentStep === 4) stepIndex = 4; // After quick start, show complete message
 
     if (currentStep >= totalSteps) {
         console.log("TTS: Onboarding already complete.");
         return; // Onboarding already done
     }
 
-    const stepData = onboardingStepsContent[stepIndex];
+    const stepData = onboardingStepsContent[currentStep];
     if (!stepData) {
-        console.error("TTS: Invalid onboarding step data for step index:", stepIndex);
+        console.error("TTS: Invalid onboarding step data for step index:", currentStep);
         return;
     }
 
     const progressHTML = stepNames.map((name, i) => `
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 0.75rem; color: ${i === stepIndex ? 'var(--accent)' : (i < stepIndex ? 'var(--success)' : 'var(--text-dim)')}; font-weight: ${i === stepIndex ? 'bold' : 'normal'}">
-            <span style="width: 16px; height: 16px; border-radius: 50%; border: 1px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 0.6rem;">${i < stepIndex ? '✓' : i + 1}</span>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 0.75rem; color: ${i === currentStep ? 'var(--accent)' : (i < currentStep ? 'var(--success)' : 'var(--text-dim)')}; font-weight: ${i === currentStep ? 'bold' : 'normal'}">
+            <span style="width: 16px; height: 16px; border-radius: 50%; border: 1px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 0.6rem;">${i < currentStep ? '✓' : i + 1}</span>
             <span>${name}</span>
         </div>
     `).join('');
@@ -315,12 +384,14 @@ window.updateHubStatus = () => {
     const audioText = document.getElementById('hubAudioStatusText');
     const validDot = document.getElementById('hubValidStatusDot');
     const validText = document.getElementById('hubValidStatusText');
+    const compatDot = document.getElementById('hubCompatStatusDot');
+    const compatText = document.getElementById('hubCompatStatusText');
 
-    if (!audioDot || !audioText || !validDot || !validText) return;
+    if (!audioDot || !audioText || !validDot || !validText || !compatDot || !compatText) return;
 
     // 1. Audio Engine Status
     const ctx = window.audioCtx;
-    const state = ctx ? ctx.state : 'offline';
+    const state = ctx ? ctx.state : 'Offline';
 
     audioDot.style.background = state === 'running' ? 'var(--accent)' : (state === 'suspended' ? '#ff9800' : 'var(--text-dim)');
     audioText.textContent = state === 'running' ? 'Active' : (state === 'suspended' ? 'Suspended' : (state === 'closed' ? 'Closed' : 'Offline'));
@@ -338,6 +409,19 @@ window.updateHubStatus = () => {
             validText.textContent = 'Pending';
             validText.style.color = '#ef5350';
         }
+    }
+
+    // 3. Compatibility Status
+    if (typeof SystemCompatibilityAudit !== 'undefined') {
+        const compat = SystemCompatibilityAudit.check();
+        const hasErrors = compat.errors.length > 0;
+        const hasWarnings = compat.warnings.length > 0;
+
+        compatDot.style.background = hasErrors ? '#ef5350' : (hasWarnings ? '#ff9800' : 'var(--success)');
+        compatText.textContent = hasErrors ? 'Critical Error' : (hasWarnings ? 'Limited' : 'Compatible');
+        compatText.style.color = compatDot.style.background;
+        // Show details on hover for technical troubleshooting
+        compatText.title = "Audit Details:\n" + [...compat.errors, ...compat.warnings].join('\n');
     }
 };
 

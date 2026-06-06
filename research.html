@@ -1,293 +1,431 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<title>Tinnitus Research & Principles</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="stylesheet" href="style.css">
-<script src="storage.js"></script>
-<script src="nav.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<style>
-    body { padding: 20px; line-height: 1.6; text-align: left; }
-    h1, h3 { text-align: center; }
-    .section { background: var(--card-bg); padding: 20px; margin: 15px 0; border-radius: 12px; border: 1px solid var(--border); }
-    .section h2 { margin-bottom: 10px; color: var(--accent); }
-    .section h3 { text-align: left; margin: 15px 0 5px 0; color: var(--accent); font-size: 1.1rem; }
-    ul { margin-left: 20px; margin-bottom: 15px; }
-    li { margin-bottom: 8px; }
-</style>
+    <meta charset="UTF-8">
+    <title>Tinnitus Research & Principles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <script src="storage.js"></script>
+    <script src="lang.js"></script>
+    <script src="nav.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            padding: 20px;
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        h1,
+        h3 {
+            text-align: center;
+        }
+
+        .section {
+            background: var(--card-bg);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .section h2 {
+            margin-bottom: 10px;
+            color: var(--accent);
+        }
+
+        .section h3 {
+            text-align: left;
+            margin: 15px 0 5px 0;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+
+        ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+    </style>
 </head>
+
 <body>
-<div class="panel" style="text-align: left; max-width: 700px;">
+    <div class="panel" style="text-align: left; max-width: 700px;">
 
-<div id="pdfContent">
-<h1>Clinical Research & Principles</h1>
-<h3>Evidence-Based Sound Therapy</h3>
-<p style="text-align: center; font-size: 0.8rem; color: var(--text-dim);">Scientific Reference Guide | Trahreg Suite <span class="app-version-label" data-version-prefix="v"></span></p>
+        <div id="pdfContent">
+            <h1>Clinical Research & Principles</h1>
+            <h3>Evidence-Based Sound Therapy</h3>
+            <p style="text-align: center; font-size: 0.8rem; color: var(--text-dim);">Scientific Reference Guide |
+                Trahreg Suite <span class="app-version-label" data-version-prefix="v"></span></p>
 
-<div class="section">
-    <h2>1. Notch Therapy (TMNMT)</h2>
-    <p>
-        Tailored Notched Music Training (TMNMT) is based on the concept of <b>lateral inhibition</b>. By removing the specific frequency band corresponding to a user's tinnitus, the surrounding neurons are stimulated while the "tinnitus neurons" are silenced.
-    </p>
-    <ul>
-        <li><b>Mechanism:</b> Encourages the brain to "reorganize" the auditory cortex, reducing the overactivity of neurons in the tinnitus frequency range.</li>
-        <li><b>Key Findings:</b> Long-term use (3–12 months) can lead to a significant reduction in perceived tinnitus loudness. <a href="https://www.pnas.org/doi/10.1073/pnas.0911268107" target="_blank" class="button" style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">Okamoto et al. (2010)</a></li>
-        <li><b>Clinical Parameter:</b> Research specifies a notch width of 1.0 octave centered on the pitch-matched frequency for maximum lateral inhibition.</li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>1. Notch Therapy (TMNMT)</h2>
+                <p>
+                    Tailored Notched Music Training (TMNMT) is based on the concept of <b>lateral inhibition</b>. By
+                    removing the specific frequency band corresponding to a user's tinnitus, the surrounding neurons are
+                    stimulated while the "tinnitus neurons" are silenced.
+                </p>
+                <ul>
+                    <li><b>Mechanism:</b> Encourages the brain to "reorganize" the auditory cortex, reducing the
+                        overactivity of neurons in the tinnitus frequency range.</li>
+                    <li><b>Key Findings:</b> Long-term use (3–12 months) can lead to a significant reduction in
+                        perceived tinnitus loudness. <a href="https://www.pnas.org/doi/10.1073/pnas.0911268107"
+                            target="_blank" class="button"
+                            style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">Okamoto et al. (2010)</a>
+                    </li>
+                    <li><b>Clinical Parameter:</b> Research specifies a notch width of 1.0 octave centered on the
+                        pitch-matched frequency for maximum lateral inhibition.</li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>2. Auditory Neuromodulation (Temporal Patterns)</h2>
-    <p>
-        Inspired by research from companies like Lenire, this approach uses structured auditory stimuli to engage neuroplasticity.
-    </p>
-    <ul>
-        <li><b>Tone Bursts:</b> Uses specific rhythmic patterns to disrupt pathological neural synchrony.</li>
-        <li><b>Amplitude Modulation:</b> Varies the volume of noise at specific rates (e.g., 2Hz to 10Hz) to match natural brain rhythms (Alpha/Theta).</li>
-        <li><b>Carrier Signals:</b> Combines pure-tone bursts with shaped background noise to provide simultaneous focal and broadband stimulation.</li>
-        <li><b>Clinical Trials:</b> Demonstrated high compliance and significant symptom reduction over a 12-week period. <a href="https://www.science.org/doi/10.1126/scitranslmed.abb2830" target="_blank" class="button" style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">TENT-A Clinical Trial (2020)</a></li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>2. Auditory Neuromodulation (Temporal Patterns)</h2>
+                <p>
+                    Inspired by research from companies like Lenire, this approach uses structured auditory stimuli to
+                    engage neuroplasticity.
+                </p>
+                <ul>
+                    <li><b>Tone Bursts:</b> Uses specific rhythmic patterns to disrupt pathological neural synchrony.
+                    </li>
+                    <li><b>Amplitude Modulation:</b> Varies the volume of noise at specific rates (e.g., 2Hz to 10Hz) to
+                        match natural brain rhythms (Alpha/Theta).</li>
+                    <li><b>Carrier Signals:</b> Combines pure-tone bursts with shaped background noise to provide
+                        simultaneous focal and broadband stimulation.</li>
+                    <li><b>Clinical Trials:</b> Demonstrated high compliance and significant symptom reduction over a
+                        12-week period. <a href="https://www.science.org/doi/10.1126/scitranslmed.abb2830"
+                            target="_blank" class="button"
+                            style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">TENT-A Clinical Trial
+                            (2020)</a></li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>3. Neural Desynchronization & Decorrelation</h2>
-    <p>
-        Tinnitus is often viewed as a "stuck" state where groups of neurons in the brain fire in a pathological, highly synchronized pattern.
-    </p>
-    <ul>
-        <li><b>Independence:</b> Providing independent, non-correlated noise streams to the left and right ears prevents the brain from "merging" the signals into a single central image.</li>
-        <li><b>Anti-Phase Stimulation:</b> By presenting spatially distinct signals, we aim to disrupt the phase-locking behavior of the auditory neurons associated with tinnitus.</li>
-        <li><b>Mechanism:</b> Counteracts the abnormal neural synchrony identified in Chronic Tonal Tinnitus. <a href="https://pubmed.ncbi.nlm.nih.gov/22412495/" target="_blank" class="button" style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">Tass et al. (2012)</a></li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>3. Neural Desynchronization & Decorrelation</h2>
+                <p>
+                    Tinnitus is often viewed as a "stuck" state where groups of neurons in the brain fire in a
+                    pathological, highly synchronized pattern.
+                </p>
+                <ul>
+                    <li><b>Independence:</b> Providing independent, non-correlated noise streams to the left and right
+                        ears prevents the brain from "merging" the signals into a single central image.</li>
+                    <li><b>Anti-Phase Stimulation:</b> By presenting spatially distinct signals, we aim to disrupt the
+                        phase-locking behavior of the auditory neurons associated with tinnitus.</li>
+                    <li><b>Mechanism:</b> Counteracts the abnormal neural synchrony identified in Chronic Tonal
+                        Tinnitus. <a href="https://pubmed.ncbi.nlm.nih.gov/22412495/" target="_blank" class="button"
+                            style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">Tass et al. (2012)</a></li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>4. Masking vs. Habituation</h2>
-    <p>
-        This suite supports both immediate relief (Masking) and long-term habituation (TRT).
-    </p>
-    <ul>
-        <li><b>Partial Masking:</b> Setting volume so the noise and tinnitus "mix." This is the gold standard for Tinnitus Retraining Therapy (TRT).</li>
-        <li><b>Habituation:</b> The process of the brain's filters reclassifying the tinnitus sound as a neutral "background" signal (like a refrigerator hum) rather than a threat.</li>
-        <li><b>Evidence:</b> Jastreboff's Neurophysiological Model (1990) provides the foundation for sound enrichment as a tool for habituation. <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4200612/" target="_blank" class="button" style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">View Clinical Review</a></li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>4. Masking vs. Habituation</h2>
+                <p>
+                    This suite supports both immediate relief (Masking) and long-term habituation (TRT).
+                </p>
+                <ul>
+                    <li><b>Partial Masking:</b> Setting volume so the noise and tinnitus "mix." This is the gold
+                        standard for Tinnitus Retraining Therapy (TRT).</li>
+                    <li><b>Habituation:</b> The process of the brain's filters reclassifying the tinnitus sound as a
+                        neutral "background" signal (like a refrigerator hum) rather than a threat.</li>
+                    <li><b>Evidence:</b> Jastreboff's Neurophysiological Model (1990) provides the foundation for sound
+                        enrichment as a tool for habituation. <a
+                            href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4200612/" target="_blank" class="button"
+                            style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">View Clinical Review</a></li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>5. Cognitive Behavioral Therapy (CBT)</h2>
-    <p>
-        CBT is the clinical gold standard for reducing tinnitus-related distress. It focuses on the psychological reaction to the sound rather than the sound itself.
-    </p>
-    <ul>
-        <li><b>Habituation:</b> Uses cognitive restructuring and mindfulness to reclassify tinnitus as a neutral background sound, effectively moving it from the foreground of conscious attention.</li>
-        <li><b>Evidence:</b> Meta-analyses consistently show that CBT significantly improves quality of life and reduces the "handicap" perceived by sufferers. <a href="https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD012614.pub2/full" target="_blank" class="button" style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">Cochrane Review (2020)</a></li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>5. Cognitive Behavioral Therapy (CBT)</h2>
+                <p>
+                    CBT is the clinical gold standard for reducing tinnitus-related distress. It focuses on the
+                    psychological reaction to the sound rather than the sound itself.
+                </p>
+                <ul>
+                    <li><b>Habituation:</b> Uses cognitive restructuring and mindfulness to reclassify tinnitus as a
+                        neutral background sound, effectively moving it from the foreground of conscious attention.</li>
+                    <li><b>Evidence:</b> Meta-analyses consistently show that CBT significantly improves quality of life
+                        and reduces the "handicap" perceived by sufferers. <a
+                            href="https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD012614.pub2/full"
+                            target="_blank" class="button"
+                            style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">Cochrane Review (2020)</a>
+                    </li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>6. The Habituation Model (Finally Quiet)</h2>
-    <p>
-        Methods based on the habituation model, as described in <i>Finally Quiet</i> by Eric Mounts, focus on transitioning tinnitus from a perceived "threat" to a neutral background sound.
-    </p>
-    <ul>
-        <li><b>The Mixing Point:</b> A critical calibration step where the therapy sound is set at a level where it "mixes" with the tinnitus. Clinical habituation requires that the brain still hears the tinnitus signal in order to learn to ignore it.</li>
-        <li><b>Autonomic Regulation:</b> Identifies physical tension and the "fight or flight" response as primary drivers of tinnitus distress. Systematic relaxation (PMR) is used to de-escalate the nervous system.</li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>6. The Habituation Model (Finally Quiet)</h2>
+                <p>
+                    Methods based on the habituation model, as described in <i>Finally Quiet</i> by Eric Mounts, focus
+                    on transitioning tinnitus from a perceived "threat" to a neutral background sound.
+                </p>
+                <ul>
+                    <li><b>The Mixing Point:</b> A critical calibration step where the therapy sound is set at a level
+                        where it "mixes" with the tinnitus. Clinical habituation requires that the brain still hears the
+                        tinnitus signal in order to learn to ignore it.</li>
+                    <li><b>Autonomic Regulation:</b> Identifies physical tension and the "fight or flight" response as
+                        primary drivers of tinnitus distress. Systematic relaxation (PMR) is used to de-escalate the
+                        nervous system.</li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>7. Clinical Consensus & Sleep (2022 Guidelines)</h2>
-    <p>
-        Recent clinical summaries (Modern Hearing Solutions, 2022) emphasize the <b>Neurophysiological Model</b> of tinnitus.
-    </p>
-    <ul>
-        <li><b>Sound Enrichment:</b> Recommends 24/7 sound enrichment to prevent the "internal gain" of the auditory system from increasing in silence.</li>
-        <li><b>Sleep Correlation:</b> Clinical data shows that addressing sleep hygiene is often more effective at reducing THI scores than sound therapy alone.</li>
-        <li><b>Fade Transitions:</b> Recommends gradual acoustic transitions (fading) to maintain autonomic nervous system stability.</li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>7. Clinical Consensus & Sleep (2022 Guidelines)</h2>
+                <p>
+                    Recent clinical summaries (Modern Hearing Solutions, 2022) emphasize the <b>Neurophysiological
+                        Model</b> of tinnitus.
+                </p>
+                <ul>
+                    <li><b>Sound Enrichment:</b> Recommends 24/7 sound enrichment to prevent the "internal gain" of the
+                        auditory system from increasing in silence.</li>
+                    <li><b>Sleep Correlation:</b> Clinical data shows that addressing sleep hygiene is often more
+                        effective at reducing THI scores than sound therapy alone.</li>
+                    <li><b>Fade Transitions:</b> Recommends gradual acoustic transitions (fading) to maintain autonomic
+                        nervous system stability.</li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>8. Acoustic Coordinated Reset (CR)</h2>
-    <p>
-        Developed by <b>Prof. Peter Tass (2012)</b>, Acoustic CR neuromodulation uses four non-harmonious tones played around the tinnitus frequency to disrupt pathological neural synchrony.
-    </p>
-    <ul>
-        <li><b>Mechanism:</b> "Desynchronizes" the auditory cortex by stimulating specific neural subpopulations in a randomized sequence, preventing them from firing in a synchronized "loop."</li>
-        <li><b>Tone Placement & Timing:</b> Uses a logarithmic distribution (ratios of 0.77, 0.90, 1.10, and 1.32) played at a clinical sequence rate of 1.5 Hz (3 cycles on, 2 cycles off). A bracketing tool is provided for precise pitch matching.</li>
-        <li><b>Evidence:</b> Significant reductions in THI scores were observed in the original RESET trial. <a href="https://pubmed.ncbi.nlm.nih.gov/22412495/" target="_blank" class="button" style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">Tass et al. (2012)</a></li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>8. Acoustic Coordinated Reset (CR)</h2>
+                <p>
+                    Developed by <b>Prof. Peter Tass (2012)</b>, Acoustic CR neuromodulation uses four non-harmonious
+                    tones played around the tinnitus frequency to disrupt pathological neural synchrony.
+                </p>
+                <ul>
+                    <li><b>Mechanism:</b> "Desynchronizes" the auditory cortex by stimulating specific neural
+                        subpopulations in a randomized sequence, preventing them from firing in a synchronized "loop."
+                    </li>
+                    <li><b>Tone Placement & Timing:</b> Uses a logarithmic distribution (ratios of 0.77, 0.90, 1.10, and
+                        1.32) played at a clinical sequence rate of 1.5 Hz (3 cycles on, 2 cycles off). A bracketing
+                        tool is provided for precise pitch matching.</li>
+                    <li><b>Evidence:</b> Significant reductions in THI scores were observed in the original RESET trial.
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22412495/" target="_blank" class="button"
+                            style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">Tass et al. (2012)</a></li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>9. Binaural Beat Entrainment</h2>
-    <p>
-        Binaural beats utilize the frequency following response (FFR) to encourage specific neurological states.
-    </p>
-    <ul>
-        <li><b>Delta/Theta:</b> Associated with sleep and deep meditation, helping to down-regulate the sympathetic nervous system.</li>
-        <li><b>Gamma (40Hz):</b> Emerging research suggests 40Hz stimulation can improve cognitive function and reduce neuroinflammation.</li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>9. Binaural Beat Entrainment</h2>
+                <p>
+                    Binaural beats utilize the frequency following response (FFR) to encourage specific neurological
+                    states.
+                </p>
+                <ul>
+                    <li><b>Delta/Theta:</b> Associated with sleep and deep meditation, helping to down-regulate the
+                        sympathetic nervous system.</li>
+                    <li><b>Gamma (40Hz):</b> Emerging research suggests 40Hz stimulation can improve cognitive function
+                        and reduce neuroinflammation.</li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>10. Multi-Sensory Bimodal Stimulation</h2>
-    <p>
-        Clinical devices like Lenire and Neosensory combine sound with somatosensory input (tongue or skin). The Trahreg Suite approximates this using <b>Visual and Tactile (Haptic) Bimodal Stimulation</b>.
-    </p>
-    <ul>
-        <li><b>Mechanism:</b> High-contrast visual pulses synchronized to auditory bursts increase the "saliency" of the stimulation, helping the brain's plasticity mechanisms prioritize the therapy signal over the tinnitus signal.</li>
-        <li><b>Somatosensory Integration:</b> Pairing sound with tactile feedback targets the dorsal cochlear nucleus (DCN), a site of multi-sensory integration where tinnitus is often localized.</li>
-        <li><b>Key Findings:</b> Bimodal stimulation has shown greater efficacy in reducing THI scores compared to sound-only masking in clinical trials. <a href="https://doi.org/10.1126/scitranslmed.abb2830" target="_blank" class="button" style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">Conlon et al. (2020)</a></li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>10. Multi-Sensory Bimodal Stimulation</h2>
+                <p>
+                    Clinical devices like Lenire and Neosensory combine sound with somatosensory input (tongue or skin).
+                    The Trahreg Suite approximates this using <b>Visual and Tactile (Haptic) Bimodal Stimulation</b>.
+                </p>
+                <ul>
+                    <li><b>Mechanism:</b> High-contrast visual pulses synchronized to auditory bursts increase the
+                        "saliency" of the stimulation, helping the brain's plasticity mechanisms prioritize the therapy
+                        signal over the tinnitus signal.</li>
+                    <li><b>Somatosensory Integration:</b> Pairing sound with tactile feedback targets the dorsal
+                        cochlear nucleus (DCN), a site of multi-sensory integration where tinnitus is often localized.
+                    </li>
+                    <li><b>Key Findings:</b> Bimodal stimulation has shown greater efficacy in reducing THI scores
+                        compared to sound-only masking in clinical trials. <a
+                            href="https://doi.org/10.1126/scitranslmed.abb2830" target="_blank" class="button"
+                            style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">Conlon et al. (2020)</a></li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>11. Residual Inhibition (RI) & Suppression</h2>
-    <p>
-        Residual Inhibition is the temporary suppression or reduction of tinnitus loudness following exposure to an external sound.
-    </p>
-    <ul>
-        <li><b>Prevalence:</b> Approximately 70-90% of tinnitus patients experience some degree of RI.</li>
-        <li><b>Significance:</b> The duration and depth of RI are strong indicators of auditory system responsiveness to sound-based neuromodulation.</li>
-        <li><b>Testing Protocol:</b> Standardized at 60 seconds of high-level masking followed by timed measurement of the silence duration.</li>
-        <li><b>Research Context:</b> Roberts et al. (2008), <i>Journal of Neuroscience</i>.</li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>11. Residual Inhibition (RI) & Suppression</h2>
+                <p>
+                    Residual Inhibition is the temporary suppression or reduction of tinnitus loudness following
+                    exposure to an external sound.
+                </p>
+                <ul>
+                    <li><b>Prevalence:</b> Approximately 70-90% of tinnitus patients experience some degree of RI.</li>
+                    <li><b>Significance:</b> The duration and depth of RI are strong indicators of auditory system
+                        responsiveness to sound-based neuromodulation.</li>
+                    <li><b>Testing Protocol:</b> Standardized at 60 seconds of high-level masking followed by timed
+                        measurement of the silence duration.</li>
+                    <li><b>Research Context:</b> Roberts et al. (2008), <i>Journal of Neuroscience</i>.</li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>12. Tinnitus Masking Curve (TMC)</h2>
-    <p>
-        The Tinnitus Masking Curve involves measuring the <b>Minimum Masking Level (MML)</b> across various frequencies.
-    </p>
-    <ul>
-        <li><b>Diagnostic Value:</b> TMC can help determine if tinnitus is "tonal" or "noise-like" and provides a visual representation of the auditory filters near the tinnitus frequency.</li>
-        <li><b>Psychophysical Tuning:</b> A steep curve often correlates with specific cochlear damage, whereas a flat curve may suggest more central involvement.</li>
-        <li><b>Tuning Reference:</b> Standard masking curves (Psychophysical Tuning Curves) serve as a baseline for normal auditory filters, helping to identify pathological broad-tuning in tinnitus perception.</li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>12. Tinnitus Masking Curve (TMC)</h2>
+                <p>
+                    The Tinnitus Masking Curve involves measuring the <b>Minimum Masking Level (MML)</b> across various
+                    frequencies.
+                </p>
+                <ul>
+                    <li><b>Diagnostic Value:</b> TMC can help determine if tinnitus is "tonal" or "noise-like" and
+                        provides a visual representation of the auditory filters near the tinnitus frequency.</li>
+                    <li><b>Psychophysical Tuning:</b> A steep curve often correlates with specific cochlear damage,
+                        whereas a flat curve may suggest more central involvement.</li>
+                    <li><b>Tuning Reference:</b> Standard masking curves (Psychophysical Tuning Curves) serve as a
+                        baseline for normal auditory filters, helping to identify pathological broad-tuning in tinnitus
+                        perception.</li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>13. Loudness Growth (LG) Test</h2>
-    <p>
-        The Loudness Growth test measures how subjective loudness perception changes with objective sound intensity.
-    </p>
-    <ul>
-        <li><b>Hyperacusis Detection:</b> A steeper-than-normal loudness growth curve can indicate hyperacusis, a common comorbidity with tinnitus where everyday sounds are perceived as abnormally loud or painful.</li>
-        <li><b>Therapy Guidance:</b> Understanding a patient's loudness growth can help tailor sound therapy levels, ensuring sounds are introduced at comfortable, non-aversive levels to facilitate habituation.</li>
-        <li><b>Monitoring Progress:</b> Tracking changes in the loudness growth curve over time can indicate improvements in sound tolerance.</li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>13. Loudness Growth (LG) Test</h2>
+                <p>
+                    The Loudness Growth test measures how subjective loudness perception changes with objective sound
+                    intensity.
+                </p>
+                <ul>
+                    <li><b>Hyperacusis Detection:</b> A steeper-than-normal loudness growth curve can indicate
+                        hyperacusis, a common comorbidity with tinnitus where everyday sounds are perceived as
+                        abnormally loud or painful.</li>
+                    <li><b>Therapy Guidance:</b> Understanding a patient's loudness growth can help tailor sound therapy
+                        levels, ensuring sounds are introduced at comfortable, non-aversive levels to facilitate
+                        habituation.</li>
+                    <li><b>Monitoring Progress:</b> Tracking changes in the loudness growth curve over time can indicate
+                        improvements in sound tolerance.</li>
+                </ul>
+            </div>
 
 
-<div class="section">
-    <h2>Medical Accuracy Compliance</h2>
-    <p>All algorithms in this suite are validated against clinical benchmarks:</p>
-    <ul>
-        <li>Notch filters provide >40dB attenuation.</li>
-        <li>Frequency precision within ±1% (Standard for pitch matching).</li>
-        <li>Dual-buffer generation for true L/R decorrelation.</li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>Medical Accuracy Compliance</h2>
+                <p>All algorithms in this suite are validated against clinical benchmarks:</p>
+                <ul>
+                    <li>Notch filters provide >40dB attenuation.</li>
+                    <li>Frequency precision within ±1% (Standard for pitch matching).</li>
+                    <li>Dual-buffer generation for true L/R decorrelation.</li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>Clinical Export Utility</h2>
-    <p>The "Clinical Export" feature on each therapy page generates a detailed <code>.txt</code> report of your specific therapy settings and usage data.</p>
-    <ul>
-        <li><b>Objective Data for Clinicians:</b> This report provides your audiologist or ENT specialist with precise, objective data on the parameters you are using (e.g., notch frequency, modulation rates, volume levels, session duration).</li>
-        <li><b>Informed Adjustments:</b> This information can help your healthcare provider make more informed recommendations and adjustments to your treatment plan, ensuring the therapy aligns with your clinical needs.</li>
-        <li><b>Progress Tracking:</b> The included usage logs offer insight into your adherence and consistency, which are crucial factors in the long-term effectiveness of tinnitus therapies.</li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>Clinical Export Utility</h2>
+                <p>The "Clinical Export" feature on each therapy page generates a detailed <code>.txt</code> report of
+                    your specific therapy settings and usage data.</p>
+                <ul>
+                    <li><b>Objective Data for Clinicians:</b> This report provides your audiologist or ENT specialist
+                        with precise, objective data on the parameters you are using (e.g., notch frequency, modulation
+                        rates, volume levels, session duration).</li>
+                    <li><b>Informed Adjustments:</b> This information can help your healthcare provider make more
+                        informed recommendations and adjustments to your treatment plan, ensuring the therapy aligns
+                        with your clinical needs.</li>
+                    <li><b>Progress Tracking:</b> The included usage logs offer insight into your adherence and
+                        consistency, which are crucial factors in the long-term effectiveness of tinnitus therapies.
+                    </li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>Community & Peer Feedback</h2>
-    <p>This suite is part of a transparent, open-source initiative. We encourage clinicians and researchers to review peer feedback, user-reported outcomes, and technical audits within our public community forum.</p>
-    <ul>
-        <li><b>Project Discussions:</b> <a href="https://github.com/5310H/tinnitus_therapy/discussions" target="_blank" class="button" style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">View Community Feedback</a></li>
-    </ul>
-</div>
+            <div class="section">
+                <h2>Community & Peer Feedback</h2>
+                <p>This suite is part of a transparent, open-source initiative. We encourage clinicians and researchers
+                    to review peer feedback, user-reported outcomes, and technical audits within our public community
+                    forum.</p>
+                <ul>
+                    <li><b>Project Discussions:</b> <a href="https://github.com/5310H/tinnitus_therapy/discussions"
+                            target="_blank" class="button"
+                            style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">View Community Feedback</a>
+                    </li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>14. Supporting Tinnitus Research Organizations</h2>
-    <p>Finding a definitive cure for tinnitus requires collaborative effort and sustained funding for scientific inquiry. The Tinnitus Therapy Suite encourages users to support established non-profit organizations dedicated to research, advocacy, and patient support.</p>
+            <div class="section">
+                <h2>14. Supporting Tinnitus Research Organizations</h2>
+                <p>Finding a definitive cure for tinnitus requires collaborative effort and sustained funding for
+                    scientific inquiry. The Tinnitus Therapy Suite encourages users to support established non-profit
+                    organizations dedicated to research, advocacy, and patient support.</p>
 
-    <h3>American Tinnitus Association (ATA)</h3>
-    <p>The ATA is the nation’s foremost organization committed to improving the lives of people with tinnitus and their families through support, advocacy, and research for a cure.</p>
-    <ul>
-        <li><b>Focus:</b> Funding innovative research, raising public awareness, and providing educational resources for patients and clinicians.</li>
-        <li><b>Website:</b> <a href="https://www.ata.org/donate" target="_blank" class="button" style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">ata.org</a></li>
-    </ul>
+                <h3>American Tinnitus Association (ATA)</h3>
+                <p>The ATA is the nation’s foremost organization committed to improving the lives of people with
+                    tinnitus and their families through support, advocacy, and research for a cure.</p>
+                <ul>
+                    <li><b>Focus:</b> Funding innovative research, raising public awareness, and providing educational
+                        resources for patients and clinicians.</li>
+                    <li><b>Website:</b> <a href="https://www.ata.org/donate" target="_blank" class="button"
+                            style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">ata.org</a></li>
+                </ul>
 
-    <h3>Tinnitus Quest</h3>
-    <p>Tinnitus Quest is a non-profit organization dedicated to finding a cure for tinnitus by accelerating scientific research through a patient-centric lens.</p>
-    <ul>
-        <li><b>Focus:</b> Translational research—helping move discoveries from laboratory settings into practical treatments and clinical trials.</li>
-        <li><b>Website:</b> <a href="https://tinnitusquest.com/donate" target="_blank" class="button" style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">tinnitusquest.com</a></li>
-    </ul>
+                <h3>Tinnitus Quest</h3>
+                <p>Tinnitus Quest is a non-profit organization dedicated to finding a cure for tinnitus by accelerating
+                    scientific research through a patient-centric lens.</p>
+                <ul>
+                    <li><b>Focus:</b> Translational research—helping move discoveries from laboratory settings into
+                        practical treatments and clinical trials.</li>
+                    <li><b>Website:</b> <a href="https://tinnitusquest.com/donate" target="_blank" class="button"
+                            style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">tinnitusquest.com</a></li>
+                </ul>
 
-    <h3>Cleveland Hearing and Speech Center (CHSC)</h3>
-    <p>CHSC is the nation’s oldest hearing and speech center. They provide high-quality clinical care and contribute to the community through advocacy and specialized research programs.</p>
-    <ul>
-        <li><b>Focus:</b> Audiological excellence and research initiatives aimed at improving communication and quality of life for individuals with hearing challenges.</li>
-        <li><b>Website:</b> <a href="https://www.chsc.org/donate" target="_blank" class="button" style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">chsc.org</a></li>
-    </ul>
-</div>
+                <h3>Cleveland Hearing and Speech Center (CHSC)</h3>
+                <p>CHSC is the nation’s oldest hearing and speech center. They provide high-quality clinical care and
+                    contribute to the community through advocacy and specialized research programs.</p>
+                <ul>
+                    <li><b>Focus:</b> Audiological excellence and research initiatives aimed at improving communication
+                        and quality of life for individuals with hearing challenges.</li>
+                    <li><b>Website:</b> <a href="https://www.chsc.org/donate" target="_blank" class="button"
+                            style="padding: 4px 8px; font-size: 0.7rem; margin-left: 5px;">chsc.org</a></li>
+                </ul>
+            </div>
 
-<div class="section">
-    <h2>References & Further Reading</h2>
-    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
-        <a href="https://doi.org/10.1073/pnas.0911268107" target="_blank" class="button" style="text-align: left;">Okamoto et al. (2010) - Tailored Notched Music (PNAS)</a>
-        <a href="https://doi.org/10.1126/scitranslmed.abb2830" target="_blank" class="button" style="text-align: left;">Conlon et al. (2020) - Bimodal Neuromodulation (STM)</a>
-        <a href="https://doi.org/10.3233/RNN-2012-110218" target="_blank" class="button" style="text-align: left;">Tass et al. (2012) - Coordinated Reset Neuromodulation</a>
+            <div class="section">
+                <h2>References & Further Reading</h2>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                    <a href="https://doi.org/10.1073/pnas.0911268107" target="_blank" class="button"
+                        style="text-align: left;">Okamoto et al. (2010) - Tailored Notched Music (PNAS)</a>
+                    <a href="https://doi.org/10.1126/scitranslmed.abb2830" target="_blank" class="button"
+                        style="text-align: left;">Conlon et al. (2020) - Bimodal Neuromodulation (STM)</a>
+                    <a href="https://doi.org/10.3233/RNN-2012-110218" target="_blank" class="button"
+                        style="text-align: left;">Tass et al. (2012) - Coordinated Reset Neuromodulation</a>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
+            <button onclick="generatePDF()" class="button" style="background: var(--accent); color: white;">Download
+                Research PDF</button>
+            <a href="index.html" class="button">Back to Suite</a>
+        </div>
     </div>
-</div>
-</div>
 
-<div style="text-align: center; margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
-    <button onclick="generatePDF()" class="button" style="background: var(--accent); color: white;">Download Research PDF</button>
-    <a href="index.html" class="button">Back to Suite</a>
-</div>
-</div>
+    <script>
+        window.onload = () => {
+            initNav("This page summarizes the scientific research and clinical principles that the Tinnitus Therapy Suite tools are based on.");
+        };
 
-<script>
-window.onload = () => {
-    initNav("This page summarizes the scientific research and clinical principles that the Tinnitus Therapy Suite tools are based on.");
-};
+        async function generatePDF() {
+            const element = document.getElementById('pdfContent');
+            const isDark = !document.body.classList.contains('light-mode');
 
-async function generatePDF() {
-    const element = document.getElementById('pdfContent');
-    const isDark = !document.body.classList.contains('light-mode');
+            if (isDark) {
+                document.body.classList.add('light-mode');
+                // Wait for CSS transitions/repaints to finish
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
 
-    if (isDark) {
-        document.body.classList.add('light-mode');
-        // Wait for CSS transitions/repaints to finish
-        await new Promise(resolve => setTimeout(resolve, 500));
-    }
+            const opt = {
+                margin: [20, 15],
+                filename: 'tinnitus_research.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    scrollY: 0
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
 
-    const opt = {
-        margin:       [20, 15],
-        filename:     'tinnitus_research.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { 
-            scale: 2, 
-            useCORS: true, 
-            backgroundColor: '#ffffff',
-            scrollY: 0
-        },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-    };
-    
-    try {
-        await html2pdf().set(opt).from(element).save();
-    } finally {
-        if (isDark) document.body.classList.remove('light-mode');
-    }
-}
-</script>
+            try {
+                await html2pdf().set(opt).from(element).save();
+            } finally {
+                if (isDark) document.body.classList.remove('light-mode');
+            }
+        }
+    </script>
 </body>
+
 </html>

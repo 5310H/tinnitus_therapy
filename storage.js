@@ -1,7 +1,7 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "2026.06.19";
+const APP_VERSION = "2026.06.30";
 
 /** 
  * Helpers for consistent localStorage interaction
@@ -32,7 +32,7 @@ const loadSetting = (key, defaultVal) => {
 
 const saveSetting = (key, val) => {
     // Technical Guard: Enforce safety bounds at the persistence layer
-    if (key === 'cr_baseFreq' || key === 'st_vol' || key === 'volMaster' || key === 'wearing_hearing_aids' || key === 'onboarding_step' || key === 'noise_pulse_rate' || key === 'noise_pulse_depth') {
+    if (key === 'cr_baseFreq' || key === 'st_vol' || key === 'volMaster' || key === 'wearing_hearing_aids' || key === 'onboarding_step' || key === 'noise_pulse_rate' || key === 'noise_pulse_depth' || key === 'ai_enabled') {
         const num = parseFloat(val);
         if (key.includes('vol') && (num < 0 || num > 100)) return;
         if (key === 'cr_baseFreq' && (num < 20 || num > 20000)) return;
@@ -40,7 +40,8 @@ const saveSetting = (key, val) => {
         if (key === 'noise_pulse_depth' && (num < 0 || num > 1)) return;
         // New validation for boolean setting
         if (key === 'wearing_hearing_aids' && (val !== 'true' && val !== 'false')) return;
-        if (key === 'onboarding_step' && (num < 0 || num > 5 || !Number.isInteger(num))) return; // Validate onboarding step
+        if (key === 'ai_enabled' && (val !== 'true' && val !== 'false')) return;
+        if (key === 'onboarding_step' && (num < 0 || num > 6 || !Number.isInteger(num))) return; // Validate onboarding step
     }
     _safeSet('tts_' + key, val);
 };
@@ -53,7 +54,7 @@ const getTodayKey = () => new Date().toISOString().split('T')[0];
  */
 function completeOnboarding() {
     try {
-        saveSetting('onboarding_step', '5'); // Mark as fully complete
+        saveSetting('onboarding_step', '6'); // Mark as fully complete
         saveSetting('last_seen_version', APP_VERSION);
         try { sessionStorage.setItem('tts_session_active', 'true'); } catch (e) { }
         _memSessionActive = true;
@@ -99,6 +100,24 @@ async function requestPersistentStorage() {
     }
 }
 requestPersistentStorage();
+
+/**
+ * PrivacyAudit provides metadata about the user's local security state.
+ */
+function getPrivacyAudit() {
+    const encryptedKey = loadSetting('gemini_api_key_encrypted', null);
+    const pinSet = encryptedKey !== null;
+    const rcSet = loadSetting('gemini_api_key_rc_encrypted', null) !== null;
+
+    return {
+        storageUsedKB: getLocalStorageUsage(),
+        aiEncryptionActive: pinSet,
+        recoveryCodeActive: rcSet,
+        isAILocked: pinSet && !activeSessionKey,
+        isAIConfigured: !!(activeSessionKey || loadSetting('gemini_api_key', '')),
+        dataPolicy: "Local-Only / Zero-Server"
+    };
+}
 
 let MAINTENANCE_MODE = false; // Default to OPEN; only close if maintenance.json says so
 
@@ -340,6 +359,10 @@ class TinnitusAIManager {
     async fetchAIAssistance(taskType, payload) {
         if (!this.genAI) this.init();
 
+        if (loadSetting('ai_enabled', 'true') !== 'true') {
+            return "AI Features are currently disabled via your Privacy Settings. Re-enable them in the Privacy Hub to continue.";
+        }
+
         if (!this.genAI) {
             return "AI Features are currently unconfigured. Please check the suite's setup instructions to enable Gemini assistance.";
         }
@@ -426,7 +449,20 @@ class TinnitusAIManager {
 
     async getBalancedThoughtSuggestion(automaticThought) {
         const prompt = {
-            system_instruction: "You are a specialized CBT assistant for tinnitus habituation. Help the user reframe their 'Automatic Thought' into a 'Balanced Thought' based on Tinnitus Retraining Therapy principles. Keep it brief, supportive, and non-clinical.",
+            system_instruction: `You are a specialized CBT assistant for tinnitus habituation. 
+            Perform a full 'Thought Record' analysis on the user's input. 
+            Provide a response with exactly three sections:
+            1. EVIDENCE AGAINST: (Logical reasons why the catastrophic thought is not 100% true)
+            2. BALANCED PERSPECTIVE: (A realistic, TRT-aligned reframing)
+            3. GROUNDING ACTION: (One 30-second physical or mental task).
+            
+            Guidelines:
+            - Be supportive and objective.
+            - Reference 'habituation' as a biological process.
+            - Keep each section to 2 sentences max.
+            - Output as plain text with clear headings.
+            
+            The analysis is for a clinical record, so ensure it is high-value.`,
             input: automaticThought
         };
         return await this.fetchAIAssistance("cbt_reframing", prompt);
@@ -795,7 +831,8 @@ function getMilestoneProgress() {
         if (scores[scores.length - 1] <= 16) autoState[5] = true; // Full: Grade 1
     }
 
-    const percentage = Math.round((autoState.filter(Boolean).length / autoState.length) * 100);
+    const rawPercentage = (autoState.filter(Boolean).length / autoState.length) * 100;
+    const percentage = Math.round(rawPercentage / 5) * 5;
     return { labels, state: autoState, percentage };
 }
 
@@ -838,6 +875,43 @@ if (typeof speechSynthesis !== 'undefined') {
 }
 
 /**
+ * SystemCompatibilityAudit provides automated checks to ensure the host 
+ * browser and device meet the technical requirements for clinical audio.
+ */
+class SystemCompatibilityAudit {
+    static check() {
+        const results = {
+            audioContext: !!(window.AudioContext || window.webkitAudioContext),
+            audioWorklet: !!(window.AudioContext && window.AudioContext.prototype && 'audioWorklet' in window.AudioContext.prototype) ||
+                !!(window.webkitAudioContext && window.webkitAudioContext.prototype && 'audioWorklet' in window.webkitAudioContext.prototype),
+            webAssembly: typeof WebAssembly === 'object' && typeof WebAssembly.instantiate === 'function',
+            localStorage: isStorageAvailable(),
+            serviceWorker: 'serviceWorker' in navigator,
+            secureContext: window.isSecureContext,
+            pannerNode: !!(window.AudioContext && window.AudioContext.prototype && 'createStereoPanner' in window.AudioContext.prototype),
+            mediaDevices: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+            vibrate: !!navigator.vibrate,
+            isCompatible: false,
+            errors: [],
+            warnings: []
+        };
+
+        if (!results.audioContext) results.errors.push("Web Audio API not supported.");
+        if (!results.webAssembly) results.errors.push("WebAssembly not supported (High-performance DSP disabled).");
+        if (!results.localStorage) results.errors.push("LocalStorage is blocked or unavailable.");
+
+        if (!results.secureContext) results.warnings.push("Non-Secure context detected. Worklets and PWA features will be restricted.");
+        if (!results.audioWorklet) results.warnings.push("AudioWorklet not supported. Audio engine will use legacy fallback.");
+        if (!results.pannerNode) results.warnings.push("StereoPanner API missing. Linear L/R balance controls may fail.");
+        if (!results.mediaDevices) results.warnings.push("Microphone access restricted. Spectrogram and Meter tools will not function.");
+        if (!results.vibrate) results.warnings.push("Haptic API unavailable. Tactile Bimodal pulses will be disabled.");
+
+        results.isCompatible = results.errors.length === 0;
+        return results;
+    }
+}
+
+/**
  * Retrieves a unified validation status object covering engine, phase, and DSP tests.
  */
 function getUnifiedValidationStatus() {
@@ -849,6 +923,14 @@ function getUnifiedValidationStatus() {
 
     const recommendations = [];
     let isValid = true;
+
+    // Automated Compatibility Audit
+    const compat = SystemCompatibilityAudit.check();
+    if (!compat.isCompatible) {
+        isValid = false;
+        compat.errors.forEach(e => recommendations.push(`- Compatibility Error: ${e}`));
+    }
+    compat.warnings.forEach(w => recommendations.push(`- Compatibility Warning: ${w}`));
 
     // Check expiration (30 days)
     if (lastValidationDate) {
@@ -896,6 +978,7 @@ function getUnifiedValidationStatus() {
     return {
         engine: engineResults,
         phase: phaseStatus,
+        compatibility: compat,
         dsp: dspStatus,
         spectralAudit: spectralAuditSummary,
         isValid: isValid,
@@ -1223,10 +1306,30 @@ class NoiseGenerator {
                     throw loadErr;
                 }
 
+                let wasmModule = null;
+                try {
+                    const wasmPath = (isDocs ? '../noise-generator.wasm' : 'noise-generator.wasm') + '?v=' + APP_VERSION;
+                    const wasmResp = await fetch(wasmPath);
+                    if (wasmResp.ok) {
+                        const wasmBuf = await wasmResp.arrayBuffer();
+                        wasmModule = await WebAssembly.compile(wasmBuf);
+                        console.log('[TTS] WASM DSP engine compiled.');
+                    } else {
+                        console.warn(`[NoiseGenerator] WASM fetch returned status ${wasmResp.status}.`);
+                    }
+                } catch (wasmErr) {
+                    console.error('[NoiseGenerator] WASM compilation failed, falling back to JS:', wasmErr);
+                }
+
                 let node;
                 try {
                     node = new AudioWorkletNode(this.ctx, 'noise-processor', {
-                        processorOptions: { color: targetColor, targetFreq: targetFreq, enableAutoMatch: enableAutoMatch.toString() },
+                        processorOptions: {
+                            color: targetColor,
+                            targetFreq: targetFreq,
+                            enableAutoMatch: enableAutoMatch.toString(),
+                            wasmModule: wasmModule
+                        },
                         numberOfInputs: 0,
                         numberOfOutputs: 1,
                         outputChannelCount: [2]
@@ -1274,9 +1377,6 @@ class NoiseGenerator {
         }
 
         const buffer = this.generate(targetColor, bufferSize, { enableAutoMatch });
-        source.updateTargetFreq = (newFreq) => {
-            console.warn("[NoiseGenerator] Cannot update frequency on a BufferSourceNode. The node must be recreated.");
-        };
         if (!buffer) {
             console.error("NoiseGenerator: Failed to create AudioBuffer for fallback. No noise will be generated.");
             return null;
@@ -1410,7 +1510,7 @@ function getHearingBoost(freq, side) {
     const profile = getJson('hearing_profile', null);
     if (!profile || !profile[side]) return 0;
 
-    const freqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
+    const freqs = [250, 500, 750, 1000, 2000, 3000, 4000, 6000, 8000];
     const data = profile[side];
 
     if (!Array.isArray(data)) return 0;
@@ -1468,6 +1568,81 @@ function exportAllData() {
     a.href = URL.createObjectURL(blob);
     a.download = `trahreg_tinnitus_backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
+}
+
+/**
+ * Exports clinical log data (THI and Usage) to a CSV format for research/clinical analysis.
+ */
+function exportClinicalDataCSV() {
+    const distress = getDistressScores();
+    const usage = getJson('usage_log', {});
+    const dates = Array.from(new Set([...Object.keys(distress), ...Object.keys(usage)])).sort();
+
+    let csv = "Date,THI_Score,Usage_Minutes\n";
+    dates.forEach(date => {
+        const score = distress[date] || "";
+        const mins = usage[date] || 0;
+        csv += `${date},${score},${mins}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `trahreg_clinical_data_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+}
+
+/**
+ * Saves a soundscape preset (a collection of settings for a therapy module).
+ * @param {string} name - The name of the preset.
+ * @param {object} settings - An object containing the settings to save.
+ */
+function saveSoundscapePreset(name, settings) {
+    const presets = getJson('soundscape_presets', {});
+    presets[name] = settings;
+    setJson('soundscape_presets', presets);
+    console.log(`TTS: Soundscape preset '${name}' saved.`);
+}
+
+/**
+ * Loads a soundscape preset.
+ * @param {string} name - The name of the preset.
+ * @returns {object|null} The settings object for the preset, or null if not found.
+ */
+function loadSoundscapePreset(name) {
+    const presets = getJson('soundscape_presets', {});
+    return presets[name] || null;
+}
+
+/**
+ * Deletes a specific log entry from a JSON-based log.
+ * Useful for GDPR compliance and correcting data entry errors.
+ * @param {string} logKey - The log key (e.g., 'distress_log')
+ * @param {string} entryKey - The date or index to remove
+ */
+function deleteLogEntry(logKey, entryKey) {
+    const log = getJson(logKey, {});
+    if (Array.isArray(log)) {
+        // If it's an array (like thought_records)
+        const index = parseInt(entryKey);
+        if (!isNaN(index)) {
+            log.splice(index, 1);
+            setJson(logKey, log);
+        }
+    } else {
+        // If it's an object/map (like distress_log)
+        if (log[entryKey] !== undefined) {
+            delete log[entryKey];
+            setJson(logKey, log);
+        }
+    }
+    console.log(`TTS: Deleted entry ${entryKey} from ${logKey}.`);
+}
+
+function clearAllLogs() {
+    const keys = ['distress_log', 'usage_log', 'ri_log', 'tmc_log', 'q_factor_log', 'lg_log', 'thought_records', 'error_log'];
+    keys.forEach(k => localStorage.removeItem('tts_' + k));
+    alert("All therapy logs have been cleared. Settings remain intact.");
 }
 
 function importAllData(file) {
@@ -1565,7 +1740,7 @@ function getClinicalReportData(modeName, settingsObj, techSpecsObj = {}) {
         tmc: {
             latestQFactor: latestQFactor
         },
-        hearingProfile: getJson('hearing_profile', { L: [0, 0, 0, 0, 0, 0, 0, 0, 0], R: [0, 0, 0, 0, 0, 0, 0, 0, 0] }),
+        hearingProfile: getJson('hearing_profile', { L: new Array(9).fill(0), R: new Array(9).fill(0) }),
         branding: {
             name: loadSetting('clinic_name', ''),
             logo: loadSetting('clinic_logo', '') // Can be URL or Base64
@@ -1684,7 +1859,7 @@ function generateClinicalReportHtml(reportData) {
 
     // Hearing Profile (Audiogram) Block
     if (reportData.hearingProfile && (reportData.hearingProfile.L?.some(v => v > 0) || reportData.hearingProfile.R?.some(v => v > 0))) {
-        const hpFreqs = [250, 500, 1000, 2000, 3000, 4000, 6000, 8000, 12000];
+        const hpFreqs = [250, 500, 750, 1000, 2000, 3000, 4000, 6000, 8000];
         const width = 600, height = 180, pad = 35;
         const gW = width - (pad * 2), gH = height - (pad * 2);
 
@@ -2173,6 +2348,14 @@ function getLastTHIAssessmentDate() {
     return latest ? new Date(latest.date) : null;
 }
 
+/**
+ * Retrieves the date of the most recent Hearing Profile (Audiogram) entry.
+ */
+function getLastHearingTestDate() {
+    const d = loadSetting('last_hearing_test_date', null);
+    return d ? new Date(d) : null;
+}
+
 // Initialize the AI manager globally, but only after the DOM is ready
 const tinnitusAI = new TinnitusAIManager();
 
@@ -2209,9 +2392,9 @@ function showWalkthrough(slides, startIndex = 0) {
         const el = document.getElementById('walkthroughModal');
         if (el) el.remove();
 
-        // Return to onboarding if we were in the middle of step 4
+        // Return to onboarding if we were in the middle of step 3 (System Guidance)
         const step = parseInt(loadSetting('onboarding_step', '0'));
-        if (step === 4 && typeof window.showOnboardingModal === 'function') {
+        if (step === 3 && typeof window.showOnboardingModal === 'function') {
             window.showOnboardingModal();
         }
     };
@@ -2463,6 +2646,14 @@ const closeWhatsNew = () => {
     const btn = document.getElementById('whatsNewBtn');
     if (btn) btn.style.display = 'none';
 };
+
+// Global Keyboard Support for Modal Dismissal
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const whatsNew = document.getElementById('whatsNewModal');
+        if (whatsNew && whatsNew.style.display === 'block') closeWhatsNew();
+    }
+});
 
 function showQuickStartGuide() {
     showWalkthrough([
@@ -2735,7 +2926,7 @@ function syncUIVersion() {
         } catch (e) { /* Private mode protection */ }
 
         // 2. Identify Whitelisted (Public) pages
-        const publicPages = ['index.html', 'disclaimer.html', 'license.html', 'about.html', 'research.html', 'feedback.html', 'presentation.html', 'handout.html', 'clinical_summary.html', 'stats.html'];
+        const publicPages = ['index.html', 'disclaimer.html', 'license.html', 'about.html', 'research.html', 'feedback.html', 'presentation.html', 'handout.html', 'clinical_summary.html', 'stats.html', 'audiogram.html', 'hearingtest.html', 'cbt.html', 'validation.html', 'notchfinder.html'];
         const isPublicPage = isHome || publicPages.some(p => pageName === p);
 
         const onboardingStep = parseInt(loadSetting('onboarding_step', '0')); // Default to 0 if not set
@@ -2751,14 +2942,14 @@ function syncUIVersion() {
 
         // 3. Enforce Redirection: Bypass if already onboarded OR session is active
         // New logic: If onboarding is not complete (step < 5) AND it's not a public page AND not the home page, redirect to home.
-        if (onboardingStep < 5 && !isPublicPage && !isHome) {
+        if (onboardingStep < 6 && !isPublicPage && !isHome) {
             console.warn(`[Gatekeeper] Onboarding not complete (step ${onboardingStep}). Redirecting to home...`);
             const redirectTarget = isDocs ? '../index.html' : 'index.html';
             window.location.replace(redirectTarget);
             return; // Stop further execution on this page
         }
         // If on the home page, and onboarding is not complete, ensure the onboarding modal is shown.
-        if (isHome && onboardingStep < 5) {
+        if (isHome && onboardingStep < 6) {
             console.log(`[Gatekeeper] Onboarding in progress (step ${onboardingStep}). Allowing access to home page.`);
         }
     })();
@@ -2777,7 +2968,7 @@ if (document.readyState === 'loading') {
         const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
         const lastSeenVersion = localStorage.getItem('tts_last_seen_version');
         // Only trigger "What's New" if user has completed onboarding to avoid UI conflicts
-        if (onboardingStep >= 5 && lastSeenVersion && lastSeenVersion !== APP_VERSION) {
+        if (onboardingStep >= 6 && lastSeenVersion && lastSeenVersion !== APP_VERSION) {
             setTimeout(showWhatsNew, 1500);
         }
     });
@@ -2786,12 +2977,13 @@ if (document.readyState === 'loading') {
     applyCompactMode();
     applyDashboardLayout();
     applyEmailVisibility();
+    if (typeof i18n !== 'undefined') i18n.applyTranslations(); // Apply translations on theme change
     syncUIVersion();
 
     // Version Update Notification
     const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
     const lastSeenVersion = localStorage.getItem('tts_last_seen_version');
-    if (onboardingStep >= 5 && lastSeenVersion && lastSeenVersion !== APP_VERSION) {
+    if (onboardingStep >= 6 && lastSeenVersion && lastSeenVersion !== APP_VERSION) {
         setTimeout(showWhatsNew, 1500);
     }
 }
@@ -2808,6 +3000,8 @@ Object.assign(window, {
     loadSetting,
     saveSetting,
     getTodayKey,
+    SystemCompatibilityAudit,
+    getPrivacyAudit,
     completeOnboarding,
     setOnboardingStep,
     getLocalStorageUsage,
@@ -2844,6 +3038,9 @@ Object.assign(window, {
     getBalancePreset,
     isFrequencySafe,
     exportAllData,
+    exportClinicalDataCSV,
+    deleteLogEntry,
+    clearAllLogs,
     importAllData,
     getClinicalReportData,
     generateClinicalReportText,
@@ -2872,6 +3069,8 @@ Object.assign(window, {
     getQFactors,
     getTMCLog,
     clearTMCLog,
+    saveSoundscapePreset,
+    loadSoundscapePreset,
     getLastTHIAssessmentDate,
     showWalkthrough,
     showWhatsNew,

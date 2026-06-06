@@ -11,6 +11,7 @@
         window.GoogleGenerativeAI = GoogleGenerativeAI;
     </script>
     <script src="storage.js"></script>
+    <script src="lang.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="nav.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -154,7 +155,8 @@
                 title="Set the volume to the 'Mixing Point'—where the noise and your tinnitus blend together without one hiding the other.">
                 <label>Volume (%) <span class="status-dot" id="volumeStatus">○</span> <span class="info-icon">?</span>
                     <div class="input-with-buttons">
-                        <input type="number" id="volInput" class="val-input" min="0" max="100" value="30">
+                        <input type="number" id="volInput" class="val-input" inputmode="numeric" pattern="[0-9]*"
+                            min="0" max="100" value="30">
                         <div class="fine-tune-group" data-target="volume">
                             <button class="fine-tune-btn" data-delta="-5">-5</button>
                             <button class="fine-tune-btn" data-delta="-1">-1</button>
@@ -174,7 +176,8 @@
                     Balance <span class="status-dot" id="balanceStatus">○</span> <span
                         class="info-icon">?</span></label>
                 <div class="input-with-buttons">
-                    <input type="number" id="balInput" class="val-input" min="-1" max="1" step="0.1" value="0">
+                    <input type="number" id="balInput" class="val-input" inputmode="decimal" min="-1" max="1" step="0.1"
+                        value="0">
                     <div class="fine-tune-group" data-target="balance">
                         <button class="fine-tune-btn" data-delta="-0.1">-0.1</button>
                         <button class="fine-tune-btn" data-delta="0.1">+0.1</button>

@@ -11,6 +11,7 @@
         window.GoogleGenerativeAI = GoogleGenerativeAI;
     </script>
     <script src="storage.js"></script>
+    <script src="lang.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="nav.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -194,14 +195,18 @@
         <div class="card">
             <h2>Tinnitus Handicap Inventory (THI)</h2>
             <div id="thiReminderCBT" class="card"
-                style="display:none; background: rgba(255, 165, 0, 0.1); border-color: #ff9800; margin-bottom: 15px;">
+                style="display:none; background: rgba(255, 165, 0, 0.1); border-color: #ff9800; margin-bottom: 15px; padding: 15px;">
                 <h3 style="color: #ff9800; margin-top: 0; margin-bottom: 5px;">Reminder: Monthly Assessment</h3>
                 <p class="info" style="color: var(--text); margin-bottom: 0;">It's been over a month since your last THI
                     assessment. Consider taking it now to track your progress.</p>
             </div>
-            <p class="info" style="margin-bottom: 15px;">A clinically validated tool to measure the impact of tinnitus
-                on your life. 0-16: Slight, 18-36: Mild, 38-56: Moderate, 58-76: Severe, 78-100: Catastrophic. <span
-                    id="lastThiDate" style="font-weight: bold;"></span></p>
+            <p class="info" style="margin-bottom: 15px;">Establish your baseline distress. <span id="lastThiDate"
+                    style="font-weight: bold;"></span></p>
+
+            <div class="usage-progress" style="height: 10px; margin-bottom: 20px; background: var(--surface);">
+                <div id="thiProgressBar" class="usage-bar"
+                    style="width: 0%; background: var(--accent); transition: width 0.3s ease;"></div>
+            </div>
 
             <div class="ctrl"
                 style="margin-bottom: 20px; border-bottom: 1px dashed var(--border); padding-bottom: 15px;">
@@ -230,7 +235,8 @@
             <h2>Tinnitus Thought Record</h2>
             <p class="info">Systematically analyze and challenge unhelpful thoughts about your tinnitus.</p>
             <p class="info" style="color: var(--accent); font-style: italic;">Tip: Completing records while playing
-                <b>Brown</b> or <b>Pink</b> noise can help lower the brain's "threat" response.</p>
+                <b>Brown</b> or <b>Pink</b> noise can help lower the brain's "threat" response.
+            </p>
             <div class="ctrl">
                 <label for="trSituation">Situation: When did you notice your tinnitus and what were you doing?</label>
                 <textarea id="trSituation" rows="3" maxlength="300"
@@ -278,9 +284,13 @@
                     thought?</label>
                 <textarea id="trBalancedThought" rows="3" maxlength="300"
                     placeholder="e.g., 'My tinnitus is present right now, but it doesn't mean it will last forever or that I can't cope,' 'I've learned strategies to manage it, and I can apply them now'"></textarea>
-                <button class="button"
-                    style="font-size: 0.75rem; margin-top: 5px; border-color: #9c27b0; color: #9c27b0;"
-                    onclick="generateGroundingScript()">🧘 Generate Grounding Script from Thought</button>
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <button class="button"
+                        style="flex:1; font-size: 0.75rem; border-color: var(--accent); color: var(--accent);"
+                        onclick="suggestBalancedThought()">✨ AI Reframe</button>
+                    <button class="button" style="flex:1; font-size: 0.75rem; border-color: #9c27b0; color: #9c27b0;"
+                        onclick="generateGroundingScript()">🧘 Action Step</button>
+                </div>
                 <div style="text-align: right; font-size: 0.8em; color: var(--text-dim); margin-top: 5px;"><span
                         id="count_trBalancedThought">0</span> / 300</div>
             </div>
@@ -464,6 +474,11 @@
 
             const container = document.getElementById('quiz');
             questions.forEach((q, i) => {
+                // Add Categorization Headers
+                if (i === 0) container.insertAdjacentHTML('beforeend', '<h3 style="margin: 25px 0 10px; color: var(--accent); font-size: 1rem; border-bottom: 1px solid var(--border);">1. Functional Impact</h3><p class="info" style="font-style:italic;">How tinnitus affects your concentration and daily tasks.</p>');
+                if (i === 11) container.insertAdjacentHTML('beforeend', '<h3 style="margin: 35px 0 10px; color: var(--accent); font-size: 1rem; border-bottom: 1px solid var(--border);">2. Emotional Reaction</h3><p class="info" style="font-style:italic;">How tinnitus affects your mood and relationships.</p>');
+                if (i === 20) container.insertAdjacentHTML('beforeend', '<h3 style="margin: 35px 0 10px; color: var(--accent); font-size: 1rem; border-bottom: 1px solid var(--border);">3. Control & Future</h3><p class="info" style="font-style:italic;">Your sense of control and long-term outlook.</p>');
+
                 const div = document.createElement('div');
                 div.className = 'question';
                 div.innerHTML = `
@@ -504,6 +519,11 @@
             parent.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             responses[parseInt(parent.dataset.idx)] = val; // Store the selected value
+
+            // Update Progress Bar
+            const answeredCount = responses.filter(v => v !== null).length;
+            const progress = (answeredCount / 25) * 100;
+            document.getElementById('thiProgressBar').style.width = progress + '%';
         }
 
         function calculateScore() {
@@ -545,11 +565,11 @@
             const entry = {
                 situation: document.getElementById('trSituation').value,
                 automaticThoughts: document.getElementById('trAutomaticThoughts').value,
-                emotions: document.getElementById('trEmotions').value,
-                evidenceFor: document.getElementById('trEvidenceFor').value,
-                evidenceAgainst: document.getElementById('trEvidenceAgainst').value,
                 balancedThought: document.getElementById('trBalancedThought').value,
-                newEmotions: document.getElementById('trNewEmotions').value,
+                emotions: "Simplified Record", // Placeholder for report compatibility
+                evidenceFor: "Simplified Record",
+                evidenceAgainst: "Analyzed via AI",
+                newEmotions: "Analyzed via AI"
             };
 
             // Basic validation

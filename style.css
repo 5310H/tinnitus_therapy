@@ -175,16 +175,27 @@ h2 {
     border: none;
     border-bottom: 1px dashed var(--accent);
     color: var(--accent);
-    font-size: var(--font-size-input);
+    font-size: 1.4rem;
+    /* Larger base size */
     text-align: right;
     font-family: inherit;
     outline: none;
-    padding: 0;
+    padding: 10px 6px;
     /* Remove padding to avoid double padding with parent */
     margin-top: 0;
     /* Reset margin */
     flex-grow: 1;
     /* Allow it to take available space in flex container */
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.val-input:focus {
+    transform: scale(1.2) translateY(-2px);
+    /* Popup effect on focus */
+    background: rgba(0, 191, 165, 0.1) !important;
+    z-index: 100;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .val {

@@ -78,14 +78,15 @@ All therapy modules now support three primary input methods:
 The suite includes an automated validation engine to ensure therapy integrity:
 - **Active Hardware Protection (v2026.06.3):** Real-time RMS limiter and DC-offset blocker to prevent clipping and protect headphone transducers.
 - **Clinical Spectral Stability:** All noise colors (Pink, Brown, Red, Rain) include integrated 20Hz high-pass filters to remove sub-sonic drift.
+- **Interactive Soundboard UI (v2026.06.30):** High-fidelity mixing console aesthetic for clinical audiometry and pitch calibration.
 - **Real-time DSP Checks:** Verifies notch depth (target >40dB) and frequency alignment.
 - **Automated Audio Watchdog:** Background observer that detects and recovers from audio stalls, browser-induced suspensions, or digital filter crashes (NaN/DC Saturation).
 - **Detailed Clinical Export:** Generates reports including THI/Distress history, Minimum Masking Levels (MML), Loudness Growth (LG) data, and Residual Inhibition (RI) results.
 - **Actionable Recommendations:** Provides automated troubleshooting for common system issues (e.g., detecting "Shallow Notch" errors caused by browser audio enhancers).
- 
+
 ## 📖 User Documentation
-### **Comprehensive User Manual (v2026.06.1)**
-The suite includes a dynamic PDF generation engine (accessible under Settings) that compiles all module documentation into a single, printable reference guide (v2026.06.3). The manual includes:
+### **Comprehensive User Manual (v2026.06.30)**
+The suite includes a dynamic PDF generation engine (accessible under Settings) that compiles all module documentation into a single, printable reference guide (v2026.06.30). The manual includes:
 - **Getting Started:** Quick Start Guide, Clinical Protocols, and the "Path to Relief" workflow.
 - **Detailed Protocols:** In-depth setup for the "Mixing Point," 24/7 Enrichment, and lateral inhibition strategies.
 - **Therapy Modules:** Technical documentation for Notch, CR, Dual-Stimulus, Sound, Binaural, and Decorrelated therapies.
@@ -173,6 +174,9 @@ Common evidence‑supported methods include:
 These approaches are widely used in tinnitus management and research.
 
 ---
+
+## 🛠 Prerequisite
+- **Node.js:** [https://nodejs.org/](https://nodejs.org/) (Required to run the release and audit scripts)
 
 ## 🛠 Development & Releases
 

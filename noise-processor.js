@@ -10,6 +10,26 @@ class NoiseProcessor extends AudioWorkletProcessor {
         this.color = 'auto'; // Initial value, will be resolved in _initializeNoiseState
         this.targetFreq = parseFloat(options.processorOptions.targetFreq) || 6000;
 
+        // WASM instantiation
+        this.wasmInstance = null;
+        if (options.processorOptions.wasmModule) {
+            // Imports for WASM module must be defined inside the worklet
+            const wasmImports = {
+                Math: { sin: Math.sin }
+            };
+            // Instantiating the compiled module synchronously inside the worklet
+            this.wasmInstance = new WebAssembly.Instance(options.processorOptions.wasmModule, wasmImports);
+            // Initialize WASM chime states to zero
+            const heap = new Float32Array(this.wasmInstance.exports.memory.buffer);
+            // Initialize Blue and Violet states in WASM memory (Memory[96..108])
+            heap[96 / 4] = 0;  // c0 (Blue)
+            heap[100 / 4] = 0; // c1 (Blue)
+            heap[104 / 4] = 0; // c2 (Blue)
+            heap[108 / 4] = 0; // lastIn (Violet)
+        }
+        this.lfoPhase = 0; // For Forest noise (JS Fallback)
+        this.lfoVal = 0.5; // For Forest noise (JS Fallback)
+
         this._initializeNoiseState();
 
         // Filter states for colors
@@ -18,6 +38,10 @@ class NoiseProcessor extends AudioWorkletProcessor {
         this.lastRedIn = 0; // HPF input state for Red/Ocean
         this.redHPState = 0; // HPF output state for Red/Ocean
         this.patterState = 0; // For organic rain decay
+        this.c0 = 0; // For Blue noise (JS Fallback)
+        this.c1 = 0;
+        this.c2 = 0;
+        this.lastIn = 0; // For Violet noise (JS Fallback)
 
         const sr = typeof sampleRate === 'number' ? sampleRate : 44100;
         const ratio = 44100 / (sr > 0 ? sr : 44100);
@@ -46,7 +70,8 @@ class NoiseProcessor extends AudioWorkletProcessor {
             'violet': 0.45,
             'rain': 0.5,
             'ocean': 0.6,
-            'chimes': 0.5
+            'chimes': 0.5,
+            'forest': 0.5
         };
 
         // RMS Limiter State
@@ -134,7 +159,7 @@ class NoiseProcessor extends AudioWorkletProcessor {
         this.color = this._resolveColor(this.requestedColor);
 
         // Voss-McCartney state for Pink Noise
-        this.b0 = 0; this.b1 = 0; this.b2 = 0; this.b3 = 0; this.b4 = 0; this.b5 = 0; this.b6 = 0;
+        this.b0 = 0; this.b1 = 0; this.b2 = 0; this.b3 = 0; this.b4 = 0; this.b5 = 0; this.b6 = 0; // Pink noise state
 
         // Chime state
         this.phases = new Float32Array(8);
@@ -190,8 +215,7 @@ class NoiseProcessor extends AudioWorkletProcessor {
         if (pulseDepth > 0) this.pulsePhase = (this.pulsePhase + (2 * Math.PI * pulseRate * len) / sr) % (2 * Math.PI);
 
         if (this.tempBuf1.length !== len) {
-            this.tempBuf1 = new Float32Array(len);
-            this.tempBuf2 = new Float32Array(len);
+            this._resizeTempBuffers(len);
         }
 
         const crossfadeSamples = Math.max(1, Math.floor(crossfadeSec * sr));
@@ -204,40 +228,59 @@ class NoiseProcessor extends AudioWorkletProcessor {
             for (let i = 0; i < len; i++) {
                 const alpha = Math.min(1.0, this.fadePos / crossfadeSamples);
                 const mixed = (this.tempBuf1[i] * p1 * (1 - alpha)) + (this.tempBuf2[i] * p2 * alpha);
-                this._applyFinalGain(i, mixed, channelL, channelR);
+
+                // Apply safety limiter logic during crossfade
+                let val = mixed;
+                if (isNaN(val) || !isFinite(val)) val = 0;
+                const sq = val * val;
+                this.rmsSq = (this.rmsAlpha * sq) + (this.rmsAlphaInv * this.rmsSq);
+                this.dcMean = (this.dcAlpha * val) + (this.dcAlphaInv * this.dcMean);
+                let targetGain = 1.0;
+                if (this.rmsSq > 0.81) targetGain = 0.9 / Math.sqrt(this.rmsSq);
+                const absDc = Math.abs(this.dcMean);
+                if (absDc > 0.3) targetGain = Math.min(targetGain, 0.3 / absDc);
+                const gAlpha = (targetGain < this.limiterGain) ? this.gainAttackAlpha : this.gainReleaseAlpha;
+                this.limiterGain += (targetGain - this.limiterGain) * gAlpha;
+                const finalVal = val * this.amVal * this.limiterGain;
+                channelL[i] = finalVal;
+                if (channelR) channelR[i] = finalVal;
+
                 this.fadePos++;
                 if (this.fadePos >= crossfadeSamples) this.prevColor = null;
             }
         } else {
-            this._fillBuffer(this.color, len, this.tempBuf1);
-            const peak = this.peakMap[this.color] || 0.5;
+            // High-Performance Path: Process directly into hardware buffer
+            this._fillBuffer(this.color, len, channelL);
+            const baseGain = (this.peakMap[this.color] || 0.5) * this.amVal;
+
+            // Inlined sample loop to minimize function call overhead in the audio thread
             for (let i = 0; i < len; i++) {
-                this._applyFinalGain(i, this.tempBuf1[i] * peak, channelL, channelR);
+                let val = channelL[i] * baseGain;
+                if (isNaN(val)) val = 0;
+
+                const sq = val * val;
+                this.rmsSq = (this.rmsAlpha * sq) + (this.rmsAlphaInv * this.rmsSq);
+                this.dcMean = (this.dcAlpha * val) + (this.dcAlphaInv * this.dcMean);
+
+                let targetGain = 1.0;
+                if (this.rmsSq > 0.81) targetGain = 0.9 / Math.sqrt(this.rmsSq);
+                const absDc = Math.abs(this.dcMean);
+                if (absDc > 0.3) targetGain = Math.min(targetGain, 0.3 / absDc);
+
+                const gAlpha = (targetGain < this.limiterGain) ? this.gainAttackAlpha : this.gainReleaseAlpha;
+                this.limiterGain += (targetGain - this.limiterGain) * gAlpha;
+
+                const finalVal = val * this.limiterGain;
+                channelL[i] = finalVal;
+                if (channelR) channelR[i] = finalVal;
             }
         }
         return true;
     }
 
-    _applyFinalGain(i, val, channelL, channelR) {
-        if (isNaN(val) || !isFinite(val)) val = 0;
-
-        const sq = val * val;
-        this.rmsSq = (this.rmsAlpha * sq) + (this.rmsAlphaInv * this.rmsSq);
-        this.dcMean = (this.dcAlpha * val) + (this.dcAlphaInv * this.dcMean);
-
-        // Optimized threshold check (Use square to avoid sqrt on every sample)
-        let targetGain = 1.0;
-        if (this.rmsSq > 0.81) targetGain = 0.9 / Math.sqrt(this.rmsSq);
-
-        const absDc = Math.abs(this.dcMean);
-        if (absDc > 0.3) targetGain = Math.min(targetGain, 0.3 / absDc);
-
-        const alpha = (targetGain < this.limiterGain) ? this.gainAttackAlpha : this.gainReleaseAlpha;
-        this.limiterGain += (targetGain - this.limiterGain) * alpha;
-
-        const finalVal = val * this.amVal * this.limiterGain;
-        channelL[i] = finalVal;
-        if (channelR) channelR[i] = finalVal;
+    _resizeTempBuffers(len) {
+        this.tempBuf1 = new Float32Array(len);
+        this.tempBuf2 = new Float32Array(len);
     }
 
     _fillBuffer(color, len, target) {
@@ -245,106 +288,178 @@ class NoiseProcessor extends AudioWorkletProcessor {
         const sr = sampleRate || 44100;
         const phaseConst = (2 * Math.PI) / sr;
 
+        // Use WASM for performance-critical colors
+        const heap = this.wasmInstance ? new Float32Array(this.wasmInstance.exports.memory.buffer) : null;
+        const outPtr = 1024; // Static offset for processing buffer
+
         if (color === 'pink') {
-            for (let i = 0; i < len; i++) {
-                const white = Math.random() * 2 - 1;
-                this.b0 = this.p[0] * this.b0 + white * this.g[0];
-                this.b1 = this.p[1] * this.b1 + white * this.g[1];
-                this.b2 = this.p[2] * this.b2 + white * this.g[2];
-                this.b3 = this.p[3] * this.b3 + white * this.g[3];
-                this.b4 = this.p[4] * this.b4 + white * this.g[4];
-                this.b5 = this.p[5] * this.b5 + white * this.g[5];
-                const raw = (this.b0 + this.b1 + this.b2 + this.b3 + this.b4 + this.b5 + this.b6 + white * 0.5362) * 0.85;
-                const out = raw - this.lastRedIn + (0.997 * this.redHPState);
-                this.lastRedIn = raw; this.redHPState = out;
-                target[i] = out; // Generate at unit scale, normalized in _applyFinalGain
-                this.b6 = white * 0.115926;
+            if (this.wasmInstance) {
+                this.wasmInstance.exports.fillPink(outPtr, len,
+                    this.p[0], this.p[1], this.p[2], this.p[3], this.p[4], this.p[5],
+                    this.g[0], this.g[1], this.g[2], this.g[3], this.g[4], this.g[5]);
+                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+            } else {
+                for (let i = 0; i < len; i++) {
+                    const white = Math.random() * 2 - 1;
+                    this.b0 = this.p[0] * this.b0 + white * this.g[0];
+                    this.b1 = this.p[1] * this.b1 + white * this.g[1];
+                    this.b2 = this.p[2] * this.b2 + white * this.g[2];
+                    this.b3 = this.p[3] * this.b3 + white * this.g[3];
+                    this.b4 = this.p[4] * this.b4 + white * this.g[4];
+                    this.b5 = this.p[5] * this.b5 + white * this.g[5];
+                    const raw = (this.b0 + this.b1 + this.b2 + this.b3 + this.b4 + this.b5 + this.b6 + white * 0.5362) * 0.85;
+                    const out = raw - this.lastRedIn + (0.997 * this.redHPState);
+                    this.lastRedIn = raw; this.redHPState = out;
+                    target[i] = out;
+                    this.b6 = white * 0.115926;
+                }
             }
         } else if (color === 'red') {
-            for (let i = 0; i < len; i++) {
-                const white = Math.random() * 2 - 1;
-                this.lastOut = (this.lastOut * 0.999) + (white * 0.01);
-                this.lastOut2 = (this.lastOut2 * 0.999) + (this.lastOut * 0.01);
-                const raw = this.lastOut2 * 45;
-                const out = raw - this.lastRedIn + (0.997 * this.redHPState);
-                this.lastRedIn = raw; this.redHPState = out;
-                target[i] = out;
+            if (this.wasmInstance) {
+                this.wasmInstance.exports.fillRed(outPtr, len);
+                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+            } else {
+                for (let i = 0; i < len; i++) {
+                    const white = Math.random() * 2 - 1;
+                    this.lastOut = (this.lastOut * 0.999) + (white * 0.01);
+                    this.lastOut2 = (this.lastOut2 * 0.999) + (this.lastOut * 0.01);
+                    const raw = this.lastOut2 * 45;
+                    const out = raw - this.lastRedIn + (0.997 * this.redHPState);
+                    this.lastRedIn = raw; this.redHPState = out;
+                    target[i] = out;
+                }
             }
         } else if (color === 'chimes') {
-            // Randomized Wind Chimes - optimized strike logic to remove "Morse Code" feel
-            const ratios = [1, 1.25, 1.5, 1.875, 2, 2.5];
-            for (let h = 0; h < ratios.length; h++) {
-                if (Math.random() < 0.0015) { // Roughly 1 strike every 15s per harmonic
-                    this.envelopes[h] = 0.7 + Math.random() * 0.3;
-                }
-            }
+            if (this.wasmInstance) {
+                this.wasmInstance.exports.fillChimes(outPtr, len, this.chimeBaseFreq, phaseConst);
+                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+            } else {
+                // Original JS implementation for fallback
+                const ratios = [1, 1.25, 1.5, 1.875, 2, 2.5];
+                // Ensure phases and envelopes are initialized for JS fallback
+                if (!this.phases) this.phases = new Float32Array(8);
+                if (!this.envelopes) this.envelopes = new Float32Array(8);
 
-            for (let i = 0; i < len; i++) {
-                let val = 0;
                 for (let h = 0; h < ratios.length; h++) {
-                    val += Math.sin(this.phases[h]) * this.envelopes[h] * (1 / (h + 1));
-                    this.phases[h] = (this.phases[h] + phaseConst * this.chimeBaseFreq * ratios[h]) % (2 * Math.PI);
-                    this.envelopes[h] *= 0.99996; // Slower, more resonant decay
+                    if (Math.random() < 0.0015) { // Roughly 1 strike every 15s per harmonic
+                        this.envelopes[h] = 0.7 + Math.random() * 0.3;
+                    }
                 }
-                target[i] = val * 0.4;
+
+                for (let i = 0; i < len; i++) {
+                    let val = 0;
+                    for (let h = 0; h < ratios.length; h++) {
+                        val += Math.sin(this.phases[h]) * this.envelopes[h] * (1 / (h + 1));
+                        this.phases[h] = (this.phases[h] + phaseConst * this.chimeBaseFreq * ratios[h]) % (2 * Math.PI);
+                        this.envelopes[h] *= 0.99996; // Slower, more resonant decay
+                    }
+                    target[i] = val * 0.4;
+                }
             }
         } else if (color === 'rain') {
-            for (let i = 0; i < len; i++) {
-                const white = Math.random() * 2 - 1;
-                this.b0 = this.p[0] * this.b0 + white * this.g[0];
-                this.b1 = this.p[1] * this.b1 + white * this.g[1];
-                this.b2 = this.p[2] * this.b2 + white * this.g[2];
-                this.b3 = this.p[3] * this.b3 + white * this.g[3];
-                this.b4 = this.p[4] * this.b4 + white * this.g[4];
-                this.b5 = this.p[5] * this.b5 + white * this.g[5];
-                const rawPink = (this.b0 + this.b1 + this.b2 + this.b3 + this.b4 + this.b5 + this.b6 + white * 0.5362) * 0.85;
-
-                // FIX: Morse Code - Use organic decay for raindrops
-                const impulse = Math.random() > 0.9997 ? (Math.random() * 2 - 1) * 0.4 : 0;
-                this.patterState = (this.patterState * 0.995) + impulse; // ~5ms RC decay at 44.1k
-
-                const mixed = (rawPink * 0.85 + this.patterState * 0.15);
-                const out = mixed - this.lastRedIn + (0.997 * this.redHPState);
-                this.lastRedIn = mixed; this.redHPState = out;
-                target[i] = out;
-                this.b6 = white * 0.115926;
+            if (this.wasmInstance) {
+                this.wasmInstance.exports.fillRain(outPtr, len,
+                    this.p[0], this.p[1], this.p[2], this.p[3], this.p[4], this.p[5],
+                    this.g[0], this.g[1], this.g[2], this.g[3], this.g[4], this.g[5]);
+                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+            } else {
+                for (let i = 0; i < len; i++) {
+                    const white = Math.random() * 2 - 1;
+                    this.b0 = this.p[0] * this.b0 + white * this.g[0];
+                    this.b1 = this.p[1] * this.b1 + white * this.g[1];
+                    this.b2 = this.p[2] * this.b2 + white * this.g[2];
+                    this.b3 = this.p[3] * this.b3 + white * this.g[3];
+                    this.b4 = this.p[4] * this.b4 + white * this.g[4];
+                    this.b5 = this.p[5] * this.b5 + white * this.g[5];
+                    const rawPink = (this.b0 + this.b1 + this.b2 + this.b3 + this.b4 + this.b5 + this.b6 + white * 0.5362) * 0.85;
+                    const impulse = Math.random() > 0.9997 ? (Math.random() * 2 - 1) * 0.4 : 0;
+                    this.patterState = (this.patterState * 0.995) + impulse;
+                    const mixed = (rawPink * 0.85 + this.patterState * 0.15);
+                    const out = mixed - this.lastRedIn + (0.997 * this.redHPState);
+                    this.lastRedIn = mixed; this.redHPState = out;
+                    target[i] = out;
+                    this.b6 = white * 0.115926;
+                }
             }
         } else if (color === 'ocean') {
-            for (let i = 0; i < len; i++) {
-                const white = Math.random() * 2 - 1;
-                this.lastOut = (this.lastOut * 0.999) + (white * 0.01);
-                this.lastOut2 = (this.lastOut2 * 0.999) + (this.lastOut * 0.01);
-                const red = this.lastOut2 * 45;
-                const out = red - this.lastRedIn + (0.997 * this.redHPState);
-                this.lastRedIn = red; this.redHPState = out;
-                target[i] = out * this.surgeVal;
+            if (this.wasmInstance) {
+                this.wasmInstance.exports.fillOcean(outPtr, len, this.surgeVal);
+                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+            } else {
+                for (let i = 0; i < len; i++) {
+                    const white = Math.random() * 2 - 1;
+                    this.lastOut = (this.lastOut * 0.999) + (white * 0.01);
+                    this.lastOut2 = (this.lastOut2 * 0.999) + (this.lastOut * 0.01);
+                    const red = this.lastOut2 * 45;
+                    const out = red - this.lastRedIn + (0.997 * this.redHPState);
+                    this.lastRedIn = red; this.redHPState = out;
+                    target[i] = out * this.surgeVal;
+                }
             }
         } else if (color === 'brown') {
-            for (let i = 0; i < len; i++) {
-                const white = Math.random() * 2 - 1;
-                const raw = (this.lastOut * this.brownPole) + (white * this.brownGain);
-                this.lastOut = raw;
-                const out = raw - this.lastRedIn + (0.997 * this.redHPState);
-                this.lastRedIn = raw; this.redHPState = out;
-                target[i] = out;
+            if (this.wasmInstance) {
+                // WASM Implementation of Brown noise
+                this.wasmInstance.exports.fillBrown(outPtr, len, this.brownPole, this.brownGain);
+                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+            } else {
+                for (let i = 0; i < len; i++) {
+                    const white = Math.random() * 2 - 1;
+                    const raw = (this.lastOut * this.brownPole) + (white * this.brownGain);
+                    this.lastOut = raw;
+                    const out = raw - this.lastRedIn + (0.997 * this.redHPState);
+                    this.lastRedIn = raw; this.redHPState = out;
+                    target[i] = out;
+                }
             }
         } else if (color === 'blue') {
-            for (let i = 0; i < len; i++) {
-                const white = Math.random() * 2 - 1;
-                this.c0 = 0.8 * this.c0 + white * 0.2;
-                this.c1 = 0.92 * this.c1 + white * 0.15;
-                this.c2 = 0.99 * this.c2 + white * 0.05;
-                const blue = white - (this.c0 + this.c1 + this.c2) * 0.2;
-                target[i] = blue * 1.5;
+            if (this.wasmInstance) {
+                this.wasmInstance.exports.fillBlue(outPtr, len);
+                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+            } else {
+                for (let i = 0; i < len; i++) {
+                    const white = Math.random() * 2 - 1;
+                    this.c0 = 0.8 * this.c0 + white * 0.2;
+                    this.c1 = 0.92 * this.c1 + white * 0.15;
+                    this.c2 = 0.99 * this.c2 + white * 0.05;
+                    const blue = white - (this.c0 + this.c1 + this.c2) * 0.2;
+                    target[i] = blue * 1.5;
+                }
             }
         } else if (color === 'violet') {
-            for (let i = 0; i < len; i++) {
-                const white = Math.random() * 2 - 1;
-                const val = white - this.lastIn;
-                this.lastIn = white;
-                target[i] = val * 0.8;
+            if (this.wasmInstance) {
+                this.wasmInstance.exports.fillViolet(outPtr, len);
+                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+            } else {
+                for (let i = 0; i < len; i++) {
+                    const white = Math.random() * 2 - 1;
+                    const val = white - this.lastIn;
+                    this.lastIn = white;
+                    target[i] = val * 0.8;
+                }
             }
-        } else {
+        } else if (color === 'forest') {
+            if (this.wasmInstance) {
+                this.wasmInstance.exports.fillForest(outPtr, len);
+                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+            } else {
+                for (let i = 0; i < len; i++) {
+                    const white = Math.random() * 2 - 1;
+                    // Simple LFO for "whoosh" effect
+                    this.lfoPhase = (this.lfoPhase + 0.00005) % (2 * Math.PI); // Very slow LFO
+                    this.lfoVal = (Math.sin(this.lfoPhase) * 0.5 + 0.5) * 0.5 + 0.5; // Range 0.5 to 1.0
+                    target[i] = white * this.lfoVal;
+                }
+            }
+        } else if (color === 'white') { // Explicitly handle 'white' noise
+            if (this.wasmInstance) {
+                this.wasmInstance.exports.fillWhite(outPtr, len);
+                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+            } else {
+                for (let i = 0; i < len; i++) {
+                    target[i] = (Math.random() * 2 - 1);
+                }
+            }
+        } else { // Fallback for unknown colors, default to white noise
             for (let i = 0; i < len; i++) {
                 target[i] = (Math.random() * 2 - 1);
             }

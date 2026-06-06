@@ -13,6 +13,17 @@
 </head>
 
 <body>
+    <style>
+        .manual-entry-box {
+            border: 1px dashed var(--accent);
+            background: rgba(0, 191, 165, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+
     <div class="panel">
         <h1>Notch Finder Tool</h1>
         <p class="info">Identify your tinnitus pitch to calibrate Notch Therapy.</p>
@@ -26,6 +37,14 @@
                 onclick="startModuleTutorial('notchfinder', 4)">Help with Matching</button>
         </p>
 
+        <div class="manual-entry-box">
+            <h3 style="margin-top:0; color: var(--accent);">Quick Manual Calibration</h3>
+            <p class="info" style="margin-bottom: 10px;">Already know your frequency? Type it into the <b>Hz</b> boxes
+                below and click <b>Save</b> without playing any tones.</p>
+            <button class="button" style="background: var(--accent); color: white; width: 100%; border: none;"
+                onclick="saveBtn.click()">Save Frequencies & Skip Test</button>
+        </div>
+
         <div class="ctrl" style="border-bottom: 1px dashed var(--border); padding-bottom: 15px; margin-bottom: 20px;">
             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                 <input type="checkbox" id="lockLR" style="width: 20px; height: 20px; margin-top: 0;">
@@ -38,7 +57,8 @@
             <div class="ctrl">
                 <label>Left Ear <span class="val" id="freqValL">1000 Hz</span>
                     <div class="input-with-buttons">
-                        <input type="number" id="freqInputL" class="val-input" value="1000" min="100" max="16000">
+                        <input type="number" id="freqInputL" class="val-input" inputmode="numeric" pattern="[0-9]*"
+                            value="1000" min="100" max="16000">
                         <div class="fine-tune-group" data-target="freqSliderL">
                             <button class="fine-tune-btn" data-delta="-5">-5</button>
                             <button class="fine-tune-btn" data-delta="-1">-1</button>
@@ -59,7 +79,8 @@
             <div class="ctrl" id="rightFreqGroup">
                 <label>Right Ear <span class="val" id="freqValR">1000 Hz</span>
                     <div class="input-with-buttons">
-                        <input type="number" id="freqInputR" class="val-input" value="1000" min="100" max="16000">
+                        <input type="number" id="freqInputR" class="val-input" inputmode="numeric" pattern="[0-9]*"
+                            value="1000" min="100" max="16000">
                         <div class="fine-tune-group" data-target="freqSliderR">
                             <button class="fine-tune-btn" data-delta="-5">-5</button>
                             <button class="fine-tune-btn" data-delta="-1">-1</button>
@@ -304,12 +325,12 @@
             const barHeight = (canvas.height / 2) - 5; // Space for two bars
 
             // Draw Left bar (Top)
-            c.fillStyle = 'rgba(0, 191, 165, 0.8)'; // Teal
+            c.fillStyle = 'rgba(66, 165, 245, 0.8)'; // Blue
             c.fillRect(0, 0, barWidthL, barHeight);
             c.fillText("L", 5, barHeight / 2 + 5);
 
             // Draw Right bar (Bottom)
-            c.fillStyle = 'rgba(142, 36, 170, 0.8)'; // Purple
+            c.fillStyle = 'rgba(239, 83, 80, 0.8)'; // Red
             c.fillRect(0, canvas.height / 2 + 5, barWidthR, barHeight);
             c.fillText("R", 5, canvas.height / 2 + barHeight / 2 + 5);
 
@@ -359,6 +380,8 @@
             updateLabels();
             saveSetting('notchfinder_volR', volSliderR.value);
         };
+
+        sliderL.oninput = sliderR.oninput = updateLabels;
 
         speedSlider.oninput = () => {
             speedVal.textContent = speedSlider.value + "ms";
@@ -460,7 +483,7 @@
             saveSetting("notchR", sliderR.value);
             saveSetting("toneFreqL", sliderL.value);
             saveSetting("toneFreqR", sliderR.value);
-            savedMsg.textContent = "Frequencies saved to therapy settings.";
+            savedMsg.textContent = "✅ Frequencies saved to your global profile!";
             setTimeout(() => savedMsg.textContent = "", 1500);
         };
 

@@ -1,5 +1,25 @@
 [
     {
+        "title": "Version 2026.06.30 - Clinical Velocity & Soundboard UI",
+        "content": "Introduced the interactive Soundboard UI for high-precision audiometry. Launched 'Fast-Tap' THI assessments and a simplified CBT Thought Record with automated AI reframing. Integrated the System & Clinical Insights Hub into Settings for real-time performance and progress tracking."
+    },
+    {
+        "title": "Version 2026.06.27 - Enhanced Audiometry",
+        "content": "Added 750 Hz frequency support to the Hearing Profile (Audiogram) for more precise clinical mapping and therapy compensation."
+    },
+    {
+        "title": "Version 2026.06.26 - Expanded Soundscapes & Presets",
+        "content": "Introduced 'Forest' as a new procedural nature soundscape for enhanced relaxation. Added framework for user-generated sound presets to save and load custom therapy configurations."
+    },
+    {
+        "title": "Version 2026.06.25 - Security & Privacy Enhancements",
+        "content": "Comprehensive updates to the User Manual detailing the 'Zero-Knowledge' architecture, HIPAA compliance, AI data flow, third-party library audit policies, and security update notifications. Includes a global kill-switch for AI features."
+    },
+    {
+        "title": "Version 2026.06.22 - Complete WASM DSP",
+        "content": "Full migration of all noise colors (including Blue and Violet) and nature soundscapes to the high-performance WebAssembly engine for jitter-free audio."
+    },
+    {
         "title": "Version 2026.06.19 - Stability & Performance",
         "content": "This update provides critical stability fixes for the real-time AudioWorklet engine and introduces high-performance vectorization for the offline WAV generator."
     },

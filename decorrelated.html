@@ -576,8 +576,8 @@
         c.clearRect(0, 0, canvas.width, canvas.height);
         c.lineWidth = 2;
 
-        drawWaveform(c, canvas, dataArrayL, 'rgba(0, 191, 165, 0.7)'); // Teal for Left
-        drawWaveform(c, canvas, dataArrayR, 'rgba(255, 165, 0, 0.7)'); // Orange for Right
+        drawWaveform(c, canvas, dataArrayL, 'rgba(66, 165, 245, 0.7)'); // Blue for Left
+        drawWaveform(c, canvas, dataArrayR, 'rgba(239, 83, 80, 0.7)'); // Red for Right
 
         rafViz = requestAnimationFrame(loop);
       }
@@ -609,13 +609,13 @@
       const barHeight = (canvas.height / 2) - 5;
 
       // Draw Left bar (Top)
-      c.fillStyle = 'rgba(0, 191, 165, 0.8)';
+      c.fillStyle = 'rgba(66, 165, 245, 0.8)';
       c.fillRect(0, 0, barWidthL, barHeight);
       c.font = "bold 20px Arial"; c.fillStyle = "white";
       c.fillText("L", 5, barHeight / 2 + 7);
 
       // Draw Right bar (Bottom)
-      c.fillStyle = 'rgba(255, 165, 0, 0.8)';
+      c.fillStyle = 'rgba(239, 83, 80, 0.8)';
       c.fillRect(0, canvas.height / 2 + 5, barWidthR, barHeight);
       c.fillText("R", 5, canvas.height / 2 + barHeight / 2 + 7);
 

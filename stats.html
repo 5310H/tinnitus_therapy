@@ -1,771 +1,847 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="icon-192.png" type="image/png">
-<title>Progress & Stats - Tinnitus Therapy</title>
-<script type="module">
-    import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
-    window.GoogleGenerativeAI = GoogleGenerativeAI;
-</script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-<script src="storage.js"></script>
-<script src="nav.js"></script>
-<link rel="stylesheet" href="style.css">
-<style>
-    .chart-container {
-        background: var(--card-bg);
-        padding: 20px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        margin-top: 20px;
-        text-align: center;
-        position: relative; /* Needed for grade-band positioning */
-    }
-    #thiChart, #riChart, #lgChart, #qFactorChart, #mmlChart {
-        width: 100%;
-        height: 300px;
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        margin-top: 15px;
-    }
-    .chart-legend {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-        margin-top: 15px;
-        font-size: 0.85rem;
-        color: var(--text-dim);
-    }
-    .legend-item {
-        display: flex;
-        align-items: center;
-    }
-    .legend-color {
-        width: 15px;
-        height: 15px;
-        border-radius: 3px;
-        margin-right: 8px;
-    }
-    .grade-band {
-        position: absolute;
-        left: 0;
-        right: 0;
-        opacity: 0.1;
-        z-index: 0;
-    }
-    .grade-slight { background-color: #4CAF50; } /* Green */
-    .grade-mild { background-color: #8BC34A; } /* Light Green */
-    .grade-moderate { background-color: #FFC107; } /* Amber */
-    .grade-severe { background-color: #FF9800; } /* Orange */
-    .grade-catastrophic { background-color: #F44336; } /* Red */
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <title>Progress & Stats - Tinnitus Therapy</title>
+    <script type="module">
+        import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
+        window.GoogleGenerativeAI = GoogleGenerativeAI;
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script src="storage.js"></script>
+    <script src="nav.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chart-container {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-top: 20px;
+            text-align: center;
+            position: relative;
+            /* Needed for grade-band positioning */
+        }
 
-    #forecastResponse {
-        margin-top: 15px; padding: 15px; background: var(--surface); 
-        border-radius: 8px; border: 1px solid var(--border); 
-        min-height: 60px; display: none; text-align: left; 
-        font-size: 0.9rem; line-height: 1.5; color: var(--text);
-    }
-    #forecastResponse.active {
-        display: block;
-        animation: forecastFadeIn 0.6s ease-out forwards;
-    }
-    @keyframes forecastFadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .forecast-icon { color: var(--accent); margin-right: 10px; font-size: 1.1rem; vertical-align: middle; }
-</style>
+        #thiChart,
+        #riChart,
+        #lgChart,
+        #qFactorChart,
+        #mmlChart {
+            width: 100%;
+            height: 300px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+
+        .grade-band {
+            position: absolute;
+            left: 0;
+            right: 0;
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        .grade-slight {
+            background-color: #4CAF50;
+        }
+
+        /* Green */
+        .grade-mild {
+            background-color: #8BC34A;
+        }
+
+        /* Light Green */
+        .grade-moderate {
+            background-color: #FFC107;
+        }
+
+        /* Amber */
+        .grade-severe {
+            background-color: #FF9800;
+        }
+
+        /* Orange */
+        .grade-catastrophic {
+            background-color: #F44336;
+        }
+
+        /* Red */
+
+        #forecastResponse {
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--surface);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            min-height: 60px;
+            display: none;
+            text-align: left;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: var(--text);
+        }
+
+        #forecastResponse.active {
+            display: block;
+            animation: forecastFadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes forecastFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .forecast-icon {
+            color: var(--accent);
+            margin-right: 10px;
+            font-size: 1.1rem;
+            vertical-align: middle;
+        }
+    </style>
 </head>
+
 <body>
-<div class="panel">
-    <h1>Progress & Statistics</h1>
-    <p class="info">Track your Tinnitus Handicap Inventory (THI) scores over time.</p>
+    <div class="panel">
+        <h1>Progress & Statistics</h1>
+        <p class="info">Track your Tinnitus Handicap Inventory (THI) scores over time.</p>
 
-    <div class="chart-container" style="margin-bottom: 30px;">
-        <h2>Habituation Journey</h2>
-        <p class="info">Check off milestones as you progress through the stages of habituation.</p>
-        <div class="usage-progress" style="height: 14px; margin: 15px 0; background: var(--surface);">
-            <div id="milestoneBar" class="usage-bar" style="width: 0%; background: var(--accent); box-shadow: 0 0 15px var(--accent);"></div>
+        <div class="chart-container" style="margin-bottom: 30px;">
+            <h2>Habituation Journey</h2>
+            <p class="info">Check off milestones as you progress through the stages of habituation.</p>
+            <div class="usage-progress" style="height: 14px; margin: 15px 0; background: var(--surface);">
+                <div id="milestoneBar" class="usage-bar"
+                    style="width: 0%; background: var(--accent); box-shadow: 0 0 15px var(--accent);"></div>
+            </div>
+            <div id="milestoneGrid"
+                style="text-align: left; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 20px;">
+                <!-- Milestones injected via JS -->
+            </div>
         </div>
-        <div id="milestoneGrid" style="text-align: left; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 20px;">
-            <!-- Milestones injected via JS -->
+
+        <div class="chart-container">
+            <h2>Loudness Growth Trend</h2>
+            <p class="info">Objective volume (%) at which sound is perceived as "Loud". Lower values may indicate
+                hyperacusis.</p>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="lgChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>TMC Q-factor Trend</h2>
+            <p class="info">Higher Q-factor indicates a sharper auditory filter around your tinnitus frequency.</p>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="qFactorChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Minimum Masking Level (MML) Trend</h2>
+            <p class="info">Objective volume (%) required to mask your tinnitus. A downward trend can indicate lower
+                subjective volume.</p>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="mmlChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Suppression Trend (RI)</h2>
+            <p class="info">Higher values indicate longer periods of tinnitus suppression after sound exposure.</p>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="riChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Habituation Forecast (AI)</h2>
+            <p class="info">AI-powered projection of your progress based on THI trends.</p>
+            <button class="button" style="width:100%; border-color: var(--accent); color: var(--accent);"
+                onclick="triggerHabituationForecast()">✨ Generate Habituation Forecast</button>
+            <div id="forecastResponse"></div>
+        </div>
+
+        <div class="chart-container">
+            <h2>THI Score Trend</h2>
+            <p class="info">Lower scores indicate less tinnitus-related distress.</p>
+            <div style="position: relative; height: 300px;">
+                <div class="grade-band grade-slight" style="bottom: 0; height: 16%;"></div>
+                <div class="grade-band grade-mild" style="bottom: 16%; height: 18%;"></div>
+                <div class="grade-band grade-moderate" style="bottom: 34%; height: 20%;"></div>
+                <div class="grade-band grade-severe" style="bottom: 54%; height: 20%;"></div>
+                <div class="grade-band grade-catastrophic" style="bottom: 74%; height: 26%;"></div>
+                <canvas id="thiChart"></canvas>
+            </div>
+            <div class="chart-legend">
+                <div class="legend-item"><span class="legend-color" style="background-color: #4CAF50;"></span>Slight
+                    (0-16)</div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #8BC34A;"></span>Mild
+                    (18-36)</div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #FFC107;"></span>Moderate
+                    (38-56)</div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #FF9800;"></span>Severe
+                    (58-76)</div>
+                <div class="legend-item"><span class="legend-color"
+                        style="background-color: #F44336;"></span>Catastrophic (78-100)</div>
+            </div>
         </div>
     </div>
 
-    <div class="chart-container">
-        <h2>Loudness Growth Trend</h2>
-        <p class="info">Objective volume (%) at which sound is perceived as "Loud". Lower values may indicate hyperacusis.</p>
-        <div style="position: relative; height: 300px; width: 100%;">
-            <canvas id="lgChart"></canvas>
-        </div>
-    </div>
-
-    <div class="chart-container">
-        <h2>TMC Q-factor Trend</h2>
-        <p class="info">Higher Q-factor indicates a sharper auditory filter around your tinnitus frequency.</p>
-        <div style="position: relative; height: 300px; width: 100%;">
-            <canvas id="qFactorChart"></canvas>
-        </div>
-    </div>
-
-    <div class="chart-container">
-        <h2>Minimum Masking Level (MML) Trend</h2>
-        <p class="info">Objective volume (%) required to mask your tinnitus. A downward trend can indicate lower subjective volume.</p>
-        <div style="position: relative; height: 300px; width: 100%;">
-            <canvas id="mmlChart"></canvas>
-        </div>
-    </div>
-
-    <div class="chart-container">
-        <h2>Suppression Trend (RI)</h2>
-        <p class="info">Higher values indicate longer periods of tinnitus suppression after sound exposure.</p>
-        <div style="position: relative; height: 300px; width: 100%;">
-            <canvas id="riChart"></canvas>
-        </div>
-    </div>
-
-    <div class="chart-container">
-        <h2>Habituation Forecast (AI)</h2>
-        <p class="info">AI-powered projection of your progress based on THI trends.</p>
-        <button class="button" style="width:100%; border-color: var(--accent); color: var(--accent);" onclick="triggerHabituationForecast()">✨ Generate Habituation Forecast</button>
-        <div id="forecastResponse"></div>
-    </div>
-
-    <div class="chart-container">
-        <h2>THI Score Trend</h2>
-        <p class="info">Lower scores indicate less tinnitus-related distress.</p>
-        <div style="position: relative; height: 300px;">
-            <div class="grade-band grade-slight" style="bottom: 0; height: 16%;"></div>
-            <div class="grade-band grade-mild" style="bottom: 16%; height: 18%;"></div>
-            <div class="grade-band grade-moderate" style="bottom: 34%; height: 20%;"></div>
-            <div class="grade-band grade-severe" style="bottom: 54%; height: 20%;"></div>
-            <div class="grade-band grade-catastrophic" style="bottom: 74%; height: 26%;"></div>
-            <canvas id="thiChart"></canvas>
-        </div>
-        <div class="chart-legend">
-            <div class="legend-item"><span class="legend-color" style="background-color: #4CAF50;"></span>Slight (0-16)</div>
-            <div class="legend-item"><span class="legend-color" style="background-color: #8BC34A;"></span>Mild (18-36)</div>
-            <div class="legend-item"><span class="legend-color" style="background-color: #FFC107;"></span>Moderate (38-56)</div>
-            <div class="legend-item"><span class="legend-color" style="background-color: #FF9800;"></span>Severe (58-76)</div>
-            <div class="legend-item"><span class="legend-color" style="background-color: #F44336;"></span>Catastrophic (78-100)</div>
-        </div>
-    </div>
-</div>
-
-<script>
-window.onload = () => {
-    initNav(`
+    <script>
+        window.onload = () => {
+            initNav(`
         <b>THI Scores:</b> Regularly taking the Tinnitus Handicap Inventory helps you objectively track your progress in habituation.<br><br>
         <b>Interpretation:</b> A downward trend in your score indicates successful coping and reduced distress, even if the tinnitus sound itself hasn't changed.
         <b>Habituation Forecast:</b> This tool uses AI to analyze your THI trends. <i>(Requires your own API key)</i><br><br>
     `);
-    drawThiChart();
-    drawLoudnessGrowthChart();
-    drawMMLChart();
-    drawQFactorChart();
-    drawRiChart();
-    renderMilestones();
-};
+            drawThiChart();
+            drawLoudnessGrowthChart();
+            drawMMLChart();
+            drawQFactorChart();
+            drawRiChart();
+            renderMilestones();
+        };
 
-function renderMilestones() {
-    const grid = document.getElementById('milestoneGrid');
-    const bar = document.getElementById('milestoneBar');
-    const data = getMilestoneProgress();
+        function renderMilestones() {
+            const grid = document.getElementById('milestoneGrid');
+            const bar = document.getElementById('milestoneBar');
+            const data = getMilestoneProgress();
 
-    bar.style.width = data.percentage + '%';
-    grid.innerHTML = data.labels.map((label, i) => `
+            bar.style.width = data.percentage + '%';
+            grid.innerHTML = data.labels.map((label, i) => `
         <div class="milestone-item ${data.state[i] ? 'checked' : ''}" onclick="handleMilestoneToggle(${i})">
             <input type="checkbox" ${data.state[i] ? 'checked' : ''} style="pointer-events: none;">
             <span>${label}</span>
         </div>
     `).join('');
-}
+        }
 
-function handleMilestoneToggle(index) {
-    const dataBefore = getMilestoneProgress();
-    const wasChecked = dataBefore.state[index];
-    
-    const dataAfter = toggleMilestone(index);
-    
-    if (dataAfter.state[index] && !wasChecked) {
-        showMilestoneAchievement(dataAfter.labels[index]);
-        
-        // Celebrate with confetti if the final habituation milestone is achieved
-        if (index === 5 && window.confetti) {
-            saveSetting('certificate_celebrated', 'true'); // Sync flag for dashboard
-            confetti({
-                particleCount: 200, spread: 80, origin: { y: 0.6 },
-                colors: ['#00bfa5', '#388e3c', '#ffffff']
+        function handleMilestoneToggle(index) {
+            const dataBefore = getMilestoneProgress();
+            const wasChecked = dataBefore.state[index];
+
+            const dataAfter = toggleMilestone(index);
+
+            if (dataAfter.state[index] && !wasChecked) {
+                showMilestoneAchievement(dataAfter.labels[index]);
+
+                // Celebrate with confetti if the final habituation milestone is achieved
+                if (index === 5 && window.confetti) {
+                    saveSetting('certificate_celebrated', 'true'); // Sync flag for dashboard
+                    confetti({
+                        particleCount: 200, spread: 80, origin: { y: 0.6 },
+                        colors: ['#00bfa5', '#388e3c', '#ffffff']
+                    });
+                }
+            }
+            renderMilestones();
+        }
+
+        function showMilestoneAchievement(label) {
+            let el = document.getElementById('milestoneAchieveNotice');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'milestoneAchieveNotice';
+                el.className = 'recovery-notification recovery-success';
+                document.body.appendChild(el);
+            }
+            el.innerHTML = `🎉 Milestone Achieved!<br><span style="font-size: 0.8rem; font-weight: normal;">${label}</span>`;
+            el.classList.remove('recovery-active');
+            void el.offsetWidth; // Trigger reflow to restart animation
+            el.classList.add('recovery-active');
+        }
+
+        async function triggerHabituationForecast() {
+            const box = document.getElementById('forecastResponse');
+            if (!box) return;
+            box.classList.remove('active'); // Reset animation
+            void box.offsetWidth; // Trigger reflow to restart animation
+            box.classList.add('active');
+            box.innerHTML = '<span class="forecast-icon">⏳</span> Analyzing THI trends and projecting progress...';
+
+            try {
+                const response = await getHabituationForecast();
+                box.innerHTML = `<span class="forecast-icon">📉</span> ${response.replace(/\n/g, '<br>')}`;
+            } catch (error) {
+                box.innerHTML = '<span class="forecast-icon">⚠️</span> Could not generate forecast. Ensure you have logged at least 3 THI scores and your Gemini key is active.';
+            }
+        }
+
+        function drawRiChart() {
+            const rawData = getRIResults();
+            const canvas = document.getElementById('riChart');
+            const ctx = canvas.getContext('2d');
+
+            const dpi = window.devicePixelRatio || 1;
+            canvas.width = canvas.clientWidth * dpi;
+            canvas.height = canvas.clientHeight * dpi;
+            ctx.scale(dpi, dpi);
+
+            // Process data: Use the daily maximum suppression time
+            const data = Object.entries(rawData)
+                .map(([date, scores]) => ({
+                    date: new Date(date + 'T00:00:00'), // Ensure date is treated as UTC start of day
+                    score: Math.max(...scores.map(s => parseInt(s)))
+                }))
+                .sort((a, b) => a.date - b.date);
+
+            if (data.length < 2) {
+                ctx.font = '16px Arial';
+                ctx.fillStyle = 'var(--text-dim)';
+                ctx.textAlign = 'center';
+                ctx.fillText('Perform more RI tests to see your suppression trend.', canvas.clientWidth / 2, canvas.clientHeight / 2);
+                return;
+            }
+
+            const paddingLeft = 45, paddingRight = 15, paddingTop = 10, paddingBottom = 40;
+            const chartWidth = canvas.clientWidth - paddingLeft - paddingRight;
+            const chartHeight = canvas.clientHeight - paddingTop - paddingBottom;
+
+            const minDate = data[0].date.getTime();
+            const maxDate = data[data.length - 1].date.getTime();
+            const dateRange = Math.max(1, maxDate - minDate);
+
+            const maxSuppression = Math.max(60, ...data.map(d => d.score)); // Default scale at least 60s
+            const yScale = chartHeight / maxSuppression;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Grid & Labels
+            ctx.font = '11px Arial';
+            ctx.fillStyle = 'var(--text-dim)';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i <= 4; i++) {
+                const val = Math.round((maxSuppression / 4) * i);
+                const y = paddingTop + chartHeight - (val * yScale);
+                ctx.fillText(val + 's', paddingLeft - 5, y);
+                ctx.beginPath();
+                ctx.strokeStyle = 'var(--border)';
+                ctx.setLineDash([2, 2]);
+                ctx.moveTo(paddingLeft, y);
+                ctx.lineTo(paddingLeft + chartWidth, y);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // X-Axis (Dates)
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            const numLabels = Math.min(data.length, 5);
+            for (let i = 0; i < numLabels; i++) {
+                const idx = Math.floor(i * (data.length - 1) / Math.max(1, numLabels - 1));
+                const point = data[idx];
+                const x = paddingLeft + (point.date.getTime() - minDate) / dateRange * chartWidth;
+                const dateStr = point.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                ctx.fillText(dateStr, x, paddingTop + chartHeight + 10);
+            }
+
+            // Trend Line
+            ctx.beginPath();
+            ctx.strokeStyle = 'var(--accent)';
+            ctx.lineWidth = 2;
+            ctx.lineJoin = 'round';
+            data.forEach((d, i) => {
+                const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
+                const y = paddingTop + chartHeight - (d.score * yScale);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Data Points
+            data.forEach(d => {
+                const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
+                const y = paddingTop + chartHeight - (d.score * yScale);
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = 'var(--bg)';
+                ctx.fill();
+                ctx.strokeStyle = 'var(--accent)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
             });
         }
-    }
-    renderMilestones();
-}
 
-function showMilestoneAchievement(label) {
-    let el = document.getElementById('milestoneAchieveNotice');
-    if (!el) {
-        el = document.createElement('div');
-        el.id = 'milestoneAchieveNotice';
-        el.className = 'recovery-notification recovery-success';
-        document.body.appendChild(el);
-    }
-    el.innerHTML = `🎉 Milestone Achieved!<br><span style="font-size: 0.8rem; font-weight: normal;">${label}</span>`;
-    el.classList.remove('recovery-active');
-    void el.offsetWidth; // Trigger reflow to restart animation
-    el.classList.add('recovery-active');
-}
+        function drawMMLChart() {
+            const rawData = getMMLResults();
+            const canvas = document.getElementById('mmlChart');
+            const ctx = canvas.getContext('2d');
 
-async function triggerHabituationForecast() {
-    const box = document.getElementById('forecastResponse');
-    if (!box) return;
-    box.classList.remove('active'); // Reset animation
-    void box.offsetWidth; // Trigger reflow to restart animation
-    box.classList.add('active');
-    box.innerHTML = '<span class="forecast-icon">⏳</span> Analyzing THI trends and projecting progress...';
-    
-    try {
-        const response = await getHabituationForecast();
-        box.innerHTML = `<span class="forecast-icon">📉</span> ${response.replace(/\n/g, '<br>')}`;
-    } catch (error) {
-        box.innerHTML = '<span class="forecast-icon">⚠️</span> Could not generate forecast. Ensure you have logged at least 3 THI scores and your Gemini key is active.';
-    }
-}
+            const dpi = window.devicePixelRatio || 1;
+            canvas.width = canvas.clientWidth * dpi;
+            canvas.height = canvas.clientHeight * dpi;
+            ctx.scale(dpi, dpi);
 
-function drawRiChart() {
-    const rawData = getRIResults();
-    const canvas = document.getElementById('riChart');
-    const ctx = canvas.getContext('2d');
+            const data = Object.entries(rawData)
+                .map(([date, scores]) => ({
+                    date: new Date(date + 'T00:00:00'),
+                    score: scores[scores.length - 1] // Track the last MML recorded for that day
+                }))
+                .sort((a, b) => a.date - b.date);
 
-    const dpi = window.devicePixelRatio || 1;
-    canvas.width = canvas.clientWidth * dpi;
-    canvas.height = canvas.clientHeight * dpi;
-    ctx.scale(dpi, dpi);
-
-    // Process data: Use the daily maximum suppression time
-    const data = Object.entries(rawData)
-        .map(([date, scores]) => ({
-            date: new Date(date + 'T00:00:00'), // Ensure date is treated as UTC start of day
-            score: Math.max(...scores.map(s => parseInt(s)))
-        }))
-        .sort((a, b) => a.date - b.date);
-
-    if (data.length < 2) {
-        ctx.font = '16px Arial';
-        ctx.fillStyle = 'var(--text-dim)';
-        ctx.textAlign = 'center';
-        ctx.fillText('Perform more RI tests to see your suppression trend.', canvas.clientWidth / 2, canvas.clientHeight / 2);
-        return;
-    }
-
-    const paddingLeft = 45, paddingRight = 15, paddingTop = 10, paddingBottom = 40;
-    const chartWidth = canvas.clientWidth - paddingLeft - paddingRight;
-    const chartHeight = canvas.clientHeight - paddingTop - paddingBottom;
-
-    const minDate = data[0].date.getTime();
-    const maxDate = data[data.length - 1].date.getTime();
-    const dateRange = Math.max(1, maxDate - minDate);
-
-    const maxSuppression = Math.max(60, ...data.map(d => d.score)); // Default scale at least 60s
-    const yScale = chartHeight / maxSuppression;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Grid & Labels
-    ctx.font = '11px Arial';
-    ctx.fillStyle = 'var(--text-dim)';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    for (let i = 0; i <= 4; i++) {
-        const val = Math.round((maxSuppression / 4) * i);
-        const y = paddingTop + chartHeight - (val * yScale);
-        ctx.fillText(val + 's', paddingLeft - 5, y);
-        ctx.beginPath();
-        ctx.strokeStyle = 'var(--border)';
-        ctx.setLineDash([2, 2]);
-        ctx.moveTo(paddingLeft, y);
-        ctx.lineTo(paddingLeft + chartWidth, y);
-        ctx.stroke();
-    }
-    ctx.setLineDash([]);
-
-    // X-Axis (Dates)
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    const numLabels = Math.min(data.length, 5);
-    for (let i = 0; i < numLabels; i++) {
-        const idx = Math.floor(i * (data.length - 1) / Math.max(1, numLabels - 1));
-        const point = data[idx];
-        const x = paddingLeft + (point.date.getTime() - minDate) / dateRange * chartWidth;
-        const dateStr = point.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-        ctx.fillText(dateStr, x, paddingTop + chartHeight + 10);
-    }
-
-    // Trend Line
-    ctx.beginPath();
-    ctx.strokeStyle = 'var(--accent)';
-    ctx.lineWidth = 2;
-    ctx.lineJoin = 'round';
-    data.forEach((d, i) => {
-        const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
-        const y = paddingTop + chartHeight - (d.score * yScale);
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // Data Points
-    data.forEach(d => {
-        const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
-        const y = paddingTop + chartHeight - (d.score * yScale);
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = 'var(--bg)';
-        ctx.fill();
-        ctx.strokeStyle = 'var(--accent)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-    });
-}
-
-function drawMMLChart() {
-    const rawData = getMMLResults();
-    const canvas = document.getElementById('mmlChart');
-    const ctx = canvas.getContext('2d');
-
-    const dpi = window.devicePixelRatio || 1;
-    canvas.width = canvas.clientWidth * dpi;
-    canvas.height = canvas.clientHeight * dpi;
-    ctx.scale(dpi, dpi);
-
-    const data = Object.entries(rawData)
-        .map(([date, scores]) => ({
-            date: new Date(date + 'T00:00:00'),
-            score: scores[scores.length - 1] // Track the last MML recorded for that day
-        }))
-        .sort((a, b) => a.date - b.date);
-
-    if (data.length < 2) {
-        ctx.font = '16px Arial';
-        ctx.fillStyle = 'var(--text-dim)';
-        ctx.textAlign = 'center';
-        ctx.fillText('Log more MML points to see your masking trend.', canvas.clientWidth / 2, canvas.clientHeight / 2);
-        return;
-    }
-
-    const paddingLeft = 45, paddingRight = 15, paddingTop = 10, paddingBottom = 40;
-    const chartWidth = canvas.clientWidth - paddingLeft - paddingRight;
-    const chartHeight = canvas.clientHeight - paddingTop - paddingBottom;
-
-    const minDate = data[0].date.getTime();
-    const maxDate = data[data.length - 1].date.getTime();
-    const dateRange = Math.max(1, maxDate - minDate);
-
-    const yScale = chartHeight / 100;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Grid & Labels
-    ctx.font = '11px Arial';
-    ctx.fillStyle = 'var(--text-dim)';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    for (let i = 0; i <= 4; i++) {
-        const val = i * 25;
-        const y = paddingTop + chartHeight - (val * yScale);
-        ctx.fillText(val + '%', paddingLeft - 5, y);
-        ctx.beginPath();
-        ctx.strokeStyle = 'var(--border)';
-        ctx.setLineDash([2, 2]);
-        ctx.moveTo(paddingLeft, y);
-        ctx.lineTo(paddingLeft + chartWidth, y);
-        ctx.stroke();
-    }
-    ctx.setLineDash([]);
-
-    // X-Axis (Dates)
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    const numLabels = Math.min(data.length, 5);
-    for (let i = 0; i < numLabels; i++) {
-        const idx = Math.floor(i * (data.length - 1) / Math.max(1, numLabels - 1));
-        const point = data[idx];
-        const x = paddingLeft + (point.date.getTime() - minDate) / dateRange * chartWidth;
-        const dateStr = point.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-        ctx.fillText(dateStr, x, paddingTop + chartHeight + 10);
-    }
-
-    // Trend Line
-    ctx.beginPath();
-    ctx.strokeStyle = 'var(--accent)';
-    ctx.lineWidth = 2;
-    ctx.lineJoin = 'round';
-    data.forEach((d, i) => {
-        const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
-        const y = paddingTop + chartHeight - (d.score * yScale);
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // Data Points
-    data.forEach(d => {
-        const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
-        const y = paddingTop + chartHeight - (d.score * yScale);
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = 'var(--bg)';
-        ctx.fill();
-        ctx.strokeStyle = 'var(--accent)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-    });
-}
-
-function drawLoudnessGrowthChart() {
-    const rawData = getLoudnessGrowthLog();
-    const canvas = document.getElementById('lgChart');
-    const ctx = canvas.getContext('2d');
-
-    const dpi = window.devicePixelRatio || 1;
-    canvas.width = canvas.clientWidth * dpi;
-    canvas.height = canvas.clientHeight * dpi;
-    ctx.scale(dpi, dpi);
-
-    const data = Object.entries(rawData)
-        .map(([date, points]) => {
-            // Find objective volume at subjective rating 'Loud' (rating 4)
-            let objVolAtLoud = null;
-            points.sort((a, b) => a.obj - b.obj); // Sort by objective volume
-
-            for (let i = 0; i < points.length; i++) {
-                if (points[i].subj === 4) {
-                    objVolAtLoud = points[i].obj;
-                    break;
-                }
-                if (i > 0 && points[i-1].subj < 4 && points[i].subj > 4) {
-                    // Interpolate if 'Loud' is between two points
-                    objVolAtLoud = linearInterpolate(
-                        points[i-1].subj, points[i-1].obj,
-                        points[i].subj, points[i].obj,
-                        4 // Target subjective rating
-                    );
-                    break;
-                }
+            if (data.length < 2) {
+                ctx.font = '16px Arial';
+                ctx.fillStyle = 'var(--text-dim)';
+                ctx.textAlign = 'center';
+                ctx.fillText('Log more MML points to see your masking trend.', canvas.clientWidth / 2, canvas.clientHeight / 2);
+                return;
             }
-            return { date: new Date(date + 'T00:00:00'), objVolAtLoud: objVolAtLoud };
-        })
-        .filter(d => d.objVolAtLoud !== null) // Only include days where 'Loud' could be determined
-        .sort((a, b) => a.date - b.date);
 
-    if (data.length < 2) {
-        ctx.font = '16px Arial';
-        ctx.fillStyle = 'var(--text-dim)';
-        ctx.textAlign = 'center';
-        ctx.fillText('Perform more LG tests to see your loudness growth trend.', canvas.clientWidth / 2, canvas.clientHeight / 2);
-        return;
-    }
+            const paddingLeft = 45, paddingRight = 15, paddingTop = 10, paddingBottom = 40;
+            const chartWidth = canvas.clientWidth - paddingLeft - paddingRight;
+            const chartHeight = canvas.clientHeight - paddingTop - paddingBottom;
 
-    const paddingLeft = 45, paddingRight = 15, paddingTop = 10, paddingBottom = 40;
-    const chartWidth = canvas.clientWidth - paddingLeft - paddingRight;
-    const chartHeight = canvas.clientHeight - paddingTop - paddingBottom;
+            const minDate = data[0].date.getTime();
+            const maxDate = data[data.length - 1].date.getTime();
+            const dateRange = Math.max(1, maxDate - minDate);
 
-    const minDate = data[0].date.getTime();
-    const maxDate = data[data.length - 1].date.getTime();
-    const dateRange = Math.max(1, maxDate - minDate);
+            const yScale = chartHeight / 100;
 
-    const minObjVol = 0;
-    const maxObjVol = 100;
-    const objVolRange = maxObjVol - minObjVol;
-    const yScale = chartHeight / objVolRange;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Grid & Labels
-    ctx.font = '11px Arial';
-    ctx.fillStyle = 'var(--text-dim)';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    for (let i = 0; i <= 4; i++) { // 0%, 25%, 50%, 75%, 100%
-        const val = (minObjVol + (objVolRange / 4) * i);
-        const y = paddingTop + chartHeight - ((val - minObjVol) * yScale);
-        ctx.fillText(val + '%', paddingLeft - 5, y);
-        ctx.beginPath();
-        ctx.strokeStyle = 'var(--border)';
-        ctx.setLineDash([2, 2]);
-        ctx.moveTo(paddingLeft, y);
-        ctx.lineTo(paddingLeft + chartWidth, y);
-        ctx.stroke();
-    }
-    ctx.setLineDash([]);
-
-    // X-Axis (Dates)
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    const numLabels = Math.min(data.length, 5);
-    for (let i = 0; i < numLabels; i++) {
-        const idx = Math.floor(i * (data.length - 1) / Math.max(1, numLabels - 1));
-        const point = data[idx];
-        const x = paddingLeft + (point.date.getTime() - minDate) / dateRange * chartWidth;
-        const dateStr = point.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-        ctx.fillText(dateStr, x, paddingTop + chartHeight + 10);
-    }
-
-    // Trend Line
-    ctx.beginPath();
-    ctx.strokeStyle = 'var(--accent)';
-    ctx.lineWidth = 2;
-    ctx.lineJoin = 'round';
-    data.forEach((d, i) => {
-        const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
-        const y = paddingTop + chartHeight - ((d.objVolAtLoud - minObjVol) * yScale);
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // Data Points
-    data.forEach(d => {
-        const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
-        const y = paddingTop + chartHeight - ((d.objVolAtLoud - minObjVol) * yScale);
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = 'var(--bg)';
-        ctx.fill();
-        ctx.strokeStyle = 'var(--accent)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-    });
-}
-
-function drawQFactorChart() {
-    const rawData = getQFactors();
-    const canvas = document.getElementById('qFactorChart');
-    const ctx = canvas.getContext('2d');
-
-    const dpi = window.devicePixelRatio || 1;
-    canvas.width = canvas.clientWidth * dpi;
-    canvas.height = canvas.clientHeight * dpi;
-    ctx.scale(dpi, dpi);
-
-    const data = Object.entries(rawData)
-        .filter(([, qFactor]) => !isNaN(parseFloat(qFactor)))
-        .map(([date, qFactor]) => ({
-            date: new Date(date + 'T00:00:00'), // Ensure date is treated as UTC start of day
-            qFactor: parseFloat(qFactor)
-        }))
-        .sort((a, b) => a.date - b.date);
-
-    if (data.length < 2) {
-        ctx.font = '16px Arial';
-        ctx.fillStyle = 'var(--text-dim)';
-        ctx.textAlign = 'center';
-        ctx.fillText('Record more TMCs to see your Q-factor trend.', canvas.clientWidth / 2, canvas.clientHeight / 2);
-        return;
-    }
-
-    const paddingLeft = 45, paddingRight = 15, paddingTop = 10, paddingBottom = 40;
-    const chartWidth = canvas.clientWidth - paddingLeft - paddingRight;
-    const chartHeight = canvas.clientHeight - paddingTop - paddingBottom;
-
-    const minDate = data[0].date.getTime();
-    const maxDate = data[data.length - 1].date.getTime();
-    const dateRange = Math.max(1, maxDate - minDate);
-
-    const minQ = Math.min(1, ...data.map(d => d.qFactor)); // Minimum Q-factor, at least 1
-    const maxQ = Math.max(5, ...data.map(d => d.qFactor)); // Maximum Q-factor, at least 5
-    const qRange = maxQ - minQ;
-    const yScale = chartHeight / qRange;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Grid & Labels
-    ctx.font = '11px Arial';
-    ctx.fillStyle = 'var(--text-dim)';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    for (let i = 0; i <= 4; i++) {
-        const val = (minQ + (qRange / 4) * i).toFixed(1);
-        const y = paddingTop + chartHeight - ((val - minQ) * yScale);
-        ctx.fillText(val, paddingLeft - 5, y);
-        ctx.beginPath();
-        ctx.strokeStyle = 'var(--border)';
-        ctx.setLineDash([2, 2]);
-        ctx.moveTo(paddingLeft, y);
-        ctx.lineTo(paddingLeft + chartWidth, y);
-        ctx.stroke();
-    }
-    ctx.setLineDash([]);
-
-    // X-Axis (Dates)
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    const numLabels = Math.min(data.length, 5);
-    for (let i = 0; i < numLabels; i++) {
-        const idx = Math.floor(i * (data.length - 1) / Math.max(1, numLabels - 1));
-        const point = data[idx];
-        const x = paddingLeft + (point.date.getTime() - minDate) / dateRange * chartWidth;
-        const dateStr = point.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-        ctx.fillText(dateStr, x, paddingTop + chartHeight + 10);
-    }
-
-    // Trend Line
-    ctx.beginPath();
-    ctx.strokeStyle = 'var(--accent)';
-    ctx.lineWidth = 2;
-    ctx.lineJoin = 'round';
-    data.forEach((d, i) => {
-        const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
-        const y = paddingTop + chartHeight - ((d.qFactor - minQ) * yScale);
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // Data Points
-    data.forEach(d => {
-        const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
-        const y = paddingTop + chartHeight - ((d.qFactor - minQ) * yScale);
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = 'var(--bg)';
-        ctx.fill();
-        ctx.strokeStyle = 'var(--accent)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-    });
-}
-
-function drawThiChart() {
-    const rawScores = getDistressScores(); // Retrieve scores from storage.js
-    const canvas = document.getElementById('thiChart');
-    const ctx = canvas.getContext('2d');
-
-    // Adjust canvas for high-DPI displays
-    const dpi = window.devicePixelRatio || 1;
-    canvas.width = canvas.clientWidth * dpi;
-    canvas.height = canvas.clientHeight * dpi;
-    ctx.scale(dpi, dpi);
-
-    // Prepare data: filter out invalid scores, sort by date, convert to suitable format
-    const data = Object.entries(rawScores)
-        .filter(([, score]) => !isNaN(parseInt(score))) // Filter out non-numeric scores
-        .sort(([dateA], [dateB]) => new Date(dateA + 'T00:00:00').getTime() - new Date(dateB + 'T00:00:00').getTime())
-        .map(([date, score]) => ({ date: new Date(date + 'T00:00:00'), score: parseInt(score) }))
-        // Filter out duplicate dates, keeping the last score for that day
-        .filter((entry, index, self) => 
-            index === self.findIndex(t => t.date.toDateString() === entry.date.toDateString())
-        );
-
-    if (data.length < 2) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear any previous drawing
-        ctx.font = '16px Arial';
-        ctx.fillStyle = 'var(--text-dim)';
-        ctx.textAlign = 'center';
-        ctx.fillText('Not enough data to draw chart. Take the THI quiz!', canvas.clientWidth / 2, canvas.clientHeight / 2);
-        return;
-    }
-
-    const paddingLeft = 40;
-    const paddingRight = 10;
-    const paddingTop = 10;
-    const paddingBottom = 40;
-
-    const chartWidth = canvas.clientWidth - paddingLeft - paddingRight;
-    const chartHeight = canvas.clientHeight - paddingTop - paddingBottom;
-
-    const minDate = data[0].date.getTime();
-    const maxDate = data[data.length - 1].date.getTime();
-    const dateRange = maxDate === minDate ? 1 : maxDate - minDate; // Avoid division by zero for single data point
-
-    // Y-axis (scores 0-100)
-    const yScale = chartHeight / 100;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw X-axis (Dates)
-    ctx.strokeStyle = 'var(--border)';
-    ctx.beginPath();
-    ctx.moveTo(paddingLeft, paddingTop + chartHeight);
-    ctx.lineTo(paddingLeft + chartWidth, paddingTop + chartHeight);
-    ctx.stroke();
-
-    // Draw Y-axis (Scores)
-    ctx.beginPath();
-    ctx.moveTo(paddingLeft, paddingTop);
-    ctx.lineTo(paddingLeft, paddingTop + chartHeight);
-    ctx.stroke();
-
-    // Draw Y-axis labels (0, 25, 50, 75, 100) and horizontal grid lines
-    ctx.font = '12px Arial';
-    ctx.fillStyle = 'var(--text-dim)';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle'; // Align text vertically
-
-    for (let i = 0; i <= 4; i++) {
-        const scoreLabel = i * 25;
-        const y = paddingTop + chartHeight - (scoreLabel * yScale);
-        ctx.fillText(scoreLabel, paddingLeft - 5, y); // Label to the left of Y-axis
-
-        ctx.beginPath();
-        ctx.strokeStyle = 'var(--border)';
-        ctx.setLineDash([2, 2]); // Dotted line
-        ctx.moveTo(paddingLeft, y);
-        ctx.lineTo(paddingLeft + chartWidth, y);
-        ctx.stroke();
-    }
-    ctx.setLineDash([]); // Reset line dash for subsequent drawings
-
-    // Draw X-axis labels (Dates)
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top'; // Align text vertically
-    const numLabels = Math.min(data.length, 5); // Limit number of date labels
-    for (let i = 0; i < numLabels; i++) {
-        const point = data[Math.floor(i * (data.length - 1) / Math.max(1, numLabels - 1))]; // Handle single point case
-        const x = paddingLeft + (point.date.getTime() - minDate) / dateRange * chartWidth;
-        const dateStr = point.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-        ctx.fillText(dateStr, x, paddingTop + chartHeight + 5); // Label below X-axis
-    }
-
-    // Draw the line chart
-    ctx.beginPath();
-    ctx.strokeStyle = 'var(--accent)';
-    ctx.lineWidth = 2;
-
-    // If there's only one point, draw just the point, not a line
-    if (data.length === 1) {
-        const dPoint = data[0];
-        const x = paddingLeft + (dPoint.date.getTime() - minDate) / dateRange * chartWidth;
-        const y = paddingTop + chartHeight - (dPoint.score * yScale);
-        ctx.moveTo(x, y); // Move to the point
-    } else {
-        data.forEach((dPoint, index) => {
-            const x = paddingLeft + (dPoint.date.getTime() - minDate) / dateRange * chartWidth;
-            const y = paddingTop + chartHeight - (dPoint.score * yScale); // Invert Y for canvas (0 at top)
-
-            if (index === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
+            // Grid & Labels
+            ctx.font = '11px Arial';
+            ctx.fillStyle = 'var(--text-dim)';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i <= 20; i++) {
+                const val = i * 5;
+                const y = paddingTop + chartHeight - (val * yScale);
+                if (val % 10 === 0 || val === 0 || val === 100) {
+                    ctx.fillText(val + '%', paddingLeft - 5, y);
+                }
+                ctx.beginPath();
+                ctx.strokeStyle = 'var(--border)';
+                ctx.setLineDash([2, 2]);
+                ctx.globalAlpha = (val % 10 === 0) ? 0.3 : 0.1;
+                ctx.moveTo(paddingLeft, y);
+                ctx.lineTo(paddingLeft + chartWidth, y);
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
             }
+            ctx.setLineDash([]);
+        }
+        ctx.setLineDash([]);
+
+        // X-Axis (Dates)
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        const numLabels = Math.min(data.length, 5);
+        for (let i = 0; i < numLabels; i++) {
+            const idx = Math.floor(i * (data.length - 1) / Math.max(1, numLabels - 1));
+            const point = data[idx];
+            const x = paddingLeft + (point.date.getTime() - minDate) / dateRange * chartWidth;
+            const dateStr = point.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            ctx.fillText(dateStr, x, paddingTop + chartHeight + 10);
+        }
+
+        // Trend Line
+        ctx.beginPath();
+        ctx.strokeStyle = 'var(--accent)';
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+        data.forEach((d, i) => {
+            const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
+            const y = paddingTop + chartHeight - (d.score * yScale);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         });
-        ctx.stroke(); // Stroke the line
-    }
+        ctx.stroke();
 
-    // Draw points after the line (or alone if only one point) so they appear on top
-    data.forEach((dPoint) => {
-        const x = paddingLeft + (dPoint.date.getTime() - minDate) / dateRange * chartWidth;
-        const y = paddingTop + chartHeight - (dPoint.score * yScale);
-        ctx.beginPath(); // Start new path for each circle
-        ctx.arc(x, y, 3 * dpi, 0, Math.PI * 2); // Make points slightly larger for high DPI
-        ctx.fillStyle = 'var(--accent)';
-        ctx.fill();
-    });
+        // Data Points
+        data.forEach(d => {
+            const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
+            const y = paddingTop + chartHeight - (d.score * yScale);
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = 'var(--bg)';
+            ctx.fill();
+            ctx.strokeStyle = 'var(--accent)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        });
 }
 
-function linearInterpolate(x1, y1, x2, y2, x_target) {
-    if (x1 === x2) return y1;
-    return y1 + (y2 - y1) * (x_target - x1) / (x2 - x1);
-}
-</script>
+        function drawLoudnessGrowthChart() {
+            const rawData = getLoudnessGrowthLog();
+            const canvas = document.getElementById('lgChart');
+            const ctx = canvas.getContext('2d');
+
+            const dpi = window.devicePixelRatio || 1;
+            canvas.width = canvas.clientWidth * dpi;
+            canvas.height = canvas.clientHeight * dpi;
+            ctx.scale(dpi, dpi);
+
+            const data = Object.entries(rawData)
+                .map(([date, points]) => {
+                    // Find objective volume at subjective rating 'Loud' (rating 4)
+                    let objVolAtLoud = null;
+                    points.sort((a, b) => a.obj - b.obj); // Sort by objective volume
+
+                    for (let i = 0; i < points.length; i++) {
+                        if (points[i].subj === 4) {
+                            objVolAtLoud = points[i].obj;
+                            break;
+                        }
+                        if (i > 0 && points[i - 1].subj < 4 && points[i].subj > 4) {
+                            // Interpolate if 'Loud' is between two points
+                            objVolAtLoud = linearInterpolate(
+                                points[i - 1].subj, points[i - 1].obj,
+                                points[i].subj, points[i].obj,
+                                4 // Target subjective rating
+                            );
+                            break;
+                        }
+                    }
+                    return { date: new Date(date + 'T00:00:00'), objVolAtLoud: objVolAtLoud };
+                })
+                .filter(d => d.objVolAtLoud !== null) // Only include days where 'Loud' could be determined
+                .sort((a, b) => a.date - b.date);
+
+            if (data.length < 2) {
+                ctx.font = '16px Arial';
+                ctx.fillStyle = 'var(--text-dim)';
+                ctx.textAlign = 'center';
+                ctx.fillText('Perform more LG tests to see your loudness growth trend.', canvas.clientWidth / 2, canvas.clientHeight / 2);
+                return;
+            }
+
+            const paddingLeft = 45, paddingRight = 15, paddingTop = 10, paddingBottom = 40;
+            const chartWidth = canvas.clientWidth - paddingLeft - paddingRight;
+            const chartHeight = canvas.clientHeight - paddingTop - paddingBottom;
+
+            const minDate = data[0].date.getTime();
+            const maxDate = data[data.length - 1].date.getTime();
+            const dateRange = Math.max(1, maxDate - minDate);
+
+            const minObjVol = 0;
+            const maxObjVol = 100;
+            const objVolRange = maxObjVol - minObjVol;
+            const yScale = chartHeight / objVolRange;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Grid & Labels
+            ctx.font = '11px Arial';
+            ctx.fillStyle = 'var(--text-dim)';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i <= 4; i++) { // 0%, 25%, 50%, 75%, 100%
+                const val = (minObjVol + (objVolRange / 4) * i);
+                const y = paddingTop + chartHeight - ((val - minObjVol) * yScale);
+                ctx.fillText(val + '%', paddingLeft - 5, y);
+                ctx.beginPath();
+                ctx.strokeStyle = 'var(--border)';
+                ctx.setLineDash([2, 2]);
+                ctx.moveTo(paddingLeft, y);
+                ctx.lineTo(paddingLeft + chartWidth, y);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // X-Axis (Dates)
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            const numLabels = Math.min(data.length, 5);
+            for (let i = 0; i < numLabels; i++) {
+                const idx = Math.floor(i * (data.length - 1) / Math.max(1, numLabels - 1));
+                const point = data[idx];
+                const x = paddingLeft + (point.date.getTime() - minDate) / dateRange * chartWidth;
+                const dateStr = point.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                ctx.fillText(dateStr, x, paddingTop + chartHeight + 10);
+            }
+
+            // Trend Line
+            ctx.beginPath();
+            ctx.strokeStyle = 'var(--accent)';
+            ctx.lineWidth = 2;
+            ctx.lineJoin = 'round';
+            data.forEach((d, i) => {
+                const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
+                const y = paddingTop + chartHeight - ((d.objVolAtLoud - minObjVol) * yScale);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Data Points
+            data.forEach(d => {
+                const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
+                const y = paddingTop + chartHeight - ((d.objVolAtLoud - minObjVol) * yScale);
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = 'var(--bg)';
+                ctx.fill();
+                ctx.strokeStyle = 'var(--accent)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        function drawQFactorChart() {
+            const rawData = getQFactors();
+            const canvas = document.getElementById('qFactorChart');
+            const ctx = canvas.getContext('2d');
+
+            const dpi = window.devicePixelRatio || 1;
+            canvas.width = canvas.clientWidth * dpi;
+            canvas.height = canvas.clientHeight * dpi;
+            ctx.scale(dpi, dpi);
+
+            const data = Object.entries(rawData)
+                .filter(([, qFactor]) => !isNaN(parseFloat(qFactor)))
+                .map(([date, qFactor]) => ({
+                    date: new Date(date + 'T00:00:00'), // Ensure date is treated as UTC start of day
+                    qFactor: parseFloat(qFactor)
+                }))
+                .sort((a, b) => a.date - b.date);
+
+            if (data.length < 2) {
+                ctx.font = '16px Arial';
+                ctx.fillStyle = 'var(--text-dim)';
+                ctx.textAlign = 'center';
+                ctx.fillText('Record more TMCs to see your Q-factor trend.', canvas.clientWidth / 2, canvas.clientHeight / 2);
+                return;
+            }
+
+            const paddingLeft = 45, paddingRight = 15, paddingTop = 10, paddingBottom = 40;
+            const chartWidth = canvas.clientWidth - paddingLeft - paddingRight;
+            const chartHeight = canvas.clientHeight - paddingTop - paddingBottom;
+
+            const minDate = data[0].date.getTime();
+            const maxDate = data[data.length - 1].date.getTime();
+            const dateRange = Math.max(1, maxDate - minDate);
+
+            const minQ = Math.min(1, ...data.map(d => d.qFactor)); // Minimum Q-factor, at least 1
+            const maxQ = Math.max(5, ...data.map(d => d.qFactor)); // Maximum Q-factor, at least 5
+            const qRange = maxQ - minQ;
+            const yScale = chartHeight / qRange;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Grid & Labels
+            ctx.font = '11px Arial';
+            ctx.fillStyle = 'var(--text-dim)';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i <= 4; i++) {
+                const val = (minQ + (qRange / 4) * i).toFixed(1);
+                const y = paddingTop + chartHeight - ((val - minQ) * yScale);
+                ctx.fillText(val, paddingLeft - 5, y);
+                ctx.beginPath();
+                ctx.strokeStyle = 'var(--border)';
+                ctx.setLineDash([2, 2]);
+                ctx.moveTo(paddingLeft, y);
+                ctx.lineTo(paddingLeft + chartWidth, y);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // X-Axis (Dates)
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            const numLabels = Math.min(data.length, 5);
+            for (let i = 0; i < numLabels; i++) {
+                const idx = Math.floor(i * (data.length - 1) / Math.max(1, numLabels - 1));
+                const point = data[idx];
+                const x = paddingLeft + (point.date.getTime() - minDate) / dateRange * chartWidth;
+                const dateStr = point.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                ctx.fillText(dateStr, x, paddingTop + chartHeight + 10);
+            }
+
+            // Trend Line
+            ctx.beginPath();
+            ctx.strokeStyle = 'var(--accent)';
+            ctx.lineWidth = 2;
+            ctx.lineJoin = 'round';
+            data.forEach((d, i) => {
+                const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
+                const y = paddingTop + chartHeight - ((d.qFactor - minQ) * yScale);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Data Points
+            data.forEach(d => {
+                const x = paddingLeft + (d.date.getTime() - minDate) / dateRange * chartWidth;
+                const y = paddingTop + chartHeight - ((d.qFactor - minQ) * yScale);
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = 'var(--bg)';
+                ctx.fill();
+                ctx.strokeStyle = 'var(--accent)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        function drawThiChart() {
+            const rawScores = getDistressScores(); // Retrieve scores from storage.js
+            const canvas = document.getElementById('thiChart');
+            const ctx = canvas.getContext('2d');
+
+            // Adjust canvas for high-DPI displays
+            const dpi = window.devicePixelRatio || 1;
+            canvas.width = canvas.clientWidth * dpi;
+            canvas.height = canvas.clientHeight * dpi;
+            ctx.scale(dpi, dpi);
+
+            // Prepare data: filter out invalid scores, sort by date, convert to suitable format
+            const data = Object.entries(rawScores)
+                .filter(([, score]) => !isNaN(parseInt(score))) // Filter out non-numeric scores
+                .sort(([dateA], [dateB]) => new Date(dateA + 'T00:00:00').getTime() - new Date(dateB + 'T00:00:00').getTime())
+                .map(([date, score]) => ({ date: new Date(date + 'T00:00:00'), score: parseInt(score) }))
+                // Filter out duplicate dates, keeping the last score for that day
+                .filter((entry, index, self) =>
+                    index === self.findIndex(t => t.date.toDateString() === entry.date.toDateString())
+                );
+
+            if (data.length < 2) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear any previous drawing
+                ctx.font = '16px Arial';
+                ctx.fillStyle = 'var(--text-dim)';
+                ctx.textAlign = 'center';
+                ctx.fillText('Not enough data to draw chart. Take the THI quiz!', canvas.clientWidth / 2, canvas.clientHeight / 2);
+                return;
+            }
+
+            const paddingLeft = 40;
+            const paddingRight = 10;
+            const paddingTop = 10;
+            const paddingBottom = 40;
+
+            const chartWidth = canvas.clientWidth - paddingLeft - paddingRight;
+            const chartHeight = canvas.clientHeight - paddingTop - paddingBottom;
+
+            const minDate = data[0].date.getTime();
+            const maxDate = data[data.length - 1].date.getTime();
+            const dateRange = maxDate === minDate ? 1 : maxDate - minDate; // Avoid division by zero for single data point
+
+            // Y-axis (scores 0-100)
+            const yScale = chartHeight / 100;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw X-axis (Dates)
+            ctx.strokeStyle = 'var(--border)';
+            ctx.beginPath();
+            ctx.moveTo(paddingLeft, paddingTop + chartHeight);
+            ctx.lineTo(paddingLeft + chartWidth, paddingTop + chartHeight);
+            ctx.stroke();
+
+            // Draw Y-axis (Scores)
+            ctx.beginPath();
+            ctx.moveTo(paddingLeft, paddingTop);
+            ctx.lineTo(paddingLeft, paddingTop + chartHeight);
+            ctx.stroke();
+
+            // Draw Y-axis labels (0, 25, 50, 75, 100) and horizontal grid lines
+            ctx.font = '12px Arial';
+            ctx.fillStyle = 'var(--text-dim)';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle'; // Align text vertically
+
+            for (let i = 0; i <= 20; i++) {
+                const scoreLabel = i * 5;
+                const y = paddingTop + chartHeight - (scoreLabel * yScale);
+                if (scoreLabel % 10 === 0 || scoreLabel === 0 || scoreLabel === 100) {
+                    ctx.fillText(scoreLabel, paddingLeft - 5, y);
+                }
+
+                ctx.beginPath();
+                ctx.strokeStyle = 'var(--border)';
+                ctx.setLineDash([2, 2]);
+                ctx.globalAlpha = (scoreLabel % 10 === 0) ? 0.3 : 0.1; // Major/Minor grid
+                ctx.moveTo(paddingLeft, y);
+                ctx.lineTo(paddingLeft + chartWidth, y);
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+            }
+            ctx.setLineDash([]); // Reset line dash for subsequent drawings
+
+            // Draw X-axis labels (Dates)
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top'; // Align text vertically
+            const numLabels = Math.min(data.length, 5); // Limit number of date labels
+            for (let i = 0; i < numLabels; i++) {
+                const point = data[Math.floor(i * (data.length - 1) / Math.max(1, numLabels - 1))]; // Handle single point case
+                const x = paddingLeft + (point.date.getTime() - minDate) / dateRange * chartWidth;
+                const dateStr = point.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                ctx.fillText(dateStr, x, paddingTop + chartHeight + 5); // Label below X-axis
+            }
+
+            // Draw the line chart
+            ctx.beginPath();
+            ctx.strokeStyle = 'var(--accent)';
+            ctx.lineWidth = 2;
+
+            // If there's only one point, draw just the point, not a line
+            if (data.length === 1) {
+                const dPoint = data[0];
+                const x = paddingLeft + (dPoint.date.getTime() - minDate) / dateRange * chartWidth;
+                const y = paddingTop + chartHeight - (dPoint.score * yScale);
+                ctx.moveTo(x, y); // Move to the point
+            } else {
+                data.forEach((dPoint, index) => {
+                    const x = paddingLeft + (dPoint.date.getTime() - minDate) / dateRange * chartWidth;
+                    const y = paddingTop + chartHeight - (dPoint.score * yScale); // Invert Y for canvas (0 at top)
+
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke(); // Stroke the line
+            }
+
+            // Draw points after the line (or alone if only one point) so they appear on top
+            data.forEach((dPoint) => {
+                const x = paddingLeft + (dPoint.date.getTime() - minDate) / dateRange * chartWidth;
+                const y = paddingTop + chartHeight - (dPoint.score * yScale);
+                ctx.beginPath(); // Start new path for each circle
+                ctx.arc(x, y, 3 * dpi, 0, Math.PI * 2); // Make points slightly larger for high DPI
+                ctx.fillStyle = 'var(--accent)';
+                ctx.fill();
+            });
+        }
+
+        function linearInterpolate(x1, y1, x2, y2, x_target) {
+            if (x1 === x2) return y1;
+            return y1 + (y2 - y1) * (x_target - x1) / (x2 - x1);
+        }
+    </script>
 </body>
+
 </html>

@@ -15,6 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <script src="storage.js"></script>
+    <script src="lang.js"></script>
     <script src="nav.js"></script>
 </head>
 
@@ -135,8 +136,8 @@
                 </button>
                 <a class="button" href="cbt.html" id="step-thi"
                     style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <span><b style="color:var(--accent)">2. Assessment:</b> Take the THI baseline.</span> <span
-                        class="step-status"></span>
+                    <span><b style="color:var(--accent)">2. Assessment:</b> Take the <b>Fast-Tap</b> THI
+                        baseline.</span> <span class="step-status"></span>
                 </a>
                 <div id="assessment-steps"
                     style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: -4px; margin-bottom: 8px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
@@ -158,8 +159,8 @@
 
                 <a class="button" href="notchfinder.html" id="step-pitch"
                     style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <span><b style="color:var(--accent)">4. Calibration:</b> Pitch-match your tinnitus.</span> <span
-                        class="step-status"></span>
+                    <span><b style="color:var(--accent)">4. Calibration:</b> <b>Interactive</b> Pitch-matching.</span>
+                    <span class="step-status"></span>
                 </a>
                 <a class="button" href="recommended.html" id="step-plan"
                     style="text-align: left; padding: 10px; display: flex; justify-content: space-between; align-items: center; background: var(--success); color: white;">
@@ -179,7 +180,8 @@
                         </div>
                     </div>
                     <div id="wizard-steps"
-                        style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
+                        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
+                        <div id="wstep-0">○ Profile</div>
                         <div id="wstep-1">○ Pitch</div>
                         <div id="wstep-2">○ Volume</div>
                         <div id="wstep-3">○ Notch</div>
@@ -187,16 +189,6 @@
                 </div>
             </div>
         </div>
-        <div id="card-ai-insights" class="card grid-wide" draggable="true">
-            <div class="drag-handle">⠿</div>
-            <h2>✨ AI Insights </h2>
-            <p class="info">Your daily dose of motivation and personalized tips from your AI coach.</p>
-            <div id="dailyMotivationDisplay"
-                style="margin-top: 15px; padding: 15px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); min-height: 80px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic; color: var(--text-dim);">
-                Loading your daily motivation...
-            </div>
-        </div>
-
         <div id="card-modes" class="card" draggable="true">
             <div class="drag-handle">⠿</div>
             <h2>Therapy Modes</h2>
@@ -283,6 +275,15 @@
                         Inventory. Regular assessments help track your progress.</p>
                     <a href="cbt.html" class="big-btn play-btn" style="margin-top: 10px;">Take THI Assessment Now</a>
                 </div>
+                <div class="card" id="hearingReminderCard"
+                    style="display:none; background: rgba(33, 150, 243, 0.1); border-color: #2196f3; margin-top: 15px;">
+                    <h2 style="color: #2196f3; margin-bottom: 5px;">Bi-Weekly Hearing Check Due</h2>
+                    <p class="info" style="color: var(--text);">Hearing checks ensure your therapy remains calibrated to
+                        your current audibility thresholds.</p>
+                    <a href="audiogram.html" class="big-btn play-btn"
+                        style="margin-top: 10px; background: linear-gradient(135deg, #2196f3, #1565c0) !important;">Update
+                        Profile</a>
+                </div>
                 <a class="button" href="recommended.html"
                     style="width:100%; margin-top:10px; background:var(--accent); color:white;">Personalized
                     Recommendations</a>
@@ -303,7 +304,7 @@
                     Tinnitus Talk helps fund future research.</p>
             </div>
         </div>
-        <div id="card-settings" class="card" draggable="true">
+        <div id="card-settings" class="card grid-wide" draggable="true">
             <div class="drag-handle">⠿</div>
             <h2>Project & Settings</h2>
             <details>
@@ -316,6 +317,98 @@
                     <a class="button" style="margin:0;" href="research.html">Research</a>
                     <a class="button" style="margin:0;" href="license.html">License</a>
                 </div>
+
+                <!-- System & Clinical Insights Hub -->
+                <div id="settingsInsightsHub"
+                    style="margin-top: 15px; padding: 12px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); font-size: 0.8rem;">
+                    <h3
+                        style="color: var(--accent); font-size: 0.85rem; margin-top: 0; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">
+                        System & Clinical Hub</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+                        <div>
+                            <span style="color: var(--text-dim);">Habituation Progress:</span>
+                            <div style="font-weight: bold; color: var(--success);" id="settingsHabitProgress">0%</div>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-dim);">App Version:</span>
+                            <div style="font-weight: bold;" class="app-version-label"></div>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-dim);">Local Data Size:</span>
+                            <div style="font-weight: bold;" id="settingsStorageUsed">0.00 KB</div>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-dim);">Active AI Model:</span>
+                            <div style="font-weight: bold;" id="settingsAiModel">None</div>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-dim);">Engine State:</span>
+                            <div style="font-weight: bold;" id="settingsEngineStatus">Offline</div>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-dim);">Base Latency:</span>
+                            <div style="font-weight: bold;" id="settingsLatency">0ms</div>
+                        </div>
+                    </div>
+                    <div
+                        style="margin-top: 5px; border-top: 1px solid var(--border); padding-top: 8px; margin-bottom: 10px;">
+                        <span style="color: var(--text-dim);">System Performance:</span>
+                        <div id="settingsCompatDetails" style="font-size: 0.75rem; margin-top: 4px;">Auditing...</div>
+                    </div>
+
+                    <!-- Daily AI Motivation (Moved from main card) -->
+                    <div id="dailyMotivationDisplay"
+                        style="margin-top: 10px; padding: 15px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); min-height: 60px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic; color: var(--text-dim); font-size: 0.85rem;">
+                        Loading your daily motivation...
+                    </div>
+
+                    <!-- Privacy & Data Hub (Moved from main card) -->
+                    <div class="ctrl" style="margin-top:15px; border-top:1px dashed var(--border); padding-top:15px;">
+                        <h3 style="color: var(--accent); font-size: 0.85rem; margin-bottom: 10px;">🛡️ PRIVACY & DATA
+                            HUB</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div
+                                style="background: var(--bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+                                <span
+                                    style="font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase;">Origin
+                                    Usage</span>
+                                <div style="font-size: 1rem; font-weight: bold;" id="privacyStorageUsage">0.00 KB</div>
+                            </div>
+                            <div
+                                style="background: var(--bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+                                <span
+                                    style="font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase;">Vault
+                                    Status</span>
+                                <div style="font-size: 1rem; font-weight: bold;" id="privacyEncryptStatus">Verified
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            style="margin-bottom: 15px; padding: 10px; background: rgba(0, 191, 165, 0.05); border-radius: 8px; border: 1px solid var(--accent);">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div>
+                                    <b style="color: var(--accent); font-size: 0.85rem;">Global AI Authorization</b>
+                                    <p style="font-size: 0.65rem; color: var(--text-dim);">Blocks all requests when
+                                        disabled.</p>
+                                </div>
+                                <input type="checkbox" id="privacyAiToggle"
+                                    style="width: 20px; height: 20px; cursor: pointer;">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                            <button class="button" style="font-size: 0.7rem; padding: 8px;"
+                                onclick="exportAllData()">Backup</button>
+                            <button class="button" style="font-size: 0.7rem; padding: 8px;"
+                                onclick="clearAllLogs()">Wipe</button>
+                            <button class="button"
+                                style="font-size: 0.7rem; padding: 8px; border-color: #ef5350; color: #ef5350;"
+                                onclick="factoryReset()">Reset</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="ctrl"
                     style="display: flex; align-items: center; gap: 10px; margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 10px;">
                     <input type="checkbox" id="globalAutoMatch" style="width: 20px; height: 20px;"
@@ -386,7 +479,9 @@
                 <button class="button"
                     style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
                     onclick="restartOnboarding()">Restart Onboarding</button>
-                <button id="whatsNewBtn" class="button" style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim); display: none;" onclick="showWhatsNew()">Show "What's New" Summary</button>
+                <button id="whatsNewBtn" class="button"
+                    style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim); display: none;"
+                    onclick="showWhatsNew()">Show "What's New" Summary</button>
                 <button class="button"
                     style="width:100%; margin-top:10px; border-color: var(--text-dim); color: var(--text-dim);"
                     onclick="toggleCompactMode()">Toggle Compact Mode</button>
@@ -525,11 +620,11 @@
 
         function updateDashboardGating() {
             const step = parseInt(loadSetting('onboarding_step', '0'));
-            const isComplete = step >= 5;
+            const isComplete = step >= 6;
             // Strict gating: Hide all secondary cards until mandatory onboarding is finished
             const gatedCards = [
                 'card-modes', 'card-tests', 'card-utils', 'card-progress',
-                'card-ai-insights', 'card-community', 'card-settings', 'card-support'
+                'card-community', 'card-settings', 'card-support'
             ];
 
             gatedCards.forEach(id => {
@@ -538,6 +633,23 @@
                     el.style.display = isComplete ? '' : 'none';
                 }
             });
+
+            // Protocol Locking: Enforce THI Assessment before allowing Therapy Modes
+            const modesCard = document.getElementById('card-modes');
+            if (modesCard) {
+                const hasThi = getLatestLogData('distress_log') !== null;
+                if (isComplete && !hasThi) {
+                    modesCard.style.opacity = '0.7';
+                    modesCard.style.pointerEvents = 'none';
+                    const summary = modesCard.querySelector('summary');
+                    if (summary) summary.textContent = "🔒 Assessment Required First";
+                } else if (isComplete) {
+                    modesCard.style.opacity = '1';
+                    modesCard.style.pointerEvents = 'auto';
+                    const summary = modesCard.querySelector('summary');
+                    if (summary) summary.textContent = "Show";
+                }
+            }
 
             // Handle the 'Start Here' card specifically
             const pathCard = document.getElementById('card-path');
@@ -577,7 +689,7 @@
         window.finishOnboarding = () => {
             console.log("TTS: Finalizing setup...");
             try {
-                saveSetting('onboarding_step', 5);
+                saveSetting('onboarding_step', 6);
                 saveSetting('last_seen_version', APP_VERSION);
                 try { sessionStorage.setItem('tts_session_active', 'true'); } catch (e) { }
                 updateDashboardGating();
@@ -646,6 +758,12 @@
             tinnitusAI.init(); // Initialize AI manager after DOM is ready and SDK script is loaded
             updateStartPathStatus();
 
+            // Auto-Run Technical Compatibility Audit
+            const audit = SystemCompatibilityAudit.check();
+            if (!audit.isCompatible) {
+                logTherapyError('SystemAudit', 'Critical Browser Constraint Detected', { errors: audit.errors });
+            }
+
             // Register Service Worker for PWA functionality
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js')
@@ -661,9 +779,21 @@
             const onboardingStep = parseInt(loadSetting('onboarding_step', 0));
             updateDashboardGating();
 
-            if (onboardingStep < 5) {
+            if (onboardingStep < 6) {
                 if (typeof showOnboardingModal === 'function') {
                     showOnboardingModal();
+                }
+            } else if (new URLSearchParams(window.location.search).get('setup') === 'complete') {
+                // Smooth landing: highlight the roadmap roadmap for newly onboarded users
+                const pathCard = document.getElementById('card-path');
+                if (pathCard) {
+                    pathCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    pathCard.style.outline = '4px solid var(--accent)';
+                    pathCard.style.outlineOffset = '4px';
+                    setTimeout(() => {
+                        pathCard.style.transition = 'outline 2.0s ease';
+                        pathCard.style.outline = '0px solid transparent';
+                    }, 3000);
                 }
             } else {
                 // Version tracking for returning users
@@ -694,7 +824,8 @@
             }
 
             renderStats();
-            checkTHIReminder();
+            checkReminders();
+            updatePrivacyHub();
             checkMilestoneAchievement();
 
             // Detect iOS and show manual installation instructions
@@ -742,6 +873,13 @@
             const hasThi = getLatestLogData('distress_log') !== null;
             const hasValid = loadSetting('last_validation_date', null) !== null;
 
+            // Critical Compatibility Check
+            const compat = SystemCompatibilityAudit.check();
+            if (!compat.isCompatible) {
+                const stepValidBtn = document.getElementById('step-valid');
+                if (stepValidBtn) stepValidBtn.style.borderColor = '#ef5350';
+            }
+
             // Expanded Step 1 Logic (Assessment)
             const sleepSet = loadSetting('reports_sleep_issues', null) !== null;
             const thoughtSet = getJson('thought_records', []).length > 0;
@@ -755,11 +893,13 @@
             const validationComplete = hasValid && phaseSet && engineSet;
 
             // Functional Wizard Tracking (Check for saved calibration parameters in localStorage)
+            const profileData = getJson('hearing_profile', { L: [], R: [] });
+            const profileSet = (profileData.L?.some(v => v > 0) || profileData.R?.some(v => v > 0));
             const pitchSet = loadSetting('notchL', null) !== null;
             const volumeSet = loadSetting('volL', null) !== null || loadSetting('volMaster', null) !== null;
             const nwSet = loadSetting('nw', null) !== null;
 
-            const wizardComplete = pitchSet && volumeSet && nwSet;
+            const wizardComplete = profileSet && pitchSet && volumeSet && nwSet;
 
             const recommendationsViewed = loadSetting('recommendations_viewed', 'false') === 'true';
 
@@ -804,9 +944,9 @@
             updateSubStep('vstep-2', engineSet, 'Engine');
 
             // Update Wizard UI Indicator
-            const steps = [pitchSet, volumeSet, nwSet];
+            const steps = [profileSet, pitchSet, volumeSet, nwSet];
             const completedCount = steps.filter(Boolean).length;
-            const percent = Math.round((completedCount / steps.length) * 100);
+            const percent = Math.round(((completedCount / steps.length) * 100) / 5) * 5;
 
             if (document.getElementById('wizard-bar')) document.getElementById('wizard-bar').style.width = percent + '%';
             if (document.getElementById('wizard-percent')) document.getElementById('wizard-percent').textContent = percent + '%';
@@ -818,9 +958,24 @@
                     el.innerHTML = (set ? '✓' : '○') + ' ' + label;
                 }
             };
+            updateWStep('wstep-0', profileSet, 'Profile');
             updateWStep('wstep-1', pitchSet, 'Pitch');
             updateWStep('wstep-2', volumeSet, 'Volume');
             updateWStep('wstep-3', nwSet, 'Notch');
+        }
+
+        function updatePrivacyHub() {
+            const audit = getPrivacyAudit();
+            document.getElementById('privacyStorageUsage').textContent = audit.storageUsedKB + ' KB';
+            document.getElementById('privacyEncryptStatus').textContent = audit.aiEncryptionActive ? 'Vault Active' : 'Unencrypted';
+            document.getElementById('privacyEncryptStatus').style.color = audit.aiEncryptionActive ? 'var(--success)' : 'var(--text-dim)';
+
+            const aiToggle = document.getElementById('privacyAiToggle');
+            aiToggle.checked = loadSetting('ai_enabled', 'true') === 'true';
+            aiToggle.onchange = (e) => {
+                saveSetting('ai_enabled', e.target.checked ? 'true' : 'false');
+                loadDailyMotivation(); // Refresh the insight card to reflect the new state
+            };
         }
 
         function checkMilestoneAchievement() {
@@ -1200,13 +1355,21 @@
             document.getElementById('weeklyTotal').textContent = `Total: ${Math.round(total)} mins this week`;
         }
 
-        function checkTHIReminder() {
-            const lastDate = getLastTHIAssessmentDate();
-            if (!lastDate) return;
+        function checkReminders() {
+            // 1. Monthly THI Reminder
+            const lastTHI = getLastTHIAssessmentDate();
             const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-            if (Date.now() - lastDate.getTime() > thirtyDays) {
-                const card = document.getElementById('thiReminderCard');
-                if (card) card.style.display = 'block';
+            if (lastTHI && (Date.now() - lastTHI.getTime() > thirtyDays)) {
+                document.getElementById('thiReminderCard').style.display = 'block';
+            }
+
+            // 2. Bi-Weekly Hearing Test Reminder
+            const lastHearing = getLastHearingTestDate();
+            const fourteenDays = 14 * 24 * 60 * 60 * 1000;
+            if (!lastHearing || (Date.now() - lastHearing.getTime() > fourteenDays)) {
+                // Only show if user has finished onboarding to avoid cluttering the welcome screen
+                const step = parseInt(loadSetting('onboarding_step', '0'));
+                if (step >= 5) document.getElementById('hearingReminderCard').style.display = 'block';
             }
         }
 
@@ -1284,6 +1447,24 @@
                 return false;
             }
         }
+
+        function updatePrivacyHub() {
+            const audit = getPrivacyAudit();
+            if (document.getElementById('privacyStorageUsage'))
+                document.getElementById('privacyStorageUsage').textContent = audit.storageUsedKB + ' KB';
+            if (document.getElementById('privacyEncryptStatus'))
+                document.getElementById('privacyEncryptStatus').textContent = audit.aiEncryptionActive ? 'Vault Active' : 'Unencrypted';
+
+            const aiToggle = document.getElementById('privacyAiToggle');
+            if (aiToggle) {
+                aiToggle.checked = loadSetting('ai_enabled', 'true') === 'true';
+                aiToggle.onchange = (e) => {
+                    saveSetting('ai_enabled', e.target.checked ? 'true' : 'false');
+                    loadDailyMotivation();
+                    updateSettingsInsights();
+                };
+            }
+        }
     </script>
 
     <div id="aiSetupModal" class="modal-overlay">
@@ -1324,16 +1505,16 @@
         </div>
     </div>
 
-    <div id="whatsNewModal" class="modal-overlay">
+    <div id="whatsNewModal" class="modal-overlay" onclick="if(event.target === this) closeWhatsNew()">
         <div class="modal-card">
             <h2 style="color: var(--accent); margin-top: 0;">What's New in v<span class="app-version-label"></span></h2>
             <p class="info">Recent improvements to your therapy experience:</p>
-            <div
-                id="dynamicWhatsNew" style="max-height: 400px; overflow-y: auto; text-align: left; padding-right: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
-                </div>
+            <div id="dynamicWhatsNew"
+                style="max-height: 400px; overflow-y: auto; text-align: left; padding-right: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
             </div>
-            <button onclick="closeWhatsNew()" class="big-btn play-btn">Let's Go</button>
+            <button onclick="closeWhatsNew()" class="big-btn play-btn" style="margin-top: 20px;">Let's Go</button>
         </div>
+    </div>
     </div>
 
 </body>

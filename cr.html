@@ -113,7 +113,7 @@
                 until it matches your tinnitus.</p>
             <div class="ctrl" data-target="freqBracketSlider">
                 <label>Test Tone Frequency (Hz) <input type="number" id="freqBracketInput" class="val-input"
-                        value="6000" min="500" max="16000"></label>
+                        inputmode="numeric" pattern="[0-9]*" value="6000" min="500" max="16000"></label>
                 <input id="freqBracketSlider" type="range" min="500" max="16000" value="6000" step="1">
                 <div class="fine-tune-group" data-target="freqBracketInput">
                     <button class="fine-tune-btn" data-delta="-100">-100</button>
@@ -143,7 +143,8 @@
             <div class="ctrl" data-target="baseFreq">
                 <label>Tinnitus Frequency (Hz)
                     <div class="input-with-buttons">
-                        <input type="number" id="baseFreq" class="val-input" value="6000" min="500" max="12000">
+                        <input type="number" id="baseFreq" class="val-input" inputmode="numeric" pattern="[0-9]*"
+                            value="6000" min="500" max="12000">
                         <div class="fine-tune-group" data-target="baseFreq">
                             <button class="fine-tune-btn" data-delta="-10">-10</button>
                             <button class="fine-tune-btn" data-delta="-1">-1</button>
@@ -294,13 +295,17 @@
                 if (bracketPlaying && bracketOsc) bracketOsc.frequency.setTargetAtTime(e.target.value, bracketAudioCtx.currentTime, 0.05);
             };
             document.getElementById('freqBracketInput').oninput = (e) => {
-                const val = parseFloat(e.target.value);
+                const valStr = e.target.value;
+                const val = parseFloat(valStr);
                 if (!isNaN(val) && val >= 100 && val <= 20000) {
                     document.getElementById('freqBracketSlider').value = val;
                     saveSetting('cr_bracketFreq', val);
                     updateStatusDots();
                     if (bracketPlaying && bracketOsc) bracketOsc.frequency.setTargetAtTime(val, bracketAudioCtx.currentTime, 0.05);
                 }
+            };
+            document.getElementById('freqBracketInput').onblur = (e) => {
+                e.target.value = document.getElementById('freqBracketSlider').value;
             };
 
             for (let i = 0; i < 4; i++) {

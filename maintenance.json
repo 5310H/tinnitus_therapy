@@ -1,5 +1,6 @@
 {
-  "version": "2026.06.19",
+  "version": "2026.06.30",
+  "date": "June 2026",
   "enabled": false,
   "whatsNew": [
     "Anti-Aliased Frequency Jitter Fix",
