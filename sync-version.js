@@ -13,6 +13,32 @@ const colors = {
     gray: "\x1b[90m"
 };
 
+// --- Audit Logging Setup ---
+// Captures all console output to generate a persistent audit trail for the last sync attempt.
+const auditTrail = [];
+const originalLog = console.log;
+const originalError = console.error;
+const originalWarn = console.warn;
+
+console.log = (...args) => {
+    auditTrail.push(args.join(' ').replace(/\x1b\[[0-9;]*m/g, ''));
+    originalLog(...args);
+};
+console.error = (...args) => {
+    auditTrail.push(`❌ ERROR: ${args.join(' ').replace(/\x1b\[[0-9;]*m/g, '')}`);
+    originalError(...args);
+};
+console.warn = (...args) => {
+    auditTrail.push(`⚠️ WARNING: ${args.join(' ').replace(/\x1b\[[0-9;]*m/g, '')}`);
+    originalWarn(...args);
+};
+
+process.on('exit', (code) => {
+    const logHeader = `Sync Audit Report - v${version}\nExecuted: ${new Date().toLocaleString()}\nExit Status: ${code === 0 ? 'Success' : 'Failed'}\n${'='.repeat(50)}\n\n`;
+    fs.writeFileSync(path.join(__dirname, 'last-sync-audit.log'), logHeader + auditTrail.join('\n'));
+    originalLog(`${colors.gray}\nAudit report archived to last-sync-audit.log${colors.reset}`);
+});
+
 const isDryRun = process.argv.includes('--dry-run');
 const shouldPush = process.argv.includes('--push');
 
