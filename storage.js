@@ -1,7 +1,7 @@
 // Shared script for Tinnitus Therapy Suite persistence
 // Include this at the bottom of therapy pages to handle auto-save/load
 
-const APP_VERSION = "2026.06.30";
+const APP_VERSION = "2026.06.31";
 
 /** 
  * Helpers for consistent localStorage interaction
@@ -2873,6 +2873,13 @@ function syncUIVersion() {
         const pageName = fullPath.split('/').pop() || 'index.html';
         const isDocs = fullPath.includes('/docs/');
 
+        // Debug Bypass: Allows testers to skip onboarding via URL parameter ?debug=1
+        const isDebug = window.location.search.includes('debug=1') || localStorage.getItem('tts_debug_mode') === 'true';
+        if (isDebug) {
+            console.info("[Gatekeeper] Debug mode active. Bypassing onboarding requirements.");
+            _memSessionActive = true;
+        }
+
         async function checkGatekeeper() {
             try {
                 const configPath = isDocs ? '../maintenance.json' : 'maintenance.json';
@@ -2892,200 +2899,201 @@ function syncUIVersion() {
                     // 2. Maintenance Mode Routing
                     const remoteMaintenance = config.enabled === true;
                     if (remoteMaintenance && pageName !== 'maintenance.html') {
-                        console.warn("[Gatekeeper] Suite is down for maintenance. Redirecting...");
-                        window.location.replace(isDocs ? '../maintenance.html' : 'maintenance.html');
-                        return;
-                    } else if (!remoteMaintenance && pageName === 'maintenance.html') {
-                        console.log("[Gatekeeper] Maintenance concluded. Returning to suite...");
-                        window.location.replace(isDocs ? '../index.html' : 'index.html');
-                        return;
+                        if (remoteMaintenance && pageName !== 'maintenance.html' && !isDebug) {
+                            console.warn("[Gatekeeper] Suite is down for maintenance. Redirecting...");
+                            window.location.replace(isDocs ? '../maintenance.html' : 'maintenance.html');
+                            return;
+                        } else if (!remoteMaintenance && pageName === 'maintenance.html') {
+                            console.log("[Gatekeeper] Maintenance concluded. Returning to suite...");
+                            window.location.replace(isDocs ? '../index.html' : 'index.html');
+                            return;
+                        }
+                        MAINTENANCE_MODE = remoteMaintenance;
+                        window.REMOTE_CONFIG = config;
                     }
-                    MAINTENANCE_MODE = remoteMaintenance;
-                    window.REMOTE_CONFIG = config;
-                }
-            } catch (e) { console.warn("[Gatekeeper] Health check failure:", e); }
-        }
+                } catch (e) { console.warn("[Gatekeeper] Health check failure:", e); }
+            }
 
         // Perform initial check on load and establish periodic heartbeats
         await checkGatekeeper();
-        setInterval(checkGatekeeper, 300000); // Check every 5 minutes
+            setInterval(checkGatekeeper, 300000); // Check every 5 minutes
 
-        // 1. Identify Home/Root and authorize the session (more robust detection)
-        // Check if the path ends with common root patterns or project directory name
-        const homePatterns = ['index.html', '', 'tinnitus_therapy', 'tinnitus_therapy/'];
-        const isHome = homePatterns.some(p => pageName === p || fullPath.endsWith(p));
+            // 1. Identify Home/Root and authorize the session (more robust detection)
+            // Check if the path ends with common root patterns or project directory name
+            const homePatterns = ['index.html', '', 'tinnitus_therapy', 'tinnitus_therapy/'];
+            const isHome = homePatterns.some(p => pageName === p || fullPath.endsWith(p));
 
-        try {
-            // Set session active if we are on the home page or a public page to avoid immediate redirect
-            if (isHome || isDocs) _memSessionActive = true;
+            try {
+                // Set session active if we are on the home page or a public page to avoid immediate redirect
+                if (isHome || isDocs) _memSessionActive = true;
 
-            // If we are on a therapy page or tool, mark splash as shown so going "Home" skips it.
-            if (!isHome && !isDocs) {
-                sessionStorage.setItem('tts_splash_shown', 'true');
+                // If we are on a therapy page or tool, mark splash as shown so going "Home" skips it.
+                if (!isHome && !isDocs) {
+                    sessionStorage.setItem('tts_splash_shown', 'true');
+                }
+            } catch (e) { /* Private mode protection */ }
+
+            // 2. Identify Whitelisted (Public) pages
+            const publicPages = ['index.html', 'disclaimer.html', 'license.html', 'about.html', 'research.html', 'feedback.html', 'presentation.html', 'handout.html', 'clinical_summary.html', 'stats.html', 'audiogram.html', 'hearingtest.html', 'cbt.html', 'validation.html', 'notchfinder.html'];
+            const isPublicPage = isHome || publicPages.some(p => pageName === p);
+
+            const onboardingStep = parseInt(loadSetting('onboarding_step', '0')); // Default to 0 if not set
+            const sessionActive = _memSessionActive || (function () {
+                try { return sessionStorage.getItem('tts_session_active') === 'true'; }
+                catch (e) { return false; }
+            })();
+
+            if (!isStorageAvailable()) {
+                console.error("[Gatekeeper] LocalStorage is blocked. The suite cannot save your progress.");
+                alert("Warning: Your browser is blocking LocalStorage. Therapy settings and progress will not be saved.");
             }
-        } catch (e) { /* Private mode protection */ }
 
-        // 2. Identify Whitelisted (Public) pages
-        const publicPages = ['index.html', 'disclaimer.html', 'license.html', 'about.html', 'research.html', 'feedback.html', 'presentation.html', 'handout.html', 'clinical_summary.html', 'stats.html', 'audiogram.html', 'hearingtest.html', 'cbt.html', 'validation.html', 'notchfinder.html'];
-        const isPublicPage = isHome || publicPages.some(p => pageName === p);
-
-        const onboardingStep = parseInt(loadSetting('onboarding_step', '0')); // Default to 0 if not set
-        const sessionActive = _memSessionActive || (function () {
-            try { return sessionStorage.getItem('tts_session_active') === 'true'; }
-            catch (e) { return false; }
-        })();
-
-        if (!isStorageAvailable()) {
-            console.error("[Gatekeeper] LocalStorage is blocked. The suite cannot save your progress.");
-            alert("Warning: Your browser is blocking LocalStorage. Therapy settings and progress will not be saved.");
-        }
-
-        // 3. Enforce Redirection: Bypass if already onboarded OR session is active
-        // New logic: If onboarding is not complete (step < 5) AND it's not a public page AND not the home page, redirect to home.
-        if (onboardingStep < 6 && !isPublicPage && !isHome) {
-            console.warn(`[Gatekeeper] Onboarding not complete (step ${onboardingStep}). Redirecting to home...`);
-            const redirectTarget = isDocs ? '../index.html' : 'index.html';
-            window.location.replace(redirectTarget);
-            return; // Stop further execution on this page
-        }
-        // If on the home page, and onboarding is not complete, ensure the onboarding modal is shown.
-        if (isHome && onboardingStep < 6) {
-            console.log(`[Gatekeeper] Onboarding in progress (step ${onboardingStep}). Allowing access to home page.`);
-        }
+            // 3. Enforce Redirection: Bypass if already onboarded OR session is active
+            // New logic: If onboarding is not complete (step < 5) AND it's not a public page AND not the home page, redirect to home.
+            if (onboardingStep < 6 && !isPublicPage && !isHome && !isDebug) {
+                console.warn(`[Gatekeeper] Onboarding not complete (step ${onboardingStep}). Redirecting to home...`);
+                const redirectTarget = isDocs ? '../index.html' : 'index.html';
+                window.location.replace(redirectTarget);
+                return; // Stop further execution on this page
+            }
+            // If on the home page, and onboarding is not complete, ensure the onboarding modal is shown.
+            if (isHome && onboardingStep < 6) {
+                console.log(`[Gatekeeper] Onboarding in progress (step ${onboardingStep}). Allowing access to home page.`);
+            }
+        }) ();
     })();
-})();
 
-// Re-sync with body once DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
+    // Re-sync with body once DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            applyTheme();
+            applyCompactMode();
+            applyDashboardLayout();
+            applyEmailVisibility();
+            syncUIVersion();
+
+            // Version Update Notification
+            const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
+            const lastSeenVersion = localStorage.getItem('tts_last_seen_version');
+            // Only trigger "What's New" if user has completed onboarding to avoid UI conflicts
+            if (onboardingStep >= 6 && lastSeenVersion && lastSeenVersion !== APP_VERSION) {
+                setTimeout(showWhatsNew, 1500);
+            }
+        });
+    } else {
         applyTheme();
         applyCompactMode();
         applyDashboardLayout();
         applyEmailVisibility();
+        if (typeof i18n !== 'undefined') i18n.applyTranslations(); // Apply translations on theme change
         syncUIVersion();
 
         // Version Update Notification
         const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
         const lastSeenVersion = localStorage.getItem('tts_last_seen_version');
-        // Only trigger "What's New" if user has completed onboarding to avoid UI conflicts
         if (onboardingStep >= 6 && lastSeenVersion && lastSeenVersion !== APP_VERSION) {
             setTimeout(showWhatsNew, 1500);
         }
-    });
-} else {
-    applyTheme();
-    applyCompactMode();
-    applyDashboardLayout();
-    applyEmailVisibility();
-    if (typeof i18n !== 'undefined') i18n.applyTranslations(); // Apply translations on theme change
-    syncUIVersion();
-
-    // Version Update Notification
-    const onboardingStep = parseInt(localStorage.getItem('tts_onboarding_step') || '0');
-    const lastSeenVersion = localStorage.getItem('tts_last_seen_version');
-    if (onboardingStep >= 6 && lastSeenVersion && lastSeenVersion !== APP_VERSION) {
-        setTimeout(showWhatsNew, 1500);
     }
-}
 
-function needsValidation() {
-    return !getUnifiedValidationStatus().isValid;
-}
+    function needsValidation() {
+        return !getUnifiedValidationStatus().isValid;
+    }
 
-// Expose all relevant components to window for compatibility with non-module scripts
-Object.assign(window, {
-    isStorageAvailable,
-    getJson,
-    setJson,
-    loadSetting,
-    saveSetting,
-    getTodayKey,
-    SystemCompatibilityAudit,
-    getPrivacyAudit,
-    completeOnboarding,
-    setOnboardingStep,
-    getLocalStorageUsage,
-    requestPersistentStorage,
-    TinnitusAIManager,
-    deriveKeyFromPin,
-    encryptGeminiKey,
-    decryptGeminiKey,
-    resetOnboarding,
-    getLatestLogData,
-    getThoughtRecords,
-    getDistressScores,
-    getDailyUsage,
-    logDistressScore,
-    logUsageMinutes,
-    logRIResult,
-    logTMCPoint,
-    logQFactor,
-    logLoudnessGrowthPoint,
-    logThoughtRecordEntry,
-    getMilestoneProgress,
-    toggleMilestone,
-    markSplashShown,
-    resetModuleSettings,
-    getUnifiedValidationStatus,
-    ClinicalSafetyAudit,
-    NoiseGenerator,
-    createTrahregNoise,
-    getAudioDevices,
-    logTherapyError,
-    getTherapyErrorLog,
-    sendClinicalTelemetry,
-    getHearingBoost,
-    getBalancePreset,
-    isFrequencySafe,
-    exportAllData,
-    exportClinicalDataCSV,
-    deleteLogEntry,
-    clearAllLogs,
-    importAllData,
-    getClinicalReportData,
-    generateClinicalReportText,
-    generateClinicalReportHtml,
-    generateGlobalClinicalReportPDF,
-    generateMilestoneCertificatePDF,
-    getTherapyRecommendations,
-    shareSetup,
-    initAI,
-    performGeminiTest,
-    fetchAIAssistance,
-    getBalancedThoughtSuggestion,
-    getSOSSupport,
-    getSoundRecipe,
-    getPatternAnalysis,
-    getTRTExplanation,
-    getClinicalSummary,
-    getDailyMotivation,
-    getEnvironmentalAdvice,
-    getMindfulnessScript,
-    getHabituationForecast,
-    getPersonalizedInsights,
-    getRIResults,
-    getMMLResults,
-    getLoudnessGrowthLog,
-    getQFactors,
-    getTMCLog,
-    clearTMCLog,
-    saveSoundscapePreset,
-    loadSoundscapePreset,
-    getLastTHIAssessmentDate,
-    showWalkthrough,
-    showWhatsNew,
-    closeWhatsNew,
-    showQuickStartGuide,
-    startModuleTutorial,
-    toggleCompactMode,
-    toggleDashboardLayout,
-    toggleTheme,
-    applyCompactMode,
-    applyDashboardLayout,
-    applyTheme,
-    applyEmailVisibility,
-    syncUIVersion,
-    needsValidation,
-    tinnitusAI,
-    APP_VERSION
-});
+    // Expose all relevant components to window for compatibility with non-module scripts
+    Object.assign(window, {
+        isStorageAvailable,
+        getJson,
+        setJson,
+        loadSetting,
+        saveSetting,
+        getTodayKey,
+        SystemCompatibilityAudit,
+        getPrivacyAudit,
+        completeOnboarding,
+        setOnboardingStep,
+        getLocalStorageUsage,
+        requestPersistentStorage,
+        TinnitusAIManager,
+        deriveKeyFromPin,
+        encryptGeminiKey,
+        decryptGeminiKey,
+        resetOnboarding,
+        getLatestLogData,
+        getThoughtRecords,
+        getDistressScores,
+        getDailyUsage,
+        logDistressScore,
+        logUsageMinutes,
+        logRIResult,
+        logTMCPoint,
+        logQFactor,
+        logLoudnessGrowthPoint,
+        logThoughtRecordEntry,
+        getMilestoneProgress,
+        toggleMilestone,
+        markSplashShown,
+        resetModuleSettings,
+        getUnifiedValidationStatus,
+        ClinicalSafetyAudit,
+        NoiseGenerator,
+        createTrahregNoise,
+        getAudioDevices,
+        logTherapyError,
+        getTherapyErrorLog,
+        sendClinicalTelemetry,
+        getHearingBoost,
+        getBalancePreset,
+        isFrequencySafe,
+        exportAllData,
+        exportClinicalDataCSV,
+        deleteLogEntry,
+        clearAllLogs,
+        importAllData,
+        getClinicalReportData,
+        generateClinicalReportText,
+        generateClinicalReportHtml,
+        generateGlobalClinicalReportPDF,
+        generateMilestoneCertificatePDF,
+        getTherapyRecommendations,
+        shareSetup,
+        initAI,
+        performGeminiTest,
+        fetchAIAssistance,
+        getBalancedThoughtSuggestion,
+        getSOSSupport,
+        getSoundRecipe,
+        getPatternAnalysis,
+        getTRTExplanation,
+        getClinicalSummary,
+        getDailyMotivation,
+        getEnvironmentalAdvice,
+        getMindfulnessScript,
+        getHabituationForecast,
+        getPersonalizedInsights,
+        getRIResults,
+        getMMLResults,
+        getLoudnessGrowthLog,
+        getQFactors,
+        getTMCLog,
+        clearTMCLog,
+        saveSoundscapePreset,
+        loadSoundscapePreset,
+        getLastTHIAssessmentDate,
+        showWalkthrough,
+        showWhatsNew,
+        closeWhatsNew,
+        showQuickStartGuide,
+        startModuleTutorial,
+        toggleCompactMode,
+        toggleDashboardLayout,
+        toggleTheme,
+        applyCompactMode,
+        applyDashboardLayout,
+        applyTheme,
+        applyEmailVisibility,
+        syncUIVersion,
+        needsValidation,
+        tinnitusAI,
+        APP_VERSION
+    });

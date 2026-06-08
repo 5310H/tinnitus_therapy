@@ -620,7 +620,8 @@
 
         function updateDashboardGating() {
             const step = parseInt(loadSetting('onboarding_step', '0'));
-            const isComplete = step >= 6;
+            const isDebug = window.location.search.includes('debug=1') || localStorage.getItem('tts_debug_mode') === 'true';
+            const isComplete = step >= 6 || isDebug;
             // Strict gating: Hide all secondary cards until mandatory onboarding is finished
             const gatedCards = [
                 'card-modes', 'card-tests', 'card-utils', 'card-progress',
@@ -779,7 +780,9 @@
             const onboardingStep = parseInt(loadSetting('onboarding_step', 0));
             updateDashboardGating();
 
-            if (onboardingStep < 6) {
+            const isDebug = window.location.search.includes('debug=1') || localStorage.getItem('tts_debug_mode') === 'true';
+
+            if (onboardingStep < 6 && !isDebug) {
                 if (typeof showOnboardingModal === 'function') {
                     showOnboardingModal();
                 }
