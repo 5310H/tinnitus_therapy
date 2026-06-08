@@ -588,14 +588,14 @@ function validateAssets() {
                     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
                     const timeout = setTimeout(() => {
                         rl.close();
-                        process.stdout.write(`\n${colors.yellow}Timed out. Defaulting to "no".${colors.reset}\n`);
-                        resolve('n');
+                        process.stdout.write(`\n${colors.yellow}Timed out. Defaulting to "yes".${colors.reset}\n`);
+                        resolve('y');
                     }, 10000); // 10 second timeout
 
-                    rl.question(`\n${colors.yellow}⚠️ Confirm push to origin/${currentBranch} and tags? (y/n) [10s timeout]: ${colors.reset}`, (ans) => {
+                    rl.question(`\n${colors.yellow}⚠️ Confirm push to origin/${currentBranch} and tags? (Y/n) [10s timeout]: ${colors.reset}`, (ans) => {
                         clearTimeout(timeout);
                         rl.close();
-                        resolve(ans.trim().toLowerCase());
+                        resolve(ans.trim().toLowerCase() || 'y');
                     });
                 });
 
