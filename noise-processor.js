@@ -19,13 +19,19 @@ class NoiseProcessor extends AudioWorkletProcessor {
             };
             // Instantiating the compiled module synchronously inside the worklet
             this.wasmInstance = new WebAssembly.Instance(options.processorOptions.wasmModule, wasmImports);
-            // Initialize WASM chime states to zero
-            const heap = new Float32Array(this.wasmInstance.exports.memory.buffer);
-            // Initialize Blue and Violet states in WASM memory (Memory[96..108])
-            heap[96 / 4] = 0;  // c0 (Blue)
-            heap[100 / 4] = 0; // c1 (Blue)
-            heap[104 / 4] = 0; // c2 (Blue)
-            heap[108 / 4] = 0; // lastIn (Violet)
+            this.wasmHeap = new Float32Array(this.wasmInstance.exports.memory.buffer);
+            this.wasmOutIdx = 256; // Static offset (1024 / 4) for processing buffer
+
+            // Clinical Safety: Explicitly zero out all WASM state registers to prevent audio artifacts
+            // Memory Layout: Pink (0-28), Red (32-36), Brown (40), Blue (96-104), Violet (108)
+            for (let i = 0; i < 7; i++) this.wasmHeap[i] = 0;      // Pink State (b0-b6)
+            this.wasmHeap[32 / 4] = 0; this.wasmHeap[36 / 4] = 0; // Red State (l1, l2)
+            this.wasmHeap[40 / 4] = 0;                           // Brown State (lastOut)
+
+            this.wasmHeap[96 / 4] = 0;  // c0 (Blue)
+            this.wasmHeap[100 / 4] = 0; // c1 (Blue)
+            this.wasmHeap[104 / 4] = 0; // c2 (Blue)
+            this.wasmHeap[108 / 4] = 0; // lastIn (Violet)
         }
         this.lfoPhase = 0; // For Forest noise (JS Fallback)
         this.lfoVal = 0.5; // For Forest noise (JS Fallback)
@@ -42,6 +48,11 @@ class NoiseProcessor extends AudioWorkletProcessor {
         this.c1 = 0;
         this.c2 = 0;
         this.lastIn = 0; // For Violet noise (JS Fallback)
+
+        // Pre-allocate fallback arrays to avoid allocations in the audio thread
+        this.chimeRatios = new Float32Array([1, 1.25, 1.5, 1.875, 2, 2.5]);
+        this.fallbackPhases = new Float32Array(8);
+        this.fallbackEnvelopes = new Float32Array(8);
 
         const sr = typeof sampleRate === 'number' ? sampleRate : 44100;
         const ratio = 44100 / (sr > 0 ? sr : 44100);
@@ -78,10 +89,10 @@ class NoiseProcessor extends AudioWorkletProcessor {
         this.rmsSq = 0;
         this.dcMean = 0; // Hardware protection: Track DC offset
         this.limiterGain = 1.0;
-        this.limiterThreshold = 0.9; // Target RMS threshold for clipping prevention
+        this.limiterThreshold = 0.8; // Clinical standard: -2dB headroom for long-term exposure
         const rmsTime = 0.01; // 10ms window for RMS integration
         this.rmsAlpha = 1 - Math.exp(-1 / (sr * rmsTime));
-        const gAttack = 0.005; // 5ms attack
+        const gAttack = 0.002; // 2ms attack: Faster protection against transients
         const gRelease = 0.1; // 100ms release
         this.gainAttackAlpha = 1 - Math.exp(-1 / (sr * gAttack));
         this.gainReleaseAlpha = 1 - Math.exp(-1 / (sr * gRelease));
@@ -94,8 +105,8 @@ class NoiseProcessor extends AudioWorkletProcessor {
         // Crossfade state management
         this.prevColor = null;
         this.fadePos = 0;
-        this.tempBuf1 = new Float32Array(128);
-        this.tempBuf2 = new Float32Array(128);
+        this.tempBuf1 = new Float32Array(512); // Pre-allocate safe maximum to avoid thread allocations
+        this.tempBuf2 = new Float32Array(512);
 
         this.port.onmessage = (e) => {
             if (e.data.type === 'SET_COLOR') {
@@ -159,11 +170,19 @@ class NoiseProcessor extends AudioWorkletProcessor {
         this.color = this._resolveColor(this.requestedColor);
 
         // Voss-McCartney state for Pink Noise
-        this.b0 = 0; this.b1 = 0; this.b2 = 0; this.b3 = 0; this.b4 = 0; this.b5 = 0; this.b6 = 0; // Pink noise state
+        this.b0 = 0; this.b1 = 0; this.b2 = 0; this.b3 = 0; this.b4 = 0; this.b5 = 0; this.b6 = 0;
 
-        // Chime state
-        this.phases = new Float32Array(8);
-        this.envelopes = new Float32Array(8);
+        // Filter states
+        this.lastOut = 0;
+        this.lastOut2 = 0;
+        this.lastRedIn = 0;
+        this.redHPState = 0;
+        this.patterState = 0;
+        this.c0 = 0; this.c1 = 0; this.c2 = 0; this.lastIn = 0;
+
+        // Reset Chime fallback states
+        this.fallbackPhases.fill(0);
+        this.fallbackEnvelopes.fill(0);
 
         this.surgeVal = 1.0;
         this.amVal = 1.0;
@@ -214,10 +233,6 @@ class NoiseProcessor extends AudioWorkletProcessor {
         this.surgePhase = (this.surgePhase + (0.503 * len) / sr) % (2 * Math.PI); // 0.08Hz
         if (pulseDepth > 0) this.pulsePhase = (this.pulsePhase + (2 * Math.PI * pulseRate * len) / sr) % (2 * Math.PI);
 
-        if (this.tempBuf1.length !== len) {
-            this._resizeTempBuffers(len);
-        }
-
         const crossfadeSamples = Math.max(1, Math.floor(crossfadeSec * sr));
 
         if (this.prevColor) {
@@ -231,14 +246,17 @@ class NoiseProcessor extends AudioWorkletProcessor {
 
                 // Apply safety limiter logic during crossfade
                 let val = mixed;
-                if (isNaN(val) || !isFinite(val)) val = 0;
+                if (isNaN(val) || !isFinite(val)) {
+                    val = 0;
+                    this._initializeNoiseState(); // Emergency state reset for recursive filters
+                }
                 const sq = val * val;
                 this.rmsSq = (this.rmsAlpha * sq) + (this.rmsAlphaInv * this.rmsSq);
                 this.dcMean = (this.dcAlpha * val) + (this.dcAlphaInv * this.dcMean);
                 let targetGain = 1.0;
-                if (this.rmsSq > 0.81) targetGain = 0.9 / Math.sqrt(this.rmsSq);
+                if (this.rmsSq > 0.64) targetGain = 0.8 / Math.sqrt(this.rmsSq); // 0.8^2 = 0.64
                 const absDc = Math.abs(this.dcMean);
-                if (absDc > 0.3) targetGain = Math.min(targetGain, 0.3 / absDc);
+                if (absDc > 0.1) targetGain = Math.min(targetGain, 0.1 / absDc); // Protect transducers from DC bias
                 const gAlpha = (targetGain < this.limiterGain) ? this.gainAttackAlpha : this.gainReleaseAlpha;
                 this.limiterGain += (targetGain - this.limiterGain) * gAlpha;
                 const finalVal = val * this.amVal * this.limiterGain;
@@ -256,16 +274,19 @@ class NoiseProcessor extends AudioWorkletProcessor {
             // Inlined sample loop to minimize function call overhead in the audio thread
             for (let i = 0; i < len; i++) {
                 let val = channelL[i] * baseGain;
-                if (isNaN(val)) val = 0;
+                if (isNaN(val) || !isFinite(val)) {
+                    val = 0;
+                    this._initializeNoiseState(); // Emergency state reset
+                }
 
                 const sq = val * val;
                 this.rmsSq = (this.rmsAlpha * sq) + (this.rmsAlphaInv * this.rmsSq);
                 this.dcMean = (this.dcAlpha * val) + (this.dcAlphaInv * this.dcMean);
 
                 let targetGain = 1.0;
-                if (this.rmsSq > 0.81) targetGain = 0.9 / Math.sqrt(this.rmsSq);
+                if (this.rmsSq > 0.64) targetGain = 0.8 / Math.sqrt(this.rmsSq);
                 const absDc = Math.abs(this.dcMean);
-                if (absDc > 0.3) targetGain = Math.min(targetGain, 0.3 / absDc);
+                if (absDc > 0.1) targetGain = Math.min(targetGain, 0.1 / absDc);
 
                 const gAlpha = (targetGain < this.limiterGain) ? this.gainAttackAlpha : this.gainReleaseAlpha;
                 this.limiterGain += (targetGain - this.limiterGain) * gAlpha;
@@ -278,26 +299,27 @@ class NoiseProcessor extends AudioWorkletProcessor {
         return true;
     }
 
-    _resizeTempBuffers(len) {
-        this.tempBuf1 = new Float32Array(len);
-        this.tempBuf2 = new Float32Array(len);
-    }
-
     _fillBuffer(color, len, target) {
         const peak = this.peakMap[color] || 0.5;
         const sr = sampleRate || 44100;
         const phaseConst = (2 * Math.PI) / sr;
 
         // Use WASM for performance-critical colors
-        const heap = this.wasmInstance ? new Float32Array(this.wasmInstance.exports.memory.buffer) : null;
-        const outPtr = 1024; // Static offset for processing buffer
+        // Safety: If WASM memory grows, the existing ArrayBuffer is detached.
+        // We must refresh the Float32Array view if the buffer reference has changed.
+        if (this.wasmInstance && this.wasmHeap.buffer !== this.wasmInstance.exports.memory.buffer) {
+            this.wasmHeap = new Float32Array(this.wasmInstance.exports.memory.buffer);
+        }
+
+        const outPtr = 1024; // Bytes
+        const outIdx = this.wasmOutIdx;
 
         if (color === 'pink') {
             if (this.wasmInstance) {
                 this.wasmInstance.exports.fillPink(outPtr, len,
                     this.p[0], this.p[1], this.p[2], this.p[3], this.p[4], this.p[5],
                     this.g[0], this.g[1], this.g[2], this.g[3], this.g[4], this.g[5]);
-                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+                for (let j = 0; j < len; j++) target[j] = this.wasmHeap[outIdx + j];
             } else {
                 for (let i = 0; i < len; i++) {
                     const white = Math.random() * 2 - 1;
@@ -317,7 +339,7 @@ class NoiseProcessor extends AudioWorkletProcessor {
         } else if (color === 'red') {
             if (this.wasmInstance) {
                 this.wasmInstance.exports.fillRed(outPtr, len);
-                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+                for (let j = 0; j < len; j++) target[j] = this.wasmHeap[outIdx + j];
             } else {
                 for (let i = 0; i < len; i++) {
                     const white = Math.random() * 2 - 1;
@@ -332,26 +354,22 @@ class NoiseProcessor extends AudioWorkletProcessor {
         } else if (color === 'chimes') {
             if (this.wasmInstance) {
                 this.wasmInstance.exports.fillChimes(outPtr, len, this.chimeBaseFreq, phaseConst);
-                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+                for (let j = 0; j < len; j++) target[j] = this.wasmHeap[outIdx + j];
             } else {
                 // Original JS implementation for fallback
-                const ratios = [1, 1.25, 1.5, 1.875, 2, 2.5];
-                // Ensure phases and envelopes are initialized for JS fallback
-                if (!this.phases) this.phases = new Float32Array(8);
-                if (!this.envelopes) this.envelopes = new Float32Array(8);
-
-                for (let h = 0; h < ratios.length; h++) {
+                const rs = this.chimeRatios;
+                for (let h = 0; h < rs.length; h++) {
                     if (Math.random() < 0.0015) { // Roughly 1 strike every 15s per harmonic
-                        this.envelopes[h] = 0.7 + Math.random() * 0.3;
+                        this.fallbackEnvelopes[h] = 0.7 + Math.random() * 0.3;
                     }
                 }
 
                 for (let i = 0; i < len; i++) {
                     let val = 0;
-                    for (let h = 0; h < ratios.length; h++) {
-                        val += Math.sin(this.phases[h]) * this.envelopes[h] * (1 / (h + 1));
-                        this.phases[h] = (this.phases[h] + phaseConst * this.chimeBaseFreq * ratios[h]) % (2 * Math.PI);
-                        this.envelopes[h] *= 0.99996; // Slower, more resonant decay
+                    for (let h = 0; h < rs.length; h++) {
+                        val += Math.sin(this.fallbackPhases[h]) * this.fallbackEnvelopes[h] * (1 / (h + 1));
+                        this.fallbackPhases[h] = (this.fallbackPhases[h] + phaseConst * this.chimeBaseFreq * rs[h]) % (2 * Math.PI);
+                        this.fallbackEnvelopes[h] *= 0.99996; // Slower, more resonant decay
                     }
                     target[i] = val * 0.4;
                 }
@@ -361,7 +379,7 @@ class NoiseProcessor extends AudioWorkletProcessor {
                 this.wasmInstance.exports.fillRain(outPtr, len,
                     this.p[0], this.p[1], this.p[2], this.p[3], this.p[4], this.p[5],
                     this.g[0], this.g[1], this.g[2], this.g[3], this.g[4], this.g[5]);
-                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+                for (let j = 0; j < len; j++) target[j] = this.wasmHeap[outIdx + j];
             } else {
                 for (let i = 0; i < len; i++) {
                     const white = Math.random() * 2 - 1;
@@ -384,7 +402,7 @@ class NoiseProcessor extends AudioWorkletProcessor {
         } else if (color === 'ocean') {
             if (this.wasmInstance) {
                 this.wasmInstance.exports.fillOcean(outPtr, len, this.surgeVal);
-                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+                for (let j = 0; j < len; j++) target[j] = this.wasmHeap[outIdx + j];
             } else {
                 for (let i = 0; i < len; i++) {
                     const white = Math.random() * 2 - 1;
@@ -400,7 +418,7 @@ class NoiseProcessor extends AudioWorkletProcessor {
             if (this.wasmInstance) {
                 // WASM Implementation of Brown noise
                 this.wasmInstance.exports.fillBrown(outPtr, len, this.brownPole, this.brownGain);
-                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+                for (let j = 0; j < len; j++) target[j] = this.wasmHeap[outIdx + j];
             } else {
                 for (let i = 0; i < len; i++) {
                     const white = Math.random() * 2 - 1;
@@ -414,7 +432,7 @@ class NoiseProcessor extends AudioWorkletProcessor {
         } else if (color === 'blue') {
             if (this.wasmInstance) {
                 this.wasmInstance.exports.fillBlue(outPtr, len);
-                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+                for (let j = 0; j < len; j++) target[j] = this.wasmHeap[outIdx + j];
             } else {
                 for (let i = 0; i < len; i++) {
                     const white = Math.random() * 2 - 1;
@@ -428,7 +446,7 @@ class NoiseProcessor extends AudioWorkletProcessor {
         } else if (color === 'violet') {
             if (this.wasmInstance) {
                 this.wasmInstance.exports.fillViolet(outPtr, len);
-                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+                for (let j = 0; j < len; j++) target[j] = this.wasmHeap[outIdx + j];
             } else {
                 for (let i = 0; i < len; i++) {
                     const white = Math.random() * 2 - 1;
@@ -440,7 +458,7 @@ class NoiseProcessor extends AudioWorkletProcessor {
         } else if (color === 'forest') {
             if (this.wasmInstance) {
                 this.wasmInstance.exports.fillForest(outPtr, len);
-                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+                for (let j = 0; j < len; j++) target[j] = this.wasmHeap[outIdx + j];
             } else {
                 for (let i = 0; i < len; i++) {
                     const white = Math.random() * 2 - 1;
@@ -453,7 +471,7 @@ class NoiseProcessor extends AudioWorkletProcessor {
         } else if (color === 'white') { // Explicitly handle 'white' noise
             if (this.wasmInstance) {
                 this.wasmInstance.exports.fillWhite(outPtr, len);
-                target.set(heap.subarray(outPtr / 4, (outPtr / 4) + len));
+                for (let j = 0; j < len; j++) target[j] = this.wasmHeap[outIdx + j];
             } else {
                 for (let i = 0; i < len; i++) {
                     target[i] = (Math.random() * 2 - 1);

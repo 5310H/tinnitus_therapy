@@ -687,27 +687,6 @@
             }
         };
 
-        window.finishOnboarding = () => {
-            console.log("TTS: Finalizing setup...");
-            try {
-                saveSetting('onboarding_step', 6);
-                saveSetting('last_seen_version', APP_VERSION);
-                try { sessionStorage.setItem('tts_session_active', 'true'); } catch (e) { }
-                updateDashboardGating();
-                const modal = document.getElementById('onboardingModal');
-                if (modal) {
-                    modal.style.display = 'none';
-                    modal.remove();
-                }
-
-                window.location.href = 'index.html?setup=complete'; // Definitive redirection to bypass stuck state
-            } catch (e) {
-                console.error("TTS: Error finishing onboarding:", e);
-                // Fallback: just hide the modal if reload fails
-                document.getElementById('onboardingModal').style.display = 'none';
-            }
-        };
-
         window.onload = () => {
             // Start automatic countdown for splash screen every load
             let timeLeft = 10;
