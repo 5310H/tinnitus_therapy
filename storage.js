@@ -2,7 +2,7 @@
 // Include this at the bottom of therapy pages to handle auto-save/load
 
 (function () {
-    const APP_VERSION = "2026.06.32";
+    const APP_VERSION = "2026.06.33";
 
     /** 
      * Helpers for consistent localStorage interaction
@@ -2901,7 +2901,9 @@
             const isDocs = fullPath.includes('/docs/');
 
             // Debug Bypass: Allows testers to skip onboarding via URL parameter ?debug=1
-            const isDebug = window.location.search.includes('debug=1') || localStorage.getItem('tts_debug_mode') === 'true';
+            const urlParams = new URLSearchParams(window.location.search);
+            const isDebug = urlParams.get('debug') === '1' || localStorage.getItem('tts_debug_mode') === 'true';
+
             if (isDebug) {
                 console.info("[Gatekeeper] Debug mode active. Bypassing onboarding requirements.");
                 _memSessionActive = true;
@@ -2931,16 +2933,22 @@
                         if (isMaintActive) {
                             if (pageName !== 'maintenance.html' && !isDebug) {
                                 console.warn("[Gatekeeper] Suite is down for maintenance. Redirecting...");
-                                window.location.replace(isDocs ? '../maintenance.html' : 'maintenance.html');
+                                const url = new URL(isDocs ? '../maintenance.html' : 'maintenance.html', window.location.origin);
+                                url.search = window.location.search;
+                                window.location.replace(url.toString());
                                 return;
                             } else if (pageName === 'maintenance.html' && isDebug) {
                                 console.info("[Gatekeeper] Maintenance active but Debug detected. Returning to suite...");
-                                window.location.replace(isDocs ? '../index.html' : 'index.html');
+                                const url = new URL(isDocs ? '../index.html' : 'index.html', window.location.origin);
+                                url.search = window.location.search;
+                                window.location.replace(url.toString());
                                 return;
                             }
                         } else if (pageName === 'maintenance.html') {
                             console.log("[Gatekeeper] Maintenance concluded. Returning to suite...");
-                            window.location.replace(isDocs ? '../index.html' : 'index.html');
+                            const url = new URL(isDocs ? '../index.html' : 'index.html', window.location.origin);
+                            url.search = window.location.search;
+                            window.location.replace(url.toString());
                             return;
                         }
                         return isMaintActive; // Return state to IIFE
@@ -3117,6 +3125,7 @@
             saveSoundscapePreset,
             loadSoundscapePreset,
             getLastTHIAssessmentDate,
+            getLastHearingTestDate,
             showWalkthrough,
             showWhatsNew,
             closeWhatsNew,
@@ -3135,4 +3144,3 @@
             APP_VERSION
         });
     })();
-})();
