@@ -1,13 +1,13 @@
-Sync Audit Report - v2026.06.32
-Executed: 6/7/2026, 10:03:16 PM
+Sync Audit Report - v2026.06.34
+Executed: 6/11/2026, 9:18:45 AM
 Exit Status: Success
 ==================================================
 
-Updated storage.js to version 2026.06.32
-Updated sw.js to version 2026.06.32
-Updated manifest.json to version 2026.06.32
-Updated maintenance.json to version 2026.06.32
-Updated maintenance.json to version 2026.06.32
+[Dry Run] Would update storage.js to version 2026.06.34
+[Dry Run] Would update sw.js to version 2026.06.34
+[Dry Run] Would update manifest.json to version 2026.06.34
+[Dry Run] Would update maintenance.json to version 2026.06.34
+[Dry Run] Would update maintenance.json to version 2026.06.34
 
 --- DSP Stability Audit ---
 ✅ Syntax check passed.
@@ -65,13 +65,9 @@ Updated maintenance.json to version 2026.06.32
    To enable this check, run: npm install music-metadata@7.13.4
 
 --- Git Automation ---
-Creating recovery checkpoint: checkpoint/pre-v2026.06.32-1780884184376
-Staging changes on main and creating commit...
-Creating annotated tag: v2026.06.32
-Pushing changes and tags to origin/main...
-✅ Remote updated successfully.
+[Dry Run] Would create recovery checkpoint: checkpoint/pre-v2026.06.34-1781183925390
+[Dry Run] Would stage changes and create commit: "chore: release v2026.06.34"
+[Dry Run] Would create annotated tag: v2026.06.34
 
-✅ Success: v2026.06.32 is ready.
-   Recovery Branch: checkpoint/pre-v2026.06.32-1780884184376
-To undo:      git tag -d v2026.06.32 && git reset --soft HEAD~1
-To recover:   git checkout checkpoint/pre-v2026.06.32-1780884184376
+✅ Success: v2026.06.34 is ready.
+   [Dry Run] Would log recovery branch, publish instructions, undo/recover details.

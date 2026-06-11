@@ -2,8 +2,32 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const { execSync } = require('child_process');
-const packageJson = require('./package.json');
-const version = packageJson.version;
+const packageJsonPath = path.join(__dirname, 'package.json');
+const packageJson = require(packageJsonPath);
+let version = packageJson.version;
+
+const isDryRun = process.argv.includes('--dry-run');
+const shouldPush = process.argv.includes('--push');
+
+// Auto-discover and parse a custom version argument (e.g., node sync-version.js 2026.06.34)
+const args = process.argv.slice(2);
+const newVersionArg = args.find(arg => !arg.startsWith('-'));
+
+if (newVersionArg) {
+    if (/^\d+(\.\d+)+$/.test(newVersionArg)) {
+        version = newVersionArg;
+        packageJson.version = version;
+        if (isDryRun) {
+            console.log(`[Dry Run] Would update package.json version to: ${version}`);
+        } else {
+            fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
+            console.log(`Updated package.json version to: ${version}`);
+        }
+    } else {
+        console.error(`Invalid version format: "${newVersionArg}". Expected format like 2026.06.34 or 1.0.0.`);
+        process.exit(1);
+    }
+}
 
 const colors = {
     reset: "\x1b[0m",
@@ -38,9 +62,6 @@ process.on('exit', (code) => {
     fs.writeFileSync(path.join(__dirname, 'last-sync-audit.log'), logHeader + auditTrail.join('\n'));
     originalLog(`${colors.gray}\nAudit report archived to last-sync-audit.log${colors.reset}`);
 });
-
-const isDryRun = process.argv.includes('--dry-run');
-const shouldPush = process.argv.includes('--push');
 
 const dateObj = new Date();
 const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -573,17 +594,29 @@ function validateAssets() {
 
             // Safety Feature: Create a recovery checkpoint branch of the current state
             const checkpointName = `checkpoint/pre-v${version}-${Date.now()}`;
-            console.log(`${colors.gray}Creating recovery checkpoint: ${checkpointName}${colors.reset}`);
-            execSync(`git branch ${checkpointName}`);
+            if (isDryRun) {
+                console.log(`[Dry Run] Would create recovery checkpoint: ${checkpointName}`);
+            } else {
+                console.log(`${colors.gray}Creating recovery checkpoint: ${checkpointName}${colors.reset}`);
+                execSync(`git branch ${checkpointName}`);
+            }
 
-            console.log(`${colors.gray}Staging changes on ${currentBranch} and creating commit...${colors.reset}`);
-            execSync('git add .');
-            execSync(`git commit -m "chore: release v${version}"`);
+            if (isDryRun) {
+                console.log(`[Dry Run] Would stage changes and create commit: "chore: release v${version}"`);
+            } else {
+                console.log(`${colors.gray}Staging changes on ${currentBranch} and creating commit...${colors.reset}`);
+                execSync('git add .');
+                execSync(`git commit -m "chore: release v${version}"`);
+            }
 
-            console.log(`${colors.gray}Creating annotated tag: v${version}${colors.reset}`);
-            execSync(`git tag -a v${version} -m "${dateStr} Release"`);
+            if (isDryRun) {
+                console.log(`[Dry Run] Would create annotated tag: v${version}`);
+            } else {
+                console.log(`${colors.gray}Creating annotated tag: v${version}${colors.reset}`);
+                execSync(`git tag -a v${version} -m "${dateStr} Release"`);
+            }
 
-            if (shouldPush) {
+            if (shouldPush && !isDryRun) {
                 const answer = await new Promise(resolve => {
                     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
                     const timeout = setTimeout(() => {
@@ -610,12 +643,16 @@ function validateAssets() {
             }
 
             console.log(`\n${colors.green}✅ Success: v${version} is ready.${colors.reset}`);
-            console.log(`${colors.cyan}   Recovery Branch: ${checkpointName}${colors.reset}`);
-            if (!pushed) {
-                console.log(`\n${colors.cyan}To publish:   git push origin ${currentBranch} --tags${colors.reset}`);
+            if (isDryRun) {
+                console.log(`${colors.cyan}   [Dry Run] Would log recovery branch, publish instructions, undo/recover details.${colors.reset}`);
+            } else {
+                console.log(`${colors.cyan}   Recovery Branch: ${checkpointName}${colors.reset}`);
+                if (!pushed) {
+                    console.log(`\n${colors.cyan}To publish:   git push origin ${currentBranch} --tags${colors.reset}`);
+                }
+                console.log(`${colors.cyan}To undo:      git tag -d v${version} && git reset --soft HEAD~1${colors.reset}`);
+                console.log(`${colors.cyan}To recover:   git checkout ${checkpointName}${colors.reset}`);
             }
-            console.log(`${colors.cyan}To undo:      git tag -d v${version} && git reset --soft HEAD~1${colors.reset}`);
-            console.log(`${colors.cyan}To recover:   git checkout ${checkpointName}${colors.reset}`);
         }
     } catch (e) {
         console.warn('\n⚠️ Git automation skipped. (Repo not found or Git not installed)');

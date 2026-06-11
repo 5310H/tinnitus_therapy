@@ -11,6 +11,8 @@
         import { GoogleGenerativeAI } from 'https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/+esm';
         window.GoogleGenerativeAI = GoogleGenerativeAI;
     </script>
+    <!-- Fallback for file:/// environments where ES module CDN imports are blocked -->
+    <script src="https://cdn.jsdelivr.net/npm/@google/generative-ai@0.12.0/dist/index.min.js"></script>
     <script src="storage.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="nav.js"></script>
@@ -124,6 +126,19 @@
     </div>
 
     <script>
+        window.addEventListener('error', function(e) {
+            const errDiv = document.createElement('div');
+            errDiv.style.cssText = "background:#ffebee; color:#c62828; padding:15px; margin:20px; border:1px solid #ef9a9a; border-radius:8px; font-weight:bold; font-family:sans-serif; text-align:left;";
+            errDiv.textContent = "Error: " + e.message + " (" + e.filename + ":" + e.lineno + ")";
+            document.body.insertBefore(errDiv, document.body.firstChild);
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+            const errDiv = document.createElement('div');
+            errDiv.style.cssText = "background:#ffebee; color:#c62828; padding:15px; margin:20px; border:1px solid #ef9a9a; border-radius:8px; font-weight:bold; font-family:sans-serif; text-align:left;";
+            errDiv.textContent = "Promise Rejection: " + e.reason;
+            document.body.insertBefore(errDiv, document.body.firstChild);
+        });
+
         window.onload = () => {
             initNav(`
         <b>Purpose:</b> This page verifies the technical accuracy of the suite and your hardware.<br><br>
@@ -183,46 +198,55 @@
         <p>${message}</p>
         ${details ? `<p style="font-size:0.8em; color:var(--muted);">${details}</p>` : ''}
     `;
-            resultsContainer.appendChild(resultDiv);
+            const container = document.getElementById('results') || resultsContainer;
+            if (container) container.appendChild(resultDiv);
 
             if (status !== 'info') {
                 engineTestResults.push(`[${timestamp}] ${title}: [${status.toUpperCase()}] ${message}`);
-                saveSetting('engine_validation_results', engineTestResults.join('\n'));
+                if (typeof saveSetting === 'function') {
+                    saveSetting('engine_validation_results', engineTestResults.join('\n'));
+                }
             }
             return resultDiv;
         }
 
         let audioContextLatency = 'N/A', audioContextSampleRate = 'N/A';
         async function runAllTests() {
-            resultsContainer.innerHTML = '';
+            const container = document.getElementById('results') || resultsContainer;
+            if (container) container.innerHTML = '';
             engineTestResults = [];
-            saveSetting('engine_validation_results', 'Not Performed');
+            if (typeof saveSetting === 'function') {
+                saveSetting('engine_validation_results', 'Not Performed');
+            }
             addResult('Starting Tests', 'info', 'Initializing AudioContext...');
 
             let audioCtx;
             try {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') await audioCtx.resume();
-                audioContextLatency = audioCtx.baseLatency;
+                audioContextLatency = typeof audioCtx.baseLatency === 'number' ? audioCtx.baseLatency : 'N/A';
                 audioContextSampleRate = audioCtx.sampleRate;
-                addResult('Web Audio Engine', 'pass', `AudioContext is active and stable. Base Latency: ${(audioContextLatency * 1000).toFixed(2)} ms.`);
+                const latencyStr = typeof audioContextLatency === 'number' ? `${(audioContextLatency * 1000).toFixed(2)} ms` : 'N/A';
+                addResult('Web Audio Engine', 'pass', `AudioContext is active and stable. Base Latency: ${latencyStr}.`);
             } catch (e) {
-                addResult('Web Audio Engine', 'fail', 'Failed to initialize.');
+                addResult('Web Audio Engine', 'fail', 'Failed to initialize.', e.message);
                 return;
             }
 
-            await testSampleRate(audioCtx);
-            await testBrowserCompatibility(audioCtx);
-            await testChannelConfiguration(audioCtx);
-            await testNotchFilter(audioCtx);
-            await testModulationNodes(audioCtx);
-            await testLocalStorageQuota();
-            await testAIConnectivity();
-            await testIndependentMix(audioCtx);
-            await testStereoSeparation(audioCtx);
+            try { await testSampleRate(audioCtx); } catch (e) { addResult('Sample Rate Verification', 'fail', 'Error: ' + e.message); }
+            try { await testBrowserCompatibility(audioCtx); } catch (e) { addResult('Compatibility Audit', 'fail', 'Error: ' + e.message); }
+            try { await testChannelConfiguration(audioCtx); } catch (e) { addResult('Stereo Routing Check', 'fail', 'Error: ' + e.message); }
+            try { await testNotchFilter(audioCtx); } catch (e) { addResult('Filter Validation', 'fail', 'Error: ' + e.message); }
+            try { await testModulationNodes(audioCtx); } catch (e) { addResult('Neuromodulation Engine', 'fail', 'Error: ' + e.message); }
+            try { await testLocalStorageQuota(); } catch (e) { addResult('LocalStorage Quota Check', 'fail', 'Error: ' + e.message); }
+            try { await testAIConnectivity(); } catch (e) { addResult('AI Assistant Connectivity', 'fail', 'Error: ' + e.message); }
+            try { await testIndependentMix(audioCtx); } catch (e) { addResult('Neuromodulation Mix', 'fail', 'Error: ' + e.message); }
+            try { await testStereoSeparation(audioCtx); } catch (e) { addResult('Stereo Decorrelation', 'fail', 'Error: ' + e.message); }
 
             if (audioCtx) await audioCtx.close();
-            saveSetting('last_validation_date', new Date().toISOString());
+            if (typeof saveSetting === 'function') {
+                saveSetting('last_validation_date', new Date().toISOString());
+            }
             addResult('Finished', 'info', 'Validation sequence completed.');
         }
 
@@ -332,9 +356,13 @@
                 }
                 notch.getFrequencyResponse(freqs, mag, phase);
 
-                let minMag = 1.0;
-                for (let i = 0; i < sampleCount; i++) if (mag[i] < minMag) minMag = mag[i];
-                const db = 20 * Math.log10(Math.max(minMag, 0.0001));
+                // Measure exact center frequency (6000Hz) attenuation specifically
+                // to avoid sweep frequency resolution limitations from missing the narrow notch peak.
+                const centerFreq = new Float32Array([6000]);
+                const centerMag = new Float32Array(1);
+                const centerPhase = new Float32Array(1);
+                notch.getFrequencyResponse(centerFreq, centerMag, centerPhase);
+                const db = 20 * Math.log10(Math.max(centerMag[0], 0.0001));
 
                 const status = (db < -40) ? 'pass' : 'fail';
                 const msg = (status === 'pass')
@@ -497,33 +525,50 @@
             } catch (e) { addResult(title, 'fail', 'Mix Engine Error: ' + e.message); }
         }
 
+        function getSafeLocalStorageUsage() {
+            try {
+                if (typeof getLocalStorageUsage === 'function') {
+                    return getLocalStorageUsage();
+                }
+            } catch (e) {}
+            return 'Unknown';
+        }
+
         async function testLocalStorageQuota() {
             const title = 'LocalStorage Quota Check';
             const testKey = 'tts_quota_test';
-            const testDataSizeKB = 1024; // Try to write 1MB of data (approx)
-            const testData = 'a'.repeat(testDataSizeKB * 1024); // 1MB string
+            const testDataSizeKB = 64; // Safe size to check write capability without exceeding browser limits
+            const testData = 'a'.repeat(testDataSizeKB * 1024);
 
             try {
-                // Attempt to write a large string to test quota
+                // Attempt to write a small string to test quota
                 localStorage.setItem(testKey, testData);
                 localStorage.removeItem(testKey); // Clean up
 
-                const currentUsage = getLocalStorageUsage(); // Function from storage.js
+                const currentUsage = getSafeLocalStorageUsage();
                 addResult(title, 'pass', `LocalStorage is available and has sufficient quota. Current usage: ${currentUsage} KB.`);
             } catch (e) {
+                const currentUsage = getSafeLocalStorageUsage();
                 if (e.name === 'QuotaExceededError') {
-                    addResult(title, 'fail', `LocalStorage quota exceeded. Current usage: ${getLocalStorageUsage()} KB.`, 'Your browser has limited the storage available to this application. Please clear browser data or free up space.');
+                    addResult(title, 'fail', `LocalStorage quota exceeded. Current usage: ${currentUsage} KB.`, 'Your browser has limited the storage available to this application. Please clear browser data or free up space.');
                 } else {
-                    addResult(title, 'fail', `LocalStorage test failed: ${e.message}. Current usage: ${getLocalStorageUsage()} KB.`);
+                    addResult(title, 'fail', `LocalStorage test failed: ${e.message}. Current usage: ${currentUsage} KB.`);
                 }
             } finally {
-                localStorage.removeItem(testKey); // Ensure cleanup even if other errors occur
+                try {
+                    localStorage.removeItem(testKey); // Ensure cleanup even if other errors occur
+                } catch (err) {}
             }
         }
 
         async function testAIConnectivity() {
             const title = 'AI Assistant Connectivity';
-            const SDK = tinnitusAI._getSDK();
+            let SDK = null;
+            try {
+                SDK = window.tinnitusAI ? window.tinnitusAI._getSDK() : null;
+            } catch (e) {
+                console.error("Error checking AI SDK:", e);
+            }
 
             if (SDK) {
                 addResult(title, 'pass', 'Google Generative AI SDK is loaded and authorized for therapy support.');
@@ -533,23 +578,28 @@
         }
 
         function getReportData() {
-            const engineLog = loadSetting('engine_validation_results', 'Not Performed');
+            const engineLog = typeof loadSetting === 'function' ? loadSetting('engine_validation_results', 'Not Performed') : 'Not Performed';
             const mixStatus = engineLog.includes('Neuromodulation Mix: [PASS]') ? 'PASS' :
                 (engineLog.includes('Neuromodulation Mix: [FAIL]') ? 'FAIL' : 'Not Tested');
 
-            const SDK = tinnitusAI._getSDK();
+            let SDK = null;
+            try {
+                SDK = window.tinnitusAI ? window.tinnitusAI._getSDK() : null;
+            } catch (e) {
+                console.error("Error checking AI SDK in report:", e);
+            }
             const aiStatus = SDK ? 'Active' : 'Unavailable/Blocked';
 
             return {
                 settings: {
-                    "Hardware Phase Status": loadSetting('phase_status', 'Not Verified'),
+                    "Hardware Phase Status": typeof loadSetting === 'function' ? loadSetting('phase_status', 'Not Verified') : 'Not Verified',
                     "Independent Mix Validation": mixStatus,
                     "AI Engine Status": aiStatus,
                     "Engine Validation Summary": engineLog.includes('[FAIL]') ? 'Critical Issues Detected' :
                         (engineLog === 'Not Performed' ? 'Pending Validation' : 'All Engine Checks Passed')
                 },
                 techSpecs: {
-                    "AudioContext Base Latency": `${(audioContextLatency * 1000).toFixed(2)} ms`,
+                    "AudioContext Base Latency": typeof audioContextLatency === 'number' ? `${(audioContextLatency * 1000).toFixed(2)} ms` : 'N/A',
                     "Audio Sample Rate": `${audioContextSampleRate} Hz`
                 }
             };
@@ -557,53 +607,103 @@
 
         function exportClinicalSettings() {
             const reportData = getClinicalReportData("System Validation", getReportData().settings, getReportData().techSpecs);
-            // Fetch AI summary and add to reportData
-            getClinicalSummary().then(aiSummaryText => {
-                reportData.aiSummary = aiSummaryText;
+            
+            const generateFile = (aiSummaryText) => {
+                let summary = aiSummaryText || "AI Summary unavailable.";
+                if (summary && typeof summary === 'object') {
+                    summary = summary.message || "AI Summary unavailable.";
+                }
+                reportData.aiSummary = summary;
                 const report = generateClinicalReportText(reportData);
                 const blob = new Blob([report], { type: 'text/plain' });
                 const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
                 a.download = `tinnitus_validation_log.txt`; a.click();
                 alert("Validation log downloaded. Please check your browser's Downloads folder.");
-            });
+            };
+
+            getClinicalSummary()
+                .then(generateFile)
+                .catch(err => {
+                    console.error("AI Summary failed for text export:", err);
+                    generateFile("AI Summary unavailable.");
+                });
         }
 
         async function generatePDFReport() {
-            const reportData = getClinicalReportData("System Validation", getReportData().settings, getReportData().techSpecs);
-            // Fetch AI summary and add to reportData
-            const aiSummaryText = await getClinicalSummary();
-            reportData.aiSummary = aiSummaryText;
-            const htmlContent = generateClinicalReportHtml(reportData);
+            if (typeof html2pdf === 'undefined') {
+                alert("PDF Generation Error: The PDF library failed to load. This usually happens if you are offline or if CDN requests are blocked by an ad-blocker. Please connect to the internet, disable script-blocking, and try again.");
+                return;
+            }
+            
+            let tempDiv = null;
+            let isDark = false;
+            
+            try {
+                const reportData = getClinicalReportData("System Validation", getReportData().settings, getReportData().techSpecs);
+                
+                let aiSummaryText = "AI Summary unavailable.";
+                try {
+                    aiSummaryText = await getClinicalSummary();
+                    if (aiSummaryText && typeof aiSummaryText === 'object') {
+                        aiSummaryText = aiSummaryText.message || "AI Summary unavailable.";
+                    }
+                } catch (e) {
+                    console.error("AI Summary failed for PDF generation:", e);
+                }
+                reportData.aiSummary = aiSummaryText;
+                
+                const htmlContent = generateClinicalReportHtml(reportData);
 
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = htmlContent;
-            document.body.appendChild(tempDiv);
+                tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                document.body.appendChild(tempDiv);
 
-            const isDark = document.documentElement.classList.contains('light-mode');
-            if (!isDark) document.documentElement.classList.add('light-mode');
+                isDark = document.documentElement.classList.contains('light-mode');
+                if (!isDark) document.documentElement.classList.add('light-mode');
 
-            const opt = {
-                margin: [20, 15], filename: 'tinnitus_validation_log.pdf', image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            await html2pdf().set(opt).from(tempDiv).save();
+                const opt = {
+                    margin: [20, 15], filename: 'tinnitus_suite_validation.pdf', image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
 
-            if (!isDark) document.documentElement.classList.remove('light-mode');
-            document.body.removeChild(tempDiv);
+                await html2pdf().set(opt).from(tempDiv).save();
+                alert("Clinical PDF report downloaded successfully! Please check your browser's Downloads folder.");
+            } catch (error) {
+                console.error("PDF generation failed:", error);
+                alert("PDF Generation Failed: " + error.message);
+            } finally {
+                if (!isDark && document.documentElement.classList.contains('light-mode')) {
+                    document.documentElement.classList.remove('light-mode');
+                }
+                if (tempDiv && tempDiv.parentNode) {
+                    document.body.removeChild(tempDiv);
+                }
+            }
         }
 
         function emailToAudiologist() {
-            const email = loadSetting('audiologist_email', '');
+            const email = typeof loadSetting === 'function' ? loadSetting('audiologist_email', '') : '';
             if (!email) return alert("Please set your audiologist's email on the Home page.");
-            // Fetch AI summary and add to reportData
-            getClinicalSummary().then(async aiSummaryText => {
+
+            const sendEmail = (aiSummaryText) => {
+                let summary = aiSummaryText || "AI Summary unavailable.";
+                if (summary && typeof summary === 'object') {
+                    summary = summary.message || "AI Summary unavailable.";
+                }
                 const reportData = getClinicalReportData("System Validation", getReportData().settings, getReportData().techSpecs);
-                reportData.aiSummary = aiSummaryText;
+                reportData.aiSummary = summary;
                 const report = generateClinicalReportText(reportData);
                 window.location.href = `mailto:${email}?subject=System Validation Log&body=${encodeURIComponent(report)}`;
                 alert("Email client opened. Please review and send the validation log draft.");
-            });
+            };
+
+            getClinicalSummary()
+                .then(sendEmail)
+                .catch(err => {
+                    console.error("AI Summary failed for email:", err);
+                    sendEmail("AI Summary unavailable.");
+                });
         }
     </script>
 </body>

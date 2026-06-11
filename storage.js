@@ -2,7 +2,7 @@
 // Include this at the bottom of therapy pages to handle auto-save/load
 
 (function () {
-    const APP_VERSION = "2026.06.33";
+    const APP_VERSION = "2026.06.34";
 
     /** 
      * Helpers for consistent localStorage interaction
@@ -524,7 +524,18 @@
                     reports_sleep_issues: loadSetting('reports_sleep_issues', 'false') === 'true'
                 }
             };
-            return await this.fetchAIAssistance("clinical_summary", prompt);
+            const timeoutPromise = new Promise((resolve) => 
+                setTimeout(() => resolve("AI Summary unavailable (request timed out)."), 2500)
+            );
+            try {
+                return await Promise.race([
+                    this.fetchAIAssistance("clinical_summary", prompt),
+                    timeoutPromise
+                ]);
+            } catch (e) {
+                console.error("AI Summary failed:", e);
+                return "AI Summary unavailable.";
+            }
         }
 
         async getDailyMotivation() {
@@ -989,6 +1000,55 @@
     }
 
     /**
+     * Performs the automated engine validation tests.
+     * Updates local storage with results and timestamp.
+     */
+    async function runEngineValidation() {
+        console.log("TTS: Starting Automated Engine Validation...");
+
+        if (!window.audioCtx) {
+            try {
+                window.audioCtx = new AudioContext();
+            } catch (e) {
+                logTherapyError('Validation', 'Failed to create AudioContext', e);
+                saveSetting('engine_validation_results', '[FAIL] Browser blocked AudioContext creation.');
+                return;
+            }
+        }
+
+        // Ensure the context is running to perform tests, otherwise validation will hang/do nothing
+        if (window.audioCtx.state === 'suspended') await window.audioCtx.resume();
+
+        const generator = new NoiseGenerator(window.audioCtx);
+        const audit = new ClinicalSafetyAudit(generator);
+
+        saveSetting('engine_validation_results', '[BUSY] Validation in progress...');
+        alert("System Validation Started: Please wait a moment while the suite audits the audio engine and spectral integrity.");
+        if (typeof updateHubStatus === 'function') updateHubStatus();
+
+        try {
+            const spectralResults = await audit.runSpectralAudit();
+            setJson('spectral_audit_results', spectralResults);
+
+            let status = "[PASS] Engine and Spectral integrity verified.";
+            const failures = Object.entries(spectralResults).filter(([c, r]) => r.includes('FAILED'));
+            if (failures.length > 0) {
+                status = `[FAIL] Spectral Audit failed: ${failures.map(f => f[0]).join(', ')}`;
+            }
+
+            saveSetting('engine_validation_results', status);
+            saveSetting('last_validation_date', new Date().toISOString());
+            console.log("TTS: Validation Complete:", status);
+            alert("Validation Complete:\n" + status);
+        } catch (e) {
+            logTherapyError('Validation', 'Audit runner crashed', e);
+            saveSetting('engine_validation_results', '[FAIL] Audit runner crashed. Check logs.');
+        } finally {
+            if (typeof updateHubStatus === 'function') updateHubStatus();
+        }
+    }
+
+    /**
      * ClinicalSafetyAudit provides a suite of diagnostic tests to ensure 
      * the integrity and safety of the therapeutic signals.
      */
@@ -1383,7 +1443,9 @@
 
             const buffer = this.generate(targetColor, bufferSize, { enableAutoMatch });
             if (!buffer) {
-                console.error("NoiseGenerator: Failed to create AudioBuffer for fallback. No noise will be generated.");
+                const errorMessage = "NoiseGenerator: Failed to create AudioBuffer for fallback. No noise will be generated. This might indicate a critical browser audio issue or a corrupted audio file.";
+                console.error(errorMessage);
+                alert("Critical Audio Error: The therapy engine could not generate sound. Please check your browser's audio settings and ensure it's up to date. If the problem persists, try a different browser or device.");
                 return null;
             }
 
@@ -2144,10 +2206,19 @@
             html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-        await html2pdf().set(opt).from(tempDiv).save();
 
-        if (!isAlreadyLightMode) document.documentElement.classList.remove('light-mode');
-        document.body.removeChild(tempDiv);
+        try {
+            await html2pdf().set(opt).from(tempDiv).save();
+            alert("Clinical PDF report downloaded successfully! Please check your browser's Downloads folder.");
+        } catch (error) {
+            console.error("PDF generation failed:", error);
+            alert("PDF Generation Failed: " + error.message);
+        } finally {
+            if (!isAlreadyLightMode) document.documentElement.classList.remove('light-mode');
+            if (tempDiv.parentNode) {
+                document.body.removeChild(tempDiv);
+            }
+        }
     }
 
     /**
@@ -2195,8 +2266,14 @@
 
         try {
             await html2pdf().set(opt).from(tempDiv).save();
+            alert("Milestone Certificate PDF downloaded successfully! Please check your browser's Downloads folder.");
+        } catch (error) {
+            console.error("PDF generation failed:", error);
+            alert("PDF Generation Failed: " + error.message);
         } finally {
-            document.body.removeChild(tempDiv);
+            if (tempDiv.parentNode) {
+                document.body.removeChild(tempDiv);
+            }
         }
     }
 
@@ -2893,8 +2970,9 @@
                 document.head.appendChild(style);
             }
         } catch (e) { }
+    })();
 
-        // --- Trahreg Gatekeeper Logic ---
+    // --- Trahreg Gatekeeper Logic ---
         (async function () {
             const fullPath = decodeURIComponent(window.location.pathname).toLowerCase();
             const pageName = fullPath.split('/').pop() || 'index.html';
@@ -3080,6 +3158,7 @@
             markSplashShown,
             resetModuleSettings,
             getUnifiedValidationStatus,
+            runEngineValidation,
             ClinicalSafetyAudit,
             NoiseGenerator,
             createTrahregNoise,

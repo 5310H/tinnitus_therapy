@@ -72,7 +72,7 @@ function populateHelpContent(helpHtml = '') {
     guide = guide.replace('<b>Hearing Profile (Audiogram)</b>', `<a href="${hearingTestPath}" style="color:var(--accent); text-decoration:underline;">Hearing Profile (Audiogram)</a>`);
 
     // Sync manual references and versioning against clinical documentation
-    guide = guide.replace('System Resilience', `System Resilience (v${APP_VERSION})`);
+    guide = guide.replace('System Resilience', `System Resilience${window.APP_VERSION ? ` (v${window.APP_VERSION})` : ''}`);
     guide = guide.replace(/User Manual/g, `<a href="${manualPath}" target="_blank" style="color:var(--accent); text-decoration:underline;">User Manual</a>`);
     guide = guide.replace(/Appendix E/g, `<a href="${manualPath}#app-e" target="_blank" style="color:var(--accent); text-decoration:underline;">Appendix E</a>`);
 
@@ -112,6 +112,8 @@ function initNav(helpHtml = '') {
     // isHome is true if we are on the dashboard (index.html or directory root) and not in the docs subfolder.
     const isHome = !isDocs && (filename === 'index' || filename === '' || window.location.pathname.endsWith('/'));
 
+    const isDebug = new URLSearchParams(window.location.search).get('debug') === '1' || localStorage.getItem('tts_debug_mode') === 'true';
+
     const supportedTutorials = [
         'decorrelated', 'notch', 'cr', 'lenire', 'soundtherapy',
         'notchfinder', 'twotone', 'sweep', 'tmc', 'lg', 'hearingtest', 'audiogram', 'ri', 'validation', 'clinical_summary'
@@ -123,6 +125,7 @@ function initNav(helpHtml = '') {
             <div id="navLeftGroup" style="display:flex; gap:10px; pointer-events: auto;">
                 <a class="help-btn" href="${homePath}" onclick="try { sessionStorage.setItem('tts_splash_shown', 'true'); } catch(e) {}" style="position:static; right:auto; padding: 8px 12px; background: var(--success); color: white; border-color: var(--success); text-decoration: none; display: ${isHome ? 'none' : 'inline-flex'}; align-items: center; justify-content: center; font-weight: bold; border-width: 2px; box-shadow: 0 0 10px rgba(56, 142, 60, 0.4);">Home</a>
                 <button class="help-btn" style="position:static; right:auto; padding: 8px 10px; border-color:var(--accent); color:var(--accent);" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌓</button>
+                <button id="debugBtn" class="help-btn" style="position:static; right:auto; padding: 8px 10px; border-color:#ff5722; color:#ff5722; display: ${isDebug ? 'inline-block' : 'none'};" onclick="openDebugMenu()" title="Open Debug Menu">⚙️</button>
             </div>
             <div id="navRightGroup" style="display:flex; gap:10px; align-items: center; pointer-events: auto;">
                 <div id="audioStatusIndicator" style="font-size: 0.65rem; font-weight: bold; color: var(--text-dim); background: var(--card-bg); padding: 4px 10px; border-radius: 15px; border: 1px solid var(--border); display: none; white-space: nowrap;">○ Audio Off</div>
@@ -179,6 +182,27 @@ function initNav(helpHtml = '') {
                 <button onclick="closeHelp()" class="modal-close-btn">Close</button>
             </div>
         </div>
+
+        <div id="debugModal" class="modal-overlay" style="z-index: 12000;">
+            <div class="modal-card" style="max-width: 500px; border-top: 4px solid #ff5722;">
+                <h2 style="color:#ff5722; margin-top:0;">System Debug Menu</h2>
+                <p class="info" style="margin-bottom: 20px;">Developer and troubleshooting tools for the therapy engine.</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px;">
+                    <button class="button" onclick="unlockAllUI(); alert('UI Unlocked');" style="border-color:#ff5722; color:#ff5722;">🔓 Force Unlock UI</button>
+                    <button class="button" onclick="if(window.audioCtx) window.audioCtx.resume(); alert('Context Resumed');">🔊 Resume AudioContext</button>
+                    <button class="button" onclick="location.reload();">🔄 Hard Reload</button>
+                    <button class="button" onclick="if(confirm('Clear all settings and logs?')) { localStorage.clear(); location.reload(); }" style="border-color: #ef5350; color: #ef5350;">🗑️ Nuclear Reset (Clear All)</button>
+                </div>
+
+                <div style="background: var(--bg); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.75rem; color: var(--text-dim); border: 1px solid var(--border);">
+                    <div>App Version: ${window.APP_VERSION || 'Unknown'}</div>
+                    <div id="debugAudioState">Audio State: ${window.audioCtx ? window.audioCtx.state : 'N/A'}</div>
+                </div>
+
+                <button onclick="closeDebugMenu()" class="modal-close-btn" style="margin-top: 20px;">Close</button>
+            </div>
+        </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
@@ -201,6 +225,19 @@ function initNav(helpHtml = '') {
 
     populateHelpContent(helpHtml);
 }
+
+window.openDebugMenu = () => {
+    const modal = document.getElementById("debugModal");
+    if (modal) {
+        modal.style.display = "block";
+        const stateEl = document.getElementById('debugAudioState');
+        if (stateEl) stateEl.textContent = `Audio State: ${window.audioCtx ? window.audioCtx.state : 'N/A'}`;
+    }
+};
+window.closeDebugMenu = () => {
+    const modal = document.getElementById("debugModal");
+    if (modal) modal.style.display = "none";
+};
 
 // Auto-initialization Hook for nav.js and i18n
 document.addEventListener('DOMContentLoaded', async () => {
@@ -500,6 +537,15 @@ window.showPreFlight = (onConfirm) => {
         }
         closePreFlight();
         // Attempt to resume the active AudioContext on user interaction
+        if (!window.audioCtx) {
+            try {
+                window.audioCtx = new AudioContext();
+                console.log("AudioContext created by user interaction.");
+            } catch (e) {
+                console.error("Failed to create AudioContext during pre-flight:", e);
+            }
+        }
+
         if (window.audioCtx && window.audioCtx.state === 'suspended') {
             window.audioCtx.resume().then(() => {
                 console.log("AudioContext resumed by user interaction.");
@@ -521,16 +567,35 @@ window.closePreFlight = () => {
  * Used during audio transition states (starting/stopping).
  */
 window.toggleUIInteraction = (locked) => {
-    const controls = document.querySelectorAll('.card input, .card select, .card .button, .card .sm-btn, .card .big-btn:not(#toggleBtn):not(#stopBtn)');
+    // Expanded selector to catch utility buttons (like those on validation.html) that may be outside of a .card
+    const controls = document.querySelectorAll('.card input, .card select, .card .button, .card .sm-btn, .card .big-btn:not(#toggleBtn):not(#stopBtn), .card a.button, button.big-btn:not(#toggleBtn):not(#stopBtn)');
+
     controls.forEach(el => {
         if (locked) {
             el.style.pointerEvents = 'none';
             el.style.opacity = '0.5';
+            el.setAttribute('data-locked-by-tts', 'true'); // Mark elements that are locked by TTS
         } else {
             el.style.pointerEvents = 'auto';
             el.style.opacity = '1';
+            el.removeAttribute('data-locked-by-tts');
         }
     });
+};
+
+// Add a global function to force unlock all UI elements, useful for debugging or error recovery
+window.unlockAllUI = () => {
+    console.warn("TTS: Forcing unlock of all UI elements.");
+    document.querySelectorAll('[data-locked-by-tts="true"]').forEach(el => {
+        el.style.pointerEvents = 'auto';
+        el.style.opacity = '1';
+        el.removeAttribute('data-locked-by-tts');
+    });
+    // Also ensure tutorial overlay is removed if it somehow got stuck
+    document.body.classList.remove('tutorial-active');
+    // And pre-flight/onboarding modals are closed if they are present
+    const onboardingModal = document.getElementById('onboardingModal'); if (onboardingModal) onboardingModal.remove();
+    const preFlightModal = document.getElementById('preFlightModal'); if (preFlightModal) preFlightModal.remove();
 };
 
 // --- Global AudioContext State Observer ---
@@ -546,6 +611,11 @@ window.toggleUIInteraction = (locked) => {
             super(...args);
             // Ensure the global reference always points to the most recently created context
             window.audioCtx = this;
+
+            // Attach the high-precision generator if available
+            if (typeof window.NoiseGenerator === 'function') {
+                this.generator = new window.NoiseGenerator(this);
+            }
 
             let watchdogInterval = null;
 
@@ -598,8 +668,9 @@ window.toggleUIInteraction = (locked) => {
             // Closure-safe reference to updateUI for the setter
             this._refreshUI = () => updateUI();
 
-            // Automatically attach the high-precision generator to the context
-            this.generator = new NoiseGenerator(this);
+            if (typeof window.NoiseGenerator === 'function') {
+                this.generator = new window.NoiseGenerator(this);
+            }
             this._isRecovering = false;
             this._expectingSoundVal = false;
             this._healthAnalyser = null;

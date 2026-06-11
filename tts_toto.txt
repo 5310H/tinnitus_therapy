@@ -1,0 +1,108 @@
+================================================================================
+                     TINNITUS THERAPY SUITE - TODO TRACKER
+================================================================================
+
+This file serves as the official project tracking board for the Tinnitus 
+Therapy Suite (TTS). Follow the layouts below to add, prioritize, and log 
+features and bug fixes.
+
+--------------------------------------------------------------------------------
+1. STATUS & PRIORITY LEGEND
+--------------------------------------------------------------------------------
+Status Flags:
+  [ ]  Todo        - Task is queued and not yet started.
+  [/]  In Progress - Task is actively being worked on.
+  [X]  Completed   - Task is fully implemented, verified, and released.
+  [!]  Blocked     - Task is on hold due to external dependencies or blockers.
+  [-]  Deferred    - Task is postponed for a future milestone.
+
+Priority Scale:
+  1 - Critical     - Blocking release, clinical safety issue, or core DSP bug.
+  2 - High         - Important feature, core UI issue, or major usability need.
+  3 - Medium       - Standard feature, minor bug fix, or general improvement.
+  4 - Low          - Nice-to-have enhancement, refactoring, or style polish.
+  5 - Planning     - Long-term research, experimental design, or idea phase.
+
+Versioning Scheme:
+  Follows the date-based scheme matching package.json and whats_new.json 
+  (e.g., 2026.06.33, 2026.07.01).
+
+--------------------------------------------------------------------------------
+2. COMPACT TABLE LAYOUT
+--------------------------------------------------------------------------------
+Use this layout for a quick, high-level overview of the project status.
+
++-----+-----+--------+------------------------------------+------------+------------+
+| ID  | PRI | STATUS | TASK DESCRIPTION                   | TARGET VER | COMP. VER  |
++-----+-----+--------+------------------------------------+------------+------------+
+| 001 |  1  |  [X]   | Add 750 Hz frequency support to HL | 2026.06.27 | 2026.06.27 |
+| 002 |  2  |  [/]   | Implement forest nature soundscape | 2026.06.26 |            |
+| 003 |  1  |  [ ]   | Create BLE hearing aid diagnostics | 2026.07.05 |            |
+| 004 |  3  |  [ ]   | Add custom Q-factor trends chart   | 2026.06.40 |            |
+| 005 |  4  |  [-]   | Refactor hub_v43.scad cleanups     | 2026.08.01 |            |
+| 006 |  5  |  [!]   | Research AI-driven custom sound TRT| 2026.09.15 |            |
++-----+-----+--------+------------------------------------+------------+------------+
+
+[Template for new entries]
+|     |     |  [ ]   |                                    |            |            |
+
+--------------------------------------------------------------------------------
+3. DETAILED CARD LAYOUT
+--------------------------------------------------------------------------------
+Use this layout to capture full details, notes, and verification plans for tasks.
+
+---
+ID: #001
+Task: Add 750 Hz frequency support to Hearing Profile (Audiogram)
+Category: UI / Audiometry
+Priority: 1 (Critical)
+Status: [X] Completed
+Target Version: 2026.06.27
+Completed In Version: 2026.06.27
+Created: 2026-06-25
+Closed:  2026-06-27
+Description:
+  Integrate 750 Hz frequency testing and audiogram input support. Essential for
+  more precise clinical mapping and therapy compensation.
+Notes:
+  Ensure half-gain rule calculations handle 750 Hz correctly.
+Verification:
+  Tested on audiogram.html manually; clinical validation passes specs.
+
+---
+ID: #002
+Task: Implement forest nature soundscape
+Category: DSP / Audio
+Priority: 2 (High)
+Status: [/] In Progress
+Target Version: 2026.06.26
+Completed In Version: 
+Created: 2026-06-26
+Closed:  
+Description:
+  Migrate procedural forest and wind noise generator to the high-performance
+  WASM audio worklet engine.
+Notes:
+  Requires update to noise-processor.js and noise-generator.wat.
+Verification:
+  Listen for zero clicks/pops during dynamic volume envelope shifts.
+
+---
+ID: #003
+Task: Create BLE hearing aid diagnostics
+Category: Connectivity / BLE
+Priority: 1 (Critical)
+Status: [ ] Todo
+Target Version: 2026.07.05
+Completed In Version: 
+Created: 2026-06-27
+Closed:  
+Description:
+  Implement BLE connection troubleshooter for external hearing aid hardware.
+Notes:
+  Refer to TROUBLESHOOTING_BLE.md for known connection state failures.
+Verification:
+  Test on physical Android/iOS devices with test firmware.
+
+--------------------------------------------------------------------------------
+================================================================================
