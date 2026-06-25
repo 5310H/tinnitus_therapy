@@ -428,28 +428,56 @@
         }
 
         function setupStepButtons() {
-            let repeatTarget = "";
             document.querySelectorAll('.btn-group .button-step[data-delta], .fine-tune-btn[data-delta]').forEach(btn => {
                 const delta = parseInt(btn.dataset.delta);
-                btn.onmousedown = btn.ontouchstart = (e) => {
-                    e.preventDefault();
-                    repeatTarget = btn.parentElement.dataset.target;
-                    startRepeat(delta);
+                let holdTimeout, holdInterval;
+                
+                const triggerAction = () => {
+                    const targetId = btn.parentElement.dataset.target;
+                    stopSweep();
+                    const target = document.getElementById(targetId);
+                    if (!target) return;
+                    target.value = Math.min(16000, Math.max(100, Number(target.value) + delta));
+                    updateLabels();
+                    
                     const isLocked = document.getElementById('lockLR').checked;
-                    if (isLocked && repeatTarget.endsWith('L')) {
-                        const rightId = repeatTarget.replace('L', 'R');
+                    if (isLocked && targetId.endsWith('L')) {
+                        const rightId = targetId.replace('L', 'R');
                         const rightEl = document.getElementById(rightId);
                         if (rightEl) {
-                            setTimeout(() => {
-                                rightEl.value = document.getElementById(repeatTarget).value;
-                                rightEl.dispatchEvent(new Event('input'));
-                            }, 10);
+                            rightEl.value = target.value;
+                            rightEl.dispatchEvent(new Event('input'));
                         }
                     }
                 };
-                btn.onmouseup = btn.onmouseleave = btn.ontouchend = () => { stopRepeat(); repeatTarget = ""; };
-                // Accessible fallback
-                btn.onclick = (e) => { if (!repeatInterval) startRepeat(delta); stopRepeat(); };
+
+                const startHold = (e) => {
+                    if (e && e.cancelable) e.preventDefault();
+                    triggerAction();
+                    holdTimeout = setTimeout(() => {
+                        holdInterval = setInterval(triggerAction, 80);
+                    }, 500);
+                };
+
+                const stopHold = () => {
+                    clearTimeout(holdTimeout);
+                    clearInterval(holdInterval);
+                };
+
+                btn.addEventListener('mousedown', startHold);
+                btn.addEventListener('touchstart', startHold, {passive: false});
+                
+                btn.addEventListener('mouseup', stopHold);
+                btn.addEventListener('mouseleave', stopHold);
+                btn.addEventListener('touchend', stopHold);
+                
+                // Keyboard accessibility
+                btn.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        triggerAction();
+                    }
+                });
             });
         }
 
@@ -483,6 +511,9 @@
             saveSetting("notchR", sliderR.value);
             saveSetting("toneFreqL", sliderL.value);
             saveSetting("toneFreqR", sliderR.value);
+            saveSetting("nf_volMaster", volMasterSlider.value);
+            saveSetting("notchfinder_volL", volSliderL.value);
+            saveSetting("notchfinder_volR", volSliderR.value);
             savedMsg.textContent = "✅ Frequencies saved to your global profile!";
             setTimeout(() => savedMsg.textContent = "", 1500);
         };

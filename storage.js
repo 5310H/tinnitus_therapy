@@ -448,26 +448,6 @@
             }
         }
 
-        async getBalancedThoughtSuggestion(automaticThought) {
-            const prompt = {
-                system_instruction: `You are a specialized CBT assistant for tinnitus habituation. 
-            Perform a full 'Thought Record' analysis on the user's input. 
-            Provide a response with exactly three sections:
-            1. EVIDENCE AGAINST: (Logical reasons why the catastrophic thought is not 100% true)
-            2. BALANCED PERSPECTIVE: (A realistic, TRT-aligned reframing)
-            3. GROUNDING ACTION: (One 30-second physical or mental task).
-            
-            Guidelines:
-            - Be supportive and objective.
-            - Reference 'habituation' as a biological process.
-            - Keep each section to 2 sentences max.
-            - Output as plain text with clear headings.
-            
-            The analysis is for a clinical record, so ensure it is high-value.`,
-                input: automaticThought
-            };
-            return await this.fetchAIAssistance("cbt_reframing", prompt);
-        }
 
         async getSOSSupport(userInput = "I am having a spike right now.") {
             const latestDistress = getLatestLogData('distress_log');
@@ -492,12 +472,7 @@
             const anonymizedHistory = {
                 usage_patterns: getJson('usage_log', {}),
                 distress_history: getJson('distress_log', {}),
-                reports_sleep_issues: loadSetting('reports_sleep_issues', 'false') === 'true',
-                recent_situational_contexts: getThoughtRecords().slice(-5).map(tr => ({
-                    date: new Date(tr.timestamp).toLocaleDateString(),
-                    situation: tr.situation,
-                    emotions: tr.emotions
-                }))
+                reports_sleep_issues: loadSetting('reports_sleep_issues', 'false') === 'true'
             };
             const prompt = {
                 system_instruction: "Identify potential correlations in therapy logs, reported sleep issues, and situational data. State clearly that these are correlations and suggest one focus area for next week.",
@@ -554,13 +529,6 @@
             return await this.fetchAIAssistance("environmental_advice", prompt);
         }
 
-        async getMindfulnessScript(thought) {
-            const prompt = {
-                system_instruction: "Generate a custom 1-minute mindfulness script designed to help a user detach from this specific thought.",
-                input: thought
-            };
-            return await this.fetchAIAssistance("mindfulness_script", prompt);
-        }
 
         async getHabituationForecast() {
             const data = Object.entries(getDistressScores()).map(([date, score]) => ({ date, score }));
@@ -757,7 +725,7 @@
         return { date: latestDate, data: log[latestDate] };
     }
 
-    function getThoughtRecords() { return getJson('thought_records', []); }
+
     function getDistressScores() { return getJson('distress_log', {}); }
     function getDailyUsage() {
         const log = getJson('usage_log', {});
@@ -805,11 +773,6 @@
         setJson('lg_log', log);
     }
 
-    function logThoughtRecordEntry(entry) {
-        const records = getThoughtRecords();
-        records.push({ ...entry, timestamp: new Date().toISOString() });
-        setJson('thought_records', records);
-    }
 
     /**
      * Returns the status of the patient's journey through clinical milestones.
@@ -860,7 +823,7 @@
      */
     function markSplashShown() {
         try {
-            sessionStorage.setItem('tts_splash_shown', 'true');
+            localStorage.setItem('tts_splash_shown', 'true');
             console.log("TTS: Splash screen marked as shown for this session.");
         } catch (e) { }
     }
@@ -1690,7 +1653,7 @@
     function deleteLogEntry(logKey, entryKey) {
         const log = getJson(logKey, {});
         if (Array.isArray(log)) {
-            // If it's an array (like thought_records)
+            // If it's an array
             const index = parseInt(entryKey);
             if (!isNaN(index)) {
                 log.splice(index, 1);
@@ -1778,16 +1741,7 @@
         }
         const lastTHIDateDisplay = latestTHI ? new Date(latestTHI.date).toLocaleDateString() : 'N/A';
 
-        const thoughtRecords = getThoughtRecords();
-        const thoughtRecordsCount = thoughtRecords.length;
-        let recentThoughtSummary = "N/A";
-        if (thoughtRecordsCount > 0) {
-            const latest = thoughtRecords[thoughtRecordsCount - 1];
-            recentThoughtSummary = `Date: ${new Date(latest.timestamp).toLocaleDateString()}\n`;
-            recentThoughtSummary += `  - Situation: ${latest.situation}\n`;
-            recentThoughtSummary += `  - Automatic Thought: ${latest.automaticThoughts}\n`;
-            recentThoughtSummary += `  - Balanced Thought: ${latest.balancedThought}`;
-        }
+
         const therapyRecs = getTherapyRecommendations();
 
         return {
@@ -1804,9 +1758,7 @@
                 lastTHIScore: lastScore,
                 lastTHIDate: lastTHIDateDisplay,
                 subscales: subscaleBreakdown,
-                thiHistory: getDistressScores(),
-                thoughtRecordsCount: thoughtRecordsCount,
-                recentThoughtSummary: recentThoughtSummary
+                thiHistory: getDistressScores()
             },
             milestones: getMilestoneProgress(),
             recommendations: therapyRecs.status === 'complete' ? therapyRecs.recommendations : [],
@@ -1881,8 +1833,6 @@
             });
         }
 
-        text += `Thought Records Logged: ${reportData.psychological.thoughtRecordsCount}\n`;
-        text += `Most Recent Record:\n${reportData.psychological.recentThoughtSummary}\n`;
 
         text += `\nRESIDUAL INHIBITION (RI):\n`;
         text += `Latest RI Result: ${reportData.ri.latestRIResult}\n`;
@@ -2188,10 +2138,6 @@
             html += `</div>`;
         }
 
-        if (reportData.psychological.thoughtRecordsCount > 0) {
-            html += sectionHeader("Psychological Context (Last Record)");
-            html += `<pre style="background: #fcfcfc; border: 1px solid #f0f0f0; padding: 15px; border-radius: 4px; font-family: sans-serif; font-size: 12px; color: #555; white-space: pre-wrap; line-height: 1.4;">${reportData.psychological.recentThoughtSummary}</pre></div>`;
-        }
 
         // Signature Section
         html += `<div style="margin-top: 60px; display: flex; justify-content: space-between; page-break-inside: avoid;">`;
@@ -2991,9 +2937,9 @@
             document.documentElement.classList.add('single-column-layout');
         }
 
-        // Splash Screen Persistence: Prevent re-showing splash when navigating back Home in the same session.
+        // Splash Screen Persistence: Prevent re-showing splash when navigating back Home.
         try {
-            if (sessionStorage.getItem('tts_splash_shown') === 'true') {
+            if (localStorage.getItem('tts_splash_shown') === 'true') {
                 const style = document.createElement('style');
                 style.id = 'tts-splash-suppressor';
                 style.textContent = '#appSplashScreen { display: none !important; visibility: hidden !important; pointer-events: none !important; opacity: 0 !important; animation: none !important; transition: none !important; }';
@@ -3083,7 +3029,7 @@
 
                 // If we are on a therapy page or tool, mark splash as shown so going "Home" skips it.
                 if (!isHome && !isDocs) {
-                    sessionStorage.setItem('tts_splash_shown', 'true');
+                    localStorage.setItem('tts_splash_shown', 'true');
                 }
             } catch (e) { /* Private mode protection */ }
 
@@ -3173,7 +3119,6 @@
             decryptGeminiKey,
             resetOnboarding,
             getLatestLogData,
-            getThoughtRecords,
             getDistressScores,
             getDailyUsage,
             logDistressScore,
@@ -3182,7 +3127,6 @@
             logTMCPoint,
             logQFactor,
             logLoudnessGrowthPoint,
-            logThoughtRecordEntry,
             getMilestoneProgress,
             toggleMilestone,
             markSplashShown,
@@ -3214,7 +3158,6 @@
             initAI,
             performGeminiTest,
             fetchAIAssistance,
-            getBalancedThoughtSuggestion,
             getSOSSupport,
             getSoundRecipe,
             getPatternAnalysis,
@@ -3222,7 +3165,6 @@
             getClinicalSummary,
             getDailyMotivation,
             getEnvironmentalAdvice,
-            getMindfulnessScript,
             getHabituationForecast,
             getPersonalizedInsights,
             getRIResults,

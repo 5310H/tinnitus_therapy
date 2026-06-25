@@ -123,7 +123,7 @@ function initNav(helpHtml = '') {
     const navHTML = `
         <div class="unified-nav" style="position:fixed; top:1rem; left:1rem; right:1rem; display:flex; justify-content: space-between; z-index:99999; align-items: center; pointer-events: none;">
             <div id="navLeftGroup" style="display:flex; gap:10px; pointer-events: auto;">
-                <a class="help-btn" href="${homePath}" onclick="try { sessionStorage.setItem('tts_splash_shown', 'true'); } catch(e) {}" style="position:static; right:auto; padding: 8px 12px; background: var(--success); color: white; border-color: var(--success); text-decoration: none; display: ${isHome ? 'none' : 'inline-flex'}; align-items: center; justify-content: center; font-weight: bold; border-width: 2px; box-shadow: 0 0 10px rgba(56, 142, 60, 0.4);">Home</a>
+                <a class="help-btn" href="${homePath}" onclick="try { localStorage.setItem('tts_splash_shown', 'true'); } catch(e) {}" style="position:static; right:auto; padding: 8px 12px; background: var(--success); color: white; border-color: var(--success); text-decoration: none; display: ${isHome ? 'none' : 'inline-flex'}; align-items: center; justify-content: center; font-weight: bold; border-width: 2px; box-shadow: 0 0 10px rgba(56, 142, 60, 0.4);">Home</a>
                 <button class="help-btn" style="position:static; right:auto; padding: 8px 10px; border-color:var(--accent); color:var(--accent);" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌓</button>
                 <button id="debugBtn" class="help-btn" style="position:static; right:auto; padding: 8px 10px; border-color:#ff5722; color:#ff5722; display: ${isDebug ? 'inline-block' : 'none'};" onclick="openDebugMenu()" title="Open Debug Menu">⚙️</button>
             </div>
@@ -358,7 +358,7 @@ window.showOnboardingModal = () => {
             `,
             buttons: `
                 <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
-                    <button id="finalStartBtn" class="big-btn play-btn" style="display: none; margin-top: 0;" onclick="finishOnboarding();">Start Therapy</button>
+                    <button id="finalStartBtn" class="big-btn play-btn" style="display: none; margin-top: 0;" onclick="completeOnboarding(); window.location.href='index.html?setup=complete';">Start Therapy</button>
                     <button class="button" style="width:100%; border-color:var(--text-dim); color:var(--text-dim);" onclick="setOnboardingStep(4); showOnboardingModal();">Back</button>
                 </div>
             `
@@ -571,6 +571,8 @@ window.toggleUIInteraction = (locked) => {
     const controls = document.querySelectorAll('.card input, .card select, .card .button, .card .sm-btn, .card .big-btn:not(#toggleBtn):not(#stopBtn), .card a.button, button.big-btn:not(#toggleBtn):not(#stopBtn)');
 
     controls.forEach(el => {
+        if (el.closest('.modal-card') || el.closest('.modal-overlay')) return; // Ensure modal buttons stay active
+
         if (locked) {
             el.style.pointerEvents = 'none';
             el.style.opacity = '0.5';

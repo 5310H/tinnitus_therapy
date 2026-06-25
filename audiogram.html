@@ -392,6 +392,7 @@
             setJson('hearing_profile', profile);
             saveSetting('last_hearing_test_date', new Date().toISOString());
             alert("Hearing Profile saved. Auto-compensation is now active across all therapy modules.");
+            window.location.href = 'index.html';
         }
 
         function copyProfile() {

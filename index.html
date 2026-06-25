@@ -140,10 +140,9 @@
                         baseline.</span> <span class="step-status"></span>
                 </a>
                 <div id="assessment-steps"
-                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: -4px; margin-bottom: 8px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
+                    style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-top: -4px; margin-bottom: 8px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">
                     <div id="astep-1">○ THI</div>
                     <div id="astep-2">○ Sleep</div>
-                    <div id="astep-3">○ Mindset</div>
                 </div>
 
                 <a class="button" href="validation.html" id="step-valid"
@@ -186,6 +185,11 @@
                         <div id="wstep-2">○ Volume</div>
                         <div id="wstep-3">○ Notch</div>
                     </div>
+                </div>
+                <div id="wizard-complete-wrap" style="display: none; margin-top: 10px; padding: 12px; background: rgba(0, 191, 165, 0.1); border-radius: 8px; border: 1px solid var(--accent); text-align: center;">
+                    <p style="margin: 0 0 10px 0; color: var(--accent); font-weight: bold;">✅ Setup 100% Complete</p>
+                    <p style="font-size: 0.8rem; color: var(--text); margin-bottom: 10px;">Your baseline hearing profile and therapy parameters are fully calibrated.</p>
+                    <button class="button" style="font-size: 0.75rem; padding: 5px 10px;" onclick="document.querySelector('#card-tests details').open = true; document.getElementById('card-tests').scrollIntoView({behavior: 'smooth', block: 'start'});">Review or Update Settings</button>
                 </div>
             </div>
         </div>
@@ -290,20 +294,7 @@
                 <a class="button" href="stats.html" style="width:100%; margin-top:10px;">View Progress History</a>
             </details>
         </div>
-        <div id="card-community" class="card" draggable="true" style="border-color: #9c27b0;">
-            <div class="drag-handle">⠿</div>
-            <h2 style="color: #9c27b0;">Help the Project</h2>
-            <p class="info">This suite is free and open-source. Help us reach more researchers and users.</p>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-                <button class="button"
-                    onclick="navigator.clipboard.writeText('Check out this open-source Tinnitus Therapy Suite: ' + window.location.href); alert('Link copied to clipboard!');"
-                    style="border-color: #9c27b0; color: #9c27b0;">🔗 Copy Suite Link to Share</button>
-                <a class="button" href="https://github.com/5310H/tinnitus_therapy" target="_blank"
-                    style="border-color: #9c27b0; color: #9c27b0;">⭐ Star on GitHub</a>
-                <p style="font-size: 0.7rem; color: var(--text-dim); text-align: center;">Sharing in forums like
-                    Tinnitus Talk helps fund future research.</p>
-            </div>
-        </div>
+
         <div id="card-settings" class="card grid-wide" draggable="true">
             <div class="drag-handle">⠿</div>
             <h2>Project & Settings</h2>
@@ -316,6 +307,20 @@
                     <a class="button" style="margin:0;" href="feedback.html">Feedback</a>
                     <a class="button" style="margin:0;" href="research.html">Research</a>
                     <a class="button" style="margin:0;" href="license.html">License</a>
+                </div>
+
+                <!-- Help the Project -->
+                <div style="margin-top: 15px; padding: 12px; background: rgba(156, 39, 176, 0.05); border-radius: 8px; border: 1px solid #9c27b0;">
+                    <h3 style="color: #9c27b0; margin-top: 0; margin-bottom: 5px; font-size: 0.85rem;">Help the Project</h3>
+                    <p style="font-size: 0.75rem; color: var(--text); margin-bottom: 10px;">This suite is free and open-source. Help us reach more researchers and users.</p>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button class="button"
+                            onclick="navigator.clipboard.writeText('Check out this open-source Tinnitus Therapy Suite: ' + window.location.href); alert('Link copied to clipboard!');"
+                            style="border-color: #9c27b0; color: #9c27b0; font-size: 0.75rem;">🔗 Copy Suite Link to Share</button>
+                        <a class="button" href="https://github.com/5310H/tinnitus_therapy" target="_blank"
+                            style="border-color: #9c27b0; color: #9c27b0; font-size: 0.75rem;">⭐ Star on GitHub</a>
+                        <p style="font-size: 0.65rem; color: var(--text-dim); text-align: center; margin: 0;">Sharing in forums like Tinnitus Talk helps fund future research.</p>
+                    </div>
                 </div>
 
                 <!-- System & Clinical Insights Hub -->
@@ -864,8 +869,7 @@
 
             // Expanded Step 1 Logic (Assessment)
             const sleepSet = loadSetting('reports_sleep_issues', null) !== null;
-            const thoughtSet = getJson('thought_records', []).length > 0;
-            const assessmentComplete = hasThi && sleepSet && thoughtSet;
+            const assessmentComplete = hasThi && sleepSet;
 
             // Expanded Step 2 Logic (Validation)
             const phaseStatus = loadSetting('phase_status', 'Not Verified');
@@ -874,12 +878,11 @@
             const engineSet = engineResults !== 'Not Performed' && !engineResults.includes('[FAIL]');
             const validationComplete = hasValid && phaseSet && engineSet;
 
-            // Functional Wizard Tracking (Check for saved calibration parameters in localStorage)
-            const profileData = getJson('hearing_profile', { L: [], R: [] });
-            const profileSet = (profileData.L?.some(v => v > 0) || profileData.R?.some(v => v > 0));
+            const profileSet = loadSetting('hearing_profile', null) !== null || parseInt(loadSetting('onboarding_step', '0')) >= 3;
             const pitchSet = loadSetting('notchL', null) !== null;
-            const volumeSet = loadSetting('volL', null) !== null || loadSetting('volMaster', null) !== null;
-            const nwSet = loadSetting('nw', null) !== null;
+            const volumeSet = loadSetting('volL', null) !== null || loadSetting('volMaster', null) !== null || loadSetting('nf_volMaster', null) !== null;
+            // Notch width defaults to 1, if it's not set but pitch is, we can assume it's implicitly set
+            const nwSet = loadSetting('nw', null) !== null || pitchSet;
 
             const wizardComplete = profileSet && pitchSet && volumeSet && nwSet;
 
@@ -920,7 +923,6 @@
 
             updateSubStep('astep-1', hasThi, 'THI');
             updateSubStep('astep-2', sleepSet, 'Sleep');
-            updateSubStep('astep-3', thoughtSet, 'Thought');
 
             updateSubStep('vstep-1', phaseSet, 'Phase');
             updateSubStep('vstep-2', engineSet, 'Engine');
@@ -932,6 +934,14 @@
 
             if (document.getElementById('wizard-bar')) document.getElementById('wizard-bar').style.width = percent + '%';
             if (document.getElementById('wizard-percent')) document.getElementById('wizard-percent').textContent = percent + '%';
+
+            if (percent === 100) {
+                if (document.getElementById('wizard-progress-wrap')) document.getElementById('wizard-progress-wrap').style.display = 'none';
+                if (document.getElementById('wizard-complete-wrap')) document.getElementById('wizard-complete-wrap').style.display = 'block';
+            } else {
+                if (document.getElementById('wizard-progress-wrap')) document.getElementById('wizard-progress-wrap').style.display = 'block';
+                if (document.getElementById('wizard-complete-wrap')) document.getElementById('wizard-complete-wrap').style.display = 'none';
+            }
 
             const updateWStep = (id, set, label) => {
                 const el = document.getElementById(id);
