@@ -5,7 +5,7 @@
 - [ ] Expand language/localization options
 - [ ] Offer more narrator voice options (gender, accent, language)
 - [ ] Provide more granular UI customization (font size, contrast, layout density)
-- [ ] Add onboarding wizard for first-time users
+- [x] Add onboarding wizard for first-time users (v2026.06.36)
 
 ## Therapy & Tools
 - [ ] Expand therapy modes (e.g., additional neuromodulation protocols, new sound therapies)

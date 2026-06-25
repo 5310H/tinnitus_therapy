@@ -66,6 +66,10 @@ Every therapy module features a dedicated, step-by-step interactive tutorial to 
 - **Professional Male Narrator:** High-quality neural voice synthesis provides audio guidance for all tutorial steps.
 - **Visual Guidance:** Real-time highlighting of UI elements during the setup process.
 
+### **12. Dashboard Setup Wizard & Local Persistence (v2026.06.36)**
+- Features a robust functional calibration wizard that tracks Profile and Pitch matching progress dynamically.
+- Includes `file:///` protocol-safe local storage for splash screen state persistence across modules, ensuring offline PWA compatibility.
+
 ---
 
 ## 🎵 Flexible Audio Sources
