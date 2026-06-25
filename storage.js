@@ -1761,7 +1761,21 @@
         }
 
         const latestTHI = getLatestLogData('distress_log');
-        const lastScore = latestTHI ? `${latestTHI.data}/100` : 'Not Performed';
+        let lastScore = 'Not Performed';
+        let subscaleBreakdown = null;
+        if (latestTHI) {
+            if (typeof latestTHI.data === 'object' && latestTHI.data !== null) {
+                lastScore = `${latestTHI.data.total}/100`;
+                subscaleBreakdown = {
+                    functional: latestTHI.data.functional,
+                    emotional: latestTHI.data.emotional,
+                    catastrophic: latestTHI.data.catastrophic,
+                    format: latestTHI.data.format
+                };
+            } else {
+                lastScore = `${latestTHI.data}/100`;
+            }
+        }
         const lastTHIDateDisplay = latestTHI ? new Date(latestTHI.date).toLocaleDateString() : 'N/A';
 
         const thoughtRecords = getThoughtRecords();
@@ -1789,6 +1803,7 @@
             psychological: {
                 lastTHIScore: lastScore,
                 lastTHIDate: lastTHIDateDisplay,
+                subscales: subscaleBreakdown,
                 thiHistory: getDistressScores(),
                 thoughtRecordsCount: thoughtRecordsCount,
                 recentThoughtSummary: recentThoughtSummary
@@ -1853,6 +1868,11 @@
         text += `\nPSYCHOLOGICAL BASELINE (CBT):\n`;
         text += `Last THI Score: ${reportData.psychological.lastTHIScore}\n`;
         text += `Last THI Date: ${reportData.psychological.lastTHIDate}\n`;
+        if (reportData.psychological.subscales) {
+            const sub = reportData.psychological.subscales;
+            text += `THI Subscales: Functional: ${sub.functional}/44 | Emotional: ${sub.emotional}/36 | Catastrophic: ${sub.catastrophic}/20\n`;
+            if (sub.format) text += `Questioning Format: ${sub.format}\n`;
+        }
 
         if (reportData.recommendations.length > 0) {
             text += `\nPERSONALIZED THERAPY SUGGESTIONS:\n`;
@@ -2039,6 +2059,13 @@
         html += `  <div style="flex: 1; border: 1px solid #ecf0f1; padding: 15px; border-radius: 4px;">`;
         html += `    <p style="font-size: 11px; color: #95a5a6; margin: 0 0 5px 0; text-transform: uppercase;">Handicap (THI)</p>`;
         html += `    <p style="font-size: 18px; margin: 0; color: #2c3e50;"><b>${reportData.psychological.lastTHIScore}</b> <span style="font-size: 11px; color: #7f8c8d;">(as of ${reportData.psychological.lastTHIDate})</span></p>`;
+        if (reportData.psychological.subscales) {
+            const sub = reportData.psychological.subscales;
+            html += `    <p style="font-size: 10px; color: #7f8c8d; margin: 5px 0 0 0;">`;
+            html += `Functional: <b>${sub.functional}/44</b> | Emotional: <b>${sub.emotional}/36</b> | Catastrophic: <b>${sub.catastrophic}/20</b>`;
+            if (sub.format) html += ` <span style="font-size: 9px; opacity: 0.8;">(${sub.format})</span>`;
+            html += `</p>`;
+        }
         html += `  </div>`;
         html += `</div>`;
 
@@ -2058,8 +2085,9 @@
             const step = chartWidth / (history.length - 1);
 
             history.forEach((entry, i) => {
+                const rawVal = typeof entry[1] === 'object' && entry[1] !== null ? entry[1].total : entry[1];
                 const x = padding + (i * step);
-                const y = padding + (chartHeight - (entry[1] / 100 * chartHeight));
+                const y = padding + (chartHeight - (rawVal / 100 * chartHeight));
                 points += `${x},${y} `;
             });
 
@@ -2073,8 +2101,9 @@
             });
             html += `<polyline points="${points}" fill="none" stroke="#00bfa5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />`;
             history.forEach((entry, i) => {
+                const rawVal = typeof entry[1] === 'object' && entry[1] !== null ? entry[1].total : entry[1];
                 const x = padding + (i * step);
-                const y = padding + (chartHeight - (entry[1] / 100 * chartHeight));
+                const y = padding + (chartHeight - (rawVal / 100 * chartHeight));
                 html += `<circle cx="${x}" cy="${y}" r="3.5" fill="#fff" stroke="#00bfa5" stroke-width="2" />`;
                 const dateStr = new Date(entry[0]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
                 html += `<text x="${x}" y="${height - 5}" font-size="8" fill="#95a5a6" text-anchor="middle">${dateStr}</text>`;
@@ -2282,7 +2311,8 @@
      */
     function getTherapyRecommendations() {
         const latestTHI = getLatestLogData('distress_log');
-        const thiScore = latestTHI ? latestTHI.data : null;
+        const thiScoreRaw = latestTHI ? latestTHI.data : null;
+        const thiScore = (thiScoreRaw && typeof thiScoreRaw === 'object') ? thiScoreRaw.total : thiScoreRaw;
 
         const targetFreq = parseFloat(loadSetting('notchL', loadSetting('toneFreqL', loadSetting('cr_baseFreq', 6000))));
 

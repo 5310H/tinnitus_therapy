@@ -719,9 +719,12 @@
 
             // Prepare data: filter out invalid scores, sort by date, convert to suitable format
             const data = Object.entries(rawScores)
-                .filter(([, score]) => !isNaN(parseInt(score))) // Filter out non-numeric scores
-                .sort(([dateA], [dateB]) => new Date(dateA + 'T00:00:00').getTime() - new Date(dateB + 'T00:00:00').getTime())
-                .map(([date, score]) => ({ date: new Date(date + 'T00:00:00'), score: parseInt(score) }))
+                .map(([date, val]) => {
+                    const score = (val && typeof val === 'object') ? val.total : val;
+                    return { date: new Date(date + 'T00:00:00'), score: parseInt(score) };
+                })
+                .filter(d => !isNaN(d.score))
+                .sort((a, b) => a.date.getTime() - b.date.getTime())
                 // Filter out duplicate dates, keeping the last score for that day
                 .filter((entry, index, self) =>
                     index === self.findIndex(t => t.date.toDateString() === entry.date.toDateString())

@@ -1,7 +1,7 @@
 {
   "version": "2026.06.35",
   "date": "June 2026",
-  "enabled": true,
+  "enabled": false,
   "whatsNew": [
     "Anti-Aliased Frequency Jitter Fix",
     "Optimized Chime Strike Engine",
