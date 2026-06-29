@@ -2,7 +2,7 @@
 // Include this at the bottom of therapy pages to handle auto-save/load
 
 (function () {
-    const APP_VERSION = "2026.06.36";
+    const APP_VERSION = "2026.06.37";
 
     /** 
      * Helpers for consistent localStorage interaction
@@ -42,7 +42,7 @@
             // New validation for boolean setting
             if (key === 'wearing_hearing_aids' && (val !== 'true' && val !== 'false')) return;
             if (key === 'ai_enabled' && (val !== 'true' && val !== 'false')) return;
-            if (key === 'onboarding_step' && (num < 0 || num > 6 || !Number.isInteger(num))) return; // Validate onboarding step
+            if (key === 'onboarding_step' && (num < 0 || num > 6 || isNaN(num))) return; // Validate onboarding step
         }
         _safeSet('tts_' + key, val);
     };

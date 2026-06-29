@@ -63,7 +63,7 @@
   )
 
   ;; Red Noise state stored in Memory[0] (lastOut) and Memory[88] (lastOut2)
-  (func (export "fillRed") (param $ptr i32) (param $len i32)
+  (func $fillRed (export "fillRed") (param $ptr i32) (param $len i32)
     (local $i i32) (local $w f32) (local $l1 f32) (local $l2 f32)
     (local $lastIn f32) (local $hpState f32) (local $raw f32) (local $out f32)
     (local.set $l1 (f32.load (i32.const 0)))
@@ -104,7 +104,7 @@
   ;; Rain Noise: Pink noise core + organic patter impulses
   (func (export "fillRain") (param $ptr i32) (param $len i32) 
         (param $p0 f32) (param $p1 f32) (param $p2 f32) (param $p3 f32) (param $p4 f32) (param $p5 f32)
-        (param $g0 f32) (param $g1 f32) (param $g2 f32) (param $g3 f32) (param $g4 f32) (param $g5 f32))
+        (param $g0 f32) (param $g1 f32) (param $g2 f32) (param $g3 f32) (param $g4 f32) (param $g5 f32)
     (local $i i32) (local $w f32) (local $rawPink f32) (local $impulse f32) (local $patter f32)
     (local $b0 f32) (local $b1 f32) (local $b2 f32) (local $b3 f32) (local $b4 f32) (local $b5 f32) (local $b6 f32)
     (local $lastIn f32) (local $hpState f32) (local $mixed f32) (local $out f32)
@@ -133,7 +133,9 @@
       ;; Organic Impulse
       f32.const 0.0 local.set $impulse
       call $random f32.const 1.0 f32.add f32.const 2.0 f32.div f32.const 0.9997 f32.gt
-      if (call $random f32.const 0.4 f32.mul local.set $impulse) end
+      if
+        call $random f32.const 0.4 f32.mul local.set $impulse
+      end
       local.get $patter f32.const 0.995 f32.mul local.get $impulse f32.add local.set $patter
 
       local.get $rawPink f32.const 0.85 f32.mul local.get $patter f32.const 0.15 f32.mul f32.add local.set $mixed
@@ -206,7 +208,11 @@
       call $random local.set $w ;; White noise base
 
       ;; Update LFO: lfoPhase = (lfoPhase + 0.00005) % (2 * PI)
-      local.get $lfoPhase f32.const 0.00005 f32.add f32.const 6.28318530718 f32.rem local.set $lfoPhase
+      local.get $lfoPhase f32.const 0.00005 f32.add local.set $lfoPhase
+      local.get $lfoPhase f32.const 6.28318530718 f32.gt
+      if
+        local.get $lfoPhase f32.const 6.28318530718 f32.sub local.set $lfoPhase
+      end
       ;; lfoVal = (Math.sin(lfoPhase) * 0.5 + 0.5) * 0.5 + 0.5 (range 0.5 to 1.0)
       local.get $lfoPhase call $f32_sin f32.const 0.5 f32.mul f32.const 0.5 f32.add f32.const 0.5 f32.mul f32.const 0.5 f32.add local.set $lfoVal
 
@@ -223,7 +229,7 @@
   ;; Pink Noise state stored in Memory[4..40]
   (func (export "fillPink") (param $ptr i32) (param $len i32) 
         (param $p0 f32) (param $p1 f32) (param $p2 f32) (param $p3 f32) (param $p4 f32) (param $p5 f32)
-        (param $g0 f32) (param $g1 f32) (param $g2 f32) (param $g3 f32) (param $g4 f32) (param $g5 f32))
+        (param $g0 f32) (param $g1 f32) (param $g2 f32) (param $g3 f32) (param $g4 f32) (param $g5 f32)
     (local $i i32)
     (local $w f32)
     (local $b0 f32) (local $b1 f32) (local $b2 f32) (local $b3 f32) (local $b4 f32) (local $b5 f32) (local $b6 f32)
@@ -300,6 +306,8 @@
     (local $rand_prob f32)
     (local $env_val f32)
     (local $phase_val f32)
+    (local $current_ratio f32)
+    (local $new_phase f32)
 
     ;; Hardcoded ratios for 6 harmonics
     (local $ratios_0 f32) (local $ratios_1 f32) (local $ratios_2 f32)
@@ -313,6 +321,8 @@
 
     (local.set $i (i32.const 0))
     (loop $loop_i
+      (local.set $val (f32.const 0.0))
+      
       ;; Check for new strikes for each harmonic
       (local.set $h (i32.const 0))
       (loop $loop_h_strike
@@ -327,6 +337,12 @@
         f32.const 0.0015
         f32.lt
         if
+          local.get $h
+          i32.const 4
+          i32.mul
+          i32.const 64 ;; envelopes start at 64
+          i32.add
+
           f32.const 0.7
           call $random
           f32.const 1.0
@@ -336,29 +352,11 @@
           f32.const 0.3
           f32.mul
           f32.add ;; 0.7 + random * 0.3
-          local.set $env_val
-          local.get $env_val
-          local.get $h
-          i32.const 4
-          i32.mul
-          i32.const 64 ;; envelopes start at 64
-          i32.add
+          local.tee $env_val
+          
           f32.store
         end
 
-        local.get $h
-        i32.const 1
-        i32.add
-        local.tee $h
-        i32.const 6 ;; 6 harmonics
-        i32.lt_u
-        br_if $loop_h_strike
-      )
-
-      (local.set $val (f32.const 0.0))
-      (local.set $h (i32.const 0))
-      (loop $loop_h_sum
-        ;; Load phase and envelope
         local.get $h
         i32.const 4
         i32.mul
@@ -376,42 +374,41 @@
         local.set $env_val
 
         ;; Get ratio for current harmonic
-        (local $current_ratio f32)
         local.get $h
         i32.const 0
         i32.eq
-        if (local.get $ratios_0 local.set $current_ratio) end
+        if local.get $ratios_0 local.set $current_ratio end
         local.get $h
         i32.const 1
         i32.eq
-        if (local.get $ratios_1 local.set $current_ratio) end
+        if local.get $ratios_1 local.set $current_ratio end
         local.get $h
         i32.const 2
         i32.eq
-        if (local.get $ratios_2 local.set $current_ratio) end
+        if local.get $ratios_2 local.set $current_ratio end
         local.get $h
         i32.const 3
         i32.eq
-        if (local.get $ratios_3 local.set $current_ratio) end
+        if local.get $ratios_3 local.set $current_ratio end
         local.get $h
         i32.const 4
         i32.eq
-        if (local.get $ratios_4 local.set $current_ratio) end
+        if local.get $ratios_4 local.set $current_ratio end
         local.get $h
         i32.const 5
         i32.eq
-        if (local.get $ratios_5 local.set $current_ratio) end
+        if local.get $ratios_5 local.set $current_ratio end
 
-        ;; val += Math.sin(phase) * envelope * (1 / (h + 1.0))
+        ;; val += Math.sin(phase) * envelope * (1.0 / (h + 1.0))
         local.get $phase_val
         call $f32_sin
         local.get $env_val
         f32.mul
+        f32.const 1.0
         local.get $h
         f32.convert_i32_s
         f32.const 1.0
         f32.add
-        f32.const 1.0
         f32.div
         f32.mul
         local.get $val
@@ -426,24 +423,35 @@
         local.get $current_ratio
         f32.mul
         f32.add
+        local.set $new_phase
+
+        local.get $new_phase
         f32.const 6.28318530718 ;; 2 * PI
-        f32.rem
+        f32.gt
+        if
+          local.get $new_phase
+          f32.const 6.28318530718
+          f32.sub
+          local.set $new_phase
+        end
+
         local.get $h
         i32.const 4
         i32.mul
         i32.const 40
         i32.add
+        local.get $new_phase
         f32.store
 
         ;; Update envelope: envelope *= 0.99996
-        local.get $env_val
-        f32.const 0.99996
-        f32.mul
         local.get $h
         i32.const 4
         i32.mul
         i32.const 64
         i32.add
+        local.get $env_val
+        f32.const 0.99996
+        f32.mul
         f32.store
 
         local.get $h
@@ -452,7 +460,7 @@
         local.tee $h
         i32.const 6 ;; 6 harmonics
         i32.lt_u
-        br_if $loop_h_sum
+        br_if $loop_h_strike
       )
 
       ;; Store sample
@@ -476,7 +484,6 @@
     )
   )
 
-  ;; Brown Noise state stored in Memory[0]
   (func (export "fillBrown") (param $ptr i32) (param $len i32) (param $pole f32) (param $gain f32)
     (local $i i32) (local $last f32) (local $lastIn f32) (local $hpState f32) (local $out f32)
     (local.set $last (f32.load (i32.const 0)))

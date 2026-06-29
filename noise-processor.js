@@ -36,6 +36,11 @@ class NoiseProcessor extends AudioWorkletProcessor {
         this.lfoPhase = 0; // For Forest noise (JS Fallback)
         this.lfoVal = 0.5; // For Forest noise (JS Fallback)
 
+        // Pre-allocate fallback arrays to avoid allocations in the audio thread
+        this.chimeRatios = new Float32Array([1, 1.25, 1.5, 1.875, 2, 2.5]);
+        this.fallbackPhases = new Float32Array(8);
+        this.fallbackEnvelopes = new Float32Array(8);
+
         this._initializeNoiseState();
 
         // Filter states for colors
@@ -48,11 +53,6 @@ class NoiseProcessor extends AudioWorkletProcessor {
         this.c1 = 0;
         this.c2 = 0;
         this.lastIn = 0; // For Violet noise (JS Fallback)
-
-        // Pre-allocate fallback arrays to avoid allocations in the audio thread
-        this.chimeRatios = new Float32Array([1, 1.25, 1.5, 1.875, 2, 2.5]);
-        this.fallbackPhases = new Float32Array(8);
-        this.fallbackEnvelopes = new Float32Array(8);
 
         const sr = typeof sampleRate === 'number' ? sampleRate : 44100;
         const ratio = 44100 / (sr > 0 ? sr : 44100);
