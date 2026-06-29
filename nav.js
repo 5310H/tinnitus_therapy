@@ -378,7 +378,7 @@ window.showOnboardingModal = () => {
 
     const progressHTML = stepNames.map((name, i) => `
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 0.75rem; color: ${i === currentStep ? 'var(--accent)' : (i < currentStep ? 'var(--success)' : 'var(--text-dim)')}; font-weight: ${i === currentStep ? 'bold' : 'normal'}">
-            <span style="width: 16px; height: 16px; border-radius: 50%; border: 1px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 0.6rem;">${i < currentStep ? '✓' : i + 1}</span>
+            <span style="width: 16px; height: 16px; border-radius: 50%; border: 1px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 0.6rem;">${i < currentStep ? '&#10003;' : i + 1}</span>
             <span>${name}</span>
         </div>
     `).join('');
@@ -399,11 +399,13 @@ window.showOnboardingModal = () => {
         </div>
     `;
 
-    // Remove existing modal if any
+    // Replace existing modal or append new
     const existingModal = document.getElementById('onboardingModal');
-    if (existingModal) existingModal.remove();
-
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    if (existingModal) {
+        existingModal.outerHTML = modalHTML;
+    } else {
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
     toggleUIInteraction(true); // Disable background UI
 };
 

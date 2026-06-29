@@ -1,6 +1,6 @@
 {
   "name": "project-automation",
-  "version": "2026.06.36",
+  "version": "2026.06.37",
   "scripts": {
     "build": "make",
     "run": "./my_c_program",
