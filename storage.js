@@ -2,7 +2,7 @@
 // Include this at the bottom of therapy pages to handle auto-save/load
 
 (function () {
-    const APP_VERSION = "2026.06.37";
+    const APP_VERSION = "2026.06.38";
 
     /** 
      * Helpers for consistent localStorage interaction
